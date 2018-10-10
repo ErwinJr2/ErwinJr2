@@ -16,6 +16,8 @@ const double hbar = 1.0545718e-34; /*J.s*/
 const double m0 = 9.10938356e-31;  /*kg*/
 const double e0 = 1.60217662e-19;  /*C*/
 const double pi = 3.1415926535897932385;
+const double ANG = 1E-10;  
+/* Angstrom in meter: all unit for length is Angstrom in the program */
 
 #ifdef _WINDLL
 typedef int32_t numpyint;
@@ -45,11 +47,11 @@ double Numerov(double x0, double step, numpyint N, double y0, double y1,
 	int n; 
 	y[0] = y0;
 	y[1] = y1;
+	const double unit = 2*m0/sq(hbar)*e0*sq(ANG*step);
 	for (n = 1; n < N-1; n++) {
-		y[n+1] = 2*m[n]*m0/sq(hbar) * 
-			(2 * y[n] * (1.0 - 5*sq(step)/12 * e0*( E - V[n])) 
-			 - y[n-1] * (1.0 + sq(step)/12 * e0*(E - V[n-1]))) 
-			/ (1.0 + sq(step)/12 * e0*(E - V[n+1]));
+		y[n+1] = (2 * y[n] * (1.0 - 5.0/12 * ( E - V[n]) * unit * m[n]) 
+			 - y[n-1] * (1.0 + 1.0/12 * (E - V[n-1]) * unit * m[n])) 
+			/ (1.0 + 1.0/12 * (E - V[n+1]) * unit * m[n]);
 	}
 	return y[N-1];
 }
