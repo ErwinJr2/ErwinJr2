@@ -7,10 +7,12 @@
 #endif 
 
 #define sq(X) ((X)*(X))
-#define NEWTON 1E-3 /* Newton's method stopping limit */  
+#define NEWTON 1E-3 
+/* Newton's method stopping limit */
 #define NSTEP 1E-8
 /* NSTEP (unit eV) is the step size to numerically calculate  
  * the derivative for Newton's method */
+#define Y_EPS 1.0 /* Default starting point for Numerov */
 
 const double hbar = 1.0545718e-34; /*J.s*/
 const double m0 = 9.10938356e-31;  /*kg*/
@@ -33,11 +35,11 @@ extern "C" {
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif // _WINDLL
-double Numerov(numpyint x0, double step, numpyint N, double y0, double y1, 
+double Numerov(double step, numpyint N, double y0, double y1, 
 		double E, const double *V, const double *m, double *y) {
 	/* 
 	 * An ODE solver for -hbar^2/(2*m(x)) * y''(x) + V(x) * y = E * y(x)
-	 * with starting x0 and y0, y1, ends at x0 + step*N
+	 * with starting x0 and y0, y1, ends at x0 + step*N (x0 label 0)
 	 * using Numerov algorithm
 	 * E and V are in unit eV, m are in unit m0 (free electron mass)
 	 * Don't normalize
@@ -45,15 +47,44 @@ double Numerov(numpyint x0, double step, numpyint N, double y0, double y1,
 	 * return y(x+N*step), put y result in *y
 	 */
 	int n; 
-	y[x0] = y0;
-	y[x0+1] = y1;
+	y[0] = y0;
+	y[1] = y1;
 	const double unit = 2*m0/sq(hbar)*e0*sq(ANG*step);
-	for (n = x0+1; n < N-1; n++) {
+	for (n = 1; n < N-1; n++) {
 		y[n+1] = (2 * y[n] * (1.0 - 5.0/12 * ( E - V[n]) * unit * m[n]) 
 			 - y[n-1] * (1.0 + 1.0/12 * (E - V[n-1]) * unit * m[n])) 
 			/ (1.0 + 1.0/12 * (E - V[n+1]) * unit * m[n]);
 	}
 	return y[N-1];
+}
+
+#ifdef _WINDLL
+__declspec(dllexport)
+#endif // _WINDLL
+void FillPsi(double step, numpyint N, const double *EigenEs, numpyint EN, 
+		const double *V, const double *m, double* psis) {
+	/* 
+	 * Fill in wavefunctions in psis accroding to eigen energy in EigenEs. 
+	 * psi + i*N*sizeof(double) is the wavefunction with Energy EigenEs[i] 
+	 * The result is normalized to 1
+	 */
+	int i; 
+	double modsq;
+	for(i=0; i<EN; i++) {
+		int j;
+		double* psi = psis + i*N;
+		Numerov(step, N, 0.0, Y_EPS, EigenEs[i], V, m, psi);
+		modsq = 0; 
+		/* Normalization */
+		for(j=0; j<N; j++) {
+			modsq += sq(psi[j]);
+		}
+		modsq = sqrt(modsq * step);
+		for(j=0; j<N; j++) {
+			psi[j] /= modsq;
+		}
+	}
+	return; 
 }
 
 double findZero(const double *x, const double *y, int n) {
@@ -70,7 +101,7 @@ double findZero(const double *x, const double *y, int n) {
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif // _WINDLL
-numpyint SimpleSolve1D(numpyint x0, double step, numpyint N, 
+numpyint SimpleSolve1D(double step, numpyint N, 
 		const double *Es, numpyint EN, 
 		const double *V, const double *m, 
 		double *EigenE) {
@@ -89,10 +120,10 @@ numpyint SimpleSolve1D(numpyint x0, double step, numpyint N,
 	y = (double *)malloc(N * sizeof(double));
 	yend = (double *)malloc(EN * sizeof(double));
 	for(i=0; i<EN; i++) {
-		yend[i] = Numerov(x0, step, N, 0.0, 1.0, Es[i], V, m, y);
+		yend[i] = Numerov(step, N, 0.0, Y_EPS, Es[i], V, m, y);
 	}
 
-	for(i=1; i<N; i++) {
+	for(i=1; i<EN; i++) {
 		if(yend[i] == 0) {
 			EigenE[NofZeros++] = Es[i-1]; 
 			continue; 
@@ -101,17 +132,17 @@ numpyint SimpleSolve1D(numpyint x0, double step, numpyint N,
 			continue;
 		}
 		else if(yend[i]*yend[i-1] < 0) {
-#ifndef NEWTON
+#ifdef SIMPLE
 			EigenE[NofZeros++] = findZero(Es, yend, i);
 #else
 			double E0 = findZero(Es, yend, i);
 			double E_step = NSTEP;
-			double y0 = Numerov(x0, step, N, 0.0, 1.0, E0, V, m, y);
+			double y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
 			while(abs(y0) > NEWTON){
-				double dy = (Numerov(x0, step, N, 0.0, 1.0, E0+E_step, 
+				double dy = (Numerov(step, N, 0.0, Y_EPS, E0+E_step, 
 							V, m, y) - y0)/E_step;
 				E0 -= y0/dy;
-				y0 = Numerov(x0, step, N, 0.0, 1.0, E0, V, m, y);
+				y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
 			}
 			EigenE[NofZeros++] = E0;
 #endif
