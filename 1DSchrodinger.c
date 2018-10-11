@@ -31,9 +31,9 @@ extern "C" {
 
 
 #ifdef _WINDLL
-	__declspec(dllexport)
+__declspec(dllexport)
 #endif // _WINDLL
-double Numerov(double x0, double step, numpyint N, double y0, double y1, 
+double Numerov(numpyint x0, double step, numpyint N, double y0, double y1, 
 		double E, const double *V, const double *m, double *y) {
 	/* 
 	 * An ODE solver for -hbar^2/(2*m(x)) * y''(x) + V(x) * y = E * y(x)
@@ -45,10 +45,10 @@ double Numerov(double x0, double step, numpyint N, double y0, double y1,
 	 * return y(x+N*step), put y result in *y
 	 */
 	int n; 
-	y[0] = y0;
-	y[1] = y1;
+	y[x0] = y0;
+	y[x0+1] = y1;
 	const double unit = 2*m0/sq(hbar)*e0*sq(ANG*step);
-	for (n = 1; n < N-1; n++) {
+	for (n = x0+1; n < N-1; n++) {
 		y[n+1] = (2 * y[n] * (1.0 - 5.0/12 * ( E - V[n]) * unit * m[n]) 
 			 - y[n-1] * (1.0 + 1.0/12 * (E - V[n-1]) * unit * m[n])) 
 			/ (1.0 + 1.0/12 * (E - V[n+1]) * unit * m[n]);
@@ -68,9 +68,9 @@ double findZero(const double *x, const double *y, int n) {
 }
 
 #ifdef _WINDLL
-	__declspec(dllexport)
+__declspec(dllexport)
 #endif // _WINDLL
-numpyint SimpleSolve1D(double x0, double step, numpyint N, 
+numpyint SimpleSolve1D(numpyint x0, double step, numpyint N, 
 		const double *Es, numpyint EN, 
 		const double *V, const double *m, 
 		double *EigenE) {
@@ -122,7 +122,6 @@ numpyint SimpleSolve1D(double x0, double step, numpyint N,
 	free(yend);
 	return NofZeros;
 }
-
 
 #ifdef _WINDLL
 __declspec(dllexport)
