@@ -93,16 +93,14 @@ void FillPsi(double step, numpyint N, const double *EigenEs, numpyint EN,
 	return; 
 }
 
-double findZero(const double *x, const double *y, int n) {
-	/*
-	 * Find zero x_n between x[n-1] and x[n] of function y(x), 
-	 * s.t. y(x_n) = 0
-	 * using linear interpolation (to be improved?)
-	 * assuming y[n] and y[n-1] is opposite sign
-	 * return x_n
-	 */
-	return (y[n]*x[n-1] - y[n-1]*x[n])/ (y[n] - y[n-1]); 
-}
+#define findZero(x, y, n) ((y[n]*x[n-1] - y[n-1]*x[n])/ (y[n] - y[n-1]))
+/*
+ * Find zero x_n between x[n-1] and x[n] of function y(x), 
+ * s.t. y(x_n) = 0
+ * using linear interpolation (to be improved?)
+ * assuming y[n] and y[n-1] is opposite sign
+ * return x_n
+ */
 
 #ifdef _WINDLL
 __declspec(dllexport)
