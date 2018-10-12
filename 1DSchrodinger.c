@@ -9,15 +9,21 @@
 #define sq(X) ((X)*(X))
 #define NEWTON 1E-3 
 /* Newton's method stopping limit */
-#define NSTEP 1E-8
+#define NSTEP 1E-10
 /* NSTEP (unit eV) is the step size to numerically calculate  
- * the derivative for Newton's method */
-#define Y_EPS 1.0 /* Default starting point for Numerov */
+ * the derivative for Newton's method. 
+ * Optimum step size = (6*epsilon/M3)^(1/3) 
+ * where epsilon is numerical error of yend(E) and M3 is maximum yend'''(E)
+ * Because of the exponantial behavior when V>E, yend is very sensitive 
+ * to E near EigenE. M3 is very large. 
+ * Still, it's recommanded to make high V side the starting point
+ */
+#define Y_EPS 0.1 /* Default starting point for Numerov */
 
 const double hbar = 1.0545718e-34; /*J.s*/
 const double m0 = 9.10938356e-31;  /*kg*/
 const double e0 = 1.60217662e-19;  /*C*/
-const double pi = 3.1415926535897932385;
+/* const double pi = 3.1415926535897932385; M_PI in math.h*/
 const double ANG = 1E-10;  
 /* Angstrom in meter: all unit for length is Angstrom in the program */
 
@@ -108,8 +114,8 @@ numpyint SimpleSolve1D(double step, numpyint N,
 	/* Solve 1D shrodinger's equation with potential V, effective mass m and 
 	 * in the region x0 <= x < x0+step*N with zero boundary. 
 	 * First scan in energy Es[0:EN] and look for zeros(EigenE) by either 
-	 *    simple linear interpolation if NEWTON is not defined;
-	 * or calculate zero using newton's method if NEWTON is defined
+	 *    simple linear interpolation if SIMPLE is not defined;
+	 * or calculate zero using newton's method if SIMPLE is defined
 	 * Es should be in small to large order
 	 */
 	double *y; 
@@ -135,15 +141,39 @@ numpyint SimpleSolve1D(double step, numpyint N,
 #ifdef SIMPLE
 			EigenE[NofZeros++] = findZero(Es, yend, i);
 #else
+			int count=0; 
+#ifdef __DEBUG
+			printf("Looking for zeros near %d\n", i);
+#endif
 			double E0 = findZero(Es, yend, i);
-			double E_step = NSTEP;
 			double y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
-			while(abs(y0) > NEWTON){
-				double dy = (Numerov(step, N, 0.0, Y_EPS, E0+E_step, 
-							V, m, y) - y0)/E_step;
+			while(fabs(y0) > NEWTON){
+				double y1 = Numerov(step, N, 0.0, Y_EPS, E0+NSTEP, V, m, y);
+				double y2 = Numerov(step, N, 0.0, Y_EPS, E0-NSTEP, V, m, y);
+				double dy = (y1 - y2)/(2*NSTEP);
+				if(y1*y2 < 0) {
+#ifdef __DEBUG
+					printf("solution error smaller than step.\n");
+#endif
+					break;
+				}
 				E0 -= y0/dy;
 				y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
+				count++;
+#ifdef __DEBUG
+				printf("  The %d-th try for newton, E=%.20f Err=%f\n", 
+						count, E0, fabs(y0));
+#endif
+				if(count > 20) {
+#ifdef __DEBUG
+					printf("Time out for Newton's method. %d\n", count);
+#endif
+					break;
+				}
 			}
+#ifdef __DEBUG
+			printf("After Newton, E=%f Err=%f\n", E0, fabs(y0));
+#endif
 			EigenE[NofZeros++] = E0;
 #endif
 		}
