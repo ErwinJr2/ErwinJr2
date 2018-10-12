@@ -142,37 +142,25 @@ numpyint SimpleSolve1D(double step, numpyint N,
 			EigenE[NofZeros++] = findZero(Es, yend, i);
 #else
 			int count=0; 
-#ifdef __DEBUG
-			printf("Looking for zeros near %d\n", i);
-#endif
 			double E0 = findZero(Es, yend, i);
 			double y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
-			while(fabs(y0) > NEWTON){
+			while(fabs(y0) > NEWTON && count < 20){
 				double y1 = Numerov(step, N, 0.0, Y_EPS, E0+NSTEP, V, m, y);
 				double y2 = Numerov(step, N, 0.0, Y_EPS, E0-NSTEP, V, m, y);
 				double dy = (y1 - y2)/(2*NSTEP);
 				if(y1*y2 < 0) {
 #ifdef __DEBUG
-					printf("solution error smaller than step.\n");
+					printf("  solution error smaller than step%d.\n", count);
 #endif
 					break;
 				}
 				E0 -= y0/dy;
 				y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
 				count++;
-#ifdef __DEBUG
-				printf("  The %d-th try for newton, E=%.20f Err=%f\n", 
-						count, E0, fabs(y0));
-#endif
-				if(count > 20) {
-#ifdef __DEBUG
-					printf("Time out for Newton's method. %d\n", count);
-#endif
-					break;
-				}
 			}
 #ifdef __DEBUG
-			printf("After Newton, E=%f Err=%f\n", E0, fabs(y0));
+			printf("After %d times Newton, E=%f Err=%f\n", 
+					count, E0, fabs(y0));
 #endif
 			EigenE[NofZeros++] = E0;
 #endif
