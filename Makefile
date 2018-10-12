@@ -12,7 +12,6 @@ all: 1DSchrodinger.so
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
-	# $(CC) $(CFLAGS) -D __DEBUG -c $< -o $@
 
 .PHONY : clean
 clean :
