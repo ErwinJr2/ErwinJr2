@@ -11,8 +11,8 @@ all: 1DSchrodinger.so
 	$(CC) -shared -fPIC $< -o $@ -lm
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
-	# $(CC) $(CFLAGS) -D __DEBUG -c $< -o $@
+	# $(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -D __DEBUG -c $< -o $@
 
 .PHONY : clean
 clean :
