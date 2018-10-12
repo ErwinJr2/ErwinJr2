@@ -157,7 +157,7 @@ numpyint SimpleSolve1D(double step, numpyint N,
 				count++;
 			}
 #ifdef __DEBUG
-			printf("After %d times Newton, E=%f Err=%f\n", 
+			printf("After %d times Newton, E=%f Err=%e\n", 
 					count, E0, fabs(y0));
 #endif
 			EigenE[NofZeros++] = E0;
