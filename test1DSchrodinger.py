@@ -25,20 +25,25 @@ def square_well(x0=0, x1=100, x2=300, x3=400, Vmax=0.287):
 def triangle_well(F, xmax = 1E3): 
     x = np.linspace(0, xmax, 5000)
     step = x[1]-x[0]
+    print("step: ",step)
     V = F * (xmax - x)
     mass = 0.067
     Es = np.linspace(0, 0.15, 100)
     EigenEs = cSimpleSolve1D(step, Es, V, mass)
     psis = cFillPsi(step, EigenEs, V, mass)
-    an = np.arange(0, 8) + 0.75
-    EigenEs_th = (hbar**2/(2*m_e*mass*e*ANG**2)*(3*pi*F*an/2)**2)**(1/3)
-    from scipy.special import airy
+    #  an = np.arange(0, 8) + 0.75
+    #  EigenEs_th = (hbar**2/(2*m_e*mass*e*ANG**2)*(3*pi*F*an/2)**2)**(1/3)
+    # Above is approximate Airy zeros result
+    from scipy.special import airy, ai_zeros
+    an = ai_zeros(8)[0]
+    EigenEs_th = -(hbar**2*F**2/(2*m_e*mass*e*ANG**2))**(1/3)*an
     psis_th = np.array([airy((2*mass*m_e*e*ANG**2*F/hbar**2)**(1/3) * (x-E/F))[0] 
                      for E in EigenEs_th])
     V=V[::-1]
     psis = psis[:,::-1]
     print("Eigen Energy: ", EigenEs)
     print("Thoery: ", EigenEs_th)
+    print("Diff: ", EigenEs - EigenEs_th)
     plot(x, V)
     for n in range(0, EigenEs.size):
         plot(x, EigenEs[n] + psis[n,:]/np.max(psis[n,:])*0.01)
@@ -47,8 +52,8 @@ def triangle_well(F, xmax = 1E3):
     return x, V, EigenEs, psis, EigenEs_th, psis_th
 
 if __name__ == "__main__":
-    x, V, EigenEs, psis = square_well()
-    show()
-    x, V, EigenEs, psis, EigenEs_th, psis_th = triangle_well(2e-4)
+    #  x, V, EigenEs, psis = square_well()
+    #  show()
+    x, V, EigenEs, psis, EigenEs_th, psis_th = triangle_well(2.02e-4)
     show()
 # vim: ts=4 sw=4 sts=4 expandtab
