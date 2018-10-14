@@ -10,10 +10,10 @@ all: 1DSchrodinger.so
 1DSchrodinger.so : 1DSchrodinger.o
 	$(CC) -shared -fPIC $< -o $@ -lm
 
-%.o: %.c
+%.o: %.c science.h
 	# $(CC) $(CFLAGS) -c $< -o $@
 	$(CC) $(CFLAGS) -D __DEBUG -c $< -o $@
 
 .PHONY : clean
-clean :
-	$(RM) 1DSchrodinger.so 1DSchrodinger.o
+clean:
+	@$(RM) 1DSchrodinger.so 1DSchrodinger.o
