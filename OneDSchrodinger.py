@@ -46,7 +46,20 @@ def cFillPsi(step, EigenEs, V, m, xmin=0, xmax=None):
                   V[xmin:xmax], m[xmin:xmax], psis)
     return psis.reshape((EigenEs.size, xmax-xmin))
 
+clib.CoulombField.argtypes = [c_double, c_int, _doubleArray, _doubleArray, 
+                              _doubleArray]
+clib.CoulombField.restype = c_double
+def cCoulombField(step, eDensity, eps, xmin=0, xmax=None): 
+    if not xmax:
+        xmax = eDensity.size
+    if not isinstance(eps, np.ndarray):
+        eps = eps*np.ones(V.size)
+    Vc = np.empty(xmax-xmin)
+    clib.CoulombField(c_double(step), xmax-xmin, eDensity[xmin:xmax],
+                      eps[xmin:xmax], Vc)
+    return Vc
+
 if __name__ == "__main__":
-    print(clib.answer())
+    print(clib.invAlpha())
 
 # vim: ts=4 sw=4 sts=4 expandtab
