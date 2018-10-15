@@ -141,7 +141,7 @@ double Boltzmann(double T, double EF, const double *EigenEs, numpyint EN,
 			eDensity[j] += sq(psi[j])*DoS2D*kt*exp(-DeltaE/kt);
 			/* sheetDensity += eDensity[j]*step; --> X */
 		}
-		sheetDensity += DoS2D*(EF-EigenEs[i]); 
+		sheetDensity += DoS2D*kt*exp(-DeltaE/kt); 
 		/* psi is normalized.. It's equivlent with X */
 	}
 	return sheetDensity;
@@ -159,6 +159,9 @@ double BoltzmannN(double T, double sheet, const double *EigenEs, numpyint EN,
 	 */
 	double sheet0 = Boltzmann(T, 0, EigenEs, EN, m, psis, N, step, eDensity); 
 	double EF = kb * T * log(sheet / sheet0);
+#ifdef __DEBUG
+	printf("Sheet density = %e at EF = 0, so EF = %e\n", sheet0, EF);
+#endif
 	int i;
 	for(i=0; i<N; i++) {
 		eDensity[i] *= sheet/sheet0;
