@@ -38,8 +38,8 @@ def triangle_well(F, xmax = 1E3):
     EigenEs_th = -(hbar**2*F**2/(2*m_e*mass*e*ANG**2))**(1/3)*an
     psis_th = np.array([airy((2*mass*m_e*e*ANG**2*F/hbar**2)**(1/3) * (x-E/F))[0] 
                      for E in EigenEs_th])
-    V=V[::-1]
-    psis = psis[:,::-1]
+    V = np.ascontiguousarray(V[::-1])
+    psis = np.ascontiguousarray(psis[:,::-1])
     print("Eigen Energy: ", EigenEs)
     print("Thoery: ", EigenEs_th)
     print("Diff: ", EigenEs - EigenEs_th)
