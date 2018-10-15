@@ -5,15 +5,17 @@ CFLAGS = -Ofast -Wall -c -fPIC
 
 .PHONY : all
 .DEFAULT : all
-all: 1DSchrodinger.so
+.SECONDARY : 
 
-1DSchrodinger.so : 1DSchrodinger.o
+all: 1DSchrodinger.so 1DThermal.so
+
+%.so : %.o
 	$(CC) -shared -fPIC $< -o $@ -lm
 
 %.o: %.c science.h
-	$(CC) $(CFLAGS) -c $< -o $@
-	# $(CC) $(CFLAGS) -D __DEBUG -c $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
+	# $(CC) $(CFLAGS) -D __DEBUG $< -o $@
 
 .PHONY : clean
-clean:
-	@$(RM) 1DSchrodinger.so 1DSchrodinger.o
+clean :
+	@$(RM) {1DSchrodinger,1DThermal}.{so,o}
