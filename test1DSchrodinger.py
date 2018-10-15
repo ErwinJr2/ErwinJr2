@@ -25,7 +25,6 @@ def square_well(x0=0, x1=100, x2=300, x3=400, Vmax=0.287):
 def triangle_well(F, xmax = 1E3): 
     x = np.linspace(0, xmax, 5000)
     step = x[1]-x[0]
-    print("step: ",step)
     V = F * (xmax - x)
     mass = 0.067
     Es = np.linspace(0, 0.15, 100)
