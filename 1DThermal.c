@@ -41,8 +41,8 @@ double FermiDirac0(double EF, const double *EigenEs, numpyint EN,
 		for(j=0; j<N; j++) {
 			invM += sq(psi[j])/m[j];
 		}
-		DoS2D = 1/(M_PI*sq(hbar)*invM); 
-		/* DoS2D_2D = m/(pi*\hbar^2), spin included. */
+		DoS2D = m0/(M_PI*sq(hbar)*invM)*sq(ANG)*e0; 
+		/* DoS2D_2D = m/(pi*\hbar^2), spin included, Unit Angstrom^-2eV^-1 */
 		for(j=0; j<N; j++) {
 			eDensity[j] += sq(psi[j])*DoS2D*(EF - EigenEs[i]);
 			/* sheetDensity += eDensity[j]*step; --->X */
@@ -79,19 +79,22 @@ double FermiDirac0N(double sheet, const double *EigenEs, numpyint EN,
 		for(j=0; j<N; j++) {
 			invM += sq(psi[j])/m[j];
 		}
-		DoS2Dsum += 1/(M_PI*sq(hbar)*invM); 
-		/* DoS2D_2D = m/(pi*\hbar^2), spin included. */
+		DoS2Dsum += m0/(M_PI*sq(hbar)*invM)*sq(ANG)*e0; 
+		/* DoS2D_2D = m/(pi*\hbar^2), spin included, Unit Angstrom^-2eV^-1 */
+#ifdef __DEBUG 
+		printf("Energy at %e, Dossum=%e\n", EigenEs[i], DoS2Dsum);
+#endif
 		Emax = (sheet - sheetDensity)/(DoS2Dsum); 
-		if(i == EN-1 || Emax <= EigenEs[i+1]) {
+		if(i == EN-1 || EigenEs[i] + Emax <= EigenEs[i+1]) {
 			for(j=0; j<N; j++) {
-				eDensity[j] += sq(psi[j])*DoS2Dsum*(Emax - EigenEs[i]);
+				eDensity[j] += sq(psi[j])*DoS2Dsum*Emax;
 			}
-			return Emax;
+			return EigenEs[i] + Emax;
 		}
 		for(j=0; j<N; j++) {
-			eDensity[j] += sq(psi[j])*DoS2Dsum*step*(
-					EigenEs[i+1]-EigenEs[i]);
+			eDensity[j] += sq(psi[j])*DoS2Dsum*(EigenEs[i+1]-EigenEs[i]);
 		}
+		sheetDensity += DoS2Dsum * (EigenEs[i+1]-EigenEs[i]);
 	}
 	printf("Error: You shouldn't reach here!");
 	return NAN;
@@ -132,8 +135,8 @@ double Boltzmann(double T, double EF, const double *EigenEs, numpyint EN,
 		for(j=0; j<N; j++) {
 			invM += sq(psi[j])/m[j];
 		}
-		DoS2D = 1/(M_PI*sq(hbar)*invM); 
-		/* DoS2D = m/(pi*\hbar^2), spin included. */
+		DoS2D = m0/(M_PI*sq(hbar)*invM)*sq(ANG)*e0; 
+		/* DoS2D_2D = m/(pi*\hbar^2), spin included, Unit Angstrom^-2eV^-1 */
 		for(j=0; j<N; j++) {
 			eDensity[j] += sq(psi[j])*DoS2D*kt*exp(-DeltaE/kt);
 			/* sheetDensity += eDensity[j]*step; --> X */
