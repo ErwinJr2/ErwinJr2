@@ -47,14 +47,14 @@ def cBoltzmann(T, EF, EigenEs, m, psis, step):
     return eDensity, 
 
 _clib.BoltzmannN.argtypes = [c_double, c_double, _doubleArray, c_int,
-                              _doubleArray, _doubleArray, _doubleMatrix,
-                              c_int, c_double, _doubleArray]
+                              _doubleArray, _doubleMatrix, c_int,
+                             c_double, _doubleArray]
 _clib.BoltzmannN.restype = c_double
 def cBoltzmannN(T, sheet, EigenEs, m, psis, step):
     if not isinstance(m, np.ndarray):
         m = m*np.ones(psis.shape[1])
     eDensity = np.empty(psis.shape[1])
-    EF = _clib.cBoltzmannN(c_double(T), c_double(sheet), EigenEs,
+    EF = _clib.BoltzmannN(c_double(T), c_double(sheet), EigenEs,
                            EigenEs.size, m, psis, psis.shape[1], 
                            c_double(step), eDensity)
     return eDensity, EF
