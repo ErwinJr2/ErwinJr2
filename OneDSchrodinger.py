@@ -53,7 +53,7 @@ def cCoulombField(step, eDensity, eps, xmin=0, xmax=None):
     if not xmax:
         xmax = eDensity.size
     if not isinstance(eps, np.ndarray):
-        eps = eps*np.ones(V.size)
+        eps = eps*np.ones(eDensity.size)
     Vc = np.empty(xmax-xmin)
     _clib.CoulombField(c_double(step), xmax-xmin, eDensity[xmin:xmax],
                       eps[xmin:xmax], Vc)
