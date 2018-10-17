@@ -29,7 +29,7 @@ if __name__ == "__main__":
     #                               0.067, psis, x[1]-x[0])
     eDensity, EF = cFermiDirac0N(sheet, EigenEs, 
                                  0.067, psis, x[1]-x[0])
-    Vc = cCoulombField(x[1]-x[0], -eDensity, 3)
+    Vc = cCoulombField0(x[1]-x[0], -eDensity, 3)
     #  plot(x, EF + eDensity/np.max(eDensity)*0.1, '--')
     fill_between(x, EF + eDensity/np.max(eDensity)*0.1, EF, alpha=0.3)
     plot(x, Vc)
