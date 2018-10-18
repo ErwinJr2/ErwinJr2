@@ -99,7 +99,7 @@ double FermiDirac0N(double sheet, const double *EigenEs, numpyint EN,
 		}
 		sheetDensity += DoS2Dsum * (EigenEs[i+1]-EigenEs[i]);
 	}
-	printf("Error: You shouldn't reach here!");
+	printf("Error: You shouldn't reach here!\n");
 	return NAN;
 }
 
