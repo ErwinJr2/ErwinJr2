@@ -30,8 +30,7 @@ __declspec(dllexport)
 #endif // _WINDLL
 double Numerov(double step, numpyint N, double y0, double y1, 
 		double E, const double *V, const double *m, double *y) {
-	/* 
-	 * An ODE solver for -hbar^2/(2*m(x)) * y''(x) + V(x) * y = E * y(x)
+	/* An ODE solver for -hbar^2/(2*m(x)) * y''(x) + V(x) * y = E * y(x)
 	 * with starting x0 and y0, y1, ends at x0 + step*N (x0 label 0)
 	 * using Numerov algorithm
 	 * E and V are in unit eV, m are in unit m0 (free electron mass)
@@ -56,8 +55,7 @@ __declspec(dllexport)
 #endif // _WINDLL
 void FillPsi(double step, numpyint N, const double *EigenEs, numpyint EN, 
 		const double *V, const double *m, double* psis) {
-	/* 
-	 * Fill in wavefunctions in psis accroding to eigen energy in EigenEs. 
+	/* Fill in wavefunctions in psis accroding to eigen energy in EigenEs. 
 	 * psi + i*N*sizeof(double) is the wavefunction with Energy EigenEs[i] 
 	 * The result is normalized to 1
 	 */
@@ -81,8 +79,7 @@ void FillPsi(double step, numpyint N, const double *EigenEs, numpyint EN,
 }
 
 #define findZero(x, y, n) ((y[n]*x[n-1] - y[n-1]*x[n])/ (y[n] - y[n-1]))
-/*
- * Find zero x_n between x[n-1] and x[n] of function y(x), 
+/* Find zero x_n between x[n-1] and x[n] of function y(x), 
  * s.t. y(x_n) = 0
  * using linear interpolation (to be improved?)
  * assuming y[n] and y[n-1] is opposite sign
@@ -111,12 +108,11 @@ numpyint SimpleSolve1D(double step, numpyint N,
 	yend = (double *)malloc(EN * sizeof(double));
 #ifdef __MP
 	#pragma omp parallel for private(y)
+	for(i=0; i<EN; i++) {
+		y = (double *)malloc(N * sizeof(double));
 #else 
 	y = (double *)malloc(N * sizeof(double));
-#endif
 	for(i=0; i<EN; i++) {
-#ifdef __MP
-		y = (double *)malloc(N * sizeof(double));
 #endif
 		yend[i] = Numerov(step, N, 0.0, Y_EPS, Es[i], V, m, y);
 #ifdef __MP
