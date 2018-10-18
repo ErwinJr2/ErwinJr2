@@ -33,16 +33,16 @@ def cSimpleSolve1D(step, Es, V, m, xmin=0, xmax=None):
                                  V[xmin:xmax], m[xmin:xmax], EigenE)
     return EigenE[:EigenEN]
 
-_clib.FillPsi.argtypes = [c_double, c_int, _doubleArray, c_int, 
+_clib.SimpleFillPsi.argtypes = [c_double, c_int, _doubleArray, c_int, 
                          _doubleArray, _doubleArray, _doubleArray]
-_clib.FillPsi.restype = None
-def cFillPsi(step, EigenEs, V, m, xmin=0, xmax=None): 
+_clib.SimpleFillPsi.restype = None
+def cSimpleFillPsi(step, EigenEs, V, m, xmin=0, xmax=None): 
     if not xmax:
         xmax = V.size
     if not isinstance(m, np.ndarray):
         m = m*np.ones(V.size)
     psis = np.empty(EigenEs.size*(xmax-xmin))
-    _clib.FillPsi(c_double(step), xmax-xmin, EigenEs, EigenEs.size, 
+    _clib.SimpleFillPsi(c_double(step), xmax-xmin, EigenEs, EigenEs.size, 
                   V[xmin:xmax], m[xmin:xmax], psis)
     return psis.reshape((EigenEs.size, xmax-xmin))
 
