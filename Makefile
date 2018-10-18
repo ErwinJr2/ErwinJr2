@@ -7,7 +7,7 @@ CFLAGS = -Ofast -Wall -c -fPIC
 .DEFAULT : all
 .SECONDARY : 
 
-all: 1DSchrodinger.so 1DThermal.so
+all: 1DSchrodinger.so 1DThermal.so 1DSelfConsistant.so
 
 %.so : %.o
 	$(CC) -shared -fPIC $< -o $@ -lm

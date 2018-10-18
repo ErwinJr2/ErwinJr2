@@ -4,6 +4,7 @@ from pylab import *
 from scipy.constants import hbar, e, m_e, pi
 from OneDSchrodinger import * 
 from OneDThermal import *
+from OneDSelfConsistant import *
 ANG=1E-8 # angstrom in cm
 
 def triangle_well(F, sheet, xmax = 1E3): 
