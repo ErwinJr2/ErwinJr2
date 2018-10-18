@@ -175,8 +175,8 @@ numpyint SimpleSolve1D(double step, numpyint N,
 		}
 #ifdef __MP
 		#pragma omp ordered
-		EigenE[NofZeros++] = E0;
 #endif
+		EigenE[NofZeros++] = E0;
 	}
 
 #ifndef __MP
