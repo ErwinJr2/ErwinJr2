@@ -54,6 +54,7 @@ double FermiDirac0(double EF, const double *EigenEs, numpyint EN,
 	return sheetDensity;
 }
 
+
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif // _WINDLL
@@ -103,6 +104,7 @@ double FermiDirac0N(double sheet, const double *EigenEs, numpyint EN,
 	return NAN;
 }
 
+
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif // _WINDLL
@@ -151,6 +153,7 @@ double Boltzmann(double T, double EF, const double *EigenEs, numpyint EN,
 	return sheetDensity;
 }
 
+
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif // _WINDLL
@@ -173,11 +176,13 @@ double BoltzmannN(double T, double sheet, const double *EigenEs, numpyint EN,
 	return EF;
 }
 
+
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif // _WINDLL
 numpyint answer()
 {return 42;}
+
 
 #ifdef __cplusplus
 }
