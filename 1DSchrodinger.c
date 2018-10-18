@@ -129,19 +129,17 @@ numpyint SimpleSolve1D(double step, numpyint N,
 	#pragma omp parallel for private(y) ordered
 #endif
 	for(i=1; i<EN; i++) {
+		double E0;
 		if(yend[i] == 0) {
-			EigenE[NofZeros++] = Es[i-1]; 
-			continue; 
+			E0 = Es[i-1];
 		}
 		else if(yend[i] == Es[i-1]) {
 			continue;
 		}
 		else if(yend[i]*yend[i-1] < 0) {
-#ifdef SIMPLE
-			EigenE[NofZeros++] = findZero(Es, yend, i);
-#else
+			E0 = findZero(Es, yend, i);
+#ifndef SIMPLE
 			int count=0; 
-			double E0 = findZero(Es, yend, i);
 			double y0;
 	#ifdef __MP
 			y = (double *)malloc(N * sizeof(double));
@@ -169,11 +167,16 @@ numpyint SimpleSolve1D(double step, numpyint N,
 	#ifdef __MP
 			free(y);
 			y = NULL;
-			#pragma omp ordered
 	#endif
-			EigenE[NofZeros++] = E0;
 #endif
 		}
+		else {
+			continue;
+		}
+#ifdef __MP
+		#pragma omp ordered
+		EigenE[NofZeros++] = E0;
+#endif
 	}
 
 #ifndef __MP
