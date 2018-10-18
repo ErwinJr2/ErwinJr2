@@ -50,6 +50,7 @@ double Numerov(double step, numpyint N, double y0, double y1,
 	return y[N-1];
 }
 
+
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif // _WINDLL
@@ -78,6 +79,7 @@ void FillPsi(double step, numpyint N, const double *EigenEs, numpyint EN,
 	return; 
 }
 
+
 #define findZero(x, y, n) ((y[n]*x[n-1] - y[n-1]*x[n])/ (y[n] - y[n-1]))
 /* Find zero x_n between x[n-1] and x[n] of function y(x), 
  * s.t. y(x_n) = 0
@@ -85,6 +87,7 @@ void FillPsi(double step, numpyint N, const double *EigenEs, numpyint EN,
  * assuming y[n] and y[n-1] is opposite sign
  * return x_n
  */
+
 
 #ifdef _WINDLL
 __declspec(dllexport)
@@ -182,12 +185,15 @@ numpyint SimpleSolve1D(double step, numpyint N,
 	return NofZeros;
 }
 
+
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif // _WINDLL
 numpyint invAlpha()
 {return 137;}
 
+
 #ifdef __cplusplus
 }
 #endif
+

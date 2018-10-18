@@ -7,10 +7,10 @@
 #endif 
 #include "science.h"
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 
 #ifdef _WINDLL
 __declspec(dllexport)
@@ -41,6 +41,7 @@ double CoulombField(double step, numpyint N,
 	return D;
 }
 
+
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif // _WINDLL
@@ -66,6 +67,8 @@ __declspec(dllexport)
 numpyint speedOfLight()
 {return 299792458;}
 
+
 #ifdef __cplusplus
 }
 #endif
+
