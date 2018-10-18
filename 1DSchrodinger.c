@@ -108,12 +108,26 @@ numpyint SimpleSolve1D(double step, numpyint N,
 	int NofZeros=0;
 	int i;
 
-	y = (double *)malloc(N * sizeof(double));
 	yend = (double *)malloc(EN * sizeof(double));
+#ifdef __MP
+	#pragma omp parallel for private(y)
+#else 
+	y = (double *)malloc(N * sizeof(double));
+#endif
 	for(i=0; i<EN; i++) {
+#ifdef __MP
+		y = (double *)malloc(N * sizeof(double));
+#endif
 		yend[i] = Numerov(step, N, 0.0, Y_EPS, Es[i], V, m, y);
+#ifdef __MP
+		free(y);
+		y = NULL;
+#endif
 	}
 
+#ifdef __MP
+	#pragma omp parallel for private(y) ordered
+#endif
 	for(i=1; i<EN; i++) {
 		if(yend[i] == 0) {
 			EigenE[NofZeros++] = Es[i-1]; 
@@ -128,31 +142,43 @@ numpyint SimpleSolve1D(double step, numpyint N,
 #else
 			int count=0; 
 			double E0 = findZero(Es, yend, i);
-			double y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
+			double y0;
+	#ifdef __MP
+			y = (double *)malloc(N * sizeof(double));
+	#endif
+			y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
 			while(fabs(y0) > NEWTON && count < 20){
 				double y1 = Numerov(step, N, 0.0, Y_EPS, E0+NSTEP, V, m, y);
 				double y2 = Numerov(step, N, 0.0, Y_EPS, E0-NSTEP, V, m, y);
 				double dy = (y1 - y2)/(2*NSTEP);
 				if(y1*y2 < 0) {
-#ifdef __DEBUG
-					printf("  solution error smaller than step%d.\n", count);
-#endif
+	#ifdef __DEBUG
+					printf("  solution error smaller than step at E=%e,"
+							" (count=%d).\n", E0, count);
+	#endif
 					break;
 				}
 				E0 -= y0/dy;
 				y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
 				count++;
 			}
-#ifdef __DEBUG
+	#ifdef __DEBUG
 			printf("After %d times Newton, E=%f Err=%e\n", 
 					count, E0, fabs(y0));
-#endif
+	#endif
+	#ifdef __MP
+			free(y);
+			y = NULL;
+			#pragma omp ordered
+	#endif
 			EigenE[NofZeros++] = E0;
 #endif
 		}
 	}
 
+#ifndef __MP
 	free(y);
+#endif
 	free(yend);
 	return NofZeros;
 }
