@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 import numpy as np
 from ctypes import *
-_clib = np.ctypeslib.load_library('1DSelfConsistant', '.')
+_clib = np.ctypeslib.load_library('1DMaxwell', '.')
 _doubleArray = np.ctypeslib.ndpointer(
     dtype=np.float64, ndim=1, flags="C_CONTIGUOUS")
 
