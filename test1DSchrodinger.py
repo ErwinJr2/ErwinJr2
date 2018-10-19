@@ -29,7 +29,7 @@ def triangle_well(F, xmax = 1E3):
     mass = 0.067
     Es = np.linspace(0, 0.15, 100)
     EigenEs = cSimpleSolve1D(step, Es, V, mass)
-    psis = cFillPsi(step, EigenEs, V, mass)
+    psis = cSimpleFillPsi(step, EigenEs, V, mass)
     #  an = np.arange(0, 8) + 0.75
     #  EigenEs_th = (hbar**2/(2*m_e*mass*e*ANG**2)*(3*pi*F*an/2)**2)**(1/3)
     # Above is approximate Airy zeros result

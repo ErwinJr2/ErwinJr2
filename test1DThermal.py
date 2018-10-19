@@ -13,7 +13,7 @@ def triangle_well(F, xmax = 1E3):
     mass = 0.067
     Es = np.linspace(0, 0.15, 100)
     EigenEs = cSimpleSolve1D(step, Es, V, mass)
-    psis = cFillPsi(step, EigenEs, V, mass)
+    psis = cSimpleFillPsi(step, EigenEs, V, mass)
     V = np.ascontiguousarray(V[::-1])
     psis = np.ascontiguousarray(psis[:,::-1])
     plot(x, V)
