@@ -61,12 +61,14 @@ void SimpleFillPsi(double step, numpyint N, const double *EigenEs,
 	 * The result is normalized to 1
 	 */
 	int i; 
-	double modsq;
+#ifdef __MP
+	#pragma omp parallel for
+#endif
 	for(i=0; i<EN; i++) {
 		int j;
 		double* psi = psis + i*N;
+		double modsq = 0;
 		Numerov(step, N, 0.0, Y_EPS, EigenEs[i], V, m, psi);
-		modsq = 0; 
 		/* Normalization */
 		for(j=0; j<N; j++) {
 			modsq += sq(psi[j]);
