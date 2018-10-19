@@ -27,7 +27,7 @@ extern "C" {
 
 #ifdef _WINDLL
 __declspec(dllexport)
-#endif // _WINDLL
+#endif 
 double Numerov(double step, numpyint N, double y0, double y1, 
 		double E, const double *V, const double *m, double *y) {
 	/* An ODE solver for -hbar^2/(2*m(x)) * y''(x) + V(x) * y = E * y(x)
@@ -53,7 +53,7 @@ double Numerov(double step, numpyint N, double y0, double y1,
 
 #ifdef _WINDLL
 __declspec(dllexport)
-#endif // _WINDLL
+#endif 
 void SimpleFillPsi(double step, numpyint N, const double *EigenEs,
 		numpyint EN, const double *V, const double *m, double* psis) {
 	/* Fill in wavefunctions in psis accroding to eigen energy in EigenEs. 
@@ -93,7 +93,7 @@ void SimpleFillPsi(double step, numpyint N, const double *EigenEs,
 
 #ifdef _WINDLL
 __declspec(dllexport)
-#endif // _WINDLL
+#endif 
 numpyint SimpleSolve1D(double step, numpyint N, 
 		const double *Es, numpyint EN, 
 		const double *V, const double *m, 
@@ -190,7 +190,7 @@ numpyint SimpleSolve1D(double step, numpyint N,
 
 #ifdef _WINDLL
 __declspec(dllexport)
-#endif // _WINDLL
+#endif 
 numpyint invAlpha()
 {return 137;}
 

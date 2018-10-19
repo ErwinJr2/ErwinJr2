@@ -14,7 +14,7 @@ extern "C" {
 
 #ifdef _WINDLL
 __declspec(dllexport)
-#endif // _WINDLL
+#endif 
 double CoulombField(double step, numpyint N, 
 		const double *eDensity, const double *eps,
 		double *Vc) {
@@ -44,7 +44,7 @@ double CoulombField(double step, numpyint N,
 
 #ifdef _WINDLL
 __declspec(dllexport)
-#endif // _WINDLL
+#endif 
 double CoulombField0(double step, numpyint N, 
 		const double *eDensity, const double *eps,
 		double *Vc) {
@@ -63,7 +63,7 @@ double CoulombField0(double step, numpyint N,
 
 #ifdef _WINDLL
 __declspec(dllexport)
-#endif // _WINDLL
+#endif 
 numpyint speedOfLight()
 {return 299792458;}
 
