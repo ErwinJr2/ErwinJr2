@@ -14,7 +14,7 @@ extern "C" {
 
 #ifdef _WINDLL
 __declspec(dllexport)
-#endif // _WINDLL
+#endif 
 double FermiDirac0(double EF, const double *EigenEs, numpyint EN, 
 		const double *m, const double* psis, numpyint N, double step, 
 		double* eDensity) {
@@ -57,7 +57,7 @@ double FermiDirac0(double EF, const double *EigenEs, numpyint EN,
 
 #ifdef _WINDLL
 __declspec(dllexport)
-#endif // _WINDLL
+#endif 
 double FermiDirac0N(double sheet, const double *EigenEs, numpyint EN, 
 		const double *m, const double* psis, numpyint N, double step, 
 		double* eDensity) {
@@ -107,7 +107,7 @@ double FermiDirac0N(double sheet, const double *EigenEs, numpyint EN,
 
 #ifdef _WINDLL
 __declspec(dllexport)
-#endif // _WINDLL
+#endif 
 double Boltzmann(double T, double EF, const double *EigenEs, numpyint EN, 
 		const double *m, const double* psis, numpyint N, double step,
 		double* eDensity) {
@@ -156,7 +156,7 @@ double Boltzmann(double T, double EF, const double *EigenEs, numpyint EN,
 
 #ifdef _WINDLL
 __declspec(dllexport)
-#endif // _WINDLL
+#endif 
 double BoltzmannN(double T, double sheet, const double *EigenEs, numpyint EN, 
 		const double *m, const double* psis, numpyint N, double step,
 		double* eDensity) {
@@ -179,7 +179,7 @@ double BoltzmannN(double T, double sheet, const double *EigenEs, numpyint EN,
 
 #ifdef _WINDLL
 __declspec(dllexport)
-#endif // _WINDLL
+#endif 
 numpyint answer()
 {return 42;}
 

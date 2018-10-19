@@ -15,5 +15,5 @@ const double ANG = 1E-10;
 typedef int32_t numpyint;
 #else
 typedef int64_t numpyint;
-#endif // _WINDLL
+#endif
 #endif /* ifndef __SCIENCE */
