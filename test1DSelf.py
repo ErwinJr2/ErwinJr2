@@ -19,7 +19,7 @@ def triangle_well(F, sheet, xmax = 1E3):
         EigenEs_old = EigenEs
         EigenEs = cSimpleSolve1D(step, Es, V, mass)
         print(EigenEs)
-        psis = cFillPsi(step, EigenEs, V, mass)
+        psis = cSimpleFillPsi(step, EigenEs, V, mass)
         eDensity, EF = cFermiDirac0N(sheet, EigenEs, 
                                      0.067, psis, x[1]-x[0])
         Vc = cCoulombField(x[1]-x[0], -eDensity, 3)
