@@ -18,6 +18,7 @@ typedef struct BAND{
 	double *m;       /* Effective mass in electron mass m0 */
 	double *Eg;      /* Band gap in eV */
 } Band; 
+numpyint UpdateBand(Band *, double);
 
 Band *ZBband_new(numpyint N, const double *xEg, const double *xVc, 
 		const double *xF, const double *xEp, const double *xESO);

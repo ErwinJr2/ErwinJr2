@@ -207,7 +207,7 @@ void BandFillPsi(double step, numpyint N, const double *EigenEs,
 		int j;
 		double* psi = psis + i*N;
 		double modsq = 0;
-		mat->update(mat, EigenEs[i]);
+		UpdateBand(mat, EigenEs[i]);
 		Numerov(step, N, 0.0, Y_EPS, EigenEs[i], mat->V, mat->m, psi);
 		/* Normalization */
 		for(j=0; j<N; j++) {
@@ -252,7 +252,7 @@ numpyint BandSolve1D(double step, numpyint N,
 	y = (double *)malloc(N * sizeof(double));
 	for(i=0; i<EN; i++) {
 #endif
-		mat->update(mat, Es[i]);
+		UpdateBand(mat, Es[i]);
 		yend[i] = Numerov(step, N, 0.0, Y_EPS, Es[i], mat->V, mat->m, y);
 #ifdef __MP
 		free(y);
@@ -279,13 +279,13 @@ numpyint BandSolve1D(double step, numpyint N,
 	#ifdef __MP
 			y = (double *)malloc(N * sizeof(double));
 	#endif
-			mat->update(mat, E0);
+			UpdateBand(mat, E0);
 			y0 = Numerov(step, N, 0.0, Y_EPS, E0, mat->V, mat->m, y);
 			while(fabs(y0) > NEWTON && count < 20){
-				mat->update(mat, E0+NSTEP);
+				UpdateBand(mat, E0+NSTEP);
 				double y1 = Numerov(step, N, 0.0, Y_EPS, E0+NSTEP, 
 						mat->V, mat->m, y);
-				mat->update(mat, E0-NSTEP);
+				UpdateBand(mat, E0-NSTEP);
 				double y2 = Numerov(step, N, 0.0, Y_EPS, E0-NSTEP, 
 						mat->V, mat->m, y);
 				double dy = (y1 - y2)/(2*NSTEP);
@@ -297,7 +297,7 @@ numpyint BandSolve1D(double step, numpyint N,
 					break;
 				}
 				E0 -= y0/dy;
-				mat->update(mat, E0);
+				UpdateBand(mat, E0);
 				y0 = Numerov(step, N, 0.0, Y_EPS, E0, mat->V, mat->m, y);
 				count++;
 			}

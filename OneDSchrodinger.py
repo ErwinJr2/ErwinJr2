@@ -2,14 +2,14 @@
 # -*- coding:utf-8 -*-
 import numpy as np
 from ctypes import *
-from band import *
+import band
 _clib = np.ctypeslib.load_library('1DSchrodinger', '.')
 _doubleArray = np.ctypeslib.ndpointer(
     dtype=np.float64, ndim=1, flags="C_CONTIGUOUS")
 __all__ = ['cNumerov', 'cSimpleSolve1D', 'cSimpleFillPsi', 
-           'cZBband_new', 'cZBband_free']
+           'cUpdateBand', 'cZBband_new', 'cZBband_free']
 
-cZBband_new, cZBband_free = getZBband(_clib)
+cUpdateBand, cZBband_new, cZBband_free = band.init(_clib)
 _clib.Numerov.argtypes = [c_double, c_int, c_double, c_double, 
                          c_double, _doubleArray, _doubleArray, _doubleArray]
 _clib.Numerov.restype = c_double

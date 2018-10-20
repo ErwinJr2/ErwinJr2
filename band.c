@@ -1,5 +1,8 @@
 #include "band.h"
 /* Zincblende structure band, compatiable with structure BAND */
+numpyint UpdateBand(Band *band, double E) {
+	return band->update(band, E);
+}
 typedef struct ZBBAND {
 	UpdateFunc updateM;
 	numpyint N;

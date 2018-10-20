@@ -12,7 +12,11 @@ class Band(Structure):
                 ("m", POINTER(c_double)),
                 ("Eg", POINTER(c_double))]
 
-def getZBband(clib):
+def init(clib):
+    clib.UpdateBand.argtypes = [POINTER(Band), c_double]
+    clib.UpdateBand.restype = c_int
+    def cUpdateBand(band, E):
+        return clib.UpdateBand(band, c_double(E))
     clib.ZBband_new.argtypes = [c_int, _doubleArray, _doubleArray, 
                                 _doubleArray, _doubleArray, _doubleArray]
     clib.ZBband_new.restype = POINTER(Band)
@@ -22,6 +26,6 @@ def getZBband(clib):
     clib.ZBband_free.restype = None
     def cZBband_free(zbband):
         return clib.ZBband_free(zbband)
-    return cZBband_new, cZBband_free
+    return cUpdateBand, cZBband_new, cZBband_free
 
 # vim: ts=4 sw=4 sts=4 expandtab
