@@ -1,19 +1,6 @@
 #include "band.h"
-
-struct ZBBAND {
-	/* Zincblende structure band */
-	UpdateFunc updateM;
-	int N;           /* Size of datas */
-	const double *xVc;
-	double *m;
-	const double *xEg;      /* Band gap in eV */
-	const double *xF;
-	const double *xEp; 
-	const double *xESO;
-};
-
-
-int ZBupdateM(Band *mat, double Eq) {
+/* Update effective mass of a Zincblende band semiconductor */
+numpyint ZBupdateM(Band *mat, double Eq) {
 	ZBBand *zbmat = (ZBBand *) mat;
 	int q; 
 	for(q=0; q<zbmat->N; q++) {
@@ -25,8 +12,8 @@ int ZBupdateM(Band *mat, double Eq) {
 	return zbmat->N;
 }
 
-ZBBand *ZBband_new(int N, const double *xEg, const double *xVc, 
-		const double *xF, const double *xEp, const double *xESO, double *x) {
+ZBBand *ZBband_new(numpyint N, const double *xEg, const double *xVc, 
+		const double *xF, const double *xEp, const double *xESO) {
 	ZBBand *zbband = (ZBBand *) malloc( sizeof(ZBBand) );
 	zbband->updateM = ZBupdateM;
 	zbband->N = N; 
