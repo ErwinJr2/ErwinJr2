@@ -5,6 +5,7 @@ from ctypes import *
 _clib = np.ctypeslib.load_library('1DMaxwell', '.')
 _doubleArray = np.ctypeslib.ndpointer(
     dtype=np.float64, ndim=1, flags="C_CONTIGUOUS")
+__all__ = ['cCoulombField', 'cCoulombField0']
 
 _clib.CoulombField.argtypes = [c_double, c_int, _doubleArray, _doubleArray, 
                               _doubleArray]

@@ -7,6 +7,7 @@ _doubleArray = np.ctypeslib.ndpointer(
     dtype=np.float64, ndim=1, flags="C_CONTIGUOUS")
 _doubleMatrix = np.ctypeslib.ndpointer(dtype=np.float64, 
                                        ndim=2, flags="C_CONTIGUOUS")
+__all__ = ['cFermiDirac0', 'cFermiDirac0N', 'cBoltzmann', 'cBoltzmannN']
 
 _clib.FermiDirac0.argtypes = [c_double, _doubleArray, c_int,
                               _doubleArray, _doubleMatrix, c_int, c_double,
