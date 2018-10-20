@@ -26,3 +26,9 @@ ZBBand *ZBband_new(numpyint N, const double *xEg, const double *xVc,
 	return zbband; 
 }
 
+void ZBband_free(ZBBand * zbband) {
+	free(zbband->m);
+	free(zbband);
+	return;
+}
+

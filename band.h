@@ -32,5 +32,6 @@ typedef struct ZBBAND {
 }ZBBand; 
 ZBBand *ZBband_new(numpyint N, const double *xEg, const double *xVc, 
 		const double *xF, const double *xEp, const double *xESO);
+void ZBband_free(ZBBand *);
 
 #endif /* ifndef BAND_H */

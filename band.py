@@ -27,6 +27,10 @@ def getZBband(clib):
     clib.ZBband_new.restype = POINTER(ZBband)
     def cZBband_new(xEg, xVc, xF, xEp, xESO):
         return clib.ZBband_new(xEg.size, xEg, xVc, xF, xEp, xESO)
-    return cZBband_new
+    clib.ZBband_free.argtypes = [POINTER(ZBband)]
+    clib.ZBband_free.restype = None
+    def cZBband_free(zbband):
+        return clib.ZBband_free(zbband)
+    return cZBband_new, cZBband_free
 
 # vim: ts=4 sw=4 sts=4 expandtab
