@@ -1,4 +1,16 @@
 #include "band.h"
+/* Zincblende structure band, compatiable with structure BAND */
+typedef struct ZBBAND {
+	UpdateFunc updateM;
+	numpyint N;
+	const double *xVc;
+	double *m;
+	const double *xEg;
+	const double *xF;
+	const double *xEp; 
+	const double *xESO;
+}ZBBand; 
+
 /* Update effective mass of a Zincblende band semiconductor */
 numpyint ZBupdateM(Band *mat, double Eq) {
 	ZBBand *zbmat = (ZBBand *) mat;
@@ -12,7 +24,7 @@ numpyint ZBupdateM(Band *mat, double Eq) {
 	return zbmat->N;
 }
 
-ZBBand *ZBband_new(numpyint N, const double *xEg, const double *xVc, 
+Band *ZBband_new(numpyint N, const double *xEg, const double *xVc, 
 		const double *xF, const double *xEp, const double *xESO) {
 	ZBBand *zbband = (ZBBand *) malloc( sizeof(ZBBand) );
 	zbband->updateM = ZBupdateM;
@@ -23,12 +35,12 @@ ZBBand *ZBband_new(numpyint N, const double *xEg, const double *xVc,
 	zbband->xEp = xEp; 
 	zbband->xESO = xESO;
 	zbband->m = (double *)malloc( N*sizeof(double) );
-	return zbband; 
+	return (Band *) zbband; 
 }
 
-void ZBband_free(ZBBand * zbband) {
-	free(zbband->m);
-	free(zbband);
+void ZBband_free(Band *zbband) {
+	free( ((ZBBand *) zbband)->m );
+	free( (ZBBand *) zbband );
 	return;
 }
 

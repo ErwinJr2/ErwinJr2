@@ -19,19 +19,8 @@ typedef struct BAND{
 	double *Eg;      /* Band gap in eV */
 } Band; 
 
-/* Zincblende structure band, compatiable with structure BAND */
-typedef struct ZBBAND {
-	UpdateFunc updateM;
-	numpyint N;
-	const double *xVc;
-	double *m;
-	const double *xEg;
-	const double *xF;
-	const double *xEp; 
-	const double *xESO;
-}ZBBand; 
-ZBBand *ZBband_new(numpyint N, const double *xEg, const double *xVc, 
+Band *ZBband_new(numpyint N, const double *xEg, const double *xVc, 
 		const double *xF, const double *xEp, const double *xESO);
-void ZBband_free(ZBBand *);
+void ZBband_free(Band *);
 
 #endif /* ifndef BAND_H */
