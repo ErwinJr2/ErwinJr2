@@ -12,17 +12,21 @@ all: 1DSchrodinger.so 1DThermal.so 1DMaxwell.so
 1DSchrodinger_MP.so : 1DSchrodinger_MP.o
 	$(CC) -shared -fPIC -fopenmp $< -o $@ -lm
 
-%.so : %.o
+%.so : %.o band.o
 	$(CC) -shared -fPIC $< -o $@ -lm
 
-1DSchrodinger_MP.o : 1DSchrodinger.c science.h
+1DSchrodinger.o : 1DSchrodinger.c science.h band.h
+	# $(CC) $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) -D __DEBUG $< -o $@
+
+1DSchrodinger_MP.o : 1DSchrodinger.c science.h band.h
 	# $(CC) $(CFLAGS) -fopenmp -D __MP $< -o $@
 	$(CC) $(CFLAGS) -D __DEBUG -fopenmp -D __MP $< -o $@
 
-%.o : %.c science.h
+%.o : %.c science.h 
 	# $(CC) $(CFLAGS) $< -o $@
 	$(CC) $(CFLAGS) -D __DEBUG $< -o $@
 
 .PHONY : clean
 clean :
-	@$(RM) {1DSchrodinger,1DThermal,1DMaxwell}.{so,o}
+	@$(RM) {1DSchrodinger,1DThermal,1DMaxwell}.{so,o} band.o
