@@ -107,45 +107,47 @@ numpyint SimpleSolve1D(double step, numpyint N,
 	 * or calculate zero using newton's method if SIMPLE is defined
 	 * Es should be in small to large order
 	 */
-	double *y; 
 	double *yend; 
 	int NofZeros=0;
 	int i;
 
 	yend = (double *)malloc(EN * sizeof(double));
 #ifdef __MP
-	#pragma omp parallel  private(y)
-	{
-		y = (double *)malloc(N * sizeof(double));
-	#pragma omp for
-#else 
-	y = (double *)malloc(N * sizeof(double));
+	#pragma omp parallel
 #endif
-	for(i=0; i<EN; i++) {
-		yend[i] = Numerov(step, N, 0.0, Y_EPS, Es[i], V, m, y);
-	}
+	{
+		double *y = (double *)malloc(N * sizeof(double));
+		y = (double *)malloc(N * sizeof(double));
 #ifdef __MP
+		#pragma omp for
+#endif
+		for(i=0; i<EN; i++) {
+			yend[i] = Numerov(step, N, 0.0, Y_EPS, Es[i], V, m, y);
+		}
 		free(y);
 		y = NULL;
 	}
-#endif
 
 #ifdef __MP
-	#pragma omp parallel for private(y) ordered
-	{
-		y = (double *)malloc(N * sizeof(double));
-	#pragma omp for
+	#pragma omp parallel
 #endif
-	for(i=1; i<EN; i++) {
-		double E0;
-		if(yend[i] == 0) {
-			E0 = Es[i-1];
-		}
-		else if(yend[i] == Es[i-1]) {
-			continue;
-		}
-		else if(yend[i]*yend[i-1] < 0) {
-			E0 = findZero(Es, yend, i);
+	{
+	#ifndef SIMPLE
+		double *y = (double *)malloc(N * sizeof(double));
+	#endif
+#ifdef __MP
+		#pragma omp for ordered
+#endif
+		for(i=1; i<EN; i++) {
+			double E0;
+			if(yend[i] == 0) {
+				E0 = Es[i-1];
+			}
+			else if(yend[i] == Es[i-1]) {
+				continue;
+			}
+			else if(yend[i]*yend[i-1] < 0) {
+				E0 = findZero(Es, yend, i);
 #ifndef SIMPLE
 			int count=0; 
 			double y0;
@@ -170,24 +172,19 @@ numpyint SimpleSolve1D(double step, numpyint N,
 					count, E0, fabs(y0));
 	#endif
 #endif
-		}
-		else {
-			continue;
-		}
+			}
+			else {
+				continue;
+			}
 #ifdef __MP
-		#pragma omp ordered
+			#pragma omp ordered
 #endif
-		EigenE[NofZeros++] = E0;
-	}
-	#ifdef __MP
+			EigenE[NofZeros++] = E0;
+		}
 		free(y);
 		y = NULL;
 	}
-	#endif
 
-#ifndef __MP
-	free(y);
-#endif
 	free(yend);
 	return NofZeros;
 }
@@ -207,9 +204,9 @@ void BandFillPsi(double step, numpyint N, const double *EigenEs,
 	#pragma omp parallel 
 #endif
 	{
-	double* m = (double*)malloc(N*sizeof(double));
+		double* m = (double*)malloc(N*sizeof(double));
 #ifdef __MP
-	#pragma imp for
+		#pragma omp for
 #endif
 		for(i=0; i<EN; i++) {
 			int j;
@@ -275,7 +272,7 @@ numpyint BandSolve1D(double step, numpyint N,
 	}
 
 #ifdef __MP
-	#pragma omp parallel ordered
+	#pragma omp parallel
 #endif
 	{
 	#ifndef SIMPLE
@@ -283,7 +280,7 @@ numpyint BandSolve1D(double step, numpyint N,
 		double *m = (double *)malloc(N * sizeof(double));
 	#endif
 #ifdef __MP
-	#pragma omp for
+	#pragma omp for ordered
 #endif
 		for(i=1; i<EN; i++) {
 			double E0;
