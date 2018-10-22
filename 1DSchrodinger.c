@@ -133,9 +133,6 @@ numpyint SimpleSolve1D(double step, numpyint N,
 			if(yend[i] == 0) {
 				E0 = Es[i-1];
 			}
-			else if(yend[i] == yend[i-1]) {
-				continue;
-			}
 			else if(yend[i]*yend[i-1] < 0) {
 				E0 = findZero(Es, yend, i);
 #ifndef SIMPLE
@@ -264,9 +261,6 @@ numpyint BandSolve1D(double step, numpyint N,
 			double E0;
 			if(yend[i] == 0) {
 				E0 = Es[i-1];
-			}
-			else if(yend[i] == yend[i-1]) {
-				continue;
 			}
 			else if(yend[i]*yend[i-1] < 0) {
 				E0 = findZero(Es, yend, i);
