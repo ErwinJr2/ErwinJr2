@@ -114,22 +114,27 @@ numpyint SimpleSolve1D(double step, numpyint N,
 
 	yend = (double *)malloc(EN * sizeof(double));
 #ifdef __MP
-	#pragma omp parallel for private(y)
-	for(i=0; i<EN; i++) {
+	#pragma omp parallel  private(y)
+	{
 		y = (double *)malloc(N * sizeof(double));
+	#pragma omp for
 #else 
 	y = (double *)malloc(N * sizeof(double));
-	for(i=0; i<EN; i++) {
 #endif
+	for(i=0; i<EN; i++) {
 		yend[i] = Numerov(step, N, 0.0, Y_EPS, Es[i], V, m, y);
+	}
 #ifdef __MP
 		free(y);
 		y = NULL;
-#endif
 	}
+#endif
 
 #ifdef __MP
 	#pragma omp parallel for private(y) ordered
+	{
+		y = (double *)malloc(N * sizeof(double));
+	#pragma omp for
 #endif
 	for(i=1; i<EN; i++) {
 		double E0;
@@ -144,9 +149,6 @@ numpyint SimpleSolve1D(double step, numpyint N,
 #ifndef SIMPLE
 			int count=0; 
 			double y0;
-	#ifdef __MP
-			y = (double *)malloc(N * sizeof(double));
-	#endif
 			y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
 			while(fabs(y0) > NEWTON && count < 20){
 				double y1 = Numerov(step, N, 0.0, Y_EPS, E0+NSTEP, V, m, y);
@@ -167,10 +169,6 @@ numpyint SimpleSolve1D(double step, numpyint N,
 			printf("After %d times Newton, E=%f Err=%e\n", 
 					count, E0, fabs(y0));
 	#endif
-	#ifdef __MP
-			free(y);
-			y = NULL;
-	#endif
 #endif
 		}
 		else {
@@ -181,6 +179,11 @@ numpyint SimpleSolve1D(double step, numpyint N,
 #endif
 		EigenE[NofZeros++] = E0;
 	}
+	#ifdef __MP
+		free(y);
+		y = NULL;
+	}
+	#endif
 
 #ifndef __MP
 	free(y);
@@ -201,30 +204,31 @@ void BandFillPsi(double step, numpyint N, const double *EigenEs,
 	assert(N == mat->N);
 #endif
 #ifdef __MP
-	#pragma omp parallel for
-	for(i=0; i<EN; i++) {
-		double* m = (double*)malloc(N*sizeof(double));
-#else
-	double* m = (double*)malloc(N*sizeof(double));
-	for(i=0; i<EN; i++) {
+	#pragma omp parallel 
 #endif
-		int j;
-		double* psi = psis + i*N;
-		double modsq = 0;
-		UpdateBand(mat, EigenEs[i], V, m); /*MP assume only mass is updated*/
-		Numerov(step, N, 0.0, Y_EPS, EigenEs[i], V, m, psi);
-		/* Normalization */
-		for(j=0; j<N; j++) {
-			modsq += sq(psi[j]);
-		}
-		modsq = sqrt(modsq * step);
-		for(j=0; j<N; j++) {
-			psi[j] /= modsq;
-		}
+	{
+	double* m = (double*)malloc(N*sizeof(double));
 #ifdef __MP
+	#pragma imp for
+#endif
+		for(i=0; i<EN; i++) {
+			int j;
+			double* psi = psis + i*N;
+			double modsq = 0;
+			/*MP assume only mass is updated*/
+			UpdateBand(mat, EigenEs[i], V, m);
+			Numerov(step, N, 0.0, Y_EPS, EigenEs[i], V, m, psi);
+			/* Normalization */
+			for(j=0; j<N; j++) {
+				modsq += sq(psi[j]);
+			}
+			modsq = sqrt(modsq * step);
+			for(j=0; j<N; j++) {
+				psi[j] /= modsq;
+			}
+		}
 		free(m);
 		m = NULL;
-#endif
 	}
 	return; 
 }
@@ -243,7 +247,6 @@ numpyint BandSolve1D(double step, numpyint N,
 	 * or calculate zero using newton's method if SIMPLE is defined
 	 * Es should be in small to large order
 	 */
-	double *y; 
 	double *yend; 
 	int NofZeros=0;
 	int i;
@@ -253,76 +256,73 @@ numpyint BandSolve1D(double step, numpyint N,
 #endif
 	yend = (double *)malloc(EN * sizeof(double));
 #ifdef __MP
-	#pragma omp parallel for private(y)
-	for(i=0; i<EN; i++) {
-		y = (double *)malloc(N * sizeof(double));
-		double *m = (double *)malloc(N * sizeof(double));
-#else 
-	y = (double *)malloc(N * sizeof(double));
-	double *m = (double *)malloc(N * sizeof(double));
-	for(i=0; i<EN; i++) {
+	#pragma omp parallel 
 #endif
-		UpdateBand(mat, Es[i], V, m);
-		yend[i] = Numerov(step, N, 0.0, Y_EPS, Es[i], V, m, y);
+	{
+		double *y = (double *)malloc(N * sizeof(double));
+		double *m = (double *)malloc(N * sizeof(double));
 #ifdef __MP
+		#pragma omp for
+#endif
+		for(i=0; i<EN; i++) {
+			UpdateBand(mat, Es[i], V, m);
+			yend[i] = Numerov(step, N, 0.0, Y_EPS, Es[i], V, m, y);
+		}
 		free(y);
 		y = NULL;
 		free(m);
-		m = NULL
-#endif
+		m = NULL;
 	}
 
 #ifdef __MP
-	#pragma omp parallel for private(y) ordered
+	#pragma omp parallel ordered
 #endif
-	for(i=1; i<EN; i++) {
-		double E0;
-		if(yend[i] == 0) {
-			E0 = Es[i-1];
-		}
-		else if(yend[i] == Es[i-1]) {
-			continue;
-		}
-		else if(yend[i]*yend[i-1] < 0) {
-			E0 = findZero(Es, yend, i);
+	{
+	#ifndef SIMPLE
+		double *y = (double *)malloc(N * sizeof(double));
+		double *m = (double *)malloc(N * sizeof(double));
+	#endif
+#ifdef __MP
+	#pragma omp for
+#endif
+		for(i=1; i<EN; i++) {
+			double E0;
+			if(yend[i] == 0) {
+				E0 = Es[i-1];
+			}
+			else if(yend[i] == Es[i-1]) {
+				continue;
+			}
+			else if(yend[i]*yend[i-1] < 0) {
+				E0 = findZero(Es, yend, i);
 #ifndef SIMPLE
-			int count=0; 
-			double y0;
-	#ifdef __MP
-			y = (double *)malloc(N * sizeof(double));
-			double *m = (double *)malloc(N * sizeof(double));
-	#endif
-			UpdateBand(mat, E0, V, m);
-			y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
-			while(fabs(y0) > NEWTON && count < 20){
-				UpdateBand(mat, E0+NSTEP, V, m);
-				double y1 = Numerov(step, N, 0.0, Y_EPS, E0+NSTEP, 
-						V, m, y);
-				UpdateBand(mat, E0-NSTEP, V, m);
-				double y2 = Numerov(step, N, 0.0, Y_EPS, E0-NSTEP, 
-						V, m, y);
-				double dy = (y1 - y2)/(2*NSTEP);
-				if(y1*y2 < 0) {
-	#ifdef __DEBUG
-					printf("  solution error smaller than step at E=%e,"
-							" (count=%d).\n", E0, count);
-	#endif
-					break;
-				}
-				E0 -= y0/dy;
+				int count=0; 
+				double y0;
 				UpdateBand(mat, E0, V, m);
 				y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
-				count++;
-			}
+				while(fabs(y0) > NEWTON && count < 20){
+					UpdateBand(mat, E0+NSTEP, V, m);
+					double y1 = Numerov(step, N, 0.0, Y_EPS, E0+NSTEP, 
+							V, m, y);
+					UpdateBand(mat, E0-NSTEP, V, m);
+					double y2 = Numerov(step, N, 0.0, Y_EPS, E0-NSTEP, 
+							V, m, y);
+					double dy = (y1 - y2)/(2*NSTEP);
+					if(y1*y2 < 0) {
 	#ifdef __DEBUG
-			printf("After %d times Newton, E=%f Err=%e\n", 
-					count, E0, fabs(y0));
+						printf("  solution error smaller than step at E=%e,"
+								" (count=%d).\n", E0, count);
 	#endif
-	#ifdef __MP
-			free(y);
-			y = NULL;
-			free(m);
-			m = NULL;
+						break;
+					}
+					E0 -= y0/dy;
+					UpdateBand(mat, E0, V, m);
+					y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
+					count++;
+				}
+	#ifdef __DEBUG
+				printf("After %d times Newton, E=%f Err=%e\n", 
+						count, E0, fabs(y0));
 	#endif
 #endif
 		}
@@ -330,14 +330,18 @@ numpyint BandSolve1D(double step, numpyint N,
 			continue;
 		}
 #ifdef __MP
-		#pragma omp ordered
+			#pragma omp ordered
 #endif
-		EigenE[NofZeros++] = E0;
+			EigenE[NofZeros++] = E0;
+		}
+#ifndef SIMPLE
+		free(y);
+		y = NULL;
+		free(m);
+		m = NULL;
+#endif
 	}
 
-#ifndef __MP
-	free(y);
-#endif
 	free(yend);
 	return NofZeros;
 }
