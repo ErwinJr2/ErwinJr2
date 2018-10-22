@@ -123,18 +123,9 @@ numpyint SimpleSolve1D(double step, numpyint N,
 		for(i=0; i<EN; i++) {
 			yend[i] = Numerov(step, N, 0.0, Y_EPS, Es[i], V, m, y);
 		}
-		free(y);
-		y = NULL;
-	}
 
 #ifdef __MP
-	#pragma omp parallel
-#endif
-	{
-	#ifndef SIMPLE
-		double *y = (double *)malloc(N * sizeof(double));
-	#endif
-#ifdef __MP
+		#pragma omp barrier
 		#pragma omp for ordered
 #endif
 		for(i=1; i<EN; i++) {
@@ -142,7 +133,7 @@ numpyint SimpleSolve1D(double step, numpyint N,
 			if(yend[i] == 0) {
 				E0 = Es[i-1];
 			}
-			else if(yend[i] == Es[i-1]) {
+			else if(yend[i] == yend[i-1]) {
 				continue;
 			}
 			else if(yend[i]*yend[i-1] < 0) {
@@ -264,22 +255,10 @@ numpyint BandSolve1D(double step, numpyint N,
 			UpdateBand(mat, Es[i], V, m);
 			yend[i] = Numerov(step, N, 0.0, Y_EPS, Es[i], V, m, y);
 		}
-		free(y);
-		y = NULL;
-		free(m);
-		m = NULL;
-	}
 
 #ifdef __MP
-	#pragma omp parallel
-#endif
-	{
-	#ifndef SIMPLE
-		double *y = (double *)malloc(N * sizeof(double));
-		double *m = (double *)malloc(N * sizeof(double));
-	#endif
-#ifdef __MP
-	#pragma omp for ordered
+		#pragma omp barrier
+		#pragma omp for ordered
 #endif
 		for(i=1; i<EN; i++) {
 			double E0;
@@ -330,12 +309,10 @@ numpyint BandSolve1D(double step, numpyint N,
 #endif
 			EigenE[NofZeros++] = E0;
 		}
-#ifndef SIMPLE
 		free(y);
 		y = NULL;
 		free(m);
 		m = NULL;
-#endif
 	}
 
 	free(yend);
