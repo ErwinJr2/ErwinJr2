@@ -6,22 +6,22 @@ typedef struct BAND Band;
 
 /* an update parameter function pointer that accepts a pointer to 
  * to band struct (with its parameters as members) and according to 
- * the Band parameters and energy, update para (usually effective mass)
+ * the Band parameters and energy, update para (usually effective mass). 
+ * The latter two double * parameters are potential (including band offset) 
+ * and effective mass respectively.
  */
-typedef numpyint (*UpdateFunc)(Band *, double); 
+typedef numpyint (*UpdateFunc)(Band *, double, const double *, double *); 
 
 typedef struct BAND{
 	/* Base class for band structure */
 	const UpdateFunc update;
 	numpyint N;           /* Size of datas */
-	double *V;       /* Band bottom in eV */
-	double *m;       /* Effective mass in electron mass m0 */
 	double *Eg;      /* Band gap in eV */
 } Band; 
-numpyint UpdateBand(Band *, double);
+numpyint UpdateBand(Band *, double, const double *, double *);
 
-Band *ZBband_new(numpyint N, const double *xEg, const double *xVc, 
-		const double *xF, const double *xEp, const double *xESO);
+Band *ZBband_new(numpyint N, const double *xEg, const double *xF,
+		const double *xEp, const double *xESO);
 void ZBband_free(Band *);
 
 #endif /* ifndef BAND_H */

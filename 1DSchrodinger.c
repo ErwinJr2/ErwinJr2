@@ -194,7 +194,7 @@ numpyint SimpleSolve1D(double step, numpyint N,
 __declspec(dllexport)
 #endif 
 void BandFillPsi(double step, numpyint N, const double *EigenEs,
-		numpyint EN, double* psis, Band* mat) {
+		numpyint EN, double* psis, const double* V, Band* mat) {
 	/* Same as SimpleFillPsi except for using band related mass and V */
 	int i; 
 #ifdef __DEBUG
@@ -202,13 +202,17 @@ void BandFillPsi(double step, numpyint N, const double *EigenEs,
 #endif
 #ifdef __MP
 	#pragma omp parallel for
-#endif
 	for(i=0; i<EN; i++) {
+		double* m = (double*)malloc(N*sizeof(double));
+#else
+	double* m = (double*)malloc(N*sizeof(double));
+	for(i=0; i<EN; i++) {
+#endif
 		int j;
 		double* psi = psis + i*N;
 		double modsq = 0;
-		UpdateBand(mat, EigenEs[i]);
-		Numerov(step, N, 0.0, Y_EPS, EigenEs[i], mat->V, mat->m, psi);
+		UpdateBand(mat, EigenEs[i], V, m); /*MP assume only mass is updated*/
+		Numerov(step, N, 0.0, Y_EPS, EigenEs[i], V, m, psi);
 		/* Normalization */
 		for(j=0; j<N; j++) {
 			modsq += sq(psi[j]);
@@ -217,6 +221,10 @@ void BandFillPsi(double step, numpyint N, const double *EigenEs,
 		for(j=0; j<N; j++) {
 			psi[j] /= modsq;
 		}
+#ifdef __MP
+		free(m);
+		m = NULL;
+#endif
 	}
 	return; 
 }
@@ -226,7 +234,7 @@ void BandFillPsi(double step, numpyint N, const double *EigenEs,
 __declspec(dllexport)
 #endif 
 numpyint BandSolve1D(double step, numpyint N, 
-		const double *Es, numpyint EN, Band* mat,
+		const double *Es, numpyint EN, const double *V, Band *mat,
 		double *EigenE) {
 	/* Solve 1D shrodinger's equation with potential V, effective mass m and 
 	 * in the region x0 <= x < x0+step*N with zero boundary. 
@@ -248,15 +256,19 @@ numpyint BandSolve1D(double step, numpyint N,
 	#pragma omp parallel for private(y)
 	for(i=0; i<EN; i++) {
 		y = (double *)malloc(N * sizeof(double));
+		double *m = (double *)malloc(N * sizeof(double));
 #else 
 	y = (double *)malloc(N * sizeof(double));
+	double *m = (double *)malloc(N * sizeof(double));
 	for(i=0; i<EN; i++) {
 #endif
-		UpdateBand(mat, Es[i]);
-		yend[i] = Numerov(step, N, 0.0, Y_EPS, Es[i], mat->V, mat->m, y);
+		UpdateBand(mat, Es[i], V, m);
+		yend[i] = Numerov(step, N, 0.0, Y_EPS, Es[i], V, m, y);
 #ifdef __MP
 		free(y);
 		y = NULL;
+		free(m);
+		m = NULL
 #endif
 	}
 
@@ -278,16 +290,17 @@ numpyint BandSolve1D(double step, numpyint N,
 			double y0;
 	#ifdef __MP
 			y = (double *)malloc(N * sizeof(double));
+			double *m = (double *)malloc(N * sizeof(double));
 	#endif
-			UpdateBand(mat, E0);
-			y0 = Numerov(step, N, 0.0, Y_EPS, E0, mat->V, mat->m, y);
+			UpdateBand(mat, E0, V, m);
+			y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
 			while(fabs(y0) > NEWTON && count < 20){
-				UpdateBand(mat, E0+NSTEP);
+				UpdateBand(mat, E0+NSTEP, V, m);
 				double y1 = Numerov(step, N, 0.0, Y_EPS, E0+NSTEP, 
-						mat->V, mat->m, y);
-				UpdateBand(mat, E0-NSTEP);
+						V, m, y);
+				UpdateBand(mat, E0-NSTEP, V, m);
 				double y2 = Numerov(step, N, 0.0, Y_EPS, E0-NSTEP, 
-						mat->V, mat->m, y);
+						V, m, y);
 				double dy = (y1 - y2)/(2*NSTEP);
 				if(y1*y2 < 0) {
 	#ifdef __DEBUG
@@ -297,8 +310,8 @@ numpyint BandSolve1D(double step, numpyint N,
 					break;
 				}
 				E0 -= y0/dy;
-				UpdateBand(mat, E0);
-				y0 = Numerov(step, N, 0.0, Y_EPS, E0, mat->V, mat->m, y);
+				UpdateBand(mat, E0, V, m);
+				y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
 				count++;
 			}
 	#ifdef __DEBUG
@@ -308,6 +321,8 @@ numpyint BandSolve1D(double step, numpyint N,
 	#ifdef __MP
 			free(y);
 			y = NULL;
+			free(m);
+			m = NULL;
 	#endif
 #endif
 		}
