@@ -20,15 +20,15 @@ all: 1DSchrodinger.so 1DThermal.so 1DMaxwell.so
 	$(CC) -shared -fPIC $^ -o $@ -lm
 
 1DSchrodinger.o : 1DSchrodinger.c science.h band.h
-	# $(CC) $(CFLAGS) $< -o $@
+	# $(CC) $(CFLAGS) -c $< -o $@
 	$(CC) $(CFLAGS) -D __DEBUG -c $< -o $@
 
 1DSchrodinger_MP.o : 1DSchrodinger.c science.h band.h
-	# $(CC) $(CFLAGS) -fopenmp -D __MP $< -o $@
+	# $(CC) $(CFLAGS) -fopenmp -D __MP -c $< -o $@
 	$(CC) $(CFLAGS) -D __DEBUG -fopenmp -D __MP -c $< -o $@
 
 %.o : %.c science.h 
-	# $(CC) $(CFLAGS) $< -o $@
+	# $(CC) $(CFLAGS) -c $< -o $@
 	$(CC) $(CFLAGS) -D __DEBUG -c $< -o $@
 
 .PHONY : clean
