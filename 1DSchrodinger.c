@@ -265,7 +265,7 @@ numpyint BandSolve1D(double step, numpyint N,
 			if(yend[i] == 0) {
 				E0 = Es[i-1];
 			}
-			else if(yend[i] == Es[i-1]) {
+			else if(yend[i] == yend[i-1]) {
 				continue;
 			}
 			else if(yend[i]*yend[i-1] < 0) {
