@@ -117,7 +117,6 @@ numpyint SimpleSolve1D(double step, numpyint N,
 #endif
 	{
 		double *y = (double *)malloc(N * sizeof(double));
-		y = (double *)malloc(N * sizeof(double));
 #ifdef __MP
 		#pragma omp for
 #endif
