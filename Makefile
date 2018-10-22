@@ -11,6 +11,7 @@ all: 1DSchrodinger.so 1DThermal.so 1DMaxwell.so
 
 1DSchrodinger_MP.so : 1DSchrodinger_MP.o band.o
 	$(CC) -shared -fPIC -fopenmp $^ -o $@ -lm
+	mv 1DSchrodinger_MP.so 1DSchrodinger.so
 
 1DSchrodinger.so : 1DSchrodinger.o band.o
 	$(CC) -shared -fPIC $^ -o $@ -lm
