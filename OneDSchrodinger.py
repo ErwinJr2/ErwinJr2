@@ -2,14 +2,15 @@
 # -*- coding:utf-8 -*-
 import numpy as np
 from ctypes import *
-import band
+import band as bd
 _clib = np.ctypeslib.load_library('1DSchrodinger', '.')
 _doubleArray = np.ctypeslib.ndpointer(
     dtype=np.float64, ndim=1, flags="C_CONTIGUOUS")
 __all__ = ['cNumerov', 'cSimpleSolve1D', 'cSimpleFillPsi', 
-           'cUpdateBand', 'cZBband_new', 'cZBband_free']
+           'cUpdateBand', 'cZBband_new', 'cZBband_free', 
+           'cBandFillPsi', 'cBandSolve1D']
 
-cUpdateBand, cZBband_new, cZBband_free = band.init(_clib)
+cUpdateBand, cZBband_new, cZBband_free = bd.init(_clib)
 _clib.Numerov.argtypes = [c_double, c_int, c_double, c_double, 
                          c_double, _doubleArray, _doubleArray, _doubleArray]
 _clib.Numerov.restype = c_double
@@ -48,6 +49,28 @@ def cSimpleFillPsi(step, EigenEs, V, m, xmin=0, xmax=None):
     psis = np.empty(EigenEs.size*(xmax-xmin))
     _clib.SimpleFillPsi(c_double(step), xmax-xmin, EigenEs, EigenEs.size, 
                   V[xmin:xmax], m[xmin:xmax], psis)
+    return psis.reshape((EigenEs.size, xmax-xmin))
+
+_clib.BandSolve1D.argtypes = [c_double, c_int, _doubleArray, c_int,
+                               _doubleArray, POINTER(bd.Band), _doubleArray]
+_clib.SimpleSolve1D.restype = c_int
+def cBandSolve1D(step, Es, V, band, xmin=0, xmax=None): 
+    if not xmax:
+        xmax = V.size
+    EigenE = np.empty(Es.size) 
+    EigenEN = _clib.BandSolve1D(c_double(step), xmax-xmin, Es, Es.size, 
+                                 V[xmin:xmax], band, EigenE)
+    return EigenE[:EigenEN]
+
+_clib.BandFillPsi.argtypes = [c_double, c_int, _doubleArray, c_int, 
+                         _doubleArray, _doubleArray, POINTER(bd.Band)]
+_clib.BandFillPsi.restype = None
+def cBandFillPsi(step, EigenEs, V, band, xmin=0, xmax=None): 
+    if not xmax:
+        xmax = V.size
+    psis = np.empty(EigenEs.size*(xmax-xmin))
+    _clib.BandFillPsi(c_double(step), xmax-xmin, EigenEs, EigenEs.size, 
+                  psis, V[xmin:xmax], band)
     return psis.reshape((EigenEs.size, xmax-xmin))
 
 if __name__ == "__main__":

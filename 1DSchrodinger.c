@@ -182,7 +182,7 @@ __declspec(dllexport)
 #endif 
 void BandFillPsi(double step, numpyint N, const double *EigenEs,
 		numpyint EN, double* psis, const double* V, Band* mat) {
-	/* Same as SimpleFillPsi except for using band related mass and V */
+	/* Same as SimpleFillPsi except for using band related mass */
 	int i; 
 #ifdef __DEBUG
 	assert(N == mat->N);
