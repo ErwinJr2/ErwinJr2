@@ -3,6 +3,12 @@
 import numpy as np
 from ctypes import *
 _clib = np.ctypeslib.load_library('1DSchrodinger', '.')
+import band as _bd
+_bd.init(_clib)
+from band import cBand, cUpdateBand, Band
+__all__ = ['cNumerov', 'cSimpleSolve1D', 'cSimpleFillPsi', 
+           'cUpdateBand', 'Band', 'cBandFillPsi', 'cBandSolve1D']
+
 _doubleArray = np.ctypeslib.ndpointer(
     dtype=np.float64, ndim=1, flags="C_CONTIGUOUS")
 
@@ -44,6 +50,28 @@ def cSimpleFillPsi(step, EigenEs, V, m, xmin=0, xmax=None):
     psis = np.empty(EigenEs.size*(xmax-xmin))
     _clib.SimpleFillPsi(c_double(step), xmax-xmin, EigenEs, EigenEs.size, 
                   V[xmin:xmax], m[xmin:xmax], psis)
+    return psis.reshape((EigenEs.size, xmax-xmin))
+
+_clib.BandSolve1D.argtypes = [c_double, c_int, _doubleArray, c_int,
+                               _doubleArray, POINTER(cBand), _doubleArray]
+_clib.SimpleSolve1D.restype = c_int
+def cBandSolve1D(step, Es, V, band, xmin=0, xmax=None): 
+    if not xmax:
+        xmax = V.size
+    EigenE = np.empty(Es.size) 
+    EigenEN = _clib.BandSolve1D(c_double(step), xmax-xmin, Es, Es.size, 
+                                 V[xmin:xmax], band.c, EigenE)
+    return EigenE[:EigenEN]
+
+_clib.BandFillPsi.argtypes = [c_double, c_int, _doubleArray, c_int, 
+                         _doubleArray, _doubleArray, POINTER(cBand)]
+_clib.BandFillPsi.restype = None
+def cBandFillPsi(step, EigenEs, V, band, xmin=0, xmax=None): 
+    if not xmax:
+        xmax = V.size
+    psis = np.empty(EigenEs.size*(xmax-xmin))
+    _clib.BandFillPsi(c_double(step), xmax-xmin, EigenEs, EigenEs.size, 
+                  psis, V[xmin:xmax], band.c)
     return psis.reshape((EigenEs.size, xmax-xmin))
 
 if __name__ == "__main__":

@@ -2,10 +2,12 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <math.h>
+#include <assert.h>
 #ifdef __MP /*openmp support*/
 #include <omp.h>
 #endif 
 #include "science.h"
+#include "band.h"
 
 #define NEWTON 1E-3 
 /* Newton's method stopping limit */
@@ -105,46 +107,37 @@ numpyint SimpleSolve1D(double step, numpyint N,
 	 * or calculate zero using newton's method if SIMPLE is defined
 	 * Es should be in small to large order
 	 */
-	double *y; 
 	double *yend; 
 	int NofZeros=0;
 	int i;
 
 	yend = (double *)malloc(EN * sizeof(double));
 #ifdef __MP
-	#pragma omp parallel for private(y)
-	for(i=0; i<EN; i++) {
-		y = (double *)malloc(N * sizeof(double));
-#else 
-	y = (double *)malloc(N * sizeof(double));
-	for(i=0; i<EN; i++) {
+	#pragma omp parallel
 #endif
-		yend[i] = Numerov(step, N, 0.0, Y_EPS, Es[i], V, m, y);
+	{
+		double *y = (double *)malloc(N * sizeof(double));
 #ifdef __MP
-		free(y);
-		y = NULL;
+		#pragma omp for
 #endif
-	}
+		for(i=0; i<EN; i++) {
+			yend[i] = Numerov(step, N, 0.0, Y_EPS, Es[i], V, m, y);
+		}
 
 #ifdef __MP
-	#pragma omp parallel for private(y) ordered
+		#pragma omp barrier
+		#pragma omp for ordered
 #endif
-	for(i=1; i<EN; i++) {
-		double E0;
-		if(yend[i] == 0) {
-			E0 = Es[i-1];
-		}
-		else if(yend[i] == Es[i-1]) {
-			continue;
-		}
-		else if(yend[i]*yend[i-1] < 0) {
-			E0 = findZero(Es, yend, i);
+		for(i=1; i<EN; i++) {
+			double E0;
+			if(yend[i] == 0) {
+				E0 = Es[i-1];
+			}
+			else if(yend[i]*yend[i-1] < 0) {
+				E0 = findZero(Es, yend, i);
 #ifndef SIMPLE
 			int count=0; 
 			double y0;
-	#ifdef __MP
-			y = (double *)malloc(N * sizeof(double));
-	#endif
 			y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
 			while(fabs(y0) > NEWTON && count < 20){
 				double y1 = Numerov(step, N, 0.0, Y_EPS, E0+NSTEP, V, m, y);
@@ -165,9 +158,140 @@ numpyint SimpleSolve1D(double step, numpyint N,
 			printf("After %d times Newton, E=%f Err=%e\n", 
 					count, E0, fabs(y0));
 	#endif
-	#ifdef __MP
-			free(y);
-			y = NULL;
+#endif
+			}
+			else {
+				continue;
+			}
+#ifdef __MP
+			#pragma omp ordered
+#endif
+			EigenE[NofZeros++] = E0;
+		}
+		free(y);
+		y = NULL;
+	}
+
+	free(yend);
+	return NofZeros;
+}
+
+
+#ifdef _WINDLL
+__declspec(dllexport)
+#endif 
+void BandFillPsi(double step, numpyint N, const double *EigenEs,
+		numpyint EN, double* psis, const double* V, Band* mat) {
+	/* Same as SimpleFillPsi except for using band related mass */
+	int i; 
+#ifdef __DEBUG
+	assert(N == mat->N);
+#endif
+#ifdef __MP
+	#pragma omp parallel 
+#endif
+	{
+		double* m = (double*)malloc(N*sizeof(double));
+#ifdef __MP
+		#pragma omp for
+#endif
+		for(i=0; i<EN; i++) {
+			int j;
+			double* psi = psis + i*N;
+			double modsq = 0;
+			/*MP assume only mass is updated*/
+			UpdateBand(mat, EigenEs[i], V, m);
+			Numerov(step, N, 0.0, Y_EPS, EigenEs[i], V, m, psi);
+			/* Normalization */
+			for(j=0; j<N; j++) {
+				modsq += sq(psi[j]);
+			}
+			modsq = sqrt(modsq * step);
+			for(j=0; j<N; j++) {
+				psi[j] /= modsq;
+			}
+		}
+		free(m);
+		m = NULL;
+	}
+	return; 
+}
+
+
+#ifdef _WINDLL
+__declspec(dllexport)
+#endif 
+numpyint BandSolve1D(double step, numpyint N, 
+		const double *Es, numpyint EN, const double *V, Band *mat,
+		double *EigenE) {
+	/* Solve 1D shrodinger's equation with potential V, effective mass m and 
+	 * in the region x0 <= x < x0+step*N with zero boundary. 
+	 * First scan in energy Es[0:EN] and look for zeros(EigenE) by either 
+	 *    simple linear interpolation if SIMPLE is not defined;
+	 * or calculate zero using newton's method if SIMPLE is defined
+	 * Es should be in small to large order
+	 */
+	double *yend; 
+	int NofZeros=0;
+	int i;
+
+#ifdef __DEBUG
+	assert(N == mat->N);
+#endif
+	yend = (double *)malloc(EN * sizeof(double));
+#ifdef __MP
+	#pragma omp parallel 
+#endif
+	{
+		double *y = (double *)malloc(N * sizeof(double));
+		double *m = (double *)malloc(N * sizeof(double));
+#ifdef __MP
+		#pragma omp for
+#endif
+		for(i=0; i<EN; i++) {
+			UpdateBand(mat, Es[i], V, m);
+			yend[i] = Numerov(step, N, 0.0, Y_EPS, Es[i], V, m, y);
+		}
+
+#ifdef __MP
+		#pragma omp barrier
+		#pragma omp for ordered
+#endif
+		for(i=1; i<EN; i++) {
+			double E0;
+			if(yend[i] == 0) {
+				E0 = Es[i-1];
+			}
+			else if(yend[i]*yend[i-1] < 0) {
+				E0 = findZero(Es, yend, i);
+#ifndef SIMPLE
+				int count=0; 
+				double y0;
+				UpdateBand(mat, E0, V, m);
+				y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
+				while(fabs(y0) > NEWTON && count < 20){
+					UpdateBand(mat, E0+NSTEP, V, m);
+					double y1 = Numerov(step, N, 0.0, Y_EPS, E0+NSTEP, 
+							V, m, y);
+					UpdateBand(mat, E0-NSTEP, V, m);
+					double y2 = Numerov(step, N, 0.0, Y_EPS, E0-NSTEP, 
+							V, m, y);
+					double dy = (y1 - y2)/(2*NSTEP);
+					if(y1*y2 < 0) {
+	#ifdef __DEBUG
+						printf("  solution error smaller than step at E=%e,"
+								" (count=%d).\n", E0, count);
+	#endif
+						break;
+					}
+					E0 -= y0/dy;
+					UpdateBand(mat, E0, V, m);
+					y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
+					count++;
+				}
+	#ifdef __DEBUG
+				printf("After %d times Newton, E=%f Err=%e\n", 
+						count, E0, fabs(y0));
 	#endif
 #endif
 		}
@@ -175,18 +299,19 @@ numpyint SimpleSolve1D(double step, numpyint N,
 			continue;
 		}
 #ifdef __MP
-		#pragma omp ordered
+			#pragma omp ordered
 #endif
-		EigenE[NofZeros++] = E0;
+			EigenE[NofZeros++] = E0;
+		}
+		free(y);
+		y = NULL;
+		free(m);
+		m = NULL;
 	}
 
-#ifndef __MP
-	free(y);
-#endif
 	free(yend);
 	return NofZeros;
 }
-
 
 #ifdef _WINDLL
 __declspec(dllexport)
