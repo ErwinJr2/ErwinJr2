@@ -30,4 +30,4 @@ all: 1DSchrodinger.so 1DThermal.so 1DMaxwell.so
 
 .PHONY : clean
 clean :
-	@$(RM) {1DSchrodinger,1DThermal,1DMaxwell}.{so,o} band.o
+	@$(RM) {1DSchrodinger,1DThermal,1DMaxwell}.{so,o} band.o 1DSchrodinger_MP.o
