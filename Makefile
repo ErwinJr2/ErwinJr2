@@ -1,7 +1,7 @@
 # CC = icc
 # CFLAGS = -march=native -Ofast -gcc-name=gcc-6 -Wall -fPIC
 CC = gcc
-CFLAGS = -Ofast -Wall -fPIC
+CFLAGS = -Ofast -Wall -fPIC -D __DEBUG
 
 .PHONY : all
 .DEFAULT : all
@@ -20,16 +20,13 @@ all: 1DSchrodinger.so 1DThermal.so 1DMaxwell.so
 	$(CC) -shared -fPIC $^ -o $@ -lm
 
 1DSchrodinger.o : 1DSchrodinger.c science.h band.h
-	# $(CC) $(CFLAGS) -c $< -o $@
-	$(CC) $(CFLAGS) -D __DEBUG -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 1DSchrodinger_MP.o : 1DSchrodinger.c science.h band.h
-	# $(CC) $(CFLAGS) -fopenmp -D __MP -c $< -o $@
-	$(CC) $(CFLAGS) -D __DEBUG -fopenmp -D __MP -c $< -o $@
+	$(CC) $(CFLAGS) -fopenmp -D __MP -c $< -o $@
 
 %.o : %.c science.h 
-	# $(CC) $(CFLAGS) -c $< -o $@
-	$(CC) $(CFLAGS) -D __DEBUG -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 .PHONY : clean
 clean :
