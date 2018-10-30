@@ -347,6 +347,27 @@ numpyint BandSolve1D(double step, numpyint N,
 
 #ifdef _WINDLL
 __declspec(dllexport)
+#endif
+double LOphononScatter(double step, numpyint N, double kl,
+               const double *psi_i, const double *psi_j) {
+       double Iij = 0;
+       int i;
+#ifdef __MP
+       #pragma omp parallel for reduction(+:Iij)
+#endif
+       for(i=0; i<N; i++) {
+               int j;
+               for(j=0; j<N; j++) {
+                       Iij += psi_i[i] * psi_j[i] * exp(-kl*abs(i-j)*step)
+                                       * psi_i[j] * psi_j[j];
+               }
+       }
+       return Iij * sq(step*ANG);
+}
+
+
+#ifdef _WINDLL
+__declspec(dllexport)
 #endif 
 numpyint invAlpha()
 {return 137;}
