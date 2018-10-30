@@ -46,7 +46,7 @@ void ZBband_free(Band *zbband) {
 void ZBband_check(const Band *band, numpyint N, const double *xEg, 
 		const double *xF, const double *xEp, const double *xESO) {
 	printf("Checking ZBband\n");
-	ZBBand *zbband = (const ZBBand *) band;
+	const ZBBand *zbband = (const ZBBand *) band;
 	if(zbband->updateM != ZBupdateM)
 		printf("ZBupdateM checkfail\n");
 	if(zbband->N != N)
