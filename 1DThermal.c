@@ -6,6 +6,11 @@
 #include <omp.h>
 #endif 
 #include "science.h"
+/* TODO:
+ * Real Fermi Distribution result
+ * Band dependent result
+ */
+
 
 #ifdef __cplusplus
 extern "C" {
