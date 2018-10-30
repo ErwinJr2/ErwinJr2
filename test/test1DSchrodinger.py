@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
+import context
 from pylab import *
 from OneDSchrodinger import * 
 from scipy.constants import hbar, e, m_e, pi
