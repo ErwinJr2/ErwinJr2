@@ -28,9 +28,9 @@ def triangle_well(F, sheet, Vmax=0.4, Emax=0.15):
             np.ascontiguousarray(Vc[::-1]),\
             np.ascontiguousarray(eDensity[::-1]), EF
         xmax = (Vmax+Vc[-1]) / F
-        Vc -= Vc[-1]
         x = np.linspace(0, xmax, 5000)
         V = F * (xmax - x) + Vc
+        Vc -= Vc[-1]
         step = x[1]-x[0]
         Es = np.linspace(np.min(V), np.min(V)+Emax, 100)
 
