@@ -103,8 +103,8 @@ numpyint SimpleSolve1D(double step, numpyint N,
 	/* Solve 1D shrodinger's equation with potential V, effective mass m and 
 	 * in the region x0 <= x < x0+step*N with zero boundary. 
 	 * First scan in energy Es[0:EN] and look for zeros(EigenE) by either 
-	 *    simple linear interpolation if SIMPLE is not defined;
-	 * or calculate zero using newton's method if SIMPLE is defined
+	 *    simple linear interpolation if SIMPLE is defined;
+	 * or calculate zero using newton's method if SIMPLE is not defined
 	 * Es should be in small to large order
 	 */
 	double *yend; 
@@ -173,6 +173,7 @@ numpyint SimpleSolve1D(double step, numpyint N,
 	}
 
 	free(yend);
+	yend = NULL;
 	return NofZeros;
 }
 
@@ -310,6 +311,7 @@ numpyint BandSolve1D(double step, numpyint N,
 	}
 
 	free(yend);
+	yend = NULL;
 	return NofZeros;
 }
 
