@@ -4,8 +4,10 @@ import context
 from pylab import *
 from scipy.constants import hbar, e, m_e, pi
 from OneDSchrodinger import * 
+from OneDSchrodinger import bindOpenMP
 from OneDThermal import *
 from OneDMaxwell import *
+bindOpenMP(True)
 ANG=1E-8 # angstrom in cm
 
 def triangle_well(F, sheet, Vmax=0.4, Emax=0.15): 
