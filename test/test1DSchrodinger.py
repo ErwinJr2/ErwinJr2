@@ -3,6 +3,8 @@
 import context
 from pylab import *
 from OneDSchrodinger import * 
+from OneDSchrodinger import bindOpenMP
+bindOpenMP(True)
 from scipy.constants import hbar, e, m_e, pi
 ANG=1E-10
 def square_well(x0=0, x1=100, x2=300, x3=400, Vmax=0.287):
