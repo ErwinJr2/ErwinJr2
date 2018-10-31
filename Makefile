@@ -1,5 +1,5 @@
 # CC = icc
-# CFLAGS = -march=native -Ofast -gcc-name=gcc-6 -Wall -fPIC
+# CFLAGS = -march=native -Ofast -gcc-name=gcc-6 -Wall
 CC = gcc
 CFLAGS = -Ofast -Wall -fPIC -D __DEBUG
 
