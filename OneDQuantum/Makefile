@@ -1,6 +1,6 @@
+CFLAGS += -Ofast -Wall -fPIC
 # CC = icc
 # CFLAGS = -march=native -Ofast -gcc-name=gcc-6 -Wall
-CFLAGS = -Ofast -Wall -fPIC
 
 .PHONY : all
 .DEFAULT : all
