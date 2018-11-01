@@ -2,7 +2,9 @@
 # -*- coding:utf-8 -*-
 import numpy as np
 from ctypes import *
-import band as _bd
+from . import band as _bd
+import os
+path = os.path.dirname(__file__)
 __all__ = ['cNumerov', 'cSimpleSolve1D', 'cSimpleFillPsi', 
            'cUpdateBand', 'Band', 'cBandFillPsi', 'cBandSolve1D']
 
@@ -12,13 +14,13 @@ _doubleArray = np.ctypeslib.ndpointer(
 def bindOpenMP(on=True):
     global _clib
     if(on):
-        _clib = np.ctypeslib.load_library('1DSchrodinger_MP', '.')
+        _clib = np.ctypeslib.load_library('1DSchrodinger_MP', path)
     else:
-        _clib = np.ctypeslib.load_library('1DSchrodinger', '.')
+        _clib = np.ctypeslib.load_library('1DSchrodinger', path)
 
     _bd.init(_clib)
     global cBand, cUpdateBand, Band
-    from band import cBand, cUpdateBand, Band
+    from .band import cBand, cUpdateBand, Band
     _clib.Numerov.argtypes = [c_double, c_int, c_double, c_double, 
                              c_double, _doubleArray, _doubleArray, _doubleArray]
     _clib.Numerov.restype = c_double

@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-import context
+from context import *
+from OneDQuantum import *
 from pylab import *
 from scipy.constants import hbar, e, m_e, pi
-from OneDSchrodinger import * 
-from OneDThermal import *
 ANG=1E-10
 
 def triangle_well(F, xmax = 1E3): 
