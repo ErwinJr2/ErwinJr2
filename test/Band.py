@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-import context
+from context import *
+from OneDQuantum import *
 from pylab import *
-from OneDSchrodinger import *
 from scipy.constants import hbar, e, m_e, pi 
 EgG = {'AlAs': 3.099, 'GaAs': 1.519}
 VBO = {'AlAs': -1.33, 'GaAs': -0.80}

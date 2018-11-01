@@ -2,7 +2,10 @@
 # -*- coding:utf-8 -*-
 import numpy as np
 from ctypes import *
-_clib = np.ctypeslib.load_library('1DMaxwell', '.')
+import os
+path = os.path.dirname(__file__)
+
+_clib = np.ctypeslib.load_library('1DMaxwell', path)
 _doubleArray = np.ctypeslib.ndpointer(
     dtype=np.float64, ndim=1, flags="C_CONTIGUOUS")
 __all__ = ['cCoulombField', 'cCoulombField0']
