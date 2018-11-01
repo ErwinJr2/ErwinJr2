@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
+
+#TODO: add dependence check
+
 import os, subprocess
 
 def build_clib():
