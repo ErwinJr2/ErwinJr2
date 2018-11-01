@@ -1,5 +1,5 @@
 # CC = icc
-# CFLAGS = -march=native -Ofast -gcc-name=gcc-6 -Wall -fPIC
+# CFLAGS = -march=native -Ofast -gcc-name=gcc-6 -Wall
 CC = gcc
 CFLAGS = -Ofast -Wall -fPIC
 
@@ -29,4 +29,4 @@ all: 1DSchrodinger.so 1DThermal.so 1DMaxwell.so
 
 .PHONY : clean
 clean :
-	@$(RM) {1DSchrodinger,1DThermal,1DMaxwell}.{so,o} band.o 1DSchrodinger_MP.o
+	@$(RM) {1DSchrodinger,1DThermal,1DMaxwell, 1DSchrodinger_MP}.{so,o} band.o
