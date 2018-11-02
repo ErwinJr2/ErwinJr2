@@ -12,3 +12,5 @@ A C lib for 1D quantum problem, with python interface.
 - [ ] Save/Load using json
 - [ ] setup.py update
 - [ ] Documents
+- [ ] ?Travis CI automatic testing
+- [ ] Profile
