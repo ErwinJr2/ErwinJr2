@@ -1,4 +1,5 @@
 #include "band.h"
+/* add Wurtzite structure */
 /* Zincblende structure band, compatiable with structure BAND */
 numpyint UpdateBand(Band *band, double E, const double *xVc, double *m) {
 	return band->update(band, E, xVc, m);
