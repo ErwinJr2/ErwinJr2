@@ -1,12 +1,12 @@
 {
     "FileType": "ErwinJr2 Data File", 
     "Version": "181107", 
-    "Descrption": "16 um AlGaAs QCL", 
+    "Description": "16 um AlGaAs QCL", 
     "Substrate": "GaAs", 
     "EField": 25.0, 
     "x resolution": 0.5, 
     "E resolution": 0.01, 
-    "Solver": "SolverH", 
+    "Solver": "ODE", 
     "Temperature": 300.0, 
     "Repeats": 3, 
     "Materials": {
