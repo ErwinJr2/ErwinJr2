@@ -62,8 +62,7 @@ def qclSaveJSON(fhandle, qclayers):
         repr(s).replace("'","\"") for s in (
             o.substrate, o.EField, o.xres, o.Eres, o.Solver, 
             o.Temperature, o.repeats, o.materials, o.moleFracs, 
-            o.layerMaterials.tolist(), o.layerWidths.tolist(),
-            o.layerDopings.tolist(), o.layerARs.tolist())]
+            o.layerMaterials, o.layerWidths, o.layerDopings, o.layerARs)]
     fhandle.write(JSONTemplate % tuple(parameters))
 
 # vim: ts=4 sw=4 sts=4 expandtab

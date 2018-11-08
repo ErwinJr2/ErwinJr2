@@ -25,10 +25,10 @@ class QCLayers(object):
         self.moleFracs = moleFracs
         self.xres = xres
         self.Eres = Eres
-        self.layerWidths = np.array(layerWidths)
-        self.layerMaterials = np.array(layerMaterials)
-        self.layerDopings = np.array(layerDopings)
-        self.layerARs = np.array(layerARs)
+        self.layerWidths = layerWidths
+        self.layerMaterials = layerMaterials
+        self.layerDopings = layerDopings
+        self.layerARs = layerARs
         self.EField = EField
         self.repeats = repeats
         self.Temperature = T
