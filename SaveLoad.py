@@ -58,11 +58,12 @@ def qclSaveJSON(fhandle, qclayers):
         raise TypeError("qclSave: Nothing to save.."
                         "QCLayers not valid type")
     o=qclayers
-    parameters = [json.encoder.encode_basestring(o.description)] + [
-        repr(s).replace("'","\"") for s in (
-            o.substrate, o.EField, o.xres, o.Eres, o.Solver, 
-            o.Temperature, o.repeats, o.materials, o.moleFracs, 
-            o.layerMaterials, o.layerWidths, o.layerDopings, o.layerARs)]
+    parameters = [json.dumps(s) for s in (o.description, o.substrate,
+                                          o.EField, o.xres, o.Eres, o.Solver, 
+                                          o.Temperature, o.repeats, 
+                                          o.materials, o.moleFracs,
+                                          o.layerMaterials, o.layerWidths,
+                                          o.layerDopings, o.layerARs)]
     fhandle.write(JSONTemplate % tuple(parameters))
 
 # vim: ts=4 sw=4 sts=4 expandtab
