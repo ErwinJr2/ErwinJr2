@@ -11,9 +11,10 @@ A C lib for 1D quantum problem, with python interface.
 - [ ] Add scattering: acoustic phonon, interface roughness, ionized impurity
 - [ ] Finite temperature Fermi-Dirac distribution
 - [ ] QCLayer class
-- [ ] Save/Load using json
+- [X] Save/Load using json
 - [ ] setup.py update
 - [ ] Test case improve
 - [ ] Documents
-- [ ] ?Travis CI automatic testing
 - [ ] Profile
+- [ ] ?Travis CI automatic testing
+- [ ] ?coveralls.io
