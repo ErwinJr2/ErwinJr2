@@ -57,5 +57,10 @@ class TestSimpleSchrodinger(unittest.TestCase):
                                              decimal=wf_dec, verbose=True)
 
 if __name__ == "__main__":
+    import sys
+    if len(sys.argv) > 1 and sys.argv.pop() == "MP":
+        OneDSchrodinger.bindOpenMP(True)
+    else:
+        OneDSchrodinger.bindOpenMP(False)
     unittest.main()
 # vim: ts=4 sw=4 sts=4 expandtab
