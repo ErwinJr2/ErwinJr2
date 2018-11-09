@@ -1,4 +1,4 @@
-CFLAGS += -Ofast -Wall -fPIC -D __DEBUG
+CFLAGS += -Ofast -Wall -fPIC #-D __DEBUG
 # CC = icc
 # CFLAGS = -march=native -Ofast -gcc-name=gcc-6 -Wall
 
@@ -7,6 +7,7 @@ CFLAGS += -Ofast -Wall -fPIC -D __DEBUG
 .SECONDARY : 
 
 all: 1DSchrodinger.so 1DThermal.so 1DMaxwell.so
+MP:  1DSchrodinger_MP.so
 
 1DSchrodinger_MP.so : 1DSchrodinger_MP.o band.o
 	$(CC) -shared -fPIC -fopenmp $^ -o $@ -lm
