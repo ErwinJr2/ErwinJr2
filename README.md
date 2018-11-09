@@ -1,4 +1,11 @@
-# 1D Quantum solver
+1D Quantum solver
+================
+
+master:
+[![master Build Status](https://travis-ci.org/PrincetonUniversity/OneDQ.svg?branch=master)](https://travis-ci.org/PrincetonUniversity/OneDQ)
+dev:
+[![dev Build Status](https://travis-ci.org/PrincetonUniversity/OneDQ.svg?branch=dev)](https://travis-ci.org/PrincetonUniversity/OneDQ)
+
 
 A C lib for 1D quantum problem, with python interface. 
 
