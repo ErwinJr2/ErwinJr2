@@ -1,0 +1,11 @@
+language: python
+python:
+    - "3.6"
+sudo: false
+env:
+    - OMP_NUM_THREADS=4
+install:
+    - python install.py
+script:
+    - python test/SimpleSchrodinger.py
+    - python test/SimpleSchrodinger.py MP
