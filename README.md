@@ -23,5 +23,5 @@ A C lib for 1D quantum problem, with python interface.
 - [ ] Test case improve
 - [ ] Documents
 - [ ] Profile
-- [ ] ?Travis CI automatic testing
+- [X] ?Travis CI automatic testing
 - [ ] ?coveralls.io
