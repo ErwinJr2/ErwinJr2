@@ -13,10 +13,10 @@ E_dec  = 6
 class TestSimpleSchrodinger(unittest.TestCase):
     def test_inf_sq_well(self):
         xmax = 200
-        x = np.linspace(0, xmax, 1000)
+        x = np.linspace(0, xmax, 200)
         mass = 0.067
         step = x[1] - x[0]
-        Es = np.linspace(0, 0.4, 100)
+        Es = np.linspace(0, 0.4, 30)
         V = np.zeros(x.shape)
         EigenEs = cSimpleSolve1D(step, Es, V, mass)
         psis = cSimpleFillPsi(step, EigenEs, V, mass)
@@ -35,10 +35,10 @@ class TestSimpleSchrodinger(unittest.TestCase):
         F = 2e-4
         xmax = 1E3
         mass = 0.067  # Typical parameters for GaAs
-        x = np.linspace(0, xmax, 5000)
+        x = np.linspace(0, xmax, 200)
         step = x[1] - x[0]
         V = F * (xmax - x)
-        Es = np.linspace(0, 0.15, 100)
+        Es = np.linspace(0, 0.2, 30)
         EigenEs = cSimpleSolve1D(step, Es, V, mass)
         psis = cSimpleFillPsi(step, EigenEs, V, mass)
 
