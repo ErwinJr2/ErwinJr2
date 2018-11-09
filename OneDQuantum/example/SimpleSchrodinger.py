@@ -16,7 +16,7 @@ def square_well(x0=0, x1=100, x2=300, x3=400, Vmax=0.287):
     mass = 0.067
     Es = np.linspace(0, 0.2, 100)
     EigenEs = cSimpleSolve1D(step, Es, V, mass)
-    psis = cFillPsi(step, EigenEs, V, mass)
+    psis = cSimpleFillPsi(step, EigenEs, V, mass)
     print("Eigen Energy: ", EigenEs)
     plot(x, V)
     for n in range(0, EigenEs.size):
@@ -39,16 +39,18 @@ def triangle_well(F, xmax = 1E3):
     EigenEs_th = -(hbar**2*F**2/(2*m_e*mass*e*ANG**2))**(1/3)*an
     psis_th = np.array([airy((2*mass*m_e*e*ANG**2*F/hbar**2)**(1/3) * (x-E/F))[0] 
                      for E in EigenEs_th])
+    psis_th /= (np.linalg.norm(psis_th, axis=1) * sqrt(step))[:, None]
     V = np.ascontiguousarray(V[::-1])
     psis = np.ascontiguousarray(psis[:,::-1])
     print("Eigen Energy: ", EigenEs)
     print("Thoery: ", EigenEs_th)
     print("Diff: ", EigenEs - EigenEs_th)
     plot(x, V)
+    scale = 0.15
     for n in range(0, EigenEs.size):
-        plot(x, EigenEs[n] + psis[n,:]/np.max(psis[n,:])*0.01)
+        plot(x, EigenEs[n] + psis[n,:]*scale)
     for n in range(0, EigenEs_th.size):
-        plot(x, EigenEs_th[n] + psis_th[n,:]/np.max(psis_th[n,:])*0.01, '--')
+        plot(x, EigenEs_th[n] + psis_th[n,:]*scale, '--')
     return x, V, EigenEs, psis, EigenEs_th, psis_th
 
 if __name__ == "__main__":
