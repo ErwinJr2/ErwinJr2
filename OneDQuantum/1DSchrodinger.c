@@ -114,6 +114,9 @@ numpyint SimpleSolve1D(double step, numpyint N,
 	yend = (double *)malloc(EN * sizeof(double));
 #ifdef __MP
 	#pragma omp parallel
+	#ifdef __DEBUG
+	printf("Start a simpleSolve1D with openMP.\n");
+	#endif
 #endif
 	{
 		double *y = (double *)malloc(N * sizeof(double));
@@ -242,6 +245,9 @@ numpyint BandSolve1D(double step, numpyint N,
 	yend = (double *)malloc(EN * sizeof(double));
 #ifdef __MP
 	#pragma omp parallel 
+	#ifdef __DEBUG
+	printf("Start a BandSolve1D with openMP.\n");
+	#endif
 #endif
 	{
 		double *y = (double *)malloc(N * sizeof(double));

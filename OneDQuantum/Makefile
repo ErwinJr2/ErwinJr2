@@ -7,6 +7,7 @@ CFLAGS += -Ofast -Wall -fPIC
 .SECONDARY : 
 
 all: 1DSchrodinger.so 1DThermal.so 1DMaxwell.so
+MP:  1DSchrodinger_MP.so
 
 1DSchrodinger_MP.so : 1DSchrodinger_MP.o band.o
 	$(CC) -shared -fPIC -fopenmp $^ -o $@ -lm
