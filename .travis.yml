@@ -5,6 +5,7 @@ sudo: false
 env:
     - OMP_NUM_THREADS=4
 install:
+    - pip install -r requirements.txt
     - python install.py
 script:
     - python test/SimpleSchrodinger.py
