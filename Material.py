@@ -17,6 +17,7 @@
 # ===========================================================================
 
 from warnings import warn
+# TODO: add warning for problematic datas
 from numpy import sqrt
 
 # flags for what effect to include
