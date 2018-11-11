@@ -11,7 +11,7 @@ def build_clib():
     print("Building C Lib")
     subprocess.check_call(['make'])
     try: 
-        subprocess.check_call(['make', '1DSchrodinger_MP.so'])
+        subprocess.check_call(['make', 'MP'])
     except CalledProcessError:
         print("openMP not supported")
 
