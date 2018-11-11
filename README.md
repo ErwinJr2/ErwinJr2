@@ -11,7 +11,7 @@ A C lib for 1D quantum problem, with python interface.
 
 ## TODO list
 - [X] OpenMP support
-- [ ] Material parameters (json or py?)
+- [X] Material parameters
 - [ ] Add Wurtzite crystal structure 
 - [ ] ?Add a linear algebra solver using BLAS and/or Lapack
 - [ ] ?NEGF solver
