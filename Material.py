@@ -24,10 +24,15 @@ from numpy import sqrt
 BOWING = True
 VARSH  = True
 
+# for In0.53Ga0.47As, EcG = 0.22004154
+#    use this as a zero point baseline
+bandBaseln = 0.22004154
+
 class Material(object):
     def __init__(self, Name, Temperature=300):
         self.name = Name
         self.parm = MParm[self.name]
+        self.type = self.parm.pop("Crystal")
         self.set_temperature(Temperature)
 
     def set_temperature(self, Temperature):
@@ -48,7 +53,46 @@ class Material(object):
                     self.T + self.parm["be"+pt])
                 self.parm['Eg'+pt] = Mparm[self.name]['Eg'+pt] + Varsh
 
-class Alloy(object):
+    def set_strain(self, a_parallel):
+        """Update parameters' dependence on strain, according to Pikus-Bir 
+        interaction. The input is the lattice constant of the substrate"""
+        # TODO: crystal with more than one lattice constant? 
+        # eps_parallel: strain tensor within/parallel to the layer plane
+        eps_parallel = a_parallel / self.parm["alc"] - 1
+        # self.a_perp: lattice const. perpendicular to the layer plane
+        # Ask if MBE growers care about strain on monolayer thickness
+        self.a_perp = self.parm["alc"] * (1 - 2 * self.parm["c12"] /
+                                     self.parm["c11"] * eps_parallel)
+        # eps_perp: strain tensor perpendicular to the layer plane
+        eps_perp = self.a_perp / self.parm["alc"] - 1
+        if self.type == "ZincBlende":
+            Pec = (2 * eps_parallel + eps_perp) * self.parm["acG"]
+            Pe  = (2 * eps_parallel + eps_perp) * self.parm["av"]
+            Qe  = (- self.parm["b"] * (self.parm["c11"] + 2 
+                                       * self.parm["c12"]) 
+                   / self.parm["c11"] * eps_parallel)
+            self.parm["EcG"] = (self.parm["VBO"] + self.parm["EgG"] + Pec 
+                                - bandBaseln)
+            self.parm["EcL"] = (self.parm["VBO"] + self.parm["EgL"] 
+                                + (2 * eps_parallel + eps_perp) 
+                                * (self.parm["acL"] + self.parm["av"]) 
+                                - bandBaseln)
+            self.parm["EcX"] = (self.parm["VBO"] + self.parm["EgX"] 
+                                + (2 * eps_parallel + eps_perp) 
+                                * (self.parm["acX"] + self.parm["av"]) 
+                                + 2/3*self.parm["XiX"]*(eps_perp - eps_parallel)
+                                - bandBaseln)
+            self.parm["ESO"] = sqrt(9 * Qe**2 + 2 * Qe * self.parm["DSO"] +
+                                    self.parm["DSO"]**2)
+            self.parm["EgLH"] = (self.parm["EgG"] + Pec + Pe 
+                                 - 1/2 * (Qe - self.parm["DSO"] + self.ESO))
+            self.parm["EgSO"] = (self.parm["EgG"] + Pec + Pe 
+                                 - 2/2 * (Qe - self.parm["DSO"] - self.ESO))
+        else:
+            self.parm["EcG"] = (self.parm["VBO"] + self.parm["EgG"]
+                                - bandBaseln)
+
+class Alloy(Material):
     def __init__(self, Name, x, Temperature=300):
         """Creat an alloy of material with mole fraction x, 
         x denotes to the first composition Mole fraction defined in AParm"""
@@ -56,8 +100,16 @@ class Alloy(object):
         self.comp = AParm[self.name]["composition"]
         self.A = Material(self.comp[0], Temperature)
         self.B = Material(self.comp[1], Temperature)
+        assert(self.A.type == self.B.type)
+        self.type = self.A.type
         # so alloy is A_x B_(1-x)
+        self.set_temperature(Temperature)
         self.set_molefrac(x)
+
+    def set_temperature(self, Temperature):
+        self.T = Temperature
+        self.A.set_temperature(self.T)
+        self.B.set_temperature(self.T)
 
     def set_molefrac(self, x):
         """Update parameters of the alloy with Mole fraction x, 
@@ -83,6 +135,7 @@ class Alloy(object):
 
 MParm = {
     "GaAs":{  # from Vurgaftman[0] unless specified
+        "Crystal": "ZincBlende", 
         # Lattice constant and thermal expension
         "alc": 5.65325,       # Angstrom, Ref[3] Table 2.6
         "alc_T": 3.88e-5,     # Angstrom / K
@@ -120,6 +173,7 @@ MParm = {
     },
 
     'InAs':{ # from Vurgaftman[0] unless specified
+        "Crystal": "ZincBlende", 
         "alc": 6.0583, "alc_T": 2.74e-5,
         'c11': 832.9, 'c12': 452.6,
         'EgG': 0.417, 'EgL': 1.133, 'EgX': 1.433, 'VBO': -0.59, 'DSO': 0.39,
@@ -135,6 +189,7 @@ MParm = {
     },
 
     'AlAs':{ # from Vurgaftman[0] unless specified
+        "Crystal": "ZincBlende", 
         "alc": 5.6611, "alc_T": 2.90e-5,
         'c11': 1250, 'c12': 534,
         'EgG': 3.099, 'EgL': 2.46, 'EgX': 2.24, 'VBO': -1.33, 'DSO': 0.28,
@@ -150,6 +205,7 @@ MParm = {
     },
 
     'AlSb':{ # from Vurgaftman[0] unless specified
+        "Crystal": "ZincBlende", 
         "alc": 6.1355, "alc_T": 2.60e-5,
         'c11': 876.9, 'c12': 434.1,
         'EgG': 2.386, 'EgL': 2.329, 'EgX': 1.696, 'VBO': -0.41, 'DSO': 0.676,
@@ -166,6 +222,7 @@ MParm = {
     },
 
     'GaSb':{ # from Vurgaftman[0] unless specified
+        "Crystal": "ZincBlende", 
         "alc": 6.0959, "alc_T": 4.72e-5,
         'c11': 884.2, 'c12': 402.6,
         'EgG': 0.812, 'EgL': 0.875, 'EgX': 1.141, 'VBO': -0.03, 'DSO': 0.76,
@@ -178,6 +235,7 @@ MParm = {
     },
 
     'InSb':{ # from Vurgaftman[0] unless specified
+        "Crystal": "ZincBlende", 
         "alc": 6.4794, "alc_T": 3.48e-5,
         'c11': 684.7, 'c12': 373.5,
         'EgG': 0.235, 'EgL': 0.93, 'EgX': 0.63, 'VBO': 0, 'DSO': 0.81,
@@ -191,6 +249,7 @@ MParm = {
     },
 
     'InP':{
+        "Crystal": "ZincBlende", 
         "alc": 5.869, "alc_T": 2.79e-5,
         'c11': 1011, 'c12': 561, 
         'EgG': 1.4236, 'EgL': 2.014, 'EgX': 2.384, #-3.7e-4 * T
@@ -202,6 +261,20 @@ MParm = {
         'alX': 0.363, 'beX': 162, 
         'me0': 0.0795, 'Ep': 20.7, 'F':-1.31,
     },
+    
+    "alpha-GaN":{
+        "Crystal": "Wurtzite"
+    }
+    "beta-GaN":{
+        "Crystal": "ZincBlende"
+    }
+
+    "alpha-AlN":{
+        "Crystal": "Wurtzite"
+    }
+    "beta-AlN":{
+        "Crystal": "ZincBlende"
+    }
 }
 
 AParm = {
