@@ -1,4 +1,5 @@
 *.so
 *.o
+tags
 
 __pycache__/
