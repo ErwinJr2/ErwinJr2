@@ -121,9 +121,9 @@ class Alloy(Material):
         # Here, the bowing parameter is not constant,
         # it depends on the alloy composition x.
         if self.name == 'AlGaAs': 
-            AParm[self.name]['EgG'] = -0.127 * 1.310 * x
+            AParm[self.name]['EgG'] = -0.127 + 1.310 * x
         if self.name == 'AlGaSb': 
-            AParm[self.name]['EgG'] = -0.044 * 1.22 * x
+            AParm[self.name]['EgG'] = -0.044 + 1.22 * x
 
         for k in A.parm:
             #  if not k in B.parm:
