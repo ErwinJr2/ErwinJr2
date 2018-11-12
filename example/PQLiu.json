@@ -6,7 +6,7 @@
     "EField": 102.0, 
     "x resolution": 1.0, 
     "E resolution": 0.5, 
-    "Solver": "SolverH", 
+    "Solver": "ODE", 
     "Temperature": 300.0, 
     "Repeats": 3, 
     "Materials": {
