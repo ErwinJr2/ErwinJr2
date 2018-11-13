@@ -1,5 +1,11 @@
 *.so
 *.o
+*.dll
+*.exp
+*.ipdb
+*.lib
+*.iobj
+*.pdb
 tags
 
 __pycache__/
