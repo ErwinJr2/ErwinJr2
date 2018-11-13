@@ -1,5 +1,6 @@
 #ifndef __SCIENCE
 #define __SCIENCE 
+#include <stdint.h>
 #define sq(X) ((X)*(X))
 
 #define hbar 1.0545718e-34 /*J.s*/
@@ -12,6 +13,7 @@
 /* Angstrom in meter: all unit for length is Angstrom in the program */
 
 #ifdef _WINDLL
+#define M_PI 3.14159265358979323846
 typedef int32_t numpyint;
 #else
 typedef int64_t numpyint;

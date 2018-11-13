@@ -114,7 +114,7 @@ numpyint SimpleSolve1D(double step, numpyint N,
 	yend = (double *)malloc(EN * sizeof(double));
 #ifdef __MP
 	#pragma omp parallel
-	#ifdef __DEBUG
+	#ifdef _DEBUG
 	printf("Start a simpleSolve1D with openMP.\n");
 	#endif
 #endif
@@ -147,7 +147,7 @@ numpyint SimpleSolve1D(double step, numpyint N,
 				double y2 = Numerov(step, N, 0.0, Y_EPS, E0-NSTEP, V, m, y);
 				double dy = (y1 - y2)/(2*NSTEP);
 				if(y1*y2 < 0) {
-	#ifdef __DEBUG
+	#ifdef _DEBUG
 					printf("  solution error smaller than step at E=%e,"
 							" (count=%d).\n", E0, count);
 	#endif
@@ -157,7 +157,7 @@ numpyint SimpleSolve1D(double step, numpyint N,
 				y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
 				count++;
 			}
-	#ifdef __DEBUG
+	#ifdef _DEBUG
 			printf("After %d times Newton, E=%f Err=%e\n", 
 					count, E0, fabs(y0));
 	#endif
@@ -188,7 +188,7 @@ void BandFillPsi(double step, numpyint N, const double *EigenEs,
 		numpyint EN, double* psis, const double* V, Band* mat) {
 	/* Same as SimpleFillPsi except for using band related mass */
 	int i; 
-#ifdef __DEBUG
+#ifdef _DEBUG
 	assert(N == mat->N);
 #endif
 #ifdef __MP
@@ -239,13 +239,13 @@ numpyint BandSolve1D(double step, numpyint N,
 	int NofZeros=0;
 	int i;
 
-#ifdef __DEBUG
+#ifdef _DEBUG
 	assert(N == mat->N);
 #endif
 	yend = (double *)malloc(EN * sizeof(double));
 #ifdef __MP
 	#pragma omp parallel 
-	#ifdef __DEBUG
+	#ifdef _DEBUG
 	printf("Start a BandSolve1D with openMP.\n");
 	#endif
 #endif
@@ -285,7 +285,7 @@ numpyint BandSolve1D(double step, numpyint N,
 							V, m, y);
 					double dy = (y1 - y2)/(2*NSTEP);
 					if(y1*y2 < 0) {
-	#ifdef __DEBUG
+	#ifdef _DEBUG
 						printf("  solution error smaller than step at E=%e,"
 								" (count=%d).\n", E0, count);
 	#endif
@@ -296,7 +296,7 @@ numpyint BandSolve1D(double step, numpyint N,
 					y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
 					count++;
 				}
-	#ifdef __DEBUG
+	#ifdef _DEBUG
 				printf("After %d times Newton, E=%f Err=%e\n", 
 						count, E0, fabs(y0));
 	#endif

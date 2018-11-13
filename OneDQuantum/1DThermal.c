@@ -84,7 +84,7 @@ double FermiDirac0N(double sheet, const double *EigenEs, numpyint EN,
 		invM *= step;
 		DoS2Dsum += m0/(M_PI*sq(hbar)*invM)*sq(ANG)*e0; 
 		/* DoS2D_2D = m/(pi*\hbar^2), spin included, Unit Angstrom^-2eV^-1 */
-#ifdef __DEBUG 
+#ifdef _DEBUG 
 		printf("Energy at %e, Dossum=%e, m* = %e\n", 
 				EigenEs[i], DoS2Dsum, 1/invM);
 #endif
@@ -166,7 +166,7 @@ double BoltzmannN(double T, double sheet, const double *EigenEs, numpyint EN,
 	 */
 	double sheet0 = Boltzmann(T, 0, EigenEs, EN, m, psis, N, step, eDensity); 
 	double EF = kb * T * log(sheet / sheet0);
-#ifdef __DEBUG
+#ifdef _DEBUG
 	printf("Sheet density = %e at EF = 0, so EF = %e\n", sheet0, EF);
 #endif
 	int i;
