@@ -1,6 +1,11 @@
 #include "band.h"
 /* add Wurtzite structure */
 /* Zincblende structure band, compatiable with structure BAND */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 numpyint UpdateBand(Band *band, double E, const double *xVc, double *m) {
 	return band->update(band, E, xVc, m);
 }
@@ -42,7 +47,7 @@ void ZBband_free(Band *zbband) {
 	return;
 }
 
-#ifdef __DEBUG
+#ifdef _DEBUG
 #include <stdio.h>
 void ZBband_check(const Band *band, numpyint N, const double *xEg, 
 		const double *xF, const double *xEp, const double *xESO) {
@@ -65,3 +70,7 @@ void ZBband_check(const Band *band, numpyint N, const double *xEg,
 }
 #endif
 
+
+#ifdef __cplusplus
+}
+#endif

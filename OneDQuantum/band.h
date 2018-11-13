@@ -18,10 +18,21 @@ typedef struct BAND{
 	numpyint N;           /* Size of datas */
 	double *Eg;      /* Band gap in eV */
 } Band; 
+
+#ifdef _WINDLL
+__declspec(dllexport)
+#endif 
 numpyint UpdateBand(Band *, double, const double *, double *);
 
+#ifdef _WINDLL
+__declspec(dllexport)
+#endif 
 Band *ZBband_new(numpyint N, const double *xEg, const double *xF,
 		const double *xEp, const double *xESO);
+
+#ifdef _WINDLL
+__declspec(dllexport)
+#endif 
 void ZBband_free(Band *);
 
 #endif /* ifndef BAND_H */
