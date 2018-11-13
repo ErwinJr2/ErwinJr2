@@ -1,4 +1,4 @@
-CFLAGS += -Ofast -Wall -fPIC #-D __DEBUG
+CFLAGS += -Ofast -Wall -fPIC #-D _DEBUG
 # CC = icc
 # CFLAGS = -march=native -Ofast -gcc-name=gcc-6 -Wall
 
