@@ -35,7 +35,7 @@ def bindOpenMP(on=True):
 
     _clib.BandSolve1D.argtypes = [c_double, c_int, _doubleArray, c_int,
                                    _doubleArray, POINTER(cBand), _doubleArray]
-    _clib.SimpleSolve1D.restype = c_int
+    _clib.BandSolve1D.restype = c_int
 
     _clib.BandFillPsi.argtypes = [c_double, c_int, _doubleArray, c_int, 
                              _doubleArray, _doubleArray, POINTER(cBand)]
