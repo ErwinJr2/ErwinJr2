@@ -62,7 +62,7 @@ def qclSaveJSON(fhandle, qclayers):
                                           o.EField, o.xres, o.Eres, o.Solver, 
                                           o.Temperature, o.repeats, 
                                           o.materials, o.moleFracs,
-                                          o.layerMaterials, o.layerWidths,
+                                          o.layerMaterialIdxs, o.layerWidths,
                                           o.layerDopings, o.layerARs)]
     fhandle.write(JSONTemplate % tuple(parameters))
 
