@@ -3,19 +3,31 @@
 
 #TODO: add dependence check
 
-import os, subprocess
+import os, sys, subprocess
 
-def build_clib():
-    make_cmd = ['make']
+def build_clib(MSBuild=None):
+    if not MSBuild:
+        make_cmd = ['make']
+        makemp_cmd = ['make', 'MP']
+    else: 
+        make_cmd = [MSBuild, 'OneDQuantum.sln', '/p:Configuration=Release']
+        makemp_cmd = [MSBuild, '1DSchrodinger.vcxproj', '/p:Configuration=MP_Release']
+        print(make_cmd)
     os.chdir(os.path.join(os.path.dirname(__file__), 'OneDQuantum'))
     print("Building C Lib")
-    subprocess.check_call(['make'])
+    subprocess.check_call(make_cmd)
     try: 
-        subprocess.check_call(['make', 'MP'])
+        subprocess.check_call(makemp_cmd)
     except CalledProcessError:
         print("openMP not supported")
 
 if __name__ == "__main__":
-    build_clib()
+    MSBuild = None
+    for opt in sys.argv[1:]: 
+        if opt.lower().startswith("msbuild="):
+            MSBuild=opt[8:]
+        else: 
+            print("Unknown option %s"%opt)
+    build_clib(MSBuild)
 
 # vim: ts=4 sw=4 sts=4 expandtab
