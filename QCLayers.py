@@ -48,7 +48,7 @@ class QCLayers(object):
 
     def populate_x(self):
         update_strain()
-        for n in len(self.layerWidths): 
+        for n in range(len(self.layerWidths)): 
             pass
 
 
