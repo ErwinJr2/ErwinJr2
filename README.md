@@ -1,4 +1,4 @@
-1D Quantum solver
+1D Quantum solver for Quantum Cascade Laser simulation
 ================
 
 master:
@@ -6,8 +6,9 @@ master:
 dev:
 [![dev Build Status](https://travis-ci.org/PrincetonUniversity/OneDQ.svg?branch=dev)](https://travis-ci.org/PrincetonUniversity/OneDQ)
 
+This is a extendable Python/C program for 1D quantum problem and Quantum Cascade Laser simulation. 
 
-A C lib for 1D quantum problem, with python interface. 
+`OneDQuantum` is A C lib for 1D quantum problem, with python interface. 
 
 ## TODO list
 - [X] OpenMP support
