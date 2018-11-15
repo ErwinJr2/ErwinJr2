@@ -64,9 +64,18 @@ void SimpleFillPsi(double step, numpyint N, const double *EigenEs,
 	 */
 	int i; 
 #ifdef __MP
+	#ifdef _DEBUG
+	printf("Start a SimpleFillPsi with openMP.\n");
+	#endif
 	#pragma omp parallel for
 #endif
 	for(i=0; i<EN; i++) {
+#ifdef __MP
+	#ifdef _DEBUG
+		printf("    From thread %d out of %d\n", 
+				omp_get_thread_num(), omp_get_num_threads());
+	#endif
+#endif
 		int j;
 		double* psi = psis + i*N;
 		double modsq = 0;
@@ -113,14 +122,18 @@ numpyint SimpleSolve1D(double step, numpyint N,
 
 	yend = (double *)malloc(EN * sizeof(double));
 #ifdef __MP
-	#pragma omp parallel
 	#ifdef _DEBUG
 	printf("Start a simpleSolve1D with openMP.\n");
 	#endif
+	#pragma omp parallel
 #endif
 	{
 		double *y = (double *)malloc(N * sizeof(double));
 #ifdef __MP
+	#ifdef _DEBUG
+		printf("    From thread %d out of %d\n", 
+				omp_get_thread_num(), omp_get_num_threads());
+	#endif
 		#pragma omp for
 #endif
 		for(i=0; i<EN; i++) {
@@ -192,11 +205,18 @@ void BandFillPsi(double step, numpyint N, const double *EigenEs,
 	assert(N == mat->N);
 #endif
 #ifdef __MP
+	#ifdef _DEBUG
+	printf("Start a BandFillPsi with openMP.\n");
+	#endif
 	#pragma omp parallel 
 #endif
 	{
 		double* m = (double*)malloc(N*sizeof(double));
 #ifdef __MP
+	#ifdef _DEBUG
+		printf("    From thread %d out of %d\n", 
+				omp_get_thread_num(), omp_get_num_threads());
+	#endif
 		#pragma omp for
 #endif
 		for(i=0; i<EN; i++) {
@@ -244,15 +264,19 @@ numpyint BandSolve1D(double step, numpyint N,
 #endif
 	yend = (double *)malloc(EN * sizeof(double));
 #ifdef __MP
-	#pragma omp parallel 
 	#ifdef _DEBUG
 	printf("Start a BandSolve1D with openMP.\n");
 	#endif
+	#pragma omp parallel 
 #endif
 	{
 		double *y = (double *)malloc(N * sizeof(double));
 		double *m = (double *)malloc(N * sizeof(double));
 #ifdef __MP
+	#ifdef _DEBUG
+		printf("    From thread %d out of %d\n", 
+				omp_get_thread_num(), omp_get_num_threads());
+	#endif
 		#pragma omp for
 #endif
 		for(i=0; i<EN; i++) {
