@@ -164,6 +164,9 @@ numpyint SimpleSolve1D(double step, numpyint N,
 					printf("  solution error smaller than step at E=%e,"
 							" (count=%d).\n", E0, count);
 	#endif
+					E0 = (E0 + NSTEP)*y0*y2 / ( (y1 - y2)*(y1 - y0) )
+						+ E0*y1*y2 / ( (y0 - y2)*(y0 - y1) )
+						+ (E0 - NSTEP)*y1*y0 / ( (y2 - y0)*(y2 - y1) );
 					break;
 				}
 				E0 -= y0/dy;
