@@ -13,3 +13,13 @@ VSCache/
 *.ilk
 
 __pycache__/
+
+## compiled files from docs
+*.aux
+*.pdf
+*.toc
+*.fdb_latexmk
+*.out
+*.log
+*.fls
+*.synctex.gz
