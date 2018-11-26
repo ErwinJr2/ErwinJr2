@@ -37,18 +37,18 @@ class QCLayers(object):
         self.description = description
 
     def update_strain(self):
-        self.subM = Material.Material(self.substrate, selt.Temperature)
+        self.subM = Material.Material(self.substrate, self.Temperature)
         self.layerMaterials = [Material.Alloy(self.materials[idx],
                                               self.moleFracs[idx],
-                                              self.Temperature) 
+                                              self.Temperature)
                                for idx in self.layerMaterialIdxs]
         self.a_parallel = self.subM.parm['alc']
         for alloy in self.layerMaterials:
             alloy.set_strain(self.a_parallel)
 
     def populate_x(self):
-        update_strain()
-        for n in range(len(self.layerWidths)): 
+        self.update_strain()
+        for n in range(len(self.layerWidths)):
             pass
 
 
