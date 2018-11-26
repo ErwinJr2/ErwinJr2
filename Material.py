@@ -31,7 +31,7 @@ bandBaseln = 0.22004154
 class Material(object):
     def __init__(self, Name, Temperature=300):
         self.name = Name
-        self.parm = MParm[self.name]
+        self.parm = MParm[self.name].copy()
         self.type = self.parm.pop("Crystal")
         self.set_temperature(Temperature)
 
@@ -84,10 +84,10 @@ class Material(object):
                                 - bandBaseln)
             self.parm["ESO"] = sqrt(9 * Qe**2 + 2 * Qe * self.parm["DSO"] +
                                     self.parm["DSO"]**2)
-            self.parm["EgLH"] = (self.parm["EgG"] + Pec + Pe 
-                                 - 1/2 * (Qe - self.parm["DSO"] + self.ESO))
-            self.parm["EgSO"] = (self.parm["EgG"] + Pec + Pe 
-                                 - 2/2 * (Qe - self.parm["DSO"] - self.ESO))
+            self.parm["EgLH"] = (self.parm["EgG"] + Pec + Pe - 1/2 * (
+                Qe - self.parm["DSO"] + self.parm["ESO"]))
+            self.parm["EgSO"] = (self.parm["EgG"] + Pec + Pe - 2/2 * (
+                Qe - self.parm["DSO"] - self.parm["ESO"]))
         else:
             self.parm["EcG"] = (self.parm["VBO"] + self.parm["EgG"]
                                 - bandBaseln)
@@ -125,13 +125,13 @@ class Alloy(Material):
         if self.name == 'AlGaSb': 
             AParm[self.name]['EgG'] = -0.044 + 1.22 * x
 
-        for k in A.parm:
+        for k in self.A.parm:
             #  if not k in B.parm:
             #      continue
-            self.parm[k] = (x * A.parm[k] + (1-x) * B.parm[k])
+            self.parm[k] = (x * self.A.parm[k] + (1-x) * self.B.parm[k])
             if BOWING and k in AParm[self.name]:
                 # Bowing parameters
-                self.parm[k] -= x * (1-x) * AParm[self.name]
+                self.parm[k] -= x * (1-x) * AParm[self.name][k]
 
 MParm = {
     "GaAs":{  # from Vurgaftman[0] unless specified

@@ -43,8 +43,9 @@ class QCLayers(object):
         self.Solver = Solver
         self.description = description
 
-    def update_strain(self):
         self.subM = Material.Material(self.substrate, self.Temperature)
+
+    def update_strain(self):
         self.layerMaterials = [Material.Alloy(self.materials[idx],
                                               self.moleFracs[idx],
                                               self.Temperature)
