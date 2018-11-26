@@ -15,7 +15,14 @@ qcMaterial = {
 }
 
 class QCLayers(object):
-    """Class for QCLayers"""
+    """Class for QCLayers
+    Member variables:
+        parameters for each layer, np.array type, with len = No. of layers:
+            layerWidths - width of each layer, float
+            layerMaterialIdxs - label of materials, binary int
+            layerDopings - 
+            layerARs - if the layer is activ eor not, binary int
+    """
     def __init__(self, substrate="InP", materials=["InGaAs", "AlInAs"], 
                  moleFracs=[0.53, 0.52], xres=0.5, Eres=0.5, 
                  layerWidths=[0.0], layerMaterialIdxs=[0], layerDopings=[0.0], 
@@ -24,12 +31,12 @@ class QCLayers(object):
         self.substrate = substrate
         self.materials = materials
         self.moleFracs = moleFracs
-        self.xres = xres
+        self.xres = np.array(xres)
         self.Eres = Eres
-        self.layerWidths = layerWidths
-        self.layerMaterialIdxs = layerMaterialIdxs
-        self.layerDopings = layerDopings
-        self.layerARs = layerARs
+        self.layerWidths = np.array(layerWidths)
+        self.layerMaterialIdxs = np.array(layerMaterialIdxs)
+        self.layerDopings = np.array(layerDopings)
+        self.layerARs = np.array(layerARs)
         self.EField = EField
         self.repeats = repeats
         self.Temperature = T
