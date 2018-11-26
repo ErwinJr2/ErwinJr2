@@ -2,4 +2,5 @@ from context import *
 import QCLayers as qcl
 import SaveLoad
 
-SaveLoad.qclLoad("../example/PQLiu.json")
+with open("../example/PQLiu.json") as f:
+     qcl = SaveLoad.qclLoad(f)
