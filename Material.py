@@ -40,8 +40,8 @@ class Material(object):
         for k in self.parm:
             if k.endswith("lc") and k+"_T" in self.parm:
                 # k is about lattice constant
-                self.parm[k] = (Mparm[self.name][k] + (self.T - 300)
-                                * Mparm[self.name][k+"_T"])
+                self.parm[k] = (MParm[self.name][k] + (self.T - 300)
+                                * MParm[self.name][k+"_T"])
         # Varshni correction to bandgap [4]
         # major assumption:
         #   Correction only to conduction band (no influence on VBO)
@@ -51,7 +51,7 @@ class Material(object):
             for pt in ('G', 'X', 'L'): 
                 Varsh = -self.parm["al"+pt] * self.T**2 / (
                     self.T + self.parm["be"+pt])
-                self.parm['Eg'+pt] = Mparm[self.name]['Eg'+pt] + Varsh
+                self.parm['Eg'+pt] = MParm[self.name]['Eg'+pt] + Varsh
 
     def set_strain(self, a_parallel):
         """Update parameters' dependence on strain, according to Pikus-Bir 
