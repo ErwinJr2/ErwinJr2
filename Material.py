@@ -264,14 +264,14 @@ MParm = {
     
     "alpha-GaN":{
         "Crystal": "Wurtzite"
-    }
+    },
     "beta-GaN":{
         "Crystal": "ZincBlende"
-    }
+    },
 
     "alpha-AlN":{
         "Crystal": "Wurtzite"
-    }
+    },
     "beta-AlN":{
         "Crystal": "ZincBlende"
     }
