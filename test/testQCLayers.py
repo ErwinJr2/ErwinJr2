@@ -5,5 +5,3 @@ with open("../example/PQLiu.json") as f:
      qcl = SaveLoad.qclLoad(f)
 
 qcl.populate_x()
-
-print(qcl.layerMaterials)
