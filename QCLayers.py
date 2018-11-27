@@ -57,8 +57,7 @@ class QCLayers(object):
     def populate_x(self):
         self.update_strain()
         # largest index of grid
-        Max_grid_ind = int(sum(self.layerWidths)/self.xres)
-        self.xPoints = np.arange(0, Max_grid_ind+1) * self.xres
+        self.xPoints = np.arange(0, sum(self.layerWidths), self.xres)
         self.xMaterialsIdxs = np.ones_like(self.xPoints, dtype=int)
         self.xDopings = np.ones_like(self.xPoints, dtype=float)
         # should we set AR as a boolean
