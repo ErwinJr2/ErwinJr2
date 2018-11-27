@@ -85,7 +85,7 @@ class QCLayers(object):
         self.xEg = np.zeros_like(self.xPoints, dtype=float)
 
         # change indx to the indices with the same type of meterials
-        for indx in range(Max_grid_ind+1):
+        for indx in range(self.xPoints.size):
             self.xVc[indx] = (self.layerMaterials[self.xLayerNums[indx]].parm['EcG']
                               - self.xPoints[indx] * self.EField )
             self.xEg[indx] = (self.layerMaterials[self.xLayerNums[indx]].parm['EgLH'])
