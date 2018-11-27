@@ -31,12 +31,12 @@ class QCLayers(object):
         self.substrate = substrate
         self.materials = materials
         self.moleFracs = moleFracs
-        self.xres = np.array(xres)
+        self.xres = xres
         self.Eres = Eres
-        self.layerWidths = np.array(layerWidths)
-        self.layerMaterialIdxs = np.array(layerMaterialIdxs)
-        self.layerDopings = np.array(layerDopings)
-        self.layerARs = np.array(layerARs)
+        self.layerWidths = layerWidths
+        self.layerMaterialIdxs = layerMaterialIdxs
+        self.layerDopings = layerDopings
+        self.layerARs = layerARs
         self.EField = EField
         self.repeats = repeats
         self.Temperature = T
@@ -56,8 +56,33 @@ class QCLayers(object):
 
     def populate_x(self):
         self.update_strain()
+        # largest index of grid
+        Max_grid_ind = int(sum(self.layerWidths)/self.xres)
+        self.xPoints = np.arange(0, Max_grid_ind+1) * self.xres
+        self.xMaterialsIdxs = np.ones_like(self.xPoints, dtype=int)
+        self.xDopings = np.ones_like(self.xPoints, dtype=float)
+        # should we set AR as a boolean
+        self.xARs = np.ones_like(self.xPoints, dtype=float)
+        self.xLayerNums = np.ones_like(self.xPoints, dtype=int)
+
+        layerNumCumSum = np.concatenate(([0],
+                                np.cumsum(np.array(self.layerWidths))))
         for n in range(len(self.layerWidths)):
-            pass
+            if n==(len(self.layerWidths)-1):
+                Indices = np.logical_and(self.xPoints >= layerNumCumSum[n],
+                                         self.xPoints <= layerNumCumSum[n+1])
+            else:
+                Indices = np.logical_and(self.xPoints >= layerNumCumSum[n],
+                                         self.xPoints < layerNumCumSum[n+1])
+            
+            self.xMaterialsIdxs[Indices] = self.xMaterialsIdxs[Indices] * \
+                                           self.layerMaterialIdxs[n]
+            self.xDopings[Indices] = self.xDopings[Indices] * \
+                                     self.layerDopings[n]
+            self.xARs[Indices] = self.xARs[Indices] * self.layerARs[n]
+            self.xLayerNums[Indices] = self.xLayerNums[Indices] * n
+            
+            
 
 
 # vim: ts=4 sw=4 sts=4 expandtab
