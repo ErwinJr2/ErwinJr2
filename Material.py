@@ -337,20 +337,26 @@ AParm = {
     }
 }
 
+def main(material):
+    print("Looking for parameters of %s:" % material)
+    if material in AParm:
+        A, B = AParm[material]['composition']
+        print("Alloy with (%s)x(%s)1-x"%(A,B))
+        print("%s: "%A, MParm[A])
+        print("%s: "%B, MParm[B])
+        print("Bowing parameters:", AParm[material])
+        return 0
+    elif material in MParm: 
+        print(MParm[material])
+        return 0
+    else:
+        print("Not found.")
+        return 1
+
 if __name__ == "__main__":
     import sys
     for material in sys.argv[1:]: 
-        print("Looking for parameters of %s:" % material)
-        if material in AParm:
-            A, B = AParm[material]['composition']
-            print("Alloy with (%s)x(%s)1-x"%(A,B))
-            print("%s: "%A, MParm[A])
-            print("%s: "%B, MParm[B])
-            print("Bowing parameters:", AParm[material])
-        elif material in MParm: 
-            print(MParm[material])
-        else:
-            print("Not found.")
+        main(material)
         print("")
 
 #m vim: ts=4 sw=4 sts=4 expandtab

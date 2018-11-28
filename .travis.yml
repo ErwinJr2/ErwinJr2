@@ -8,6 +8,6 @@ install:
     - pip install -r requirements.txt
     - python install.py
 script:
-    - python test/SimpleSchrodinger.py
-    - python test/SimpleSchrodinger.py MP
-    - python Material.py GaAs AlGaAs
+    - python -m unittest -v test/SimpleSchrodinger.py
+    - python -m unittest -v test/SimpleSchrodinger.py MP
+    - python -m unittest -v test/testMaterial.py
