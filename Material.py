@@ -29,6 +29,8 @@ VARSH  = True
 bandBaseln = 0.22004154
 
 class Material(object):
+    """Creat an semiconductor material class as data collection of its
+    parameters. """
     def __init__(self, Name, Temperature=300):
         self.name = Name
         self.parm = MParm[self.name].copy()
@@ -36,6 +38,8 @@ class Material(object):
         self.set_temperature(Temperature)
 
     def set_temperature(self, Temperature):
+        """ Set Temperature of the material and update related parameters: 
+        lattice consant and band gap. """
         self.T = Temperature
         for k in self.parm:
             if k.endswith("lc") and k+"_T" in self.parm:
@@ -55,7 +59,7 @@ class Material(object):
 
     def set_strain(self, a_parallel):
         """Update parameters' dependence on strain, according to Pikus-Bir 
-        interaction. The input is the lattice constant of the substrate"""
+        interaction. The input is the lattice constant of the substrate. """
         # TODO: crystal with more than one lattice constant? 
         # eps_parallel: strain tensor within/parallel to the layer plane
         eps_parallel = a_parallel / self.parm["alc"] - 1
@@ -95,9 +99,9 @@ class Material(object):
                                 - bandBaseln)
 
 class Alloy(Material):
+    """Creat an alloy of material with mole fraction x, 
+    x denotes to the first composition Mole fraction defined in AParm"""
     def __init__(self, Name, x, Temperature=300):
-        """Creat an alloy of material with mole fraction x, 
-        x denotes to the first composition Mole fraction defined in AParm"""
         self.name = Name
         self.comp = AParm[self.name]["composition"]
         self.A = Material(self.comp[0], Temperature)
@@ -109,6 +113,8 @@ class Alloy(Material):
         self.set_molefrac(x)
 
     def set_temperature(self, Temperature):
+        """ Set Temperature of the material and update related parameters: 
+        lattice consant and band gap. """
         self.T = Temperature
         self.A.set_temperature(self.T)
         self.B.set_temperature(self.T)
@@ -345,5 +351,6 @@ if __name__ == "__main__":
             print(MParm[material])
         else:
             print("Not found.")
+        print("")
 
 #m vim: ts=4 sw=4 sts=4 expandtab
