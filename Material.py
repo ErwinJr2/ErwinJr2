@@ -90,7 +90,7 @@ class Material(object):
                                     self.parm["DSO"]**2)
             self.parm["EgLH"] = (self.parm["EgG"] + Pec + Pe - 1/2 * (
                 Qe - self.parm["DSO"] + self.parm["ESO"]))
-            self.parm["EgSO"] = (self.parm["EgG"] + Pec + Pe - 2/2 * (
+            self.parm["EgSO"] = (self.parm["EgG"] + Pec + Pe - 1/2 * (
                 Qe - self.parm["DSO"] - self.parm["ESO"]))
             self.parm["EvLH"] = self.parm["EcG"] - self.parm["EgLH"] 
             self.parm["EvSO"] = self.parm["EcG"] - self.parm["EgSO"]
