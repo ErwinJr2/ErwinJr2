@@ -15,7 +15,7 @@ class TestMaterial(unittest.TestCase):
         gaas = Material.Material("GaAs")
         #  self.assertEqual(gaas.parm.pop("Crystal"), "ZincBlende")
         for key in gaas.parm:
-            self.assertEqual(algaas.parm[key], gaas.parm[key])
+            self.assertAlmostEqual(algaas.parm[key], gaas.parm[key])
 
     def test_zero_strain(self):
         gaas = Material.Material("GaAs")
