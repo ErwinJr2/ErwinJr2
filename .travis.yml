@@ -10,3 +10,4 @@ install:
 script:
     - python test/SimpleSchrodinger.py
     - python test/SimpleSchrodinger.py MP
+    - python Material.py GaAs AlGaAs
