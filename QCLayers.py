@@ -58,7 +58,9 @@ class QCLayers(object):
 
     def populate_x(self):
         self.update_strain()
-        self.xPoints = np.arange(0, sum(self.layerWidths), self.xres)
+        layerNumCumSum = [0] + np.cumsum(self.layerWidths).tolist()
+        periodL = layerNumCumSum[-1]
+        self.xPoints = np.arange(0, periodL* self.repeats, self.xres)
         # largest index of grid
         N = self.xPoints.size
         self.xMaterialsIdxs = np.empty(N, dtype=int)
@@ -78,10 +80,13 @@ class QCLayers(object):
         self.xEp = np.empty(N)
         self.xF = np.empty(N)
 
-        layerNumCumSum = [0] + np.cumsum(self.layerWidths).tolist()
         for n in range(len(self.layerWidths)):
-            Indices = np.logical_and(self.xPoints >= layerNumCumSum[n],
-                                     self.xPoints < layerNumCumSum[n+1])
+            #  Indices = np.logical_and(self.xPoints >= layerNumCumSum[n],
+            #                           self.xPoints < layerNumCumSum[n+1])
+            Indices = np.logical_or.reduce([
+                (self.xPoints >= layerNumCumSum[n] + k * periodL) 
+                & (self.xPoints < layerNumCumSum[n+1] + k * periodL)
+                for k in range(self.repeats)])
             
             self.xLayerNums[Indices] = n
             self.xMaterialsIdxs[Indices] = self.layerMaterialIdxs[n]
