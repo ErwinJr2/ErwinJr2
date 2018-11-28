@@ -56,39 +56,30 @@ class QCLayers(object):
 
     def populate_x(self):
         self.update_strain()
-        # largest index of grid
         self.xPoints = np.arange(0, sum(self.layerWidths), self.xres)
-        self.xMaterialsIdxs = np.ones_like(self.xPoints, dtype=int)
-        self.xDopings = np.ones_like(self.xPoints, dtype=float)
-        # should we set AR as a boolean
-        self.xARs = np.ones_like(self.xPoints, dtype=float)
-        self.xLayerNums = np.ones_like(self.xPoints, dtype=int)
+        # largest index of grid
+        N = self.xPoints.size
+        self.xMaterialsIdxs = np.empty(N, dtype=int)
+        self.xDopings = np.empty(N)
+        self.xARs = np.empty(N, dtype=bool)
+        self.xLayerNums = np.empty(N, dtype=int)
 
-        layerNumCumSum = np.concatenate(([0],
-                                np.cumsum(np.array(self.layerWidths))))
+        self.xVc = np.empty(N)
+        self.xEg = np.empty(N)
+
+        layerNumCumSum = [0] + np.cumsum(self.layerWidths).tolist()
         for n in range(len(self.layerWidths)):
-            if n==(len(self.layerWidths)-1):
-                Indices = np.logical_and(self.xPoints >= layerNumCumSum[n],
-                                         self.xPoints <= layerNumCumSum[n+1])
-            else:
-                Indices = np.logical_and(self.xPoints >= layerNumCumSum[n],
-                                         self.xPoints < layerNumCumSum[n+1])
+            Indices = np.logical_and(self.xPoints >= layerNumCumSum[n],
+                                     self.xPoints < layerNumCumSum[n+1])
             
-            self.xMaterialsIdxs[Indices] = self.xMaterialsIdxs[Indices] * \
-                                           self.layerMaterialIdxs[n]
-            self.xDopings[Indices] = self.xDopings[Indices] * \
-                                     self.layerDopings[n]
-            self.xARs[Indices] = self.xARs[Indices] * self.layerARs[n]
-            self.xLayerNums[Indices] = self.xLayerNums[Indices] * n
+            self.xLayerNums[Indices] = n
+            self.xMaterialsIdxs[Indices] = self.layerMaterialIdxs[n]
+            self.xDopings[Indices] = self.layerDopings[n]
+            self.xARs[Indices] = self.layerARs[n]
 
-        self.xVc = np.zeros_like(self.xPoints, dtype=float)
-        self.xEg = np.zeros_like(self.xPoints, dtype=float)
+            for (p, key) in ((self.xVc, 'EcG'), (self.xEg, 'EgLH')):
+                p[Indices] = self.layerMaterials[n].parm[key]
 
-        # change indx to the indices with the same type of meterials
-        for indx in range(self.xPoints.size):
-            self.xVc[indx] = (self.layerMaterials[self.xLayerNums[indx]].parm['EcG']
-                              - self.xPoints[indx] * self.EField )
-            self.xEg[indx] = (self.layerMaterials[self.xLayerNums[indx]].parm['EgLH'])
-
+        self.xVc -= self.xPoints * self.EField
 
 # vim: ts=4 sw=4 sts=4 expandtab
