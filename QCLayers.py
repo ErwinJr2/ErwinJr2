@@ -8,6 +8,8 @@ from scipy.constants import (e as e0, epsilon_0 as eps0, h as h,
 import OneDQuantum as onedq
 import Material
 
+EUnit = 1e-5    # E field unit from kV/cm to V/Angtrom
+
 qcMaterial = {
     "InP":  ["InGaAs", "AlInAs"], 
     "GaAs": ["AlGaAs", "AlGaAs"], 
@@ -80,6 +82,6 @@ class QCLayers(object):
             for (p, key) in ((self.xVc, 'EcG'), (self.xEg, 'EgLH')):
                 p[Indices] = self.layerMaterials[n].parm[key]
 
-        self.xVc -= self.xPoints * self.EField
+        self.xVc -= self.xPoints * self.EField * EUnit
 
 # vim: ts=4 sw=4 sts=4 expandtab
