@@ -14,6 +14,9 @@ def plot_band(axes, qcLayers):
     #                   (qcLayers.xVSO, 'r--')):
     #      axes.plot(qcLayers.xPoints, xv, conf, linewidth=1)
 
+    fsize = 12
+    axes.set_xlabel('Position (Å)', fontsize=fsize)
+    axes.set_ylabel('Energy (eV)', fontsize=fsize)
     axes.plot(qcLayers.xPoints, qcLayers.xVc, 'k', linewidth=1)
 
     if hasattr(qcLayers, 'EigenE'): 
