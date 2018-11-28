@@ -18,17 +18,20 @@ def plot_band(axes, qcLayers):
     axes.set_xlabel('Position (Å)', fontsize=fsize)
     axes.set_ylabel('Energy (eV)', fontsize=fsize)
     axes.plot(qcLayers.xPoints, qcLayers.xVc, 'k', linewidth=1)
+    #  axes.plot(qcLayers.xPoints, qcLayers.xLayerSelected, 'b')
 
-    if hasattr(qcLayers, 'EigenE'): 
-        for n in range(qcLayers.EigenE.size): 
+    if hasattr(qcLayers, 'eigenEs'): 
+        for n in range(qcLayers.eigenEs.size): 
             axes.plot(qcLayers.xPoints, 
-                      qcLayers.psis[:, n]+qcLayers.EigenE[n])
+                      10*qcLayers.psis[n, :]**2 + qcLayers.eigenEs[n])
 
 if __name__ == "__main__":
     with open("../example/PQLiu.json") as f:
          qcl = SaveLoad.qclLoad(f)
 
+    qcl.layerSelected = 3
     qcl.populate_x()
+    qcl.solve_whole()
     axes = plt.axes()
     plot_band(axes, qcl)
     plt.show()
