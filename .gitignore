@@ -13,6 +13,7 @@ VSCache/
 *.ilk
 
 __pycache__/
+*.pyc
 
 ## compiled files from docs
 *.aux
