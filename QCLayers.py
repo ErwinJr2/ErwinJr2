@@ -95,10 +95,8 @@ class QCLayers(object):
                              (self.xVSO, 'EvSO'), (self.xF, 'F')):
                 p[Indices] = self.layerMaterials[n].parm[key]
 
-        self.xVc -= self.xPoints * self.EField * EUnit
-        self.xVX -= self.xPoints * self.EField * EUnit
-        self.xVL -= self.xPoints * self.EField * EUnit
-        self.xVLH -= self.xPoints * self.EField * EUnit
-        self.xVSO -= self.xPoints * self.EField * EUnit
+        ExtField = self.xPoints * self.EField * EUnit
+        for p in (self.xVc, self.xVX, self.xVL, self.xVLH, self.xVSO):
+            p -= ExtField
 
 # vim: ts=4 sw=4 sts=4 expandtab
