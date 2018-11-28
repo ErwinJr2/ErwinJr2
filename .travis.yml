@@ -8,6 +8,6 @@ install:
     - pip install -r requirements.txt
     - python install.py
 script:
-    - python -m unittest -v test/SimpleSchrodinger.py
-    - python -m unittest -v test/SimpleSchrodinger.py MP
-    - python -m unittest -v test/testMaterial.py
+    - pytest -v test/SimpleSchrodinger.py
+    - python test/SimpleSchrodinger.py MP
+    - pytest -v test/testMaterial.py
