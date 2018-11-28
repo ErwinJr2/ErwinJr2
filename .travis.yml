@@ -9,5 +9,5 @@ install:
     - python install.py
 script:
     - pytest -v test/SimpleSchrodinger.py
-    - pytest -v test/SimpleSchrodinger.py MP
+    - python test/SimpleSchrodinger.py MP
     - pytest -v test/testMaterial.py
