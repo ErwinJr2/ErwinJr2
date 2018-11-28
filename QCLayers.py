@@ -67,7 +67,16 @@ class QCLayers(object):
         self.xLayerNums = np.empty(N, dtype=int)
 
         self.xVc = np.empty(N)
+        self.xVX = np.empty(N)
+        self.xVL = np.empty(N)
+        self.xVLH = np.empty(N)
+        self.xVSO = np.empty(N)
+        
         self.xEg = np.empty(N)
+        self.xMc = np.empty(N)
+        self.xESO = np.empty(N)
+        self.xEp = np.empty(N)
+        self.xF = np.empty(N)
 
         layerNumCumSum = [0] + np.cumsum(self.layerWidths).tolist()
         for n in range(len(self.layerWidths)):
@@ -79,9 +88,17 @@ class QCLayers(object):
             self.xDopings[Indices] = self.layerDopings[n]
             self.xARs[Indices] = self.layerARs[n]
 
-            for (p, key) in ((self.xVc, 'EcG'), (self.xEg, 'EgLH')):
+            for (p, key) in ((self.xVc, 'EcG'), (self.xEg, 'EgLH'),
+                             (self.xVX, 'EcX'), (self.xMc, 'me0'),
+                             (self.xVL, 'EcL'), (self.xESO, 'ESO'),
+                             (self.xVLH, 'EvLH'), (self.xEp, 'Ep'),
+                             (self.xVSO, 'EvSO'), (self.xF, 'F')):
                 p[Indices] = self.layerMaterials[n].parm[key]
 
         self.xVc -= self.xPoints * self.EField * EUnit
+        self.xVX -= self.xPoints * self.EField * EUnit
+        self.xVL -= self.xPoints * self.EField * EUnit
+        self.xVLH -= self.xPoints * self.EField * EUnit
+        self.xVSO -= self.xPoints * self.EField * EUnit
 
 # vim: ts=4 sw=4 sts=4 expandtab
