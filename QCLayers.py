@@ -104,4 +104,11 @@ class QCLayers(object):
         for p in (self.xVc, self.xVX, self.xVL, self.xVLH, self.xVSO):
             p -= ExtField
 
+    def solve_whole(self):
+        Es = np.linspace(np.min(self.xVc), np.max(self.xVc), 1000)
+        self.eigenEs = onedq.cSimpleSolve1D(self.xres, Es,
+                                            self.xVc, self.xMc)
+        self.psis = onedq.cSimpleFillPsi(self.xres, self.eigenEs,
+                                         self.xVc, self.xMc)
+
 # vim: ts=4 sw=4 sts=4 expandtab
