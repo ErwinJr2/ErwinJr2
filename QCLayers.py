@@ -44,6 +44,7 @@ class QCLayers(object):
         self.Temperature = T
         self.Solver = Solver
         self.description = description
+        self.NonParabolic = False
         self.layerSelected = None
 
         self.subM = Material.Material(self.substrate, self.Temperature)
@@ -105,19 +106,23 @@ class QCLayers(object):
         for p in (self.xVc, self.xVX, self.xVL, self.xVLH, self.xVSO):
             p -= ExtField
 
-        if self.layerSelected is not None:
-            self.indicesSelected = np.empty([self.repeats,N], dtype=bool)
-            for k in range(self.repeats):
-                self.indicesSelected[k, :] = np.logical_and(
-                    self.xPoints >= layerNumCumSum[self.layerSelected] + k * periodL,
-                    self.xPoints < layerNumCumSum[self.layerSelected+1] + k * periodL)
-
+        #  if self.layerSelected:
+        xSlt = (self.xLayerNums == self.layerSelected)
+        xSlt = (xSlt | np.roll(xSlt, 1) | np.roll(xSlt, -1))
+        self.xlayerSelected = np.ma.masked_where(~xSlt , self.xVc)
 
     def solve_whole(self):
         Es = np.linspace(np.min(self.xVc), np.max(self.xVc), 1000)
-        self.eigenEs = onedq.cSimpleSolve1D(self.xres, Es,
-                                            self.xVc, self.xMc)
-        self.psis = onedq.cSimpleFillPsi(self.xres, self.eigenEs,
-                                         self.xVc, self.xMc)
+        if self.NonParabolic:
+            band = onedq.Band("ZincBlende", self.xEg, self.xF, self.xEp,
+                              self.xESO)
+            self.eigenEs = onedq.cBandSolve1D(self.xres, Es, self.xVc, band)
+            self.psis = onedq.cBandFillPsi(self.xres, self.eigenEs, 
+                                           self.xVc, band)
+        else:
+            self.eigenEs = onedq.cSimpleSolve1D(self.xres, Es,
+                                                self.xVc, self.xMc)
+            self.psis = onedq.cSimpleFillPsi(self.xres, self.eigenEs,
+                                             self.xVc, self.xMc)
 
 # vim: ts=4 sw=4 sts=4 expandtab

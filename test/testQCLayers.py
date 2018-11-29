@@ -19,11 +19,12 @@ def plot_band(axes, qcLayers):
     axes.set_ylabel('Energy (eV)', fontsize=fsize)
     axes.plot(qcLayers.xPoints, qcLayers.xVc, 'k', linewidth=1)
 
-    if qcLayers.layerSelected is not None:
-        for r in range(qcLayers.repeats):
-            axes.plot(qcLayers.xPoints[qcLayers.indicesSelected[r, :]],
-                      qcLayers.xVc[qcLayers.indicesSelected[r, :]], 'b',
-                      linewidth=2)
+    axes.plot(qcLayers.xPoints, qcLayers.xlayerSelected, 'b', linewidth=1)
+    #  if qcLayers.layerSelected is not None:
+    #      for r in range(qcLayers.repeats):
+    #          axes.plot(qcLayers.xPoints[qcLayers.indicesSelected[r, :]],
+    #                    qcLayers.xVc[qcLayers.indicesSelected[r, :]], 'b',
+    #                    linewidth=2)
 
     # if hasattr(qcLayers, 'eigenEs'): 
     #     for n in range(qcLayers.eigenEs.size): 
