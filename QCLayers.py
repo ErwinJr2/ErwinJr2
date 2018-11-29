@@ -44,7 +44,8 @@ class QCLayers(object):
         self.Temperature = T
         self.Solver = Solver
         self.description = description
-        self.NonParabolic = True
+        self.NonParabolic = False
+        self.layerSelected = None
 
         self.subM = Material.Material(self.substrate, self.Temperature)
 
@@ -104,6 +105,11 @@ class QCLayers(object):
         ExtField = self.xPoints * self.EField * EUnit
         for p in (self.xVc, self.xVX, self.xVL, self.xVLH, self.xVSO):
             p -= ExtField
+
+        if self.layerSelected:
+            xSlt = (self.xLayerNums == self.layerSelected)
+            xSlt = (xSlt | np.roll(xSlt, 1) | np.roll(xSlt, -1))
+            self.xlayerSelected = np.ma.masked_where(~xSlt , self.xVc)
 
     def solve_whole(self):
         Es = np.linspace(np.min(self.xVc), np.max(self.xVc), 1000)
