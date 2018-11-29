@@ -44,6 +44,7 @@ class QCLayers(object):
         self.Temperature = T
         self.Solver = Solver
         self.description = description
+        self.layerSelected = None
 
         self.subM = Material.Material(self.substrate, self.Temperature)
 
@@ -103,6 +104,14 @@ class QCLayers(object):
         ExtField = self.xPoints * self.EField * EUnit
         for p in (self.xVc, self.xVX, self.xVL, self.xVLH, self.xVSO):
             p -= ExtField
+
+        if self.layerSelected is not None:
+            self.indicesSelected = np.empty([self.repeats,N], dtype=bool)
+            for k in range(self.repeats):
+                self.indicesSelected[k, :] = np.logical_and(
+                    self.xPoints >= layerNumCumSum[self.layerSelected] + k * periodL,
+                    self.xPoints < layerNumCumSum[self.layerSelected+1] + k * periodL)
+
 
     def solve_whole(self):
         Es = np.linspace(np.min(self.xVc), np.max(self.xVc), 1000)
