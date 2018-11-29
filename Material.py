@@ -275,6 +275,16 @@ MParm = {
     },
     "beta-GaN":{
         "Crystal": "ZincBlende"
+        # alc_T not given, use 0
+        "alc": 4.50, "alc_T": 0, 
+        'c11': 293, 'c12': 159,
+        'EgG': 3.299, 'EgL': 5.59, 'EgX': 4.52,
+        'VBO': -2.64, 'DSO': 0.017,
+        'acG': -2.2, 'av': -5.2, 'b': -2.2,
+        'alG': 0.593e-3, 'beG': 600,
+        'alL': 0.593e-3, 'beL': 600,
+        'alX': 0.593e-3, 'beX': 600,
+        'me0': 0.15, 'Ep': 25.0, 'F': -0.92,
     },
 
     "alpha-AlN":{
@@ -282,7 +292,36 @@ MParm = {
     },
     "beta-AlN":{
         "Crystal": "ZincBlende"
+        # alc_T not given, use 0                              
+        "alc": 4.38, "alc_T": 0,
+        'c11': 304, 'c12': 160,
+        'EgG': 4.9, 'EgL': 9.3, 'EgX': 6.0,
+        'VBO': -3.44, 'DSO': 0.019,
+        'acG': -6.0, 'av': -3.4, 'b': -1.9,
+        'alG': 0.593e-3, 'beG': 600,
+        'alL': 0.593e-3, 'beL': 600,
+        'alX': 0.593e-3, 'beX': 600,
+        'me0': 0.25, 'Ep': 27.1, 'F': 0.76,
+    },
+
+    "alpha-InN":{
+        "Crystal": "Wurtzite"
+    },
+    "beta-InN":{
+        "Crystal": "ZincBlende"
+        # alc_T not given, use 0
+        "alc": 4.98, "alc_T": 0,
+        'c11': 187, 'c12': 125,
+        'EgG': 1.94, 'EgL': 5.82, 'EgX': 2.51,
+        'VBO': -2.38, 'DSO': 0.006,
+        'acG': -1.85, 'av': -1.5, 'b': -1.2,
+        'alG': 0.245e-3, 'beG': 624,
+        'alL': 0.245e-3, 'beL': 624,
+        'alX': 0.245e-3, 'beX': 624,
+        'me0': 0.12, 'Ep': 25.0, 'F': -0.92,
     }
+
+
 }
 
 AParm = {
