@@ -106,10 +106,10 @@ class QCLayers(object):
         for p in (self.xVc, self.xVX, self.xVL, self.xVLH, self.xVSO):
             p -= ExtField
 
-        if self.layerSelected:
-            xSlt = (self.xLayerNums == self.layerSelected)
-            xSlt = (xSlt | np.roll(xSlt, 1) | np.roll(xSlt, -1))
-            self.xlayerSelected = np.ma.masked_where(~xSlt , self.xVc)
+        #  if self.layerSelected:
+        xSlt = (self.xLayerNums == self.layerSelected)
+        xSlt = (xSlt | np.roll(xSlt, 1) | np.roll(xSlt, -1))
+        self.xlayerSelected = np.ma.masked_where(~xSlt , self.xVc)
 
     def solve_whole(self):
         Es = np.linspace(np.min(self.xVc), np.max(self.xVc), 1000)
