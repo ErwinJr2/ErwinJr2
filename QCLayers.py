@@ -7,6 +7,7 @@ from scipy.constants import (e as e0, epsilon_0 as eps0, h as h,
                              hbar as hbar, electron_mass as m0, c as c0)
 import OneDQuantum as onedq
 import Material
+import copy
 
 EUnit = 1e-5    # E field unit from kV/cm to V/Angtrom
 
@@ -130,4 +131,32 @@ class QCLayers(object):
             self.psis = onedq.cSimpleFillPsi(self.xres, self.eigenEs,
                                              self.xVc, self.xMc)
 
+    def solve_basis(self):
+        IndSep = np.nonzero(np.array(self.layerARs[1:]) !=
+                            np.array(self.layerARs[:-1]))[0] + 1
+        IndSep = np.insert(IndSep, len(IndSep), len(self.layerARs))
+        if self.layerARs[0]:
+            IndSep = np.insert(IndSep, 0, 0)
+
+        dCL = []
+        for n in range(0, int(len(IndSep)/2)):
+            dCL.append(copy.deepcopy(self))
+            dCL[n].repeats = 1
+            
+            dCL[n].layerWidths = self.layerWidths[IndSep[2*n]:IndSep[2*n+1]]
+            print("n = {0}, dCL[n].layerWidths = {1}".format(n, dCL[n].layerWidths))
+            
+            dCL[n].layerMaterialIdxs = self.layerMaterialIdxs[IndSep[2*n]:
+                                                              IndSep[2*n+1]]
+            dCL[n].layerDopings = self.layerDopings[IndSep[2*n]:IndSep[2*n+1]]
+            dCL[n].layerARs = self.layerARs[IndSep[2*n]:IndSep[2*n+1]]
+
+            dCL[n].populate_x()
+            dCL[n].solve_whole()
+            
+            print("dCL[n].eigenEs.shape = {0}".format(dCL[n].eigenEs.shape))
+            print("dCL[n].psis.shape = {0}".format(dCL[n].psis.shape))
+
+        
+        
 # vim: ts=4 sw=4 sts=4 expandtab

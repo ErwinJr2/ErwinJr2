@@ -31,9 +31,14 @@ if __name__ == "__main__":
          qcl = SaveLoad.qclLoad(f)
 
     qcl.layerSelected = 3
+    # qcl.populate_x()
+    # qcl.solve_whole()
+    # axes = plt.axes()
+    # plot_band(axes, qcl)
+    # plt.show()
+
     qcl.populate_x()
-    qcl.solve_whole()
+    qcl.solve_basis()
     axes = plt.axes()
     plot_band(axes, qcl)
-    plt.show()
-    
+    # plt.show()
