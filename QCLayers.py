@@ -44,7 +44,7 @@ class QCLayers(object):
         self.Temperature = T
         self.Solver = Solver
         self.description = description
-        self.NonParabolic = False
+        self.NonParabolic = True
         self.layerSelected = None
 
         self.subM = Material.Material(self.substrate, self.Temperature)
@@ -112,7 +112,12 @@ class QCLayers(object):
         self.xlayerSelected = np.ma.masked_where(~xSlt , self.xVc)
 
     def solve_whole(self):
-        Es = np.linspace(np.min(self.xVc), np.max(self.xVc), 1000)
+        mass = self.xMc[np.argmin(self.xVc)]
+        Emin = 2.33810741 * (hbar**2*(self.EField*EUnit)**2/(
+            2*m0*mass*e0**2))**(1/3)
+        #  print(Emin)
+        Es = np.linspace(np.min(self.xVc), np.max(self.xVc)+Emin, 1000)
+        #  Es = np.linspace(-1.35, -0.95, 1000)
         if self.NonParabolic:
             band = onedq.Band("ZincBlende", self.xEg, self.xF, self.xEp,
                               self.xESO)

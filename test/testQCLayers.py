@@ -20,16 +20,11 @@ def plot_band(axes, qcLayers):
     axes.plot(qcLayers.xPoints, qcLayers.xVc, 'k', linewidth=1)
 
     axes.plot(qcLayers.xPoints, qcLayers.xlayerSelected, 'b', linewidth=1)
-    #  if qcLayers.layerSelected is not None:
-    #      for r in range(qcLayers.repeats):
-    #          axes.plot(qcLayers.xPoints[qcLayers.indicesSelected[r, :]],
-    #                    qcLayers.xVc[qcLayers.indicesSelected[r, :]], 'b',
-    #                    linewidth=2)
 
-    # if hasattr(qcLayers, 'eigenEs'): 
-    #     for n in range(qcLayers.eigenEs.size): 
-    #         axes.plot(qcLayers.xPoints, 
-    #                   10*qcLayers.psis[n, :]**2 + qcLayers.eigenEs[n])
+    if hasattr(qcLayers, 'eigenEs'): 
+       for n in range(qcLayers.eigenEs.size): 
+           axes.plot(qcLayers.xPoints, 
+                     qcLayers.psis_plt[n, :] + qcLayers.eigenEs[n])
 
 if __name__ == "__main__":
     with open("../example/PQLiu.json") as f:
