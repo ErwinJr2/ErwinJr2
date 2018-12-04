@@ -138,8 +138,8 @@ class QCLayers(object):
         IndSep = np.insert(IndSep, len(IndSep), len(self.layerARs))
         if self.layerARs[0]:
             IndSep = np.insert(IndSep, 0, 0)
-
-        dCL = []
+        # create two lists to store start ind and end ind
+        dCL = [] # don't use a list, all local variable
         for n in range(0, int(len(IndSep)/2)):
             dCL.append(copy.deepcopy(self))
             dCL[n].repeats = 1
@@ -154,7 +154,7 @@ class QCLayers(object):
 
             dCL[n].populate_x()
             dCL[n].solve_whole()
-            
+            # treat repeats and output eigenEs and psis
             print("dCL[n].eigenEs.shape = {0}".format(dCL[n].eigenEs.shape))
             print("dCL[n].psis.shape = {0}".format(dCL[n].psis.shape))
 
