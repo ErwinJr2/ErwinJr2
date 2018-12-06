@@ -145,7 +145,7 @@ class QCLayers(object):
         # create two lists to store start ind and end ind
 
         self.eigenEs = np.empty((0))
-        self.psis = np.empty((0, self.xPoints.size))
+        self.psis = np.empty((0, self.xPoints.size), dtype=np.float64)
         for n in range(0, len(StartInd)):
             dCL = copy.deepcopy(self)
             dCL.repeats = 1
@@ -167,7 +167,7 @@ class QCLayers(object):
             xInd = (self.xLayerNums >= StartInd[n]) & \
                    (self.xLayerNums < EndInd[n])
 
-            psis = np.empty((dCL.eigenEs.shape[0], 0))
+            psis = np.empty((dCL.eigenEs.shape[0], 0), dtype=np.float64)
             for j in range(0, self.repeats):
                 # this is where to add global Efield
                 psis = np.concatenate((psis, dCL.psis), axis=1)
@@ -177,9 +177,6 @@ class QCLayers(object):
 
             self.eigenEs = np.concatenate((self.eigenEs, dCL.eigenEs), axis=0)
             self.psis = np.concatenate((self.psis, psis_fill), axis=0)
-
-        print("self.eigenEs.shape = {0}".format(self.eigenEs.shape))
-        print("self.psis.shape = {0}".format(self.psis.shape))
             
 
         
