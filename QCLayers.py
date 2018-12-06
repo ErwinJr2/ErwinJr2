@@ -135,28 +135,52 @@ class QCLayers(object):
     def solve_basis(self):
         IndSep = np.nonzero(np.array(self.layerARs[1:]) !=
                             np.array(self.layerARs[:-1]))[0] + 1
-        IndSep = np.insert(IndSep, len(IndSep), len(self.layerARs))
         if self.layerARs[0]:
-            IndSep = np.insert(IndSep, 0, 0)
-        # create two lists to store start ind and end ind
-        dCL = [] # don't use a list, all local variable
-        for n in range(0, int(len(IndSep)/2)):
-            dCL.append(copy.deepcopy(self))
-            dCL[n].repeats = 1
-            
-            dCL[n].layerWidths = self.layerWidths[IndSep[2*n]:IndSep[2*n+1]]
-            print("n = {0}, dCL[n].layerWidths = {1}".format(n, dCL[n].layerWidths))
-            
-            dCL[n].layerMaterialIdxs = self.layerMaterialIdxs[IndSep[2*n]:
-                                                              IndSep[2*n+1]]
-            dCL[n].layerDopings = self.layerDopings[IndSep[2*n]:IndSep[2*n+1]]
-            dCL[n].layerARs = self.layerARs[IndSep[2*n]:IndSep[2*n+1]]
+            IndSep = np.concatenate(([0], IndSep))
+        if len(IndSep) % 2:
+            IndSep = np.concatenate((IndSep, len(self.layerARs)))
 
-            dCL[n].populate_x()
-            dCL[n].solve_whole()
-            # treat repeats and output eigenEs and psis
-            print("dCL[n].eigenEs.shape = {0}".format(dCL[n].eigenEs.shape))
-            print("dCL[n].psis.shape = {0}".format(dCL[n].psis.shape))
+        StartInd = IndSep[0::2]
+        EndInd = IndSep[1::2]
+        # create two lists to store start ind and end ind
+
+        self.eigenEs = np.empty((0))
+        self.psis = np.empty((0, self.xPoints.size))
+        for n in range(0, len(StartInd)):
+            dCL = copy.deepcopy(self)
+            dCL.repeats = 1
+            
+            dCL.layerWidths = self.layerWidths[StartInd[n]:EndInd[n]]
+            # print("n = {0}, dCL.layerWidths = {1}".format(n, dCL.layerWidths))
+            
+            dCL.layerMaterialIdxs = self.layerMaterialIdxs[StartInd[n]:
+                                                           EndInd[n]]
+            dCL.layerDopings = self.layerDopings[StartInd[n]:EndInd[n]]
+            dCL.layerARs = self.layerARs[StartInd[n]:EndInd[n]]
+
+            dCL.populate_x()
+            dCL.solve_whole()
+
+            # print("dCL[n].eigenEs.shape = {0}".format(dCL.eigenEs.shape))
+            # print("dCL[n].psis.shape = {0}".format(dCL.psis.shape))
+
+            xInd = (self.xLayerNums >= StartInd[n]) & \
+                   (self.xLayerNums < EndInd[n])
+
+            psis = np.empty((dCL.eigenEs.shape[0], 0))
+            for j in range(0, self.repeats):
+                # this is where to add global Efield
+                psis = np.concatenate((psis, dCL.psis), axis=1)
+                
+            psis_fill = np.empty((dCL.eigenEs.shape[0], self.xPoints.size))
+            psis_fill[:, xInd] = psis
+
+            self.eigenEs = np.concatenate((self.eigenEs, dCL.eigenEs), axis=0)
+            self.psis = np.concatenate((self.psis, psis_fill), axis=0)
+
+        print("self.eigenEs.shape = {0}".format(self.eigenEs.shape))
+        print("self.psis.shape = {0}".format(self.psis.shape))
+            
 
         
         
