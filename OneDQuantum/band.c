@@ -1,5 +1,4 @@
 #include "band.h"
-/* add Wurtzite structure */
 /* Zincblende structure band, compatiable with structure BAND */
 
 #ifdef __cplusplus
@@ -68,6 +67,64 @@ void ZBband_check(const Band *band, numpyint N, const double *xEg,
 	printf("Checking Finished\n");
 	return;
 }
+#endif
+
+typedef struct WZBAND {
+  UpdateFunc updateM;
+  numpyint N;
+  const double *xEg;
+  const double *xEp;
+  const double *xESO;
+}WZBAND;
+
+/* Update effective mass of a Zincblende band semiconductor */
+numpyint ZBupdateM(Band *mat, double Eq, const double *xVc, double *m) {
+    ZBBand *zbmat = (ZBBand *) mat;
+    int q;
+    for(q=0; q<zbmat->N; q++) {
+      m[q] = 1 / (1 + zbmat->xEp[q]/3 * (
+				2 / (Eq - xVc[q] + zbmat->xEg[q]) +
+				1 / (Eq - xVc[q] + zbmat->xEg[q] + zbmat->xESO[q])) );
+    }
+    return zbmat->N;
+}
+
+
+Band *WZband_new(numpyint N, const double *xEg,
+		   const double *xEp, const double *xESO) {
+    WZBand *wzband = (WZBand *) malloc( sizeof(WZBand) );
+    wzband->updateM = WZupdateM;
+    wzband->N = N;
+    wzband->xEg = xEg;
+    wzband->xEp = xEp;
+    wzband->xESO = xESO;
+    return (Band *) wzband;
+}
+
+void WZband_free(Band *wzband) {
+    free( (WZBand *) wzband );
+    return;
+}
+
+#ifdef _DEBUG
+#include <stdio.h>
+void WZband_check(const Band *band, numpyint N, const double *xEg,
+		    const double *xEp, const double *xESO) {
+    printf("Checking WZband\n");
+    const WZBand *wzband = (const WZBand *) band;
+    if(wzband->updateM != WZupdateM)
+      printf("WZupdateM checkfail\n");
+    if(wzband->N != N)
+      printf("N checkfail\n");
+    if(wzband->xEg != xEg)
+      printf("xEg checkfail\n");
+    if(wzband->xEp != xEp)
+      printf("xEp checkfail\n");
+    if(wzband->xESO != xESO)
+      printf("xESO checkfail\n");
+    printf("Checking Finished\n");
+    return;
+  }
 #endif
 
 
