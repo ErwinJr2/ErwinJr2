@@ -35,8 +35,8 @@ __declspec(dllexport)
 double FermiDirac0(double EF, const double *EigenEs, numpyint EN, 
 		const double *m, const double* psis, numpyint N, double step, 
 		double* eDensity) {
-	int i;
-	double sheetDensity = 0;
+        int i;
+       	double sheetDensity = 0;
 	/* double beta = 1/(kb*T); */
 	for(i=0; i<N; i++) {
 		eDensity[i] = 0;
@@ -119,6 +119,49 @@ double FermiDirac0N(double sheet, const double *EigenEs, numpyint EN,
 	}
 	printf("Error: You shouldn't reach here!\n");
 	return NAN;
+}
+
+#ifdef _WINDLL
+  __declspec(dllexport)
+#endif
+/**                                                                                     
+ * \brief Finite Fermi-Dirac distribution. Fermi energy -> electron density
+ *                                                                                      
+ * \param EF Fermi energy
+ * \param eDensity output electron density(unit Angstrom^-3)
+ * \output sheet density (unit Angstrom^-2)
+ */
+double FermiDirac(double T, double EF, const double *EigenEs, numpyint EN,
+		     const double *m, const double* psis, numpyint N, double step,
+		     double* eDensity) {
+    int i;
+    double sheetDensity = 0;
+    double beta = 1/(kb*T);
+    for(i=0; i<N; i++) {
+      eDensity[i] = 0;
+    }
+    for(i=0; i<EN; i++) {
+      int j;
+      double nbar = 1/(exp(beta * (EigenEs[i]-EF)) + 1);
+      const double* psi = psis + i*N;
+      double invM = 0;
+      /* Density of states effective mass should be the Harmonic mean of      
+       * effective mass */
+      double DoS2D;
+      for(j=0; j<N; j++) {
+	invM += sq(psi[j])/m[j];
+      }
+      invM *= step;
+      DoS2D = m0/(M_PI*sq(hbar)*invM)*sq(ANG)*e0;
+      /* DoS2D_2D = m/(pi*\hbar^2), spin included, Unit Angstrom^-2eV^-1 */
+      for(j=0; j<N; j++) {
+	eDensity[j] += sq(psi[j])*DoS2D*nbar;
+	/* sheetDensity += eDensity[j]*step; --->X */
+      }
+      sheetDensity += DoS2D*(EF-EigenEs[i]);
+      /* psi is normalized.. It's equivlent with X */
+    }
+    return sheetDensity;
 }
 
 
