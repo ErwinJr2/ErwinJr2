@@ -1,23 +1,33 @@
+/**
+ * \file
+ *
+ * \brief Zincblende and Wurtzite structure band
+ *
+ * Zincblende and Wurtzite structure band, compatible
+ * with structure BAND.
+ */
+
+
 #include "band.h"
-/* Zincblende structure band, compatiable with structure BAND */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/** \brief Update effective mass in band */
 numpyint UpdateBand(Band *band, double E, const double *xVc, double *m) {
 	return band->update(band, E, xVc, m);
 }
 typedef struct ZBBAND {
-	UpdateFunc updateM;
-	numpyint N;
-	const double *xEg;
-	const double *xF;
+        UpdateFunc updateM;    /**< Update effective mass */
+        numpyint N;            /**< Number of finite x positions */
+        const double *xEg;     /**< Direct energy gap  */
+        const double *xF;      /**< Kane parameter  */
 	const double *xEp; 
-	const double *xESO;
+        const double *xESO;    /**< Spin-orbit splitting */
 }ZBBand; 
 
-/* Update effective mass of a Zincblende band semiconductor */
+/** \brief  Update effective mass of a Zincblende band semiconductor */
 numpyint ZBupdateM(Band *mat, double Eq, const double *xVc, double *m) {
 	ZBBand *zbmat = (ZBBand *) mat;
 	int q; 
@@ -77,7 +87,7 @@ typedef struct WZBAND {
   const double *xESO;
 }WZBAND;
 
-/* Update effective mass of a Zincblende band semiconductor */
+/** \brief  Update effective mass of a Wurtzite band semiconductor */
 numpyint ZBupdateM(Band *mat, double Eq, const double *xVc, double *m) {
     ZBBand *zbmat = (ZBBand *) mat;
     int q;
