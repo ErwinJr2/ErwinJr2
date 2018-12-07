@@ -1,3 +1,12 @@
+/**
+ *
+ * \file
+ *
+ * \brief Compute thermodynamic statistics
+ *
+ *
+ */
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -15,13 +24,17 @@ extern "C" {
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif 
+ 
+/**
+ * \brief T=0 Fermi-Dirac distribution. Fermi energy -> electron density
+ *
+ * T=0 Fermi-Dirac distribution, given Fermi energy
+ * output electron density in eDensity (unit Angstrom^-3)	 
+ * and return sheet density (unit Angstrom^-2)
+ */
 double FermiDirac0(double EF, const double *EigenEs, numpyint EN, 
 		const double *m, const double* psis, numpyint N, double step, 
 		double* eDensity) {
-	/* T=0 Fermi Driac distribution, given Fermi energy
-	 * output electron density in eDensity (unit Angstrom^-3)
-	 * and return sheet density (unit Angstrom^-2)
-	 */
 	int i;
 	double sheetDensity = 0;
 	/* double beta = 1/(kb*T); */
@@ -57,15 +70,19 @@ double FermiDirac0(double EF, const double *EigenEs, numpyint EN,
 
 #ifdef _WINDLL
 __declspec(dllexport)
-#endif 
+#endif
+ 
+/**
+ * \brief T=0 Fermi-Dirac distribution. Sheet density -> Fermi energy
+ *
+ * T=0 Fermi-Dirac distribution, given sheet density
+ * output electron density in eDensity (unit Angstrom^-3)
+ * and return EF
+ */
 double FermiDirac0N(double sheet, const double *EigenEs, numpyint EN, 
 		const double *m, const double* psis, numpyint N, double step, 
 		double* eDensity) {
-	/* T=0 Fermi Driac distribution, given sheet density
-	 * output electron density in eDensity (unit Angstrom^-3)
-	 * and return EF
-	 */
-	int i;
+       	int i;
 	double sheetDensity = 0;
 	double DoS2Dsum = 0;
 	for(i=0; i<N; i++) {
@@ -108,13 +125,17 @@ double FermiDirac0N(double sheet, const double *EigenEs, numpyint EN,
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif 
+
+/**
+ * \brief Maxwell-Boltzmann distribution at T. Fermi level -> electron density
+ *
+ * Temperature T Maxwell Boltzmann distribution, given Fermi level EF
+ * output electron density in eDensity (unit Angstrom^-3)
+ * and return sheet density (unit Angstrom^-2)
+ */
 double Boltzmann(double T, double EF, const double *EigenEs, numpyint EN, 
 		const double *m, const double* psis, numpyint N, double step,
 		double* eDensity) {
-	/* Temperature T Maxwell Boltzmann distribution, given Fermi level EF
-	 * output electron density in eDensity (unit Angstrom^-3)
-	 * and return sheet density (unit Angstrom^-2)
-	 */
 	const double MAXKT = 50;
 	int i;
 	double sheetDensity = 0;
@@ -157,13 +178,17 @@ double Boltzmann(double T, double EF, const double *EigenEs, numpyint EN,
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif 
+
+/**
+ * \brief Maxwell-Boltzmann distribution at T. sheet density -> EF
+ *
+ * Temperature T Maxwell Boltzmann distribution, given sheet density
+ * output electron density in eDensity (unit Angstrom^-3)
+ * and return EF (unit eV)
+ */
 double BoltzmannN(double T, double sheet, const double *EigenEs, numpyint EN, 
 		const double *m, const double* psis, numpyint N, double step,
 		double* eDensity) {
-	/* Temperature T Maxwell Boltzmann distribution, given sheet density
-	 * output electron density in eDensity (unit Angstrom^-3)
-	 * and return EF (unit eV)
-	 */
 	double sheet0 = Boltzmann(T, 0, EigenEs, EN, m, psis, N, step, eDensity); 
 	double EF = kb * T * log(sheet / sheet0);
 #ifdef _DEBUG
