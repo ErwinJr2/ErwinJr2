@@ -19,6 +19,7 @@ qcMaterial = {
 
 class QCLayers(object):
     """Class for QCLayers
+
     Member variables:
         parameters for each layer, np.array type, with len = No. of layers:
             layerWidths - width of each layer, float
@@ -117,7 +118,7 @@ class QCLayers(object):
         Emin = 2.33810741 * (hbar**2*(self.EField*EUnit)**2/(
             2*m0*mass*e0**2))**(1/3)
         #  print(Emin)
-        Es = np.linspace(np.min(self.xVc), np.max(self.xVc)+Emin, 1000)
+        Es = np.linspace(np.min(self.xVc)+Emin, np.max(self.xVc), 1000)
         #  Es = np.linspace(-1.35, -0.95, 1000)
         if self.NonParabolic:
             band = onedq.Band("ZincBlende", self.xEg, self.xF, self.xEp,

@@ -25,3 +25,7 @@ __pycache__/
 *.fls
 *.synctex.gz
 *.xdv
+
+## doxygen gnerated file for C code
+OneDQuantum/docs/html/
+OneDQuantum/docs/xml/

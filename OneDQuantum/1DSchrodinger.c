@@ -1,3 +1,12 @@
+/**
+ * \file
+ * 
+ * \brief Solve 1D Schrodinger equation.
+ *
+ *
+ */
+
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -9,10 +18,12 @@
 #include "science.h"
 #include "band.h"
 
-#define NEWTON 1E-3 
-/* Newton's method stopping limit */
-#define NSTEP 1E-10
-/* NSTEP (unit eV) is the step size to numerically calculate  
+
+#define NEWTON 1E-3 /**< Newton's method stopping limit */
+/** 
+ * \brief Stepsize for numerical derivative
+ *
+ * NSTEP (unit eV) is the step size to numerically calculate  
  * the derivative for Newton's method. 
  * Optimum step size = (6*epsilon/M3)^(1/3) 
  * where epsilon is numerical error of yend(E) and M3 is maximum yend'''(E)
@@ -20,7 +31,8 @@
  * to E near EigenE. M3 is very large. 
  * Still, it's recommanded to make high V side the starting point
  */
-#define Y_EPS 0.1 /* Default starting point for Numerov */
+#define NSTEP 1E-10
+#define Y_EPS 0.1 /**< Default starting point for Numerov */
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,16 +42,20 @@ extern "C" {
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif 
+
+/**
+ * \brief ODE solver for -hbar^2/(2*m(x)) * y''(x) + V(x) * y = E * y(x) 
+ * 
+ * An ODE solver for -hbar^2/(2*m(x)) * y''(x) + V(x) * y = E * y(x)
+ * with starting x0 and y0, y1, ends at x0 + step*N (x0 label 0)
+ * using Numerov algorithm
+ * E and V are in unit eV, m are in unit m0 (free electron mass)
+ * Don't normalize
+ * V[n] and m[n] means potential and effectice mass at x = x0 + n*step
+ * return y(x+N*step), put y result in *y
+ */
 double Numerov(double step, numpyint N, double y0, double y1, 
 		double E, const double *V, const double *m, double *y) {
-	/* An ODE solver for -hbar^2/(2*m(x)) * y''(x) + V(x) * y = E * y(x)
-	 * with starting x0 and y0, y1, ends at x0 + step*N (x0 label 0)
-	 * using Numerov algorithm
-	 * E and V are in unit eV, m are in unit m0 (free electron mass)
-	 * Don't normalize
-	 * V[n] and m[n] means potential and effectice mass at x = x0 + n*step
-	 * return y(x+N*step), put y result in *y
-	 */
 	int n; 
 	y[0] = y0;
 	y[1] = y1;
