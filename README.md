@@ -13,7 +13,7 @@ This is a extendable Python/C program for 1D quantum problem and Quantum Cascade
 ## TODO list
 - [X] OpenMP support
 - [X] Material parameters
-- [ ] Add Wurtzite crystal structure 
+- [X] Add Wurtzite crystal structure 
 - [ ] ?Add a linear algebra solver using BLAS and/or Lapack
 - [ ] ?NEGF solver
 - [ ] Add scattering: acoustic phonon, interface roughness, ionized impurity
