@@ -10,18 +10,9 @@ Welcome to OneDQ's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-.. autosummary::
-   :toctree: generated/
-
-   QCLayers.QCLayers
-
-.. currentmodule:: OneDQuantum
-.. autosummary::
-   :toctree: generated/
-
-   OneDMaxwell
-   OneDSchrodinger
-   OneDThermal
+   QCLayers
+   OneDQuantum
+   clib/filelist
 
 Indices and tables
 ==================

@@ -31,7 +31,8 @@ typedef struct BAND{
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif 
-numpyint UpdateBand(Band *, double, const double *, double *);
+/** \brief Update effective mass in band */
+numpyint UpdateBand(Band *band, double E, const double *xVc, double *m);
 
 #ifdef _WINDLL
 __declspec(dllexport)

@@ -50,6 +50,7 @@ extensions = [
 ]
 breathe_projects = { "OneDQuantum": "../OneDQuantum/docs/xml/"}
 breathe_default_project = "OneDQuantum"
+breathe_domain_by_extension = { "h" : "c" , "c" : "c"}
 autosummary_generate = True
 
 # Add any paths that contain templates here, relative to this directory.

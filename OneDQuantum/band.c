@@ -14,10 +14,13 @@
 extern "C" {
 #endif
 
-/** \brief Update effective mass in band */
+/** \cond IMPL
+ * implemtation of functions in header files should be excluded in doxygen */
 numpyint UpdateBand(Band *band, double E, const double *xVc, double *m) {
 	return band->update(band, E, xVc, m);
 }
+/** \endcond */
+
 typedef struct ZBBAND {
         UpdateFunc updateM;    /**< Update effective mass */
         numpyint N;            /**< Number of finite x positions */
@@ -39,6 +42,8 @@ numpyint ZBupdateM(Band *mat, double Eq, const double *xVc, double *m) {
 	return zbmat->N;
 }
 
+/** \cond IMPL
+ * implemtation of functions in header files should be excluded in doxygen */
 Band *ZBband_new(numpyint N, const double *xEg, const double *xF,
 		const double *xEp, const double *xESO) {
 	ZBBand *zbband = (ZBBand *) malloc( sizeof(ZBBand) );
@@ -55,6 +60,7 @@ void ZBband_free(Band *zbband) {
 	free( (ZBBand *) zbband );
 	return;
 }
+/** \endcond */
 
 #ifdef _DEBUG
 #include <stdio.h>
@@ -88,15 +94,15 @@ typedef struct WZBAND {
 }WZBAND;
 
 /** \brief  Update effective mass of a Wurtzite band semiconductor */
-numpyint ZBupdateM(Band *mat, double Eq, const double *xVc, double *m) {
-    ZBBand *zbmat = (ZBBand *) mat;
+numpyint WZupdateM(Band *mat, double Eq, const double *xVc, double *m) {
+    WZBand *wzmat = (ZBBand *) mat;
     int q;
-    for(q=0; q<zbmat->N; q++) {
-      m[q] = 1 / (1 + zbmat->xEp[q]/3 * (
-				2 / (Eq - xVc[q] + zbmat->xEg[q]) +
-				1 / (Eq - xVc[q] + zbmat->xEg[q] + zbmat->xESO[q])) );
+    for(q=0; q<wzmat->N; q++) {
+      m[q] = 1 / (1 + wzmat->xEp[q]/3 * (
+				2 / (Eq - xVc[q] + wzmat->xEg[q]) +
+				1 / (Eq - xVc[q] + wzmat->xEg[q] + wzmat->xESO[q])) );
     }
-    return zbmat->N;
+    return wzmat->N;
 }
 
 
