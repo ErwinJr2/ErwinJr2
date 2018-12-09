@@ -85,17 +85,17 @@ void ZBband_check(const Band *band, numpyint N, const double *xEg,
 }
 #endif
 
-typedef struct WZBAND {
+typedef struct WZBand {
   UpdateFunc updateM;
   numpyint N;
   const double *xEg;
   const double *xEp;
   const double *xESO;
-}WZBAND;
+}WZBand;
 
 /** \brief  Update effective mass of a Wurtzite band semiconductor */
 numpyint WZupdateM(Band *mat, double Eq, const double *xVc, double *m) {
-    WZBand *wzmat = (ZBBand *) mat;
+    WZBand *wzmat = (WZBand *) mat;
     int q;
     for(q=0; q<wzmat->N; q++) {
       m[q] = 1 / (1 + wzmat->xEp[q]/3 * (
