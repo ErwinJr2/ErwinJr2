@@ -1,2 +1,5 @@
 numpy
 scipy
+sphinx
+sphinx_rtd_theme
+breathe
