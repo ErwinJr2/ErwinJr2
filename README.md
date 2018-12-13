@@ -26,3 +26,4 @@ This is a extendable Python/C program for 1D quantum problem and Quantum Cascade
 - [ ] Profile
 - [X] ?Travis CI automatic testing
 - [ ] ?coveralls.io
+- [ ] ?CFFI or SWIG
