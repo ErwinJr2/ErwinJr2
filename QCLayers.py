@@ -113,6 +113,11 @@ class QCLayers(object):
         xSlt = (xSlt | np.roll(xSlt, 1) | np.roll(xSlt, -1))
         self.xlayerSelected = np.ma.masked_where(~xSlt , self.xVc)
 
+        self.xRepeats = np.empty((0), dtype=int)
+        for k in range(self.repeats):
+            self.xRepeats = np.concatenate(
+                (self.xRepeats, k*np.ones(int(N/self.repeats), dtype=int)))
+
     def solve_whole(self):
         mass = self.xMc[np.argmin(self.xVc)]
         Emin = 2.33810741 * (hbar**2*(self.EField*EUnit)**2/(
@@ -164,19 +169,39 @@ class QCLayers(object):
             # print("dCL[n].eigenEs.shape = {0}".format(dCL.eigenEs.shape))
             # print("dCL[n].psis.shape = {0}".format(dCL.psis.shape))
 
-            xInd = (self.xLayerNums >= StartInd[n]) & \
-                   (self.xLayerNums < EndInd[n])
+            xInd_all = (self.xLayerNums >= StartInd[n]) & \
+                (self.xLayerNums < EndInd[n])
 
-            psis = np.zeros((dCL.eigenEs.shape[0], 0))
+            psis_re = np.zeros((0, self.xPoints.size))
+            eigenEs_re = np.zeros(0)
             for j in range(0, self.repeats):
-                # this is where to add global Efield
-                psis = np.concatenate((psis, dCL.psis), axis=1)
-                
-            psis_fill = np.zeros((dCL.eigenEs.shape[0], self.xPoints.size))
-            psis_fill[:, xInd] = psis
+                xInd = xInd_all & (self.xRepeats == j)
+                psis_fill = np.zeros((dCL.eigenEs.shape[0], self.xPoints.size))
+                psis_fill[:, xInd] = dCL.psis
+                psis_re = np.concatenate((psis_re, psis_fill), axis=0)
 
-            self.eigenEs = np.concatenate((self.eigenEs, dCL.eigenEs), axis=0)
-            self.psis = np.concatenate((self.psis, psis_fill), axis=0)
+                # eigenEs_re = \
+                #     np.concatenate((eigenEs_re,
+                #                     dCL.eigenEs +
+                #                     j*sum(self.layerWidths)*self.EField))
+                eigenEs_re = np.concatenate((eigenEs_re, dCL.eigenEs))
+
+
+            # psis_fill = np.zeros((dCL.eigenEs.shape[0], self.xPoints.size))
+
+            # psis = np.zeros((dCL.eigenEs.shape[0], 0))
+            # for j in range(0, self.repeats):
+            #     # this is where to add global Efield
+            #     # psis = np.concatenate((psis,
+            #     #                        dCL.psis +
+            #     #                        sum(self.layerWidths)*self.EField),
+            #     #                       axis=1)
+            #     psis = np.concatenate((psis, dCL.psis), axis=1)
+                
+            
+
+            self.eigenEs = np.concatenate((self.eigenEs, eigenEs_re), axis=0)
+            self.psis = np.concatenate((self.psis, psis_re), axis=0)
             
 
         
