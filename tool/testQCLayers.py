@@ -24,13 +24,14 @@ def plot_band(axes, qcLayers):
     if hasattr(qcLayers, 'eigenEs'): 
        for n in range(qcLayers.eigenEs.size): 
            axes.plot(qcLayers.xPoints, 
-                     qcLayers.psis_plt[n, :] + qcLayers.eigenEs[n])
+                     qcLayers.psis[n, :] + qcLayers.eigenEs[n])
 
 if __name__ == "__main__":
     with open("../example/PQLiu.json") as f:
          qcl = SaveLoad.qclLoad(f)
 
     qcl.layerSelected = 3
+    qcl.NonParabolic = False
     qcl.populate_x()
     qcl.solve_whole()
     axes = plt.axes()
