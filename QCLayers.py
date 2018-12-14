@@ -52,7 +52,8 @@ class QCLayers(object):
         self.subM = Material.Material(self.substrate, self.Temperature)
         self.update_strain()
 
-    def update_strain(self):
+    def update_strain(self): 
+        self.a_parallel = self.subM.parm['alc']
         self.mtrlAlloys = [Material.Alloy(self.materials[idx], 
                                           self.moleFracs[idx], 
                                           self.Temperature)
