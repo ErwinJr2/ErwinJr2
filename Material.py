@@ -330,6 +330,7 @@ AParm = {
         'acG': 2.61, 'acL': 2.61,  # NextNano DB
         'acX': 2.61,  # NextNano DB
         'me0': 0.0091, 'Ep': -1.48, 'F': 1.77,
+        'htmlname': 'In<sub>x</sub>Ga<sub>1-x</sub>As',
         'composition': ('InAs', 'GaAs')
     }, 
 
@@ -338,6 +339,7 @@ AParm = {
         'acG': -1.4, 'acL': -1.4,  # NextNano DB
         'acX': -1.4,  # NextNano DB
         'me0': 0.049, 'Ep': -4.81, 'F': -4.44,
+        'htmlname': 'Al<sub>1-x</sub>In<sub>x</sub>As',
         'composition': ('InAs', 'AlAs')
     }, 
 
@@ -350,11 +352,13 @@ AParm = {
         'EgL': 0.055, 'EgX': 0, 'VBO': 0, 'DSO': 0,
         'acG': 0, 'acL': 0, 'acX': 0,
         'me0': 0, 'Ep': 0, 'F': 0,
+        'htmlname': 'Al<sub>x</sub>Ga<sub>1-x</sub>As',
         'composition': ('AlAs', 'GaAs')
     },
 
     'AlAsSb':{
         'EgG': 0.8, 'EgL': 0.28, 'EgX': 0.28, 'DSO': 0.15, 'VBO': -1.71,
+        'htmlname': 'AlAs<sub>x</sub>Sb<sub>1-x</sub>',
         'composition': ('AlAs', 'AlSb')
     }, 
 
@@ -364,6 +368,7 @@ AParm = {
         'acG': 0, 'acL': 0,  # NextNano DB
         'acX': 0,  # NextNano DB
         'me0': 0, 'Ep': 0, 'F': 0,
+        'htmlname': 'Al<sub>x</sub>Ga<sub>1-x</sub>Sb',
         'composition': ('AlSb', 'GaSb')
     },
 
@@ -372,6 +377,7 @@ AParm = {
         'acG': 0, 'acL': 0,  # NextNano DB
         'acX': 0,  # NextNano DB
         'me0': 0.035, 'Ep': 0, 'F': 0,
+        'htmlname': 'InAs<sub>x</sub>Sb<sub>1-x</sub>',
         'composition': ('InAs', 'InSb')
     }
 }
