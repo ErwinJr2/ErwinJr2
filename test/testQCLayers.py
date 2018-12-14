@@ -34,6 +34,7 @@ class TestQCLayers(unittest.TestCase):
             qcl = SaveLoad.qclLoad(f)
 
         qcl.layerSelected = 3
+        qcl.NonParabolic = False
         qcl.populate_x()
         qcl.solve_whole()
         # axes = plt.axes()
@@ -50,6 +51,7 @@ class TestQCLayers(unittest.TestCase):
             qcl = SaveLoad.qclLoad(f)
 
         qcl.layerSelected = 3
+        qcl.NonParabolic = False
         qcl.populate_x()
         qcl.solve_basis()
         # axes = plt.axes()
