@@ -24,7 +24,6 @@
 
 import numpy as np
 import os
-import sys
 
 import matplotlib
 matplotlib.use('Qt5Agg')
@@ -39,15 +38,27 @@ from PyQt5.QtCore import QObject, Signal
 from PyQt5.QtWidgets import (QSizePolicy, QMessageBox, QInputDialog,
                              QFileDialog)
 
-if sys.platform == 'win32':
-    margin = {'l': 0.75, 'r': 0.12, 'b': 0.55, 't': 0.09}
+import sys, json
+from warning import warn
+config = {
+    "PlotMargin": {'l': 0.75, 'r': 0.12, 'b': 0.55, 't': 0.09}, 
+    "fontsize": 12,
+}
+if sys.platform == 'win32': 
+    config["PlotMargin"] = {'l': 0.75, 'r': 0.12, 'b': 0.55, 't': 0.09}
 elif sys.platform == 'darwin':
-    margin = {'l': 0.90, 'r': 0.12, 'b': 0.55, 't': 0.09}
-elif sys.platform == 'linux2':
-    margin = {'l': 0.75, 'r': 0.12, 'b': 0.55, 't': 0.09}
-else:
-    margin = {'l': 0.75, 'r': 0.12, 'b': 0.55, 't': 0.09}
+    config["PlotMargin"] = {'l': 0.90, 'r': 0.12, 'b': 0.55, 't': 0.09}
 
+def LoadConfig(fname="plotconfig.json"):
+    try:
+        with open(fname, 'r') as f:
+            userConfig = json.load(f)
+    except:
+        userConfig = {}
+        warn("Cannot load plot config file %s. Use default config."%fname, 
+             UserWarning)
+    for k in userConfig:
+        config[k] = userConfig[k]
 
 class EJcanvas(FigureCanvas):
     """EJcanvas is designed for ErwinJr as a canvas for energy band and
@@ -63,7 +74,7 @@ class EJcanvas(FigureCanvas):
         self.xlabel = xlabel
         self.ylabel = ylabel
 
-    def set_axes(self, fsize=12):
+    def set_axes(self, fsize=config["fontsize"]):
         self.axes.autoscale(enable=True, axis='x', tight=True)
         self.axes.autoscale(enable=True, axis='y', tight=False)
         self.axes.spines['top'].set_color('none')
@@ -82,6 +93,7 @@ class EJcanvas(FigureCanvas):
         super(EJcanvas, self).resizeEvent(event)
         height = self.figure.get_figheight()
         width = self.figure.get_figwidth()
+        margin = config["PlotMargin"]
         self.figure.subplots_adjust(
             left=margin['l'] / width, bottom=margin['b'] / height,
             right=1 - margin['r'] / width, top=1 - margin['t'] / height,
@@ -236,7 +248,6 @@ class EJplotControl(NavigationToolbar2, QObject):
 
     def set_message(self, s):
         self.message.emit(s)
-        #  print s
 
     def _set_cursor(self, event):
         # override backend_bases.NavigationToolbar2._set_cursor

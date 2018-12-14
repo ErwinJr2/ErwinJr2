@@ -3,8 +3,8 @@
 
 # ===========================================================================
 # ErwinJr2 is a simulation program for quantum semiconductor lasers.
-# Copyright (C) 2012 Kale J. Franz, PhD
 # Copyright (C) 2017 Ming Lyu (CareF)
+# Copyright (C) 2012 Kale J. Franz, PhD
 #
 # A portion of this code is Copyright (c) 2011, California Institute of
 # Technology ("Caltech"). U.S. Government sponsorship acknowledged.
@@ -24,77 +24,92 @@
 # ===========================================================================
 
 # TODO:
-# find replacement for psyco
-# check unnecessary function call
 # Ctrl+z support
 # add status bar
 
-import os
-import sys
+import os, sys
 import traceback
 from functools import partial
-import time
 
 from QCLayers import QCLayers
 import SaveLoad
 
-from PyQt5.QtCore import (QSettings, SIGNAL, QString, QFile,
+from PyQt5.QtCore import (QSettings, QFile,
                           QFileInfo, QVariant, Qt)
-from PyQt5.QtGui import QIcon, QKeySequence, QPalette, QPixmap
+from PyQt5.QtGui import QIcon, QKeySequence, QPalette, QDesktopServices
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTabWidget,
                              QAction, QMessageBox, QFileDialog,
                              QInputDialog, QSplashScreen)
 
 from QuantumTab import QuantumTab
 
-# ===========================================================================
-# Version
-# ===========================================================================
-ejVersion = 171109
-majorVersion = '3.4.0'
+Version = '0.1'
 
 class MainWindow(QMainWindow):
-    def __init__(self, fileName=None, parent=None):
+    def __init__(self, fname=None, parent=None):
         super(MainWindow, self).__init__(parent)
+        self.qsettings = QSettings(QSettings.IniFormat, QSettings.UserScope, 
+                                    "ErwinJr", "ErwinJr2", self)
 
-        self.filename = fileName
+        if self.qsettings.value('firstRun', True).toBool():
+            self.qsettings.setValue("firstRun", False)
+            if not fname:
+                firstRunBox = QMessageBox(
+                    QMessageBox.Question, 'EwrinJr2 ' + Version,
+                    ("Welcome to ErwinJr2!\n"
+                     "Since this is your first time running the program, "
+                     "would you like to open an example file or a blank file?"),
+                    parent=self)
+                firstRunBox.addButton("Blank File", QMessageBox.NoRole)
+                firstRunBox.addButton("Example File", QMessageBox.YesRole)
+                ansr = firstRunBox.exec_()
+                if ansr:
+                    fname = './example/PQLiu.json'
+        elif not fname:
+            # Load last file
+            fname = self.qsettings.value("LastFile", None).toString()
+        self.dirty = True
+        qclayers = None
+        if fname and QFile.exists(fname):
+            try:
+                with open(fname, 'r') as f:
+                    qclayers = SaveLoad.qclLoad(f)
+                self.filename = fname
+                self.addRecentFile(fname)
+                self.dirty = False
+            except Exception:
+                QMessageBox.warning(self, "ErwinJr2 - Warning",
+                                    "Could not load the *.json file.\n" +
+                                    traceback.format_exc())
+                qclayers = None
 
         self.mainTabWidget = QTabWidget()
         # ==========================
         # Quantum Tab
         # ==========================
-        self.qtab = QuantumTab(self)
-        self.qtab.dirty.connect(self.winUpdate)
+        self.qtab = QuantumTab(qclayer, self)
+        self.qtab.dirty.connect(self.thingsChanged)
         self.mainTabWidget.addTab(self.qtab, 'Quantum')
         # ==========================
         # Optical Tab
         # ==========================
         # TODO
-        self.setCentralWidget(self.mainTabWidget)
 
+        self.setCentralWidget(self.mainTabWidget)
         self.create_menu()
 
-        qsettings = QSettings(parent=self)
-        self.recentFiles = qsettings.value("RecentFiles").toStringList()
         self.restoreGeometry(
-            qsettings.value("MainWindow/Geometry").toByteArray())
-        self.restoreState(qsettings.value("MainWindow/State").toByteArray())
+            self.qsettings.value("MainWindow/Geometry").toByteArray())
+        self.restoreState(
+            self.qsettings.value("MainWindow/State").toByteArray())
+        self.recentFiles = self.qsettings.value("RecentFiles").toStringList()
         self.updateFileMenu()
+        self.updateWindowTitle()
 
-        self.dirty = False
-
-        if self.filename:
-            self.fileOpen(self.filename)
-        else:
-            self.loadInitialFile()
-
-        self.dirty = False
-        self.update_windowTitle()
-
-    def winUpdate(self):
+    def thingsChanged(self):
         """ SLOT connected to self.qtab.dirty"""
         self.dirty = True
-        self.update_windowTitle()
+        self.updateWindowTitle()
 
 # ===========================================================================
 # General Menu Functions
@@ -109,14 +124,14 @@ class MainWindow(QMainWindow):
     def create_action(self, text, slot=None, shortcut=None, icon=None,
                       tip=None, checkable=False, ischecked=False):
         action = QAction(text, self)
-        if icon is not None:
+        if icon:
             action.setIcon(QIcon("images/%s.png" % icon))
-        if shortcut is not None:
+        if shortcut:
             action.setShortcut(shortcut)
-        if tip is not None:
+        if tip:
             action.setToolTip(tip)
             action.setStatusTip(tip)
-        if slot is not None:
+        if slot:
             action.triggered.connect(slot)
         if checkable:
             action.setCheckable(True)
@@ -211,11 +226,9 @@ class MainWindow(QMainWindow):
         Update for recent files"""
         self.file_menu.clear()
         self.add_actions(self.file_menu, self.fileMenuActions[:-1])
-        current = (QString(self.filename)
-                   if self.filename is not None else None)
         recentFiles = []
         for fname in self.recentFiles:
-            if fname != current and QFile.exists(fname):
+            if fname != self.filename and QFile.exists(fname):
                 recentFiles.append(fname)
         if recentFiles:
             self.file_menu.addSeparator()
@@ -229,45 +242,32 @@ class MainWindow(QMainWindow):
         self.file_menu.addSeparator()
         self.file_menu.addAction(self.fileMenuActions[-1])
 
+
+# ===========================================================================
+# Save, Load, RecentFiles 
+# ===========================================================================
+    def updateWindowTitle(self):
+        title = "ErwinJr2 " + Version
+        if self.fileName:
+            title += " - %s"%os.path.basename(self.filename)
+        if self.dirty:
+            title += "[*]"
+        self.setWindowTitle(title)
+        self.setWindowModified(self.dirty)
+
     def addRecentFile(self, fname):
-        if fname is None:
-            return
-        if fname not in self.recentFiles:
-            self.recentFiles.insert(0, fname)
-            while self.recentFiles.count() > 9:
-                self.recentFiles.pop()
-
-    def loadInitialFile(self):
-        qsettings = QSettings()
-        fname = qsettings.value("LastFile").toString()
-        if fname and QFile.exists(fname):
-            self.qclLoad(fname)
-            self.qtab.reload()
-
-        self.filename = fname
-        self.addRecentFile(fname)
-        self.dirty = False
-        self.update_windowTitle()
-
-    def fileNew(self):
-        """Start a new file, confirm if there's unsaved data"""
-        if not self.unsaveConfirm():
-            return False
-
-        self.filename = None
-        self.qtab.qclayers = QCLayers()
-        self.qtab.reload()
-
-        self.dirty = False
-        self.update_windowTitle()
-
-        return True
+        if fname in self.recentFiles: 
+            self.recentFiles.pop(self.recentFiles.index(fname))
+        self.recentFiles.insert(0, fname)
+        while self.recentFiles.count() > 9:
+            self.recentFiles.pop()
 
     def unsaveConfirm(self):
-        """Confirm if unsaved data should be saved"""
+        """Confirm if unsaved data should be saved. This returns False if the
+        user canels the operation"""
         if self.dirty:
             reply = QMessageBox.question(
-                self, "ErwinJr2 " + str(majorVersion) + " - Unsaved Changes",
+                self, "ErwinJr2 " + Version + " - Unsaved Changes",
                 "Save unsaved changes?",
                 QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
             if reply == QMessageBox.Cancel:
@@ -276,109 +276,94 @@ class MainWindow(QMainWindow):
                 self.fileSave()
         return True
 
-    def update_windowTitle(self):
-        if self.filename is not None:
-            self.setWindowTitle("ErwinJr2 " + str(majorVersion) + " - %s[*]" %
-                                os.path.basename(str(self.filename)))
-        else:
-            self.setWindowTitle("ErwinJr2 " + str(majorVersion) + "[*]")
-        self.setWindowModified(self.dirty)
-
-    def fileOpen(self, fname=None):
-        # clear all old data, also calls self.unsaveConfirm()
-        if not self.fileNew():
+    def fileNew(self):
+        """Start a new file, confirm if there's unsaved data"""
+        if not self.unsaveConfirm():
             return False
-        if not fname:
-            dir = os.path.dirname(str(self.filename)) if self.filename else "."
-            fname = QFileDialog.getOpenFileName(
-                self, "ErwinJr2 - Choose file", dir,
-                "ErwinJr2 files (*.qcl)\nAll files (*.*)")
-        # open file and determine if it is from the Matlab version of ErwinJr
-        filehandle = open(fname, 'r')
-        firstLine = filehandle.readline()
-        filehandle.close()
-        if fname:
-            if firstLine.split(':')[0] == 'Description':
-                QMessageBox.warning(
-                    self, 'ErwinJr2 Error',
-                    'Older .qcl format is no longer supported for Ver>3.0.')
-                #  self.qclPtonLoad(fname)
-            elif firstLine == 'ErwinJr2 Data File\n':
-                self.qclLoad(fname)
-            else:
-                QMessageBox.warning(self, 'ErwinJr2 Error',
-                                    'Could not recognize input file.')
-                return
-            self.qtab.reload()
-
-        self.filename = fname
-        self.addRecentFile(fname)
-        self.dirty = False
-        self.update_windowTitle()
-
+        self.qtab.qclayers = QCLayers()
+        self.qtab.reload()
+        self.filename = None
+        self.dirty = True
+        self.updateWindowTitle()
         return True
 
+    def fileOpen(self, fname=None):
+        """ Clear all old data and load a new file. This will check
+        self.unsaveConfirm and return False if user cancels it. 
+        This is used as user action and SLOT to fileOpen related signals."""
+        if not self.unsaveConfirm():
+            return False
+        if not fname:
+            fname = QFileDialog.getOpenFileName(
+                self, "ErwinJr2 - Choose file",
+                os.path.dirname(self.filename) if self.filename else ".",
+                "ErwinJr2 files (*.json)\nAll files (*.*)")
+        if fname: 
+            self.qclLoad(fname)
+            return True
+        else:
+            # User cancels the OpenFile dialog
+            return False
+
     def qclLoad(self, fname):
+        """Load from file "fname", and update everything for consistency."""
         try:
             with open(fname, 'r') as f:
                 self.qtab.qclayers = SaveLoad.qclLoad(f)
         except Exception:
             QMessageBox.warning(self, "ErwinJr2 - Warning",
-                                "Could not load *.qcl file.\n" +
+                                "Could not load the *.json file.\n" +
                                 traceback.format_exc())
+            return
+        self.qtab.reload()
+        self.filename = fname
+        self.addRecentFile(fname)
+        self.dirty = False
+        self.updateWindowTitle()
 
     def fileSave(self):
         if self.filename is None:
             return self.fileSaveAs()
-        else:
-            # os.path.extsep
-            if self.filename.split('.')[-1] == 'qcl':
-                if self.qclSave(self.filename):
-                    self.dirty = False
-                    self.update_windowTitle()
-                    return True
-                else:
-                    return False
-            else:
-                raise IOError('The *.' + self.filename.split('.')[-1] +
-                              ' extension is not supported.')
+        if self.filename.split('.')[-1] == 'json':
+            try:
+                with open(self.filename, 'w') as f:
+                    SaveLoad.qclSaveJSON(f, self.qtab.qclayers)
+            except:
+                QMessageBox.warning(self, "ErwinJr2 - Warning",
+                                    "Could not save *.json file.\n" +
+                                    traceback.format_exc())
                 return False
+            self.dirty = False
+            self.updateWindowTitle()
+            return True
+        else:
+            raise IOError('The *.' + self.filename.split('.')[-1] +
+                          ' extension is not supported.')
 
     def fileSaveAs(self):
         fname = self.filename if self.filename is not None else "."
-        typeString = "ErwinJr 2.x file (*.qcl)\nAll files (*.*)"
+        typeString = "ErwinJr2 file (*.json)\nAll files (*.*)"
         fname = QFileDialog.getSaveFileName(
-            self, "ErwinJr2 - Save File", QString(fname), typeString)
+            self, "ErwinJr2 - Save File", fname, typeString)
         if fname:
             if "." not in fname:
-                fname += ".qcl"
+                fname += ".json"
             self.addRecentFile(fname)
             self.filename = fname
             return self.fileSave()
         return False
 
-    def qclSave(self, fname):
-        try:
-            with open(fname, 'w') as f:
-                SaveLoad.qclSaveJSON(f, self.qtab.qclayers)
-        except Exception:
-            QMessageBox.warning(self, "ErwinJr2 - Warning",
-                                "Could not save *.qcl file.\n" +
-                                traceback.format_exc())
-        return True
-
     def closeEvent(self, event):
         if self.unsaveConfirm():
-            qsettings = QSettings()
-            filename = (QVariant(QString(self.filename)) if self.filename
+            filename = (QVariant(self.filename) if self.filename
                         else QVariant())
-            qsettings.setValue("LastFile", filename)
+            self.qsettings.setValue("LastFile", filename)
             recentFiles = (QVariant(self.recentFiles) if self.recentFiles
                            else QVariant())
-            qsettings.setValue("RecentFiles", recentFiles)
-            qsettings.setValue(
+            self.qsettings.setValue("RecentFiles", recentFiles)
+            self.qsettings.setValue(
                 "MainWindow/Geometry", QVariant(self.saveGeometry()))
-            qsettings.setValue(
+            self.qsettings.setValue(
                 "MainWindow/State", QVariant(self.saveState()))
         else:
             event.ignore()
@@ -388,29 +373,14 @@ class MainWindow(QMainWindow):
 # Export Functions
 # ===========================================================================
     def exportBandDiagram(self):
-        if __USE_MATPLOTLIB__:
-            self.qtab.export_quantumCanvas(
-                self.filename.split('.')[0])
-        else:
-            fname = unicode(QFileDialog.getSaveFileName(
-                self, "ErwinJr2 - Export Band Structure Image",
-                self.filename.split('.')[0],
-                "Portable Network Graphics file (*.png)"))
-            if not fname:
-                return
-
-            # set background color to white and save presets
-            bgRole = self.mainTabWidget.backgroundRole()
-            self.mainTabWidget.setBackgroundRole(QPalette.Base)
-            self.qtab.export_quantumCanvas(fname)
-            self.mainTabWidget.setBackgroundRole(bgRole)
+        self.qtab.export_quantumCanvas(self.filename.split('.')[0])
 
     def export_band_diagram_data(self):
-        fname = unicode(QFileDialog.getSaveFileName(
+        fname = QFileDialog.getSaveFileName(
             self, "ErwinJr2 - Export Band Structure Data",
             self.filename.split('.')[0],
-            "Comma-Separated Value file (*.csv)"))
-        if fname != '':
+            "Comma-Separated Value file (*.csv)")
+        if fname:
             # if user doesn't click cancel
             self.qtab.export_band_data(fname)
 
@@ -448,10 +418,10 @@ With contributions from:
          * Yamac Dikmelik (Johns Hopkins University)
          * Yu Song (Princeton University)
         """
-        QMessageBox.about(self, "ErwinJr2 " + str(ejVersion), msg.strip())
+        QMessageBox.about(self, "ErwinJr2 " + Version, msg.strip())
 
     def on_licenses(self):
-        copyright1 = """
+        copyright = """
 #=======================================
 # ErwinJr2 is a simulation program for quantum semiconductor lasers.
 # Copyright (C) 2017 Ming Lyu
@@ -474,75 +444,31 @@ With contributions from:
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #=======================================
 """
-        QMessageBox.about(self, "ErwinJr2 " + str(ejVersion),
-                          copyright1.strip())
+        QMessageBox.about(self, "ErwinJr2 " + Version,
+                          copyright.strip())
 
     def on_tutorial(self):
-        if os.name == "nt":
-            os.startfile("tutorial.pdf")
-        elif os.name == "posix":
-            os.system("/usr/bin/xdg-open tutorial.pdf")
+        QDesktopServices.openUrl("./docs/_build/html/index.html")
 
 
-def main():
+def main(filename=None):
     app = QApplication(sys.argv)
     app.setOrganizationName("ErwinJr")
     app.setOrganizationDomain("princetonuniversity.github.io/ErwinJr2")
-    app.setApplicationName("ErwinJr2")
-    qsettingsSystem = QSettings(QSettings.SystemScope, 
-                                "Princeton", "ErwinJr2")
-    installDirectory = qsettingsSystem.value('installDirectory').toString()
-    if installDirectory:
-        os.chdir(installDirectory)
-
-    # Create and display the splash screen
-    splash_pix = QPixmap('images/erwinjr_splash.png')
-    splash = QSplashScreen(splash_pix, Qt.WindowStaysOnTopHint)
-    splash.setMask(splash_pix.mask())
-    splash.show()
-    app.processEvents()
-
-    time.sleep(1)
-
+    app.setApplicationName("ErwinJr2") 
     app.setWindowIcon(QIcon('images/EJpng48x48.png'))
-
-    # this block handles a filename passed in by command line
-    try:
-        fileName = sys.argv[1]
-        name, ext = os.path.splitext(fileName)
-        assert ext == ".qcl"
-        assert os.path.exists(fileName)
-        fileName = os.path.abspath(fileName)
-    except (IndexError, AssertionError):
-        fileName = None
 
     form = MainWindow(fileName)
     form.show()
-    splash.finish(form)
-
-    qsettings = QSettings()
-    if not qsettings.value('firstRun').toInt()[1]:
-        if not installDirectory:
-            qsettingsSystem.setValue("installDirectory", QVariant(os.getcwd()))
-        firstRunBox = QMessageBox(
-            QMessageBox.Question, 'EwrinJr2 ' + str(majorVersion),
-            ("Welcome to ErwinJr2!\n"
-             "Since this is your first time running the program, "
-             "would you like to open an example file or a blank file?"),
-            parent=form)
-        firstRunBox.addButton("Blank File", QMessageBox.NoRole)
-        firstRunBox.addButton("Example File", QMessageBox.YesRole)
-        ansr = firstRunBox.exec_()
-        if ansr:
-            form.fileOpen('examples/NPhoton PQLiu.qcl')
-        else:
-            form.fileNew()
-        qsettings.setValue("firstRun", 1)
-
     app.exec_()
 
-
 if __name__ == "__main__":
-    main()
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    # this block handles a filename passed in by command line
+    try:
+        fileName = os.path.abspath(sys.argv[1])
+    except IndexError:
+        fileName = None
+    main(fileName)
 
 # vim: ts=4 sw=4 sts=4 expandtab
