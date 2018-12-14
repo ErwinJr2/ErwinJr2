@@ -32,6 +32,7 @@ if __name__ == "__main__":
         qcl = SaveLoad.qclLoad(f)
 
     qcl.layerSelected = 3
+    qcl.NonParabolic = False
     qcl.populate_x()
     qcl.solve_basis()
     axes = plt.axes()
