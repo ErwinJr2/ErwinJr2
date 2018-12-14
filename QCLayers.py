@@ -13,7 +13,7 @@ EUnit = 1e-5    # E field unit from kV/cm to V/Angtrom
 
 qcMaterial = {
     "InP":  ["InGaAs", "AlInAs"], 
-    "GaAs": ["AlGaAs", "AlGaAs"], 
+    "GaAs": ["AlGaAs"], 
     "GaSb": ["InAsSb", "AlGaSb"]
 }
 
@@ -50,18 +50,24 @@ class QCLayers(object):
         self.layerSelected = None
 
         self.subM = Material.Material(self.substrate, self.Temperature)
+        self.update_strain()
 
     def update_strain(self):
-        self.layerMaterials = [Material.Alloy(self.materials[idx],
-                                              self.moleFracs[idx],
-                                              self.Temperature)
-                               for idx in self.layerMaterialIdxs]
-        self.a_parallel = self.subM.parm['alc']
-        for alloy in self.layerMaterials:
-            alloy.set_strain(self.a_parallel)
+        self.mtrlAlloys = [Material.Alloy(self.materials[idx], 
+                                          self.moleFracs[idx], 
+                                          self.Temperature)
+                           for idx in range(len(self.materials))]
+
+        for al in self.mtrlAlloys:
+            al.set_strain(self.a_parallel)
+
+    def add_layer(self, n, width, mtrlIdx, AR, doping):
+        self.layerWidths.insert(n, width)
+        self.layerMaterialIdxs.insert(n, mtrlIdx)
+        self.layerARs.insert(n, AR)
+        self.layerDopings.insert(n, doping)
 
     def populate_x(self):
-        self.update_strain()
         layerNumCumSum = [0] + np.cumsum(self.layerWidths).tolist()
         periodL = layerNumCumSum[-1]
         self.xPoints = np.arange(0, periodL* self.repeats, self.xres)
@@ -102,7 +108,7 @@ class QCLayers(object):
                              (self.xVL, 'EcL'), (self.xESO, 'ESO'),
                              (self.xVLH, 'EvLH'), (self.xEp, 'Ep'),
                              (self.xVSO, 'EvSO'), (self.xF, 'F')):
-                p[Indices] = self.layerMaterials[n].parm[key]
+                p[Indices] = self.mtrlAlloys[self.layerMaterialIdxs[n]].parm[key]
 
         ExtField = self.xPoints * self.EField * EUnit
         for p in (self.xVc, self.xVX, self.xVL, self.xVLH, self.xVSO):
