@@ -111,7 +111,7 @@ class QCLayers(object):
         #  if self.layerSelected:
         xSlt = (self.xLayerNums == self.layerSelected)
         xSlt = (xSlt | np.roll(xSlt, 1) | np.roll(xSlt, -1))
-        self.xlayerSelected = np.ma.masked_where(~xSlt , self.xVc)
+        self.xlayerSelected = np.ma.masked_where(~xSlt, self.xVc)
 
         self.xRepeats = np.empty((0), dtype=int)
         for k in range(self.repeats):
@@ -129,7 +129,7 @@ class QCLayers(object):
             band = onedq.Band("ZincBlende", self.xEg, self.xF, self.xEp,
                               self.xESO)
             self.eigenEs = onedq.cBandSolve1D(self.xres, Es, self.xVc, band)
-            self.psis = onedq.cBandFillPsi(self.xres, self.eigenEs, 
+            self.psis = onedq.cBandFillPsi(self.xres, self.eigenEs,
                                            self.xVc, band)
         else:
             self.eigenEs = onedq.cSimpleSolve1D(self.xres, Es,
@@ -154,10 +154,7 @@ class QCLayers(object):
         for n in range(0, len(StartInd)):
             dCL = copy.deepcopy(self)
             dCL.repeats = 1
-            
             dCL.layerWidths = self.layerWidths[StartInd[n]:EndInd[n]]
-            # print("n = {0}, dCL.layerWidths = {1}".format(n, dCL.layerWidths))
-            
             dCL.layerMaterialIdxs = self.layerMaterialIdxs[StartInd[n]:
                                                            EndInd[n]]
             dCL.layerDopings = self.layerDopings[StartInd[n]:EndInd[n]]
@@ -165,9 +162,6 @@ class QCLayers(object):
 
             dCL.populate_x()
             dCL.solve_whole()
-
-            # print("dCL[n].eigenEs.shape = {0}".format(dCL.eigenEs.shape))
-            # print("dCL[n].psis.shape = {0}".format(dCL.psis.shape))
 
             xInd_all = (self.xLayerNums >= StartInd[n]) & \
                 (self.xLayerNums < EndInd[n])
@@ -180,30 +174,12 @@ class QCLayers(object):
                 psis_fill[:, xInd] = dCL.psis
                 psis_re = np.concatenate((psis_re, psis_fill), axis=0)
 
-                # eigenEs_re = \
-                #     np.concatenate((eigenEs_re,
-                #                     dCL.eigenEs +
-                #                     j*sum(self.layerWidths)*self.EField))
-                eigenEs_re = np.concatenate((eigenEs_re, dCL.eigenEs))
-
-
-            # psis_fill = np.zeros((dCL.eigenEs.shape[0], self.xPoints.size))
-
-            # psis = np.zeros((dCL.eigenEs.shape[0], 0))
-            # for j in range(0, self.repeats):
-            #     # this is where to add global Efield
-            #     # psis = np.concatenate((psis,
-            #     #                        dCL.psis +
-            #     #                        sum(self.layerWidths)*self.EField),
-            #     #                       axis=1)
-            #     psis = np.concatenate((psis, dCL.psis), axis=1)
-                
-            
+                eigenEs_re = \
+                    np.concatenate((eigenEs_re,
+                                    dCL.eigenEs -
+                                    j*sum(self.layerWidths)*self.EField*EUnit))
 
             self.eigenEs = np.concatenate((self.eigenEs, eigenEs_re), axis=0)
             self.psis = np.concatenate((self.psis, psis_re), axis=0)
-            
 
-        
-        
 # vim: ts=4 sw=4 sts=4 expandtab

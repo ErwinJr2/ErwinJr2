@@ -4,6 +4,7 @@ from context import *
 import SaveLoad
 import numpy as np
 import matplotlib.pyplot as plt
+import unittest
 
 def plot_band(axes, qcLayers):
     """ Plot potential (quantum barriers and wells) and other band parameters 
@@ -28,7 +29,7 @@ def plot_band(axes, qcLayers):
 
 if __name__ == "__main__":
     with open("../example/PQLiu.json") as f:
-         qcl = SaveLoad.qclLoad(f)
+        qcl = SaveLoad.qclLoad(f)
 
     qcl.layerSelected = 3
     qcl.populate_x()
@@ -36,5 +37,3 @@ if __name__ == "__main__":
     axes = plt.axes()
     plot_band(axes, qcl)
     plt.show()
-
-    
