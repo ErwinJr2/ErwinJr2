@@ -52,7 +52,8 @@ class QCLayers(object):
         self.subM = Material.Material(self.substrate, self.Temperature)
         self.update_strain()
 
-    def update_strain(self):
+    def update_strain(self): 
+        self.a_parallel = self.subM.parm['alc']
         self.mtrlAlloys = [Material.Alloy(self.materials[idx], 
                                           self.moleFracs[idx], 
                                           self.Temperature)
@@ -117,7 +118,12 @@ class QCLayers(object):
         #  if self.layerSelected:
         xSlt = (self.xLayerNums == self.layerSelected)
         xSlt = (xSlt | np.roll(xSlt, 1) | np.roll(xSlt, -1))
-        self.xlayerSelected = np.ma.masked_where(~xSlt , self.xVc)
+        self.xlayerSelected = np.ma.masked_where(~xSlt, self.xVc)
+
+        self.xRepeats = np.empty((0), dtype=int)
+        for k in range(self.repeats):
+            self.xRepeats = np.concatenate(
+                (self.xRepeats, k*np.ones(int(N/self.repeats), dtype=int)))
 
     def solve_whole(self):
         mass = self.xMc[np.argmin(self.xVc)]
@@ -130,7 +136,7 @@ class QCLayers(object):
             band = onedq.Band("ZincBlende", self.xEg, self.xF, self.xEp,
                               self.xESO)
             self.eigenEs = onedq.cBandSolve1D(self.xres, Es, self.xVc, band)
-            self.psis = onedq.cBandFillPsi(self.xres, self.eigenEs, 
+            self.psis = onedq.cBandFillPsi(self.xres, self.eigenEs,
                                            self.xVc, band)
         else:
             self.eigenEs = onedq.cSimpleSolve1D(self.xres, Es,
@@ -141,29 +147,46 @@ class QCLayers(object):
     def solve_basis(self):
         IndSep = np.nonzero(np.array(self.layerARs[1:]) !=
                             np.array(self.layerARs[:-1]))[0] + 1
-        IndSep = np.insert(IndSep, len(IndSep), len(self.layerARs))
         if self.layerARs[0]:
-            IndSep = np.insert(IndSep, 0, 0)
+            IndSep = np.concatenate(([0], IndSep))
+        if len(IndSep) % 2:
+            IndSep = np.concatenate((IndSep, len(self.layerARs)))
 
-        dCL = []
-        for n in range(0, int(len(IndSep)/2)):
-            dCL.append(copy.deepcopy(self))
-            dCL[n].repeats = 1
-            
-            dCL[n].layerWidths = self.layerWidths[IndSep[2*n]:IndSep[2*n+1]]
-            print("n = {0}, dCL[n].layerWidths = {1}".format(n, dCL[n].layerWidths))
-            
-            dCL[n].layerMaterialIdxs = self.layerMaterialIdxs[IndSep[2*n]:
-                                                              IndSep[2*n+1]]
-            dCL[n].layerDopings = self.layerDopings[IndSep[2*n]:IndSep[2*n+1]]
-            dCL[n].layerARs = self.layerARs[IndSep[2*n]:IndSep[2*n+1]]
+        StartInd = IndSep[0::2]
+        EndInd = IndSep[1::2]
+        # create two lists to store start ind and end ind
 
-            dCL[n].populate_x()
-            dCL[n].solve_whole()
-            
-            print("dCL[n].eigenEs.shape = {0}".format(dCL[n].eigenEs.shape))
-            print("dCL[n].psis.shape = {0}".format(dCL[n].psis.shape))
+        self.eigenEs = np.empty((0))
+        self.psis = np.empty((0, self.xPoints.size))
+        for n in range(0, len(StartInd)):
+            dCL = copy.deepcopy(self)
+            dCL.repeats = 1
+            dCL.layerWidths = self.layerWidths[StartInd[n]:EndInd[n]]
+            dCL.layerMaterialIdxs = self.layerMaterialIdxs[StartInd[n]:
+                                                           EndInd[n]]
+            dCL.layerDopings = self.layerDopings[StartInd[n]:EndInd[n]]
+            dCL.layerARs = self.layerARs[StartInd[n]:EndInd[n]]
 
-        
-        
+            dCL.populate_x()
+            dCL.solve_whole()
+
+            xInd_all = (self.xLayerNums >= StartInd[n]) & \
+                (self.xLayerNums < EndInd[n])
+
+            psis_re = np.zeros((0, self.xPoints.size))
+            eigenEs_re = np.zeros(0)
+            for j in range(0, self.repeats):
+                xInd = xInd_all & (self.xRepeats == j)
+                psis_fill = np.zeros((dCL.eigenEs.shape[0], self.xPoints.size))
+                psis_fill[:, xInd] = dCL.psis
+                psis_re = np.concatenate((psis_re, psis_fill), axis=0)
+
+                eigenEs_re = \
+                    np.concatenate((eigenEs_re,
+                                    dCL.eigenEs -
+                                    j*sum(self.layerWidths)*self.EField*EUnit))
+
+            self.eigenEs = np.concatenate((self.eigenEs, eigenEs_re), axis=0)
+            self.psis = np.concatenate((self.psis, psis_re), axis=0)
+
 # vim: ts=4 sw=4 sts=4 expandtab

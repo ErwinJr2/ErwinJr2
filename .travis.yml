@@ -20,3 +20,4 @@ script:
     - python test/SimpleSchrodinger.py MP
     - pytest -v test/testMaterial.py
     - cd docs; make html
+    - pytest -v test/testQCLayers.py
