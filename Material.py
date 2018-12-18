@@ -62,29 +62,30 @@ class Material(object):
         interaction. The input is the lattice constant of the substrate. """
         # TODO: crystal with more than one lattice constant? 
         # eps_parallel: strain tensor within/parallel to the layer plane
-        eps_parallel = a_parallel / self.parm["alc"] - 1
+        self.eps_parallel = a_parallel / self.parm["alc"] - 1
         # self.a_perp: lattice const. perpendicular to the layer plane
         # Ask if MBE growers care about strain on monolayer thickness
         self.a_perp = self.parm["alc"] * (1 - 2 * self.parm["c12"] /
-                                     self.parm["c11"] * eps_parallel)
+                                     self.parm["c11"] * self.eps_parallel)
         # eps_perp: strain tensor perpendicular to the layer plane
-        eps_perp = self.a_perp / self.parm["alc"] - 1
+        self.eps_perp = self.a_perp / self.parm["alc"] - 1
         if self.type == "ZincBlende":
-            Pec = (2 * eps_parallel + eps_perp) * self.parm["acG"]
-            Pe  = (2 * eps_parallel + eps_perp) * self.parm["av"]
+            Pec = (2 * self.eps_parallel + self.eps_perp) * self.parm["acG"]
+            Pe  = (2 * self.eps_parallel + self.eps_perp) * self.parm["av"]
             Qe  = (- self.parm["b"] * (self.parm["c11"] + 2 
                                        * self.parm["c12"]) 
-                   / self.parm["c11"] * eps_parallel)
+                   / self.parm["c11"] * self.eps_parallel)
             self.parm["EcG"] = (self.parm["VBO"] + self.parm["EgG"] + Pec 
                                 - bandBaseln)
             self.parm["EcL"] = (self.parm["VBO"] + self.parm["EgL"] 
-                                + (2 * eps_parallel + eps_perp) 
+                                + (2 * self.eps_parallel + self.eps_perp) 
                                 * (self.parm["acL"] + self.parm["av"]) 
                                 - bandBaseln)
             self.parm["EcX"] = (self.parm["VBO"] + self.parm["EgX"] 
-                                + (2 * eps_parallel + eps_perp) 
+                                + (2 * self.eps_parallel + self.eps_perp) 
                                 * (self.parm["acX"] + self.parm["av"]) 
-                                + 2/3*self.parm["XiX"]*(eps_perp - eps_parallel)
+                                + 2/3*self.parm["XiX"]*(
+                                    self.eps_perp - self.eps_parallel)
                                 - bandBaseln)
             self.parm["ESO"] = sqrt(9 * Qe**2 + 2 * Qe * self.parm["DSO"] +
                                     self.parm["DSO"]**2)

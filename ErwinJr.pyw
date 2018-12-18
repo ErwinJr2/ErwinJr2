@@ -51,7 +51,7 @@ class MainWindow(QMainWindow):
         self.qsettings = QSettings(QSettings.IniFormat, QSettings.UserScope, 
                                     "ErwinJr", "ErwinJr2", self)
 
-        if self.qsettings.value('firstRun', True).toBool():
+        if self.qsettings.value('firstRun', True):
             self.qsettings.setValue("firstRun", False)
             if not fname:
                 firstRunBox = QMessageBox(
@@ -67,9 +67,11 @@ class MainWindow(QMainWindow):
                     fname = './example/PQLiu.json'
         elif not fname:
             # Load last file
-            fname = self.qsettings.value("LastFile", None).toString()
+            fname = self.qsettings.value("LastFile", None)
         self.dirty = True
         qclayers = None
+        rf = self.qsettings.value("RecentFiles")
+        self.recentFiles = rf if rf else []
         if fname and QFile.exists(fname):
             try:
                 with open(fname, 'r') as f:
@@ -87,7 +89,7 @@ class MainWindow(QMainWindow):
         # ==========================
         # Quantum Tab
         # ==========================
-        self.qtab = QuantumTab(qclayer, self)
+        self.qtab = QuantumTab(qclayers, self)
         self.qtab.dirty.connect(self.thingsChanged)
         self.mainTabWidget.addTab(self.qtab, 'Quantum')
         # ==========================
@@ -98,11 +100,10 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.mainTabWidget)
         self.create_menu()
 
-        self.restoreGeometry(
-            self.qsettings.value("MainWindow/Geometry").toByteArray())
-        self.restoreState(
-            self.qsettings.value("MainWindow/State").toByteArray())
-        self.recentFiles = self.qsettings.value("RecentFiles").toStringList()
+        if self.qsettings.value("MainWindow/Geometry"):
+            self.restoreGeometry(self.qsettings.value("MainWindow/Geometry"))
+        if self.qsettings.value("MainWindow/State"): 
+            self.restoreState(self.qsettings.value("MainWindow/State"))
         self.updateFileMenu()
         self.updateWindowTitle()
 
@@ -173,14 +174,14 @@ class MainWindow(QMainWindow):
         self.edit_menu = self.menuBar().addMenu("&Edit")
         temperatureAction = self.create_action(
             "&Temperature", slot=self.set_temperature, tip="Set temperature")
-        bumpLayerAction = self.create_action(
-            "&Bump First Layer", slot=self.qtab.bump_first_layer,
+        rotateLayerAction = self.create_action(
+            "&Rotate Layer Table", slot=self.qtab.rotate_layer,
             tip="Move zeroth layer to first layer")
         copyStructureAction = self.create_action(
             "&Copy Structure", slot=self.qtab.copy_structure,
             tip="Copy Layer Structure to Clipboard")
         self.add_actions(self.edit_menu, (temperatureAction,
-                                          bumpLayerAction, None,
+                                          rotateLayerAction, None,
                                           copyStructureAction))
 
         # view menu
@@ -248,7 +249,7 @@ class MainWindow(QMainWindow):
 # ===========================================================================
     def updateWindowTitle(self):
         title = "ErwinJr2 " + Version
-        if self.fileName:
+        if self.filename:
             title += " - %s"%os.path.basename(self.filename)
         if self.dirty:
             title += "[*]"
@@ -259,7 +260,7 @@ class MainWindow(QMainWindow):
         if fname in self.recentFiles: 
             self.recentFiles.pop(self.recentFiles.index(fname))
         self.recentFiles.insert(0, fname)
-        while self.recentFiles.count() > 9:
+        while len(self.recentFiles) > 9:
             self.recentFiles.pop()
 
     def unsaveConfirm(self):

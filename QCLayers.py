@@ -62,11 +62,65 @@ class QCLayers(object):
         for al in self.mtrlAlloys:
             al.set_strain(self.a_parallel)
 
+    def set_mtrl(self, n, mtrl=None, moleFrac=None):
+        """Set material[n] to new material (mtrl) and/or moleFrac"""
+        if not mtrl:
+            self.mtrlAlloys[n].set_molefrac(moleFrac)
+        if not moleFrac:
+            moleFrac = self.moleFracs[n]
+            self.mtrlAlloys[n] = Material.Alloy(
+                mtrl, moleFrac, self.Temperature)
+        self.mtrlAlloys[n].set_strain(self.a_parallel)
+
     def add_layer(self, n, width, mtrlIdx, AR, doping):
         self.layerWidths.insert(n, width)
         self.layerMaterialIdxs.insert(n, mtrlIdx)
         self.layerARs.insert(n, AR)
         self.layerDopings.insert(n, doping)
+    
+    def del_layer(self, n):
+        for layerList in (self.layerWidths, self.layerARs,
+                          self.layerMaterialIdxs, self.layerDopings):
+            layerList.pop(n)
+
+    def rotate_layer(self):
+        for layerList in (self.layerWidths, self.layerARs,
+                          self.layerMaterialIdxs, self.layerDopings):
+            layerList.insert(0, layerList.pop())
+
+    def set_substrate(self, subs):
+        if subs in qcMaterial:
+            self.substrate = subs
+            self.update_strain()
+        else:
+            raise TypeError("Substrate %s not supported"%subs)
+
+    def set_temperature(self, T):
+        self.qclayers.Temperature = T
+        self.subM.set_temperature(T)
+        self.update_strain()
+
+    def offset(self):
+        """Return the conduction band offset (difference between highest
+        conduction band and lowest conduction band energy) of materials, 
+        in unit eV"""
+        ecgs = [alloy.parm['EcG'] for alloy in self.mtrlAlloys]
+        return max(ecgs) - min(ecgs)
+
+    def netStrain(self):
+        """Return average strain perpendicular to the layer plane, in
+        percentage."""
+        totalStrain = sum(self.mtrlAlloys[self.layerMaterialIdxs[n]].eps_perp
+                          * self.layerWidths[n] 
+                          for n in range(len(self.layerWidths)))
+        return 100 * totalStrain / sum(self.layerWidths)
+
+    def avghwLO(self):
+        """Return average LO phonont energy in unit eV"""
+        sumhwlo = sum(self.mtrlAlloys[self.layerMaterialIdxs[n]].parm['hwLO']
+                          * self.layerWidths[n] 
+                          for n in range(len(self.layerWidths)))
+        return sumhwlo / sum(self.layerWidths)
 
     def populate_x(self):
         layerNumCumSum = [0] + np.cumsum(self.layerWidths).tolist()
@@ -115,15 +169,18 @@ class QCLayers(object):
         for p in (self.xVc, self.xVX, self.xVL, self.xVLH, self.xVSO):
             p -= ExtField
 
-        #  if self.layerSelected:
-        xSlt = (self.xLayerNums == self.layerSelected)
-        xSlt = (xSlt | np.roll(xSlt, 1) | np.roll(xSlt, -1))
-        self.xlayerSelected = np.ma.masked_where(~xSlt, self.xVc)
-
         self.xRepeats = np.empty((0), dtype=int)
         for k in range(self.repeats):
             self.xRepeats = np.concatenate(
                 (self.xRepeats, k*np.ones(int(N/self.repeats), dtype=int)))
+
+    def xLayerSelected(self):
+        xSlt = (self.xLayerNums == self.layerSelected)
+        xSlt = (xSlt | np.roll(xSlt, 1) | np.roll(xSlt, -1))
+        return np.ma.masked_where(~xSlt, self.xVc)
+
+    def xLayerAR(self):
+        return np.ma.masked_where(~self.xARs, self.xVc)
 
     def solve_whole(self):
         mass = self.xMc[np.argmin(self.xVc)]

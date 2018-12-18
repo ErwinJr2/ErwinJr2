@@ -39,7 +39,7 @@ from PyQt5.QtWidgets import (QSizePolicy, QMessageBox, QInputDialog,
                              QFileDialog)
 
 import sys, json
-from warning import warn
+from warnings import warn
 config = {
     "PlotMargin": {'l': 0.75, 'r': 0.12, 'b': 0.55, 't': 0.09}, 
     "fontsize": 12,
