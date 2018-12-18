@@ -157,12 +157,12 @@ class QuantumTab(QWidget):
             solveBoxWidth = 220
         elif sys.platform.startswith('darwin'):
             settingBoxWidth = 90
-            layerBoxWidth = 250
+            layerBoxWidth = 400
             solveBoxWidth = 190
         elif sys.platform.startswith('linux'):
-            settingBoxWidth = 150
-            layerBoxWidth = 365
-            solveBoxWidth = 240
+            settingBoxWidth = 130
+            layerBoxWidth = 275
+            solveBoxWidth = 210
         else:
             QMessageBox.warning(self, ejWarning, 
                                 'Platform %s not tested.' % sys.platform)
@@ -261,8 +261,9 @@ class QuantumTab(QWidget):
         self.LpStringBox.setReadOnly(True)
         self.LpStringBox.setSizePolicy(
             QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
-        self.LpStringBox.setMaximumHeight(95)
+        self.LpStringBox.setMaximumHeight(120)
         self.LpStringBox.setMaximumWidth(width)
+        self.LpStringBox.setMinimumWidth(width)
         LpLayout = QGridLayout()
         LpLayout.addWidget(QLabel('<b>first</b>'), 0, 0)
         LpLayout.addWidget(QLabel('<b>last</b>'), 0, 1)
@@ -279,7 +280,7 @@ class QuantumTab(QWidget):
     def _generateLayerBox(self, width):
         """ Return a Qt Layout object containning all layer parameters """
         layerBox = QGridLayout()
-        self.insertLayerAboveButton = QPushButton("Insert Layer Above")
+        self.insertLayerAboveButton = QPushButton("Insert Layer")
         self.insertLayerAboveButton.clicked.connect(self.insert_layerAbove)
         layerBox.addWidget(self.insertLayerAboveButton, 0, 0)
         self.deleteLayerButton = QPushButton("Delete Layer")
@@ -291,6 +292,7 @@ class QuantumTab(QWidget):
         self.layerTable.setSelectionBehavior(QTableWidget.SelectRows)
         self.layerTable.setSelectionMode(QTableWidget.SingleSelection)
         self.layerTable.setMaximumWidth(width)
+        self.layerTable.setMinimumWidth(width)
         self.layerTable.setSizePolicy(
             QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding))
         self.layerTable.itemChanged.connect(self.layerTable_itemChanged)
@@ -352,6 +354,7 @@ class QuantumTab(QWidget):
             QSizePolicy.Fixed, QSizePolicy.Minimum))
         self.descBox.setMinimumHeight(60)
         self.descBox.setMaximumWidth(width)
+        self.descBox.setMinimumWidth(width)
         self.descBox.textChanged.connect(self.input_description)
         descLayout = QVBoxLayout()
         descLayout.addWidget(self.descBox)
@@ -364,7 +367,7 @@ class QuantumTab(QWidget):
         #  self.mtrlTable.setSelectionBehavior(QTableWidget.SelectItems)
         self.mtrlTable.setSelectionMode(QTableWidget.NoSelection)
         self.mtrlTable.setMaximumWidth(width)
-        self.mtrlTable.setMinimumWidth(100)
+        self.mtrlTable.setMinimumWidth(width)
         self.mtrlTable.setSizePolicy(
             QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Minimum))
         self.mtrlTable.itemChanged.connect(self.mtrlTable_itemChanged)
@@ -404,6 +407,7 @@ class QuantumTab(QWidget):
         self.pairSelectString = QTextEdit('')
         self.pairSelectString.setReadOnly(True)
         self.pairSelectString.setMaximumWidth(width)
+        self.pairSelectString.setMinimumWidth(width)
         self.pairSelectString.setSizePolicy(QSizePolicy(
             QSizePolicy.Fixed, QSizePolicy.Fixed))
         calculateControlGrid = QGridLayout()
@@ -452,7 +456,7 @@ class QuantumTab(QWidget):
             name = AParm[mtrl]['name']
             name = name.replace("1-x", str(1-self.qclayers.moleFracs[n]))
             name = name.replace("x", str(self.qclayers.moleFracs[n]))
-            name += "#%d"%(n+1) + name
+            name = "#%d "%(n+1)# + name
             self.mtrlList.append(name)
 
 # ===========================================================================
@@ -517,7 +521,7 @@ class QuantumTab(QWidget):
         self.dirty.emit()
 
     @pyqtSlot()
-    def input_basis(self, state):
+    def input_basis(self):
         """SLOT connected to self.inputARInjectorCheck.stateChanged(int) and
         self.inputInjectorARCheck.stateChanged(int)
         update dividers info
@@ -628,6 +632,7 @@ class QuantumTab(QWidget):
             ARitem.setCheckState(
                 Qt.Checked if self.qclayers.layerARs[q] == 1
                 else Qt.Unchecked)
+            ARitem.setTextAlignment(Qt.AlignCenter)
             ARitem.setBackground(color)
             self.layerTable.setItem(q, 3, ARitem)
 
@@ -759,7 +764,6 @@ class QuantumTab(QWidget):
         """SLOT connected to layerTable.itemSelectionChanged()"""
         # This is the primary call to update_quantumCanvas
         self.qclayers.layerSelected = self.layerTable.currentRow()
-        self.qclayers.populate_select()
         self.update_quantumCanvas()
 
     def layerTable_materialChanged(self, row, selection):
@@ -855,7 +859,7 @@ class QuantumTab(QWidget):
                 mf = float(item.text())
                 assert(mf <= 1)
                 self.qclayers.set_mtrl(row, moleFrac=int(100*mf)/100)
-            except ValueError, AssertionError:
+            except (ValueError, AssertionError):
                 # Input is not a number or is larger than 1
                 QMessageBox.warning(self, ejError, "invalid mole Fraction")
             item.setText(str(self.qclayers.moleFracs[row]))

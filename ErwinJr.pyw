@@ -51,7 +51,7 @@ class MainWindow(QMainWindow):
         self.qsettings = QSettings(QSettings.IniFormat, QSettings.UserScope, 
                                     "ErwinJr", "ErwinJr2", self)
 
-        if self.qsettings.value('firstRun', True):
+        if self.qsettings.value('firstRun', True, type=bool):
             self.qsettings.setValue("firstRun", False)
             if not fname:
                 firstRunBox = QMessageBox(

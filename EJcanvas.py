@@ -41,7 +41,7 @@ from PyQt5.QtWidgets import (QSizePolicy, QMessageBox, QInputDialog,
 import sys, json
 from warnings import warn
 config = {
-    "PlotMargin": {'l': 0.75, 'r': 0.12, 'b': 0.55, 't': 0.09}, 
+    "PlotMargin": {'l': 0.9, 'r': 0.12, 'b': 0.6, 't': 0.09}, 
     "fontsize": 12,
 }
 if sys.platform == 'win32': 
