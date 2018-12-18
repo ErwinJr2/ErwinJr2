@@ -19,5 +19,5 @@ script:
     - pytest -v test/SimpleSchrodinger.py
     - python test/SimpleSchrodinger.py MP
     - pytest -v test/testMaterial.py
-    - cd docs; make html
     - pytest -v test/testQCLayers.py
+    - cd docs; make html
