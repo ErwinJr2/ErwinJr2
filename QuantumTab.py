@@ -449,7 +449,7 @@ class QuantumTab(QWidget):
         information. mtrlList is used for mtrl column in layerTable"""
         self.mtrlList = []
         for n, mtrl in enumerate(self.qclayers.materials):
-            name = AParm[mtrl]['htmlname']
+            name = AParm[mtrl]['name']
             name = name.replace("1-x", str(1-self.qclayers.moleFracs[n]))
             name = name.replace("x", str(self.qclayers.moleFracs[n]))
             name += "#%d"%(n+1) + name
@@ -799,7 +799,7 @@ class QuantumTab(QWidget):
         self.mtrlTable.setHorizontalHeaderLabels(["#", "mtrl", "x"])
         # TODO: material name support
 
-        possibleMtrl = tuple([AParm[m]['htmlname'] for m in
+        possibleMtrl = tuple([AParm[m]['name'] for m in
                               qcMaterial[self.qclayers.substrate]])
         for n, mtrl in enumerate(self.qclayers.materials): 
             color = self.mtrlcolors[n%len(self.mtrlcolors)]
@@ -812,7 +812,7 @@ class QuantumTab(QWidget):
             # Choose from available materials, according to substrate 
             mtrlItem = QComboBox()
             mtrlItem.addItems(possibleMtrl)
-            mtrlItem.setCurrentText(AParm[mtrl]['htmlname'])
+            mtrlItem.setCurrentText(AParm[mtrl]['name'])
             mtrlItem.currentIndexChanged.connect(
                 partial(self.mtrlTable_mtrlChanged, n))
             self.mtrlTable.setCellWidget(n, 1, mtrlItem)
