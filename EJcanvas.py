@@ -1,27 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 
-# ===========================================================================
-# ErwinJr2 is a simulation program for quantum semiconductor lasers.
-# Copyright (C) 2018 Ming Lyu (CareF)
-#
-# The EJplotControl class of this code is inspired by
-# matplotlib.backend_qt5.NavigationToolbar2QT
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-# ===========================================================================
-
 import numpy as np
 import os
 
@@ -45,7 +24,7 @@ config = {
     "fontsize": 12,
 }
 if sys.platform == 'win32': 
-    config["PlotMargin"] = {'l': 0.75, 'r': 0.12, 'b': 0.55, 't': 0.09}
+    config["PlotMargin"] = {'l': 0.9, 'r': 0.12, 'b': 0.55, 't': 0.09}
 elif sys.platform == 'darwin':
     config["PlotMargin"] = {'l': 0.90, 'r': 0.12, 'b': 0.55, 't': 0.09}
 

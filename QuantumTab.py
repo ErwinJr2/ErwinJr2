@@ -130,9 +130,9 @@ class QuantumTab(QWidget):
 
         # Platform dependent settings, eg. layerout size settings
         if sys.platform.startswith('win'):
-            settingBoxWidth = 150
-            layerBoxWidth = 400
-            solveBoxWidth = 220
+            settingBoxWidth = 130
+            layerBoxWidth = 230
+            solveBoxWidth = 170
         elif sys.platform.startswith('darwin'):
             settingBoxWidth = 90
             layerBoxWidth = 400
