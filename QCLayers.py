@@ -110,6 +110,8 @@ class QCLayers(object):
     def netStrain(self):
         """Return average strain perpendicular to the layer plane, in
         percentage."""
+        if sum(self.layerWidths) <= 1e-5: 
+            return -1
         totalStrain = sum(self.mtrlAlloys[self.layerMaterialIdxs[n]].eps_perp
                           * self.layerWidths[n] 
                           for n in range(len(self.layerWidths)))
@@ -117,6 +119,8 @@ class QCLayers(object):
 
     def avghwLO(self):
         """Return average LO phonont energy in unit eV"""
+        if sum(self.layerWidths) <= 1e-5: 
+            return -1
         sumhwlo = sum(self.mtrlAlloys[self.layerMaterialIdxs[n]].parm['hwLO']
                           * self.layerWidths[n] 
                           for n in range(len(self.layerWidths)))
