@@ -84,6 +84,9 @@ class MainWindow(QMainWindow):
                                     "Could not load the *.json file.\n" +
                                     traceback.format_exc())
                 qclayers = None
+                self.filename = None
+        else:
+            self.filename = None
 
         self.mainTabWidget = QTabWidget()
         # ==========================
