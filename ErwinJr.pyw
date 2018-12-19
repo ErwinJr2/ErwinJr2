@@ -298,7 +298,7 @@ class MainWindow(QMainWindow):
         if not self.unsaveConfirm():
             return False
         if not fname:
-            fname = QFileDialog.getOpenFileName(
+            fname, flt = QFileDialog.getOpenFileName(
                 self, "ErwinJr2 - Choose file",
                 os.path.dirname(self.filename) if self.filename else ".",
                 "ErwinJr2 files (*.json)\nAll files (*.*)")
@@ -347,7 +347,7 @@ class MainWindow(QMainWindow):
     def fileSaveAs(self):
         fname = self.filename if self.filename is not None else "."
         typeString = "ErwinJr2 file (*.json)\nAll files (*.*)"
-        fname = QFileDialog.getSaveFileName(
+        fname, flt = QFileDialog.getSaveFileName(
             self, "ErwinJr2 - Save File", fname, typeString)
         if fname:
             if "." not in fname:
@@ -380,7 +380,7 @@ class MainWindow(QMainWindow):
         self.qtab.export_quantumCanvas(self.filename.split('.')[0])
 
     def export_band_diagram_data(self):
-        fname = QFileDialog.getSaveFileName(
+        fname, flt = QFileDialog.getSaveFileName(
             self, "ErwinJr2 - Export Band Structure Data",
             self.filename.split('.')[0],
             "Comma-Separated Value file (*.csv)")

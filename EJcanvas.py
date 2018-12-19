@@ -68,7 +68,10 @@ class EJcanvas(FigureCanvas):
         super(EJcanvas, self).__init__(self.figure)
         #  NavigationToolbar2.__init__(self, self)
         self.setParent(parent)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setMinimumWidth(200)
+        self.setMinimumHeight(200)
+        self.setSizePolicy(QSizePolicy.MinimumExpanding, 
+                           QSizePolicy.MinimumExpanding)
         self.updateGeometry()
         self.axes = self.figure.add_subplot(111)
         self.xlabel = xlabel
