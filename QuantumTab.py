@@ -791,6 +791,7 @@ class QuantumTab(QWidget):
         self.mtrlTable.setColumnCount(3)
         self.mtrlTable.setRowCount(len(self.qclayers.materials))
         self.mtrlTable.setHorizontalHeaderLabels(["#", "material", "x"])
+        self.mtrlTable.verticalHeader().hide()
         # TODO: material name support
 
         possibleMtrl = tuple([AParm[m]['name'] for m in
