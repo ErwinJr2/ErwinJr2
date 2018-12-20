@@ -2,22 +2,23 @@ CFLAGS += -Ofast -Wall -fPIC #-D _DEBUG
 # CC = icc
 # CFLAGS = -march=native -Ofast -gcc-name=gcc-6 -Wall
 
-ifeq ($(OS),Windows_NT) 
+ifeq ($(OS),Windows_NT)
     CFLAGS += -D WIN32
     EXT := dll
 else 
-    UNAME_S := $(shell uname -s) 
+    UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
         EXT := dylib
     else
         # Assuming linux
-        EXT := so 
+        EXT := so
     endif
 endif
 
 .PHONY : all
 .DEFAULT : all
 .SECONDARY : 
+
 
 all: 1DSchrodinger.$(EXT) 1DThermal.$(EXT) 1DMaxwell.$(EXT)
 MP:  1DSchrodinger_MP.$(EXT)
