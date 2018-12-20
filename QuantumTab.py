@@ -94,6 +94,7 @@ class QuantumTab(QWidget):
         (private is omitted)
         """
     dirty = pyqtSignal()
+    calculating = pyqtSignal(bool)
 
     def __init__(self, qclayers=None, parent=None):
         super(QuantumTab, self).__init__(parent)
@@ -303,7 +304,7 @@ class QuantumTab(QWidget):
         """Return:
             A Qt Layout containning a canvas for plotting; 
             A QGiridLayout containning plot control;"""
-        self.quantumCanvas = EJcanvas(xlabel=u'Position (Å)',
+        self.quantumCanvas = EJcanvas(xlabel='Position (Å)',
                                       ylabel='Energy (eV)', parent=self)
         self.plotControl = EJplotControl(self.quantumCanvas, self)
         figureBox = QVBoxLayout()
@@ -407,16 +408,13 @@ class QuantumTab(QWidget):
         """ Reload everything from qclayers, typically when it's changed
         externally or loaded"""
         # TODO
-        self.qclayers.populate_x()
         self.update_settingBos()
         self._update_mtrlList()
         self.mtrlTable_refresh()
         self.layerTable_refresh()
-        self.layerTable.selectRow(1)
         self.update_Lp_limits()
-        self.update_Lp_box()
-        self.qclayers.populate_x()
-        self.update_quantumCanvas()
+        self.layerTable.selectRow(1) # Trigger itemSelectionChanged SIGNAL 
+        # and thus update_quantumCanvas
 
     def _update_mtrlList(self):
         """Update self.mtrlList according to self.qclayers material
@@ -468,7 +466,6 @@ class QuantumTab(QWidget):
                 self.inputSubstrateBox.findText(self.qclayers.substrate))
             return
         self.layerTable_refresh()
-        self.qclayers.populate_x()
         self.update_quantumCanvas()
         self.dirty.emit()
 
@@ -478,7 +475,6 @@ class QuantumTab(QWidget):
         """ SLOT connected to inputEFieldBox.valueChanged(double)
         update external E field in unit kV/cm """
         self.qclayers.EField = EField
-        self.qclayers.populate_x()
         self.update_quantumCanvas()
         self.dirty.emit()
 
@@ -488,7 +484,6 @@ class QuantumTab(QWidget):
         """ SLOT connected to inputxResBox.valueChanged
         update position resolution (xres), in angstrom """
         self.qclayers.xres = xres
-        self.qclayers.populate_x()
         self.update_quantumCanvas()
         self.dirty.emit()
 
@@ -507,7 +502,6 @@ class QuantumTab(QWidget):
         """SLOT connected to SINGAL self.inputRepeatsBox.valueChanged(int)
         update number of repeats for the whole structure."""
         self.qclayers.repeats = repeat
-        self.qclayers.populate_x()
         self.update_quantumCanvas()
         self.dirty.emit()
 
@@ -523,6 +517,8 @@ class QuantumTab(QWidget):
     def update_Lp_limits(self):
         """Update Lp select range in the Period Info box (GUI)
         This should be called whenever number of layers is changed
+        Will trigger LpFirstSpinbox/LpLastSpinBox.valueChanged(int) SIGNAL
+        and thus update_Lp_box
         """
         self.LpFirstSpinbox.setRange(1, len(self.qclayers.layerWidths)-1)
         self.LpFirstSpinbox.setValue(1)
@@ -544,22 +540,22 @@ class QuantumTab(QWidget):
         # +1 because range is not inclusive of last value
         # total length of the layers (1 period)
         Lp = sum(self.qclayers.layerWidths[LpFirst:LpLast])
-        Lp_string = u"Lp: %.1f \u212B<br>" % Lp
+        Lp_string = "Lp: %.1f \u212B<br>" % Lp
         # average doping of the layers
         ns = sum(self.qclayers.layerDopings[n] 
                  * self.qclayers.layerWidths[n]
                  for n in range(LpFirst, LpLast))
         if Lp == 0:
-            Lp_string += (u"n<sub>D</sub>: NA\u00D710<sup>17</sup>"
-                          u"cm<sup>-3</sup><br>")
+            Lp_string += ("n<sub>D</sub>: NA\u00D710<sup>17</sup>"
+                          "cm<sup>-3</sup><br>")
         else:
             nD = ns / Lp
-            Lp_string += (u"n<sub>D</sub>: %6.3f\u00D710<sup>17</sup>"
-                          u"cm<sup>-3</sup><br>") % nD
+            Lp_string += ("n<sub>D</sub>: %6.3f\u00D710<sup>17</sup>"
+                          "cm<sup>-3</sup><br>") % nD
         # 2D carrier density in 1E11cm-2
         ns = ns * 1e-2
-        Lp_string += (u"n<sub>s</sub>: %6.3f\u00D710<sup>11</sup>"
-                      u"cm<sup>-2</sup") % ns
+        Lp_string += ("n<sub>s</sub>: %6.3f\u00D710<sup>11</sup>"
+                      "cm<sup>-2</sup") % ns
         self.LpStringBox.setText(Lp_string)
 
     @pyqtSlot()
@@ -572,7 +568,6 @@ class QuantumTab(QWidget):
 
     def set_temperature(self, T):
         self.qclayers.set_temperature(T)
-        self.qclayers.populate_x()
         self.update_quantumCanvas()
 
 #===========================================================================
@@ -692,7 +687,7 @@ class QuantumTab(QWidget):
                 value = float(item.text())
             except ValueError:
                 # invalid input
-                QMessageBox.warning(self, "ErwinJr - Error",
+                QMessageBox.warning(self, ejError,
                                     "This value should be a number")
                 self.layerTable_refresh()
                 return
@@ -760,7 +755,6 @@ class QuantumTab(QWidget):
         """SLOT as partial(self.layerTable_materialChanged, q)) connected to
         materialWidget.currentIndexChanged(int) """
         self.qclayers.layerMaterialIdxs[row] = selection
-        self.qclayers.populate_x()
         self.layerTable.selectRow(row)
         self.dirty.emit()
 
@@ -886,8 +880,9 @@ class QuantumTab(QWidget):
 # Quantum Tab Plotting and Plot Control
 # =========================================================================
     def update_quantumCanvas(self):
-        #  print "update "+inspect.stack()[1][3]
-        #  print inspect.stack()[2][3]
+        """Update the canvas to show band diagram, and if self.quantum has
+        eigen states infomation (.hasattr("eigenEs")), draw wavefuntions"""
+        self.qclayers.populate_x()
         self.quantumCanvas.clear()
         self.quantumCanvas.axes.plot(self.qclayers.xPoints,
                                      self.qclayers.xVc, 'k', linewidth=1)
@@ -918,18 +913,18 @@ class QuantumTab(QWidget):
         if hasattr(self.qclayers, 'eigenEs'):
             self.curveWF = []
             if self.plotType == "mode":
-                y = self.qclayers.psis**2
+                self.wf = self.qclayers.psis**2
             elif self.plotType == "wf":
-                y = self.qclayers.psis
+                self.wf = self.qclayers.psis
             for n in range(len(self.qclayers.eigenEs)):
                 curve, = self.quantumCanvas.axes.plot(
                     self.qclayers.xPoints,
-                    y[n, :] + self.qclayers.eigenEs[n],
+                    self.wf[n, :] + self.qclayers.eigenEs[n],
                     color=self.colors[n % len(self.colors)])
                 if self.fillplot:
                     self.quantumCanvas.axes.fill_between(
                         self.qclayers.xPoints,
-                        y[:, n] + self.qclayers.eigenEs[n],
+                        self.wf[:, n] + self.qclayers.eigenEs[n],
                         self.qclayers.eigenEs[n],
                         facecolor=self.colors[n % len(self.colors)],
                         alpha=self.fillplot)
@@ -937,7 +932,7 @@ class QuantumTab(QWidget):
             for n in self.stateHolder:
                 curve, = self.quantumCanvas.axes.plot(
                     self.qclayers.xPoints,
-                    y[:, n] + self.qclayers.eigenEs[n],
+                    self.wf[:, n] + self.qclayers.eigenEs[n],
                     'k', linewidth=2)
 
         self.quantumCanvas.draw()
@@ -963,7 +958,7 @@ class QuantumTab(QWidget):
 # ===========================================================================
     def export_quantumCanvas(self, filename=None):
         self.plotControl.save_figure(
-            "ErwinJr - Export Band Structure Image", filename, u'png')
+            "ErwinJr2 - Export Band Structure Image", filename, 'png')
 
     def export_band_data(self, fname):
         np.savetxt(fname.split('.')[0] + '_CB' + '.csv',
@@ -1023,8 +1018,10 @@ class QuantumTab(QWidget):
 # ===========================================================================
 # Calculations
 # ===========================================================================
-    def Calculating(self, is_doing):
-        """UI repaint for doing calculating """
+    @pyqtSlot(bool)
+    def waitRepaint(self, is_doing):
+        """SLOT connect to self.calculating, 
+        UI repaint for doing calculating """
         for button in (self.solveWholeButton, self.solveBasisButton,
                        self.pairSelectButton):
             button.setEnabled(not is_doing)
@@ -1040,8 +1037,7 @@ class QuantumTab(QWidget):
         if hasattr(self.qclayers, "eigenEs"):
             self.clear_WFs()
         self.pairSelected = False
-        self.Calculating(True)
-
+        self.calculating.emit(True)
         try:
             self.stateHolder = []
             self.qclayers.solve_whole()
@@ -1049,10 +1045,9 @@ class QuantumTab(QWidget):
             self.update_quantumCanvas()
             self.pairSelectButton.setEnabled(True)
         except (IndexError, TypeError):
-            QMessageBox.warning(self, 'ErwinJr - Error',
+            QMessageBox.warning(self, ejError,
                                 traceback.format_exc())
-
-        self.Calculating(False)
+        self.calculating.emit(False)
 
     @pyqtSlot()
     def solve_basis(self):  # solves structure with basis
@@ -1061,8 +1056,7 @@ class QuantumTab(QWidget):
         if hasattr(self.qclayers, "eigenEs"):
             self.clear_WFs()
         self.pairSelected = False
-        self.Calculating(True)
-
+        self.calculating.emit(True)
         try:
             self.stateHolder = []
             self.qclayers.solve_basis()
@@ -1070,10 +1064,9 @@ class QuantumTab(QWidget):
             self.update_quantumCanvas()
             self.pairSelectButton.setEnabled(True)
         except (ValueError, IndexError):
-            QMessageBox.warning(self, "ErwinJr - Error",
+            QMessageBox.warning(self, ejError,
                                 traceback.format_exc())
-
-        self.Calculating(False)
+        self.calculating.emit(False)
 
     def state_pick(self, event):
         """Callback registered in plotControl when it's in pairselect mode.
@@ -1119,7 +1112,7 @@ class QuantumTab(QWidget):
         self.update_quantumCanvas()
 
         if len(self.stateHolder) == 1:
-            self.pairString = (u"selected: %d, ..<br>" % self.stateHolder[0])
+            self.pairString = ("selected: %d, ..<br>" % self.stateHolder[0])
         elif len(self.stateHolder) == 2:
             self.pairSelected = True
             # TODO: put these enablement to a functions
@@ -1145,11 +1138,11 @@ class QuantumTab(QWidget):
                 self.tauUpperLower = 1 / self.qclayers.lo_transition_rate(
                     upper, lower)
                 self.pairString = (
-                    u"selected: %d, %d<br>"
-                    u"energy diff: <b>%6.1f meV</b> (%6.1f \u00B5m)<br>"
-                    u"coupling: %6.1f meV<br>broadening: %6.1f meV<br>"
-                    u"dipole: <b>%6.1f \u212B</b>"
-                    u"<br>LO scattering: <b>%6.3g ps</b><br>") % (
+                    "selected: %d, %d<br>"
+                    "energy diff: <b>%6.1f meV</b> (%6.1f \u00B5m)<br>"
+                    "coupling: %6.1f meV<br>broadening: %6.1f meV<br>"
+                    "dipole: <b>%6.1f \u212B</b>"
+                    "<br>LO scattering: <b>%6.3g ps</b><br>") % (
                         self.stateHolder[0],
                         self.stateHolder[1],
                         self.eDiff, self.wavelength,
@@ -1164,9 +1157,9 @@ class QuantumTab(QWidget):
                     upper, lower)
                 self.transitionBroadening = 0.1 * self.eDiff  # TODO
                 self.pairString = (
-                    u"selected: %d, %d<br>"
-                    u"energy diff: <b>%6.1f meV</b> (%6.1f \u00B5m)<br>"
-                    u"dipole: %6.1f \u212B<br>" u"LO scattering: %6.3g ps<br>"
+                    "selected: %d, %d<br>"
+                    "energy diff: <b>%6.1f meV</b> (%6.1f \u00B5m)<br>"
+                    "dipole: %6.1f \u212B<br>" "LO scattering: %6.3g ps<br>"
                 ) % (self.stateHolder[0], self.stateHolder[1], self.eDiff,
                      self.wavelength, self.opticalDipole, self.tauUpperLower)
             else:
@@ -1180,7 +1173,7 @@ class QuantumTab(QWidget):
         Calculate Figure of merit.  """
         if len(self.stateHolder) < 2:
             return
-        self.Calculating(True)
+        self.calculating.emit(True)
         self.FoMButton.setEnabled(False)
         self.FoMButton.repaint()
 
@@ -1197,14 +1190,14 @@ class QuantumTab(QWidget):
         self.alphaISB = self.qclayers.alphaISB(upper, lower)
 
         self.FoMString = (
-            u"<i>\u03C4<sub>upper</sub></i> : %6.3f ps<br>"
-            u"<i>\u03C4<sub>lower</sub></i> : %6.3f ps"
-            u"<br>FoM: <b>%6.0f ps \u212B<sup>2</sup></b>"
-            u"<br><i>\u03B1<sub>ISB</sub></i> : %.3f cm<sup>2</sup>") % (
+            "<i>\u03C4<sub>upper</sub></i> : %6.3f ps<br>"
+            "<i>\u03C4<sub>lower</sub></i> : %6.3f ps"
+            "<br>FoM: <b>%6.0f ps \u212B<sup>2</sup></b>"
+            "<br><i>\u03B1<sub>ISB</sub></i> : %.3f cm<sup>2</sup>") % (
                 self.tauUpper, self.tauLower, self.FoM, self.alphaISB)
         self.pairSelectString.setText(self.pairString + self.FoMString)
 
-        self.Calculating(False)
+        self.calculating.emit(False)
         self.FoMButton.setEnabled(True)
 
 # vim: ts=4 sw=4 sts=4 expandtab
