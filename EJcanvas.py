@@ -22,6 +22,8 @@ from warnings import warn
 config = {
     "PlotMargin": {'l': 0.9, 'r': 0.12, 'b': 0.6, 't': 0.09}, 
     "fontsize": 12,
+    "wfscale": 0.8, 
+    "modescale": 7,
 }
 if sys.platform == 'win32': 
     config["PlotMargin"] = {'l': 0.9, 'r': 0.12, 'b': 0.55, 't': 0.09}

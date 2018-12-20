@@ -76,7 +76,7 @@ void SimpleFillPsi(double step, numpyint N, const double *EigenEs,
 		numpyint EN, const double *V, const double *m, double* psis) {
 	/* Fill in wavefunctions in psis accroding to eigen energy in EigenEs. 
 	 * psi + i*N*sizeof(double) is the wavefunction with Energy EigenEs[i] 
-	 * The result is normalized to 1
+	 * The result is normalized to 1 (so psi is unit sqrt(Angstrom^-1)
 	 */
 	int i; 
 #ifdef __MP

@@ -250,4 +250,86 @@ class QCLayers(object):
             self.eigenEs = np.concatenate((self.eigenEs, eigenEs_re), axis=0)
             self.psis = np.concatenate((self.psis, psis_re), axis=0)
 
+    def dipole(self, upper, lower):
+        """Return Electrical dipole between upper and lower states, 
+        update self.dipole. Should be called for any other related physics
+        quantities."""
+        if upper < lower:
+            upper, lower = lower, upper
+        psi_i = self.psis[upper, :]
+        psi_j = self.psis[lower, :]
+        Ei = self.eigenEs[upper]
+        Ej = self.eigenEs[lower]
+        #TODO: eff mass for non-parabolic
+        avgpsi_i = (psi_i[:-1] + psi_i[1:])/2
+        avgxMc = (self.xMc[:-1] + self.xMc[1:])/2
+        self.z = np.sum(avgpsi_i * np.diff(psi_j/self.xMc) 
+                   + 1/avgxMc * (avgpsi_i * np.diff(psi_j)))
+        self.z *= hbar**2 / (2 * (Ei - Ej) * e0 * m0) / 1E-10 #Angtrom
+        return self.z
+
+    def loTransition(self, upper, lower):
+        INV_INF = 1e-20  # for infinit small decay rate (ns-1)
+        if upper < lower:
+            upper, lower = lower, upper
+
+        psi_i = self.psis[upper, :]
+        psi_j = self.psis[lower, :]
+        Ei = self.eigenEs[upper]
+        Ej = self.eigenEs[lower]
+        hwLO = self.avghwLO()
+
+        if Ei - Ej - hwLO < 0:
+            # energy difference is smaller than a LO phonon
+            # LO phonon scatering doesn't happen
+            return INV_INF
+
+        # TODO: imporve expression for eff mass
+        mass = m0 * sqrt(np.sum(self.xMc * psi_i**2 * self.xres)
+                         * np.sum(self.xMc * psi_j**2 * self.xres))
+        kl = sqrt(2 * mass / hbar**2 * (Ei-Ej-hwLO) * e0)
+        dIij = np.empty(self.xPoints.size)
+        for n in range(self.xPoints.size):
+            x1 = self.xPoints[n]
+            x2 = self.xPoints
+            dIij[n] = np.sum(psi_i * psi_j * exp(-kl * abs(x1 - x2)*1e10)
+                             * psi_i[n] * psi_j[n] * self.xres**2)
+        Iij = np.sum(dIij)
+        epsInf = np.array([a.parm["epsInf"] for a in self.mtrlAlloys])
+        epss = np.array([a.parm["epss"] for a in self.mtrlAlloys])
+        epsrho = 1 / (1/epsInf - 1/epss)
+        epsrho = (np.sum(epsrho[self.layerMaterialIdxs] * self.layerWidths) 
+                  / sum(self.layerWidths))
+        inv_tau = (mass * e0**2 * self.avghwLO() * e0 / hbar * Iij 
+                   / (4 * hbar**2 * epsrho * eps0 * kl))
+        return inv_tau / 1e12 #unit ps
+
+    def loLifeTime(self, state):
+        """ return the life time due to LO phonon scattering of the
+        given state(label)"""
+        rate = [self.loTransition(state, q) for q in range(state)]
+        return 1/sum(rate)
+
+    def FoM(self, upper, lower):
+        tauLower = self.loLifeTime(lower)
+        tauUpper = self.loLifeTime(upper)
+        tauUpperLower = 1/self.loTransition(upper, lower)
+        self.FoM = self.z**2 * tauUpper * (1 - tauLower / tauUpperLower)
+        return self.FoM
+
+    def coupleBroadening(self, upper, lower):
+        """Boradening of nergy difference between upper state and lower state
+        due to coupling to other states"""
+        #TODO
+        return 0
+
+    def ifrBroadening(self, upper, lower):
+        """Interface roughness induced broadening"""
+        #TODO
+        return 0
+
+    def alphaISB(self, upper, lower):
+        #TODO
+        return 0
+
 # vim: ts=4 sw=4 sts=4 expandtab
