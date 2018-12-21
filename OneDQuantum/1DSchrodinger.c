@@ -32,7 +32,7 @@
  * Still, it's recommanded to make high V side the starting point
  */
 #define NSTEP 1E-10
-#define Y_EPS 0.1 /**< Default starting point for Numerov */
+#define Y_EPS 0.1 /**< Default starting point for ode solver */
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,24 +46,30 @@ __declspec(dllexport)
 /**
  * \brief ODE solver for -hbar^2/(2*m(x)) * y''(x) + V(x) * y = E * y(x) 
  * 
- * An ODE solver for -hbar^2/(2*m(x)) * y''(x) + V(x) * y = E * y(x)
+ * An ODE solver for -d/dx(hbar^2/(2*m(x)) * d/dx y(x)) + V(x) * y = E * y(x)
  * with starting x0 and y0, y1, ends at x0 + step*N (x0 label 0)
- * using Numerov algorithm
+ * using Euler's algorithm
  * E and V are in unit eV, m are in unit m0 (free electron mass)
  * Don't normalize
  * V[n] and m[n] means potential and effectice mass at x = x0 + n*step
  * return y(x+N*step), put y result in *y
  */
-double Numerov(double step, numpyint N, double y0, double y1, 
+inline double ode(double step, numpyint N, double y0, double y1, 
 		double E, const double *V, const double *m, double *y) {
 	int n; 
 	y[0] = y0;
 	y[1] = y1;
 	const double unit = 2*m0/sq(hbar)*e0*sq(ANG*step);
 	for (n = 1; n < N-1; n++) {
+		/* Numerov's method, step error O(step^6) */
+		/* is bad for m is in the middle of derivative TODO*/
 		y[n+1] = (2 * y[n] * (1.0 - 5.0/12 * ( E - V[n]) * unit * m[n]) 
-			 - y[n-1] * (1.0 + 1.0/12 * (E - V[n-1]) * unit * m[n])) 
-			/ (1.0 + 1.0/12 * (E - V[n+1]) * unit * m[n]);
+				- y[n-1] * (1.0 + 1.0/12 * (E - V[n-1]) * unit * m[n-1])) 
+			/ (1.0 + 1.0/12 * (E - V[n+1]) * unit * m[n+1]);
+		/* double mmp = (m[n]/m[n+1] - m[n]/m[n-1])/4; [> m*(1/m)' to O(^3)<] */
+		/* Simple Euler's method, setp error O(step^4) */
+		/* y[n+1] = (-(E-V[n])*unit*m[n]*y[n] +
+		         2*y[n] - (1-mmp)*y[n-1])/(1 + mmp); */
 	}
 	return y[N-1];
 }
@@ -95,7 +101,7 @@ void SimpleFillPsi(double step, numpyint N, const double *EigenEs,
 		int j;
 		double* psi = psis + i*N;
 		double modsq = 0;
-		Numerov(step, N, 0.0, Y_EPS, EigenEs[i], V, m, psi);
+		ode(step, N, 0.0, Y_EPS, EigenEs[i], V, m, psi);
 		/* Normalization */
 		for(j=0; j<N; j++) {
 			modsq += sq(psi[j]);
@@ -153,7 +159,7 @@ numpyint SimpleSolve1D(double step, numpyint N,
 		#pragma omp for
 #endif
 		for(i=0; i<EN; i++) {
-			yend[i] = Numerov(step, N, 0.0, Y_EPS, Es[i], V, m, y);
+			yend[i] = ode(step, N, 0.0, Y_EPS, Es[i], V, m, y);
 		}
 
 #ifdef __MP
@@ -170,10 +176,10 @@ numpyint SimpleSolve1D(double step, numpyint N,
 #ifndef SIMPLE
 			int count=0; 
 			double y0;
-			y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
+			y0 = ode(step, N, 0.0, Y_EPS, E0, V, m, y);
 			while(fabs(y0) > NEWTON && count < 20){
-				double y1 = Numerov(step, N, 0.0, Y_EPS, E0+NSTEP, V, m, y);
-				double y2 = Numerov(step, N, 0.0, Y_EPS, E0-NSTEP, V, m, y);
+				double y1 = ode(step, N, 0.0, Y_EPS, E0+NSTEP, V, m, y);
+				double y2 = ode(step, N, 0.0, Y_EPS, E0-NSTEP, V, m, y);
 				double dy = (y1 - y2)/(2*NSTEP);
 				if(y1*y2 < 0) {
 	#ifdef _DEBUG
@@ -186,7 +192,7 @@ numpyint SimpleSolve1D(double step, numpyint N,
 					break;
 				}
 				E0 -= y0/dy;
-				y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
+				y0 = ode(step, N, 0.0, Y_EPS, E0, V, m, y);
 				count++;
 			}
 	#ifdef _DEBUG
@@ -244,7 +250,7 @@ void BandFillPsi(double step, numpyint N, const double *EigenEs,
 			double modsq = 0;
 			/*MP assume only mass is updated*/
 			UpdateBand(mat, EigenEs[i], V, m);
-			Numerov(step, N, 0.0, Y_EPS, EigenEs[i], V, m, psi);
+			ode(step, N, 0.0, Y_EPS, EigenEs[i], V, m, psi);
 			/* Normalization */
 			for(j=0; j<N; j++) {
 				modsq += sq(psi[j]);
@@ -300,7 +306,7 @@ numpyint BandSolve1D(double step, numpyint N,
 #endif
 		for(i=0; i<EN; i++) {
 			UpdateBand(mat, Es[i], V, m);
-			yend[i] = Numerov(step, N, 0.0, Y_EPS, Es[i], V, m, y);
+			yend[i] = ode(step, N, 0.0, Y_EPS, Es[i], V, m, y);
 		}
 
 #ifdef __MP
@@ -318,13 +324,13 @@ numpyint BandSolve1D(double step, numpyint N,
 				int count=0; 
 				double y0;
 				UpdateBand(mat, E0, V, m);
-				y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
+				y0 = ode(step, N, 0.0, Y_EPS, E0, V, m, y);
 				while(fabs(y0) > NEWTON && count < 20){
 					UpdateBand(mat, E0+NSTEP, V, m);
-					double y1 = Numerov(step, N, 0.0, Y_EPS, E0+NSTEP, 
+					double y1 = ode(step, N, 0.0, Y_EPS, E0+NSTEP, 
 							V, m, y);
 					UpdateBand(mat, E0-NSTEP, V, m);
-					double y2 = Numerov(step, N, 0.0, Y_EPS, E0-NSTEP, 
+					double y2 = ode(step, N, 0.0, Y_EPS, E0-NSTEP, 
 							V, m, y);
 					double dy = (y1 - y2)/(2*NSTEP);
 					if(y1*y2 < 0) {
@@ -336,7 +342,7 @@ numpyint BandSolve1D(double step, numpyint N,
 					}
 					E0 -= y0/dy;
 					UpdateBand(mat, E0, V, m);
-					y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
+					y0 = ode(step, N, 0.0, Y_EPS, E0, V, m, y);
 					count++;
 				}
 	#ifdef _DEBUG

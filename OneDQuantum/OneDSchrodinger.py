@@ -5,7 +5,7 @@ from ctypes import *
 from . import band as _bd
 import os
 path = os.path.dirname(__file__)
-__all__ = ['cNumerov', 'cSimpleSolve1D', 'cSimpleFillPsi', 
+__all__ = ['cSimpleSolve1D', 'cSimpleFillPsi', 
            'Band', 'cBandFillPsi', 'cBandSolve1D']
 
 _doubleArray = np.ctypeslib.ndpointer(
@@ -21,9 +21,9 @@ def bindOpenMP(on=True):
     _bd.init(_clib)
     global Band
     from .band import cBand, Band
-    _clib.Numerov.argtypes = [c_double, c_int, c_double, c_double, 
-                             c_double, _doubleArray, _doubleArray, _doubleArray]
-    _clib.Numerov.restype = c_double
+    #  _clib.Numerov.argtypes = [c_double, c_int, c_double, c_double, 
+    #                           c_double, _doubleArray, _doubleArray, _doubleArray]
+    #  _clib.Numerov.restype = c_double
 
     _clib.SimpleSolve1D.argtypes = [c_double, c_int, _doubleArray, c_int,
                                    _doubleArray, _doubleArray, _doubleArray]
@@ -43,16 +43,16 @@ def bindOpenMP(on=True):
 
 bindOpenMP(False)
 
-def cNumerov(step, y0, y1, E, V, m, xmin=0, xmax=None):
-    if not xmax:
-        xmax = V.size
-    if not isinstance(m, np.ndarray):
-        m = m*np.ones(V.size)
-    y = np.empty(xmax-xmin)
-    yend = _clib.Numerov(c_double(step), xmax-xmin, 
-                        c_double(y0), c_double(y1), E, 
-                        V[xmin:xmax], m[xmin:xmax], y)
-    return yend
+#  def cNumerov(step, y0, y1, E, V, m, xmin=0, xmax=None):
+#      if not xmax:
+#          xmax = V.size
+#      if not isinstance(m, np.ndarray):
+#          m = m*np.ones(V.size)
+#      y = np.empty(xmax-xmin)
+#      yend = _clib.Numerov(c_double(step), xmax-xmin, 
+#                          c_double(y0), c_double(y1), E, 
+#                          V[xmin:xmax], m[xmin:xmax], y)
+#      return yend
 
 def cSimpleSolve1D(step, Es, V, m, xmin=0, xmax=None): 
     if not xmax:
