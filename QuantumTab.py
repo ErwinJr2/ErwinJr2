@@ -26,6 +26,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLabel, QComboBox,
                              QGridLayout, QHBoxLayout, QPushButton,
                              QTableWidget, QTableWidgetItem,
                              QApplication, QMessageBox)
+from customQTClass import mtrlComboBox
 
 from Material import AParm
 ejError = "ErwinJr2 - Error"
@@ -607,7 +608,8 @@ class QuantumTab(QWidget):
             self.layerTable.setItem(q, 1, numML)
 
             # Material Setup
-            mtrlWidget = QComboBox()
+            #  mtrlWidget = QComboBox()
+            mtrlWidget = mtrlComboBox()
             mtrlWidget.addItems(self.mtrlList)
             mtrlWidget.setCurrentIndex(self.qclayers.layerMaterialIdxs[q])
             mtrlWidget.currentIndexChanged.connect(
@@ -808,7 +810,8 @@ class QuantumTab(QWidget):
             self.mtrlTable.setItem(n, 0, name)
 
             # Choose from available materials, according to substrate 
-            mtrlItem = QComboBox()
+            #  mtrlItem = QComboBox()
+            mtrlItem = mtrlComboBox()
             mtrlItem.addItems(possibleMtrl)
             mtrlItem.setCurrentText(AParm[mtrl]['name'])
             mtrlItem.currentIndexChanged.connect(
