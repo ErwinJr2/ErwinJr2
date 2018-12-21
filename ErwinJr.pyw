@@ -1,28 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 
-# ===========================================================================
-# ErwinJr2 is a simulation program for quantum semiconductor lasers.
-# Copyright (C) 2017 Ming Lyu (CareF)
-# Copyright (C) 2012 Kale J. Franz, PhD
-#
-# A portion of this code is Copyright (c) 2011, California Institute of
-# Technology ("Caltech"). U.S. Government sponsorship acknowledged.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-# ===========================================================================
-
 # TODO:
 # Ctrl+z support
 # add status bar
@@ -34,7 +12,7 @@ from functools import partial
 from QCLayers import QCLayers
 import SaveLoad
 
-from PyQt5.QtCore import (QSettings, QFile,
+from PyQt5.QtCore import (QSettings, QFile, QUrl,
                           QFileInfo, QVariant, Qt)
 from PyQt5.QtGui import QIcon, QKeySequence, QPalette, QDesktopServices
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTabWidget,
@@ -212,11 +190,11 @@ class MainWindow(QMainWindow):
 
         # help menu
         self.help_menu = self.menuBar().addMenu("&Help")
-        about_action = self.create_action("&About", shortcut='F1',
+        about_action = self.create_action("&About", 
                                           slot=self.on_about)
         licenses_action = self.create_action("&License",
                                              slot=self.on_licenses)
-        tutorialAction = self.create_action("&Tutorial",
+        tutorialAction = self.create_action("&Tutorial", shortcut='F1',
                                             slot=self.on_tutorial)
         self.add_actions(self.help_menu, (tutorialAction,
                                           about_action,
@@ -426,33 +404,31 @@ With contributions from:
 
     def on_licenses(self):
         copyright = """
-#=======================================
-# ErwinJr2 is a simulation program for quantum semiconductor lasers.
-# Copyright (C) 2017 Ming Lyu
-# Copyright (C) 2012 Kale J. Franz, PhD
-#
-# A portion of this code is Copyright (c) 2011, California Institute of
-# Technology ("Caltech"). U.S. Government sponsorship acknowledged.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#=======================================
+ErwinJr2 is a simulation program for quantum semiconductor lasers.
+Copyright (C) 2017 Ming Lyu
+Copyright (C) 2012 Kale J. Franz, PhD
+
+A portion of this code is Copyright (c) 2011, California Institute of
+Technology ("Caltech"). U.S. Government sponsorship acknowledged.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
         QMessageBox.about(self, "ErwinJr2 " + Version,
                           copyright.strip())
 
     def on_tutorial(self):
-        QDesktopServices.openUrl("./docs/_build/html/index.html")
+        QDesktopServices.openUrl(QUrl("./docs/_build/html/index.html"))
 
 
 def main(filename=None):
