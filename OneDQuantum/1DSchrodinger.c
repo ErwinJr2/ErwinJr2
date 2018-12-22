@@ -19,7 +19,7 @@
 #include "band.h"
 
 
-#define NEWTON 1E-3 /**< Newton's method stopping limit */
+#define NEWTON 1E-5 /**< Newton's method stopping limit */
 /** 
  * \brief Stepsize for numerical derivative
  *
@@ -177,6 +177,10 @@ numpyint SimpleSolve1D(double step, numpyint N,
 			int count=0; 
 			double y0;
 			y0 = ode(step, N, 0.0, Y_EPS, E0, V, m, y);
+			/* Filter singular case */
+			if(fabs(y0) > fabs(yend[i]) || fabs(y0) > fabs(yend[i-1])){
+				continue;
+			}
 			while(fabs(y0) > NEWTON && count < 20){
 				double y1 = ode(step, N, 0.0, Y_EPS, E0+NSTEP, V, m, y);
 				double y2 = ode(step, N, 0.0, Y_EPS, E0-NSTEP, V, m, y);
@@ -325,6 +329,10 @@ numpyint BandSolve1D(double step, numpyint N,
 				double y0;
 				UpdateBand(mat, E0, V, m);
 				y0 = ode(step, N, 0.0, Y_EPS, E0, V, m, y);
+				/* Filter singular case */
+				if(fabs(y0) > fabs(yend[i]) || fabs(y0) > fabs(yend[i-1])){
+					continue;
+				}
 				while(fabs(y0) > NEWTON && count < 20){
 					UpdateBand(mat, E0+NSTEP, V, m);
 					double y1 = ode(step, N, 0.0, Y_EPS, E0+NSTEP, 
@@ -350,10 +358,10 @@ numpyint BandSolve1D(double step, numpyint N,
 						count, E0, fabs(y0));
 	#endif
 #endif
-		}
-		else {
-			continue;
-		}
+			}
+			else {
+				continue;
+			}
 #ifdef __MP
 			#pragma omp ordered
 #endif

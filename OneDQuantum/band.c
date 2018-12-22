@@ -35,9 +35,12 @@ numpyint ZBupdateM(Band *mat, double Eq, const double *xVc, double *m) {
 	ZBBand *zbmat = (ZBBand *) mat;
 	int q; 
 	for(q=0; q<zbmat->N; q++) {
+		double E = Eq - xVc[q];
+		if(E < -zbmat->xEg[q])
+			E = -zbmat->xEg[q] + 1e-7; /* Avoid singularity */
 		m[q] = 1 / (1 + 2*zbmat->xF[q] + zbmat->xEp[q]/3 * ( 
-					2 / (Eq - xVc[q] + zbmat->xEg[q]) + 
-					1 / (Eq - xVc[q] + zbmat->xEg[q] + zbmat->xESO[q])) );
+					2 / (E + zbmat->xEg[q]) + 
+					1 / (E + zbmat->xEg[q] + zbmat->xESO[q])) );
 	}
 	return zbmat->N;
 }
@@ -98,9 +101,12 @@ numpyint WZupdateM(Band *mat, double Eq, const double *xVc, double *m) {
     WZBand *wzmat = (WZBand *) mat;
     int q;
     for(q=0; q<wzmat->N; q++) {
+		double E = Eq - xVc[q];
+		if(E < -zbmat->xEg[q])
+			E = -zbmat->xEg[q] + 1e-7; /* Avoid singularity */
       m[q] = 1 / (1 + wzmat->xEp[q]/3 * (
-				2 / (Eq - xVc[q] + wzmat->xEg[q]) +
-				1 / (Eq - xVc[q] + wzmat->xEg[q] + wzmat->xESO[q])) );
+				2 / (E + wzmat->xEg[q]) +
+				1 / (E + wzmat->xEg[q] + wzmat->xESO[q])) );
     }
     return wzmat->N;
 }
