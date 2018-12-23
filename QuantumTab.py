@@ -138,8 +138,8 @@ class QuantumTab(QWidget):
             solveBoxWidth = 170
         elif sys.platform.startswith('darwin'):
             settingBoxWidth = 90
-            layerBoxWidth = 400
-            solveBoxWidth = 190
+            layerBoxWidth = 250
+            solveBoxWidth = 150
         elif sys.platform.startswith('linux'):
             settingBoxWidth = 130
             layerBoxWidth = 275
