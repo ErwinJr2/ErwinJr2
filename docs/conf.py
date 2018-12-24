@@ -46,6 +46,7 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
+    'sphinx.ext.napoleon',
     'breathe',
 ]
 breathe_projects = { "OneDQuantum": "../OneDQuantum/docs/xml/"}
