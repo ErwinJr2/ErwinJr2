@@ -20,12 +20,16 @@ qcMaterial = {
 class QCLayers(object):
     """Class for QCLayers
 
-    Member variables:
-        parameters for each layer, np.array type, with len = No. of layers:
-            layerWidths - width of each layer, float
-            layerMtrls - label of materials, binary int
-            layerDopings - 
-            layerARs - if the layer is activ eor not, binary int
+    Member variables for each layer
+    -------------------------------
+    layerWidths : np.array of float, len = No. of layers
+        width of each layer
+    layerMtrls : np.array of binary int, len = No. of layers
+        label of materials
+    layerDopings : np.array of float, len = No. of layers
+        doppings of each layer
+    layerARs : np.array of binary, len = No. of layers
+        indicating if the layer is active(True) or not(False)
     """
     def __init__(self, substrate="InP", materials=["InGaAs", "AlInAs"], 
                  moleFracs=[0.53, 0.52], xres=0.5, Eres=0.5, 
@@ -127,6 +131,20 @@ class QCLayers(object):
         return sumhwlo / sum(self.layerWidths)
 
     def populate_x(self):
+        """Calculate the properties in terms of position
+
+        Member variables for each layer
+        -------------------------------
+        layerWidths : np.array of float, len = No. of layers
+            width of each layer
+        layerMaterialIdxs : np.array of binary int, len = No. of layers
+            label of materials
+        layerDopings : np.array of float, len = No. of layers
+            doppings of each layer
+        layerARs : np.array of binary, len = No. of layers
+            indicating if the layer is active(True) or not(False)
+
+        """
         layerNumCumSum = [0] + np.cumsum(self.layerWidths).tolist()
         periodL = layerNumCumSum[-1]
         self.xPoints = np.arange(0, periodL* self.repeats, self.xres)
