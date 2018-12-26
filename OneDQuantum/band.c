@@ -102,8 +102,8 @@ numpyint WZupdateM(Band *mat, double Eq, const double *xVc, double *m) {
     int q;
     for(q=0; q<wzmat->N; q++) {
 		double E = Eq - xVc[q];
-		if(E < -zbmat->xEg[q])
-			E = -zbmat->xEg[q] + 1e-7; /* Avoid singularity */
+		if(E < -wzmat->xEg[q])
+			E = -wzmat->xEg[q] + 1e-7; /* Avoid singularity */
       m[q] = 1 / (1 + wzmat->xEp[q]/3 * (
 				2 / (E + wzmat->xEg[q]) +
 				1 / (E + wzmat->xEg[q] + wzmat->xESO[q])) );
