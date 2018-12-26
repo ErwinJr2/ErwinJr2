@@ -17,25 +17,20 @@ class TestUniformPsis(unittest.TestCase):
     xmax = 1
     l = 3
     x = np.linspace(0, xmax, l)
-    psis = np.ones((2,l))
-    step = x[1] - [0]
+    step = x[1] - x[0]
+    psis = np.ones((2,l))/np.sqrt(l)/np.sqrt(step)
     mass = 1
 
     # Zero-temperature Fermi-Dirac (rho -> EF -> rho)
 
     def testUniformFermiDirac0T(self):
-        pass
         EF = 0.5
         eDensity = cFermiDirac0(EF, self.EigenEs, self.mass, self.psis,
                                 self.step)
-        self.sheet = eDensity[0]
         eDensityLowT = cFermiDirac(0.01, EF, self.EigenEs, self.mass, self.psis, 
                                    self.step)
-        #eDensityN, EF = cFermiDirac0N(self.sheet, self.EigenEs,
-        #                             self.mass, self.psis, self.step)
-        #
-        #self.assertAlmostEqual(self.step * np.sum(eDensityN), self.sheet)
-        #self.assertAlmostEqual(self.step * np.sum(eDensity), self.sheet)
+        self.assertAlmostEqual(self.step * np.sum(eDensity), 
+                               self.step * np.sum(eDensityLowT))
 
 
 
@@ -52,9 +47,6 @@ class TestTriangleWellThermal(unittest.TestCase):
     psis = cSimpleFillPsi(step, EigenEs, V, mass)
     V = np.ascontiguousarray(V[::-1])
     psis = np.ascontiguousarray(psis[:,::-1])
-    print('check normalization condition for psis')
-    print(sum(psis[1]**2))
-    print('done')
     
     # Boltzmann distribution self-consistency test (rho -> EF -> rho)
     def testTriangleWellBoltzmann(self):
