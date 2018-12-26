@@ -23,13 +23,13 @@ class QCLayers(object):
     Member variables:
         parameters for each layer, np.array type, with len = No. of layers:
             layerWidths - width of each layer, float
-            layerMaterialIdxs - label of materials, binary int
+            layerMtrls - label of materials, binary int
             layerDopings - 
             layerARs - if the layer is activ eor not, binary int
     """
     def __init__(self, substrate="InP", materials=["InGaAs", "AlInAs"], 
                  moleFracs=[0.53, 0.52], xres=0.5, Eres=0.5, 
-                 layerWidths=[0.0], layerMaterialIdxs=[0], layerDopings=[0.0], 
+                 layerWidths=[0.0], layerMtrls=[0], layerDopings=[0.0], 
                  layerARs=[True], EField=0, repeats=3, T=300.0, Solver="ODE", 
                  description=""):
         self.substrate = substrate
@@ -38,7 +38,7 @@ class QCLayers(object):
         self.xres = xres
         self.Eres = Eres
         self.layerWidths = layerWidths
-        self.layerMaterialIdxs = layerMaterialIdxs
+        self.layerMtrls = layerMtrls
         self.layerDopings = layerDopings
         self.layerARs = layerARs
         self.EField = EField
@@ -74,18 +74,18 @@ class QCLayers(object):
 
     def add_layer(self, n, width, mtrlIdx, AR, doping):
         self.layerWidths.insert(n, width)
-        self.layerMaterialIdxs.insert(n, mtrlIdx)
+        self.layerMtrls.insert(n, mtrlIdx)
         self.layerARs.insert(n, AR)
         self.layerDopings.insert(n, doping)
     
     def del_layer(self, n):
         for layerList in (self.layerWidths, self.layerARs,
-                          self.layerMaterialIdxs, self.layerDopings):
+                          self.layerMtrls, self.layerDopings):
             layerList.pop(n)
 
     def rotate_layer(self):
         for layerList in (self.layerWidths, self.layerARs,
-                          self.layerMaterialIdxs, self.layerDopings):
+                          self.layerMtrls, self.layerDopings):
             layerList.insert(0, layerList.pop())
 
     def set_substrate(self, subs):
@@ -112,7 +112,7 @@ class QCLayers(object):
         percentage."""
         if sum(self.layerWidths) <= 1e-5: 
             return -1
-        totalStrain = sum(self.mtrlAlloys[self.layerMaterialIdxs[n]].eps_perp
+        totalStrain = sum(self.mtrlAlloys[self.layerMtrls[n]].eps_perp
                           * self.layerWidths[n] 
                           for n in range(len(self.layerWidths)))
         return 100 * totalStrain / sum(self.layerWidths)
@@ -121,7 +121,7 @@ class QCLayers(object):
         """Return average LO phonont energy in unit eV"""
         if sum(self.layerWidths) <= 1e-5: 
             return -1
-        sumhwlo = sum(self.mtrlAlloys[self.layerMaterialIdxs[n]].parm['hwLO']
+        sumhwlo = sum(self.mtrlAlloys[self.layerMtrls[n]].parm['hwLO']
                           * self.layerWidths[n] 
                           for n in range(len(self.layerWidths)))
         return sumhwlo / sum(self.layerWidths)
@@ -158,7 +158,7 @@ class QCLayers(object):
                 for k in range(self.repeats)])
             
             self.xLayerNums[Indices] = n
-            self.xMaterialsIdxs[Indices] = self.layerMaterialIdxs[n]
+            self.xMaterialsIdxs[Indices] = self.layerMtrls[n]
             self.xDopings[Indices] = self.layerDopings[n]
             self.xARs[Indices] = self.layerARs[n]
 
@@ -167,7 +167,7 @@ class QCLayers(object):
                              (self.xVL, 'EcL'), (self.xESO, 'ESO'),
                              (self.xVLH, 'EvLH'), (self.xEp, 'Ep'),
                              (self.xVSO, 'EvSO'), (self.xF, 'F')):
-                p[Indices] = self.mtrlAlloys[self.layerMaterialIdxs[n]].parm[key]
+                p[Indices] = self.mtrlAlloys[self.layerMtrls[n]].parm[key]
 
         ExtField = self.xPoints * self.EField * EUnit
         for p in (self.xVc, self.xVX, self.xVL, self.xVLH, self.xVSO):
@@ -188,11 +188,10 @@ class QCLayers(object):
 
     def solve_whole(self):
         mass = self.xMc[np.argmin(self.xVc)]
+        # ground state for triangular well
         Emin = 2.33810741 * (hbar**2*(self.EField*EUnit)**2/(
             2*m0*mass*e0**2))**(1/3)
-        #  print(Emin)
         Es = np.linspace(np.min(self.xVc)+Emin, np.max(self.xVc), 1000)
-        #  Es = np.linspace(-1.35, -0.95, 1000)
         if self.NonParabolic:
             band = onedq.Band("ZincBlende", self.xEg, self.xF, self.xEp,
                               self.xESO)
@@ -204,6 +203,7 @@ class QCLayers(object):
                                                 self.xVc, self.xMc)
             self.psis = onedq.cSimpleFillPsi(self.xres, self.eigenEs,
                                              self.xVc, self.xMc)
+        #  self.stateFilter()
 
     def solve_basis(self):
         IndSep = np.nonzero(np.array(self.layerARs[1:]) !=
@@ -223,7 +223,7 @@ class QCLayers(object):
             dCL = copy.deepcopy(self)
             dCL.repeats = 1
             dCL.layerWidths = self.layerWidths[StartInd[n]:EndInd[n]]
-            dCL.layerMaterialIdxs = self.layerMaterialIdxs[StartInd[n]:
+            dCL.layerMtrls = self.layerMtrls[StartInd[n]:
                                                            EndInd[n]]
             dCL.layerDopings = self.layerDopings[StartInd[n]:EndInd[n]]
             dCL.layerARs = self.layerARs[StartInd[n]:EndInd[n]]
@@ -249,6 +249,22 @@ class QCLayers(object):
 
             self.eigenEs = np.concatenate((self.eigenEs, eigenEs_re), axis=0)
             self.psis = np.concatenate((self.psis, psis_re), axis=0)
+
+    def stateFilter(self):
+        """Filter unbounded states"""
+        bounded = []
+        semiBounded = []
+        for n in range(self.eigenEs.size):
+            #  E = self.eigenEs[n]
+            #  k = sqrt((E-self.xVc[-1])*2*self.xMc[-1])/hbar
+            wf = self.psis[n,:]
+            if self.eigenEs[n] < self.xVc[-1] or abs(wf[-2]) < 1e-4:
+                bounded.append(n)
+            elif np.all(self.xVc[wf**2 > 1e-4 ] > self.eigenEs[n]):
+                semiBounded.append(n)
+        ss = sorted(bounded + semiBounded)
+        self.eigenEs = self.eigenEs[ss]
+        self.psis = self.psis[ss,:]
 
     def dipole(self, upper, lower):
         """Return Electrical dipole between upper and lower states, 
@@ -298,7 +314,7 @@ class QCLayers(object):
         epsInf = np.array([a.parm["epsInf"] for a in self.mtrlAlloys])
         epss = np.array([a.parm["epss"] for a in self.mtrlAlloys])
         epsrho = 1 / (1/epsInf - 1/epss)
-        epsrho = (np.sum(epsrho[self.layerMaterialIdxs] * self.layerWidths) 
+        epsrho = (np.sum(epsrho[self.layerMtrls] * self.layerWidths) 
                   / sum(self.layerWidths))
         inv_tau = (mass * e0**2 * self.avghwLO() * e0 / hbar * Iij 
                    / (4 * hbar**2 * epsrho * eps0 * kl))
