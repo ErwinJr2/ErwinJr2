@@ -169,10 +169,10 @@ class QCLayers(object):
     def populate_x(self):
         """Calculate the properties in terms of position
 
-        Attributes
+        Parameters
         ----------
         xPoints : np.array
-            TBD
+            (TBD) SHOULDN'T BE PARAMETERS
 
         """
         layerNumCumSum = [0] + np.cumsum(self.layerWidths).tolist()
