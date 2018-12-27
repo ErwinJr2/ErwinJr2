@@ -158,7 +158,7 @@ double FermiDirac(double T, double EF, const double *EigenEs, numpyint EN,
 	eDensity[j] += sq(psi[j])*DoS2D*nbar;
 	/* sheetDensity += eDensity[j]*step; --->X */
       }
-      sheetDensity += DoS2D*(EF-EigenEs[i]);
+      sheetDensity += DoS2D*nbar;
       /* psi is normalized.. It's equivlent with X */
     }
     return sheetDensity;
