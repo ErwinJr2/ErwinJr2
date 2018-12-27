@@ -21,6 +21,16 @@ def build_clib(MSBuild=None):
     except CalledProcessError:
         print("openMP not supported")
 
+def build_doc(MSBuild=None):
+    if not MSBuild:
+        make_cmd = ['make', 'html']
+    else:
+        print("MS building for documents is not now available")
+        return
+    os.chdir(os.path.join(os.path.dirname(__file__), 'docs'))
+    print("Building Documents")
+    subprocess.check_call(make_cmd)
+
 if __name__ == "__main__":
     MSBuild = None
     for opt in sys.argv[1:]: 
@@ -29,5 +39,6 @@ if __name__ == "__main__":
         else: 
             print("Unknown option %s"%opt)
     build_clib(MSBuild)
+    build_doc(MSBuild)
 
 # vim: ts=4 sw=4 sts=4 expandtab
