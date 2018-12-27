@@ -18,7 +18,7 @@ This is a extendable Python/C program for 1D quantum problem and Quantum Cascade
 - [ ] ?NEGF solver
 - [ ] Add scattering: acoustic phonon, interface roughness, ionized impurity
 - [ ] Finite temperature Fermi-Dirac distribution
-- [ ] QCLayer class
+- [X] QCLayer class
 - [X] Save/Load using json
 - [ ] setup.py update
 - [ ] Test case improve
