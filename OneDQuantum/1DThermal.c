@@ -59,8 +59,10 @@ double FermiDirac0(double EF, const double *EigenEs, numpyint EN,
 		/* DoS2D_2D = m/(pi*\hbar^2), spin included, Unit Angstrom^-2eV^-1 */
 		for(j=0; j<N; j++) {
 		  eDensity[j] += sq(psi[j])*DoS2D;
+		  // eDensity[j] += sq(psi[j])*DoS2D*(EF-EigenEs[i]);
 			/* sheetDensity += eDensity[j]*step; --->X */
 		}
+		// sheetDensity += DoS2D*(EF-EigenEs[i]);
 		sheetDensity += DoS2D;
 		/* psi is normalized.. It's equivlent with X */
 	}
@@ -113,9 +115,11 @@ double FermiDirac0N(double sheet, const double *EigenEs, numpyint EN,
 			return EigenEs[i] + Emax;
 		}
 		for(j=0; j<N; j++) {
-			eDensity[j] += sq(psi[j])*DoS2Dsum*(EigenEs[i+1]-EigenEs[i]);
+		  //eDensity[j] += sq(psi[j])*DoS2Dsum*(EigenEs[i+1]-EigenEs[i]);
+		  eDensity[j] += sq(psi[j])*DoS2Dsum;
 		}
-		sheetDensity += DoS2Dsum * (EigenEs[i+1]-EigenEs[i]);
+		sheetDensity += DoS2Dsum;
+		//sheetDensity += DoS2Dsum * (EigenEs[i+1]-EigenEs[i]);
 	}
 	printf("Error: You shouldn't reach here!\n");
 	return NAN;
