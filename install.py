@@ -5,7 +5,7 @@
 
 import os, sys, subprocess
 
-def build_clib(MSBuild=None):
+def build_clib(path, MSBuild=None):
     if not MSBuild:
         make_cmd = ['make']
         makemp_cmd = ['make', 'MP']
@@ -13,7 +13,7 @@ def build_clib(MSBuild=None):
         make_cmd = [MSBuild, 'OneDQuantum.sln', '/p:Configuration=Release']
         makemp_cmd = [MSBuild, '1DSchrodinger.vcxproj', '/p:Configuration=MP_Release']
         print(make_cmd)
-    os.chdir(os.path.join(os.path.dirname(__file__), 'OneDQuantum'))
+    os.chdir(os.path.join(path, 'OneDQuantum'))
     print("Building C Lib")
     subprocess.check_call(make_cmd)
     try: 
@@ -21,24 +21,25 @@ def build_clib(MSBuild=None):
     except CalledProcessError:
         print("openMP not supported")
 
-def build_doc(MSBuild=None):
+def build_doc(path, MSBuild=None):
     if not MSBuild:
         make_cmd = ['make', 'html']
     else:
         print("MS building for documents is not now available")
         return
-    os.chdir(os.path.join(os.path.dirname(__file__), 'docs'))
+    os.chdir(os.path.join(path, 'docs'))
     print("Building Documents")
     subprocess.check_call(make_cmd)
 
 if __name__ == "__main__":
     MSBuild = None
+    path = os.path.dirname(os.path.abspath(__file__))
     for opt in sys.argv[1:]: 
         if opt.lower().startswith("msbuild="):
             MSBuild=opt[8:]
         else: 
             print("Unknown option %s"%opt)
-    build_clib(MSBuild)
-    build_doc(MSBuild)
+    build_clib(path, MSBuild)
+    build_doc(path, MSBuild)
 
 # vim: ts=4 sw=4 sts=4 expandtab
