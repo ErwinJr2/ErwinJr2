@@ -12,7 +12,6 @@ eDensity_dec = 5
 
 
 class TestUniformPsis(unittest.TestCase):
-    sheet = 0.0139
     EigenEs = np.linspace(0, 1, 2)
     xmax = 1
     l = 3
@@ -21,17 +20,17 @@ class TestUniformPsis(unittest.TestCase):
     psis = np.ones((2,l))/np.sqrt(l)/np.sqrt(step)
     mass = 1
 
-    # Zero-temperature Fermi-Dirac (rho -> EF -> rho)
-
+    # Zero-temperature Fermi-Dirac = low temperature Fermi-Dirac
     def testUniformFermiDirac0T(self):
         EF = 0.5
-        eDensity = cFermiDirac0(EF, self.EigenEs, self.mass, self.psis,
+        eDensity0T = cFermiDirac0(EF, self.EigenEs, self.mass, self.psis,
                                 self.step)
         eDensityLowT = cFermiDirac(0.01, EF, self.EigenEs, self.mass, self.psis, 
                                    self.step)
-        self.assertAlmostEqual(self.step * np.sum(eDensity), 
-                               self.step * np.sum(eDensityLowT))
-
+        self.assertAlmostEqual(np.sum(eDensity0T), np.sum(eDensityLowT))
+        np.testing.assert_array_almost_equal(eDensity0T, eDensityLowT,
+                                             decimal=eDensity_dec,
+                                             verbose=True)
 
 
 class TestTriangleWellThermal(unittest.TestCase):
