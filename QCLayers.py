@@ -67,8 +67,8 @@ class QCLayers(object):
         Description of the data
 
     
-    Attributes
-    ----------
+    Other Parameters
+    --------------------
     NonParabolic : bool
         TBD
     layerSelected : int
