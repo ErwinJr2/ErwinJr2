@@ -269,7 +269,9 @@ class QCLayers(object):
             self.psis = np.concatenate((self.psis, psis_re), axis=0)
 
     def stateFilter(self):
-        """Filter unbounded states"""
+        """Filter unbounded states: 
+        States with energy higher than potential at the end and wf[-2] higher
+        than a threshold (1e-4) is considered unbounded. """
         bounded = []
         semiBounded = []
         for n in range(self.eigenEs.size):
