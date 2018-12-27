@@ -18,18 +18,54 @@ qcMaterial = {
 }
 
 class QCLayers(object):
-    """Class for QCLayers
+    """
+    Class for QCLayers
 
-    Member variables for each layer
-    -------------------------------
+    Parameters
+    ----------
+    substrate : str
+        The substrate material for the device, which determines the well and
+        barrier material
+
+        =========    ==============   ==============
+        substrate    well             barrier
+        =========    ==============   ==============
+        InP          In_xGa_{1-x}As   Al_{1-x}In_xAs
+        GaAs         Al_xGa_{1-x}As   Al_xGa_{1-x}As
+        GaSb         InAs_ySb_{1-y}   Al_xGa_{1-x}Sb
+        =========    ==============   ==============
+
+    materials : list of str, len = 2
+        Name of alloys
+    moleFrac : list of float
+        mole fraction for each possible layer material, 
+        in format [well, barrier]*4
+    xres : float
+        Position resolution, in armstrong
+    Eres : float
+        External (static) electrical field, in kV/cm = 1e5 V/m
+
     layerWidths : np.array of float, len = No. of layers
-        width of each layer
+        Width of each layer, in mm
     layerMtrls : np.array of binary int, len = No. of layers
-        label of materials
+        Label of materials, depending on substrate
     layerDopings : np.array of float, len = No. of layers
-        doppings of each layer
+        Doping per volumn in unit 1e17 cm-3
     layerARs : np.array of binary, len = No. of layers
-        indicating if the layer is active(True) or not(False)
+        Binaries indicating if the layer is active(True) or not(False), 
+        only affects basis solver
+
+    EField : float
+        External (static) electrical field, in kV/cm = 1e5 V/m
+    repeats : int
+        Number of repeat times for the given structure
+    T : float
+        Temperature of the device, affecting material property
+    Solver : str
+        Name of solver
+    description : str
+        Description of the data
+
     """
     def __init__(self, substrate="InP", materials=["InGaAs", "AlInAs"], 
                  moleFracs=[0.53, 0.52], xres=0.5, Eres=0.5, 
@@ -133,16 +169,10 @@ class QCLayers(object):
     def populate_x(self):
         """Calculate the properties in terms of position
 
-        Member variables for each layer
-        -------------------------------
-        layerWidths : np.array of float, len = No. of layers
-            width of each layer
-        layerMaterialIdxs : np.array of binary int, len = No. of layers
-            label of materials
-        layerDopings : np.array of float, len = No. of layers
-            doppings of each layer
-        layerARs : np.array of binary, len = No. of layers
-            indicating if the layer is active(True) or not(False)
+        Attributes
+        ----------
+        xPoints : np.array
+            TBD
 
         """
         layerNumCumSum = [0] + np.cumsum(self.layerWidths).tolist()
