@@ -66,6 +66,28 @@ class QCLayers(object):
     description : str
         Description of the data
 
+    
+    Attributes
+    ----------
+    NonParabolic : bool
+        TBD
+    layerSelected : int
+        a label indicating which layer is selected in GUI, with default None 
+        indicating no layer is selected
+    
+    xPoints : np.array of float
+        position grid
+    xMaterialsIdxs : np.array of binary int
+        label of materials at each position
+    xDopings : np.array of float
+        Doping per volumn at each position
+    xARs : np.array of bool
+        Binaries indicating if the layer is active(True) or not(False) at
+        each position
+    xLayerNums : np.array of int
+        at xPoints[i] it's xLayerNums[i]-th layer
+    
+        
     """
     def __init__(self, substrate="InP", materials=["InGaAs", "AlInAs"], 
                  moleFracs=[0.53, 0.52], xres=0.5, Eres=0.5, 
@@ -169,8 +191,8 @@ class QCLayers(object):
     def populate_x(self):
         """Calculate the properties in terms of position
 
-        Parameters
-        ----------
+        Yield
+        -----
         xPoints : np.array
             (TBD) SHOULDN'T BE PARAMETERS
 
@@ -178,6 +200,7 @@ class QCLayers(object):
         layerNumCumSum = [0] + np.cumsum(self.layerWidths).tolist()
         periodL = layerNumCumSum[-1]
         self.xPoints = np.arange(0, periodL* self.repeats, self.xres)
+        """ np.array """
         # largest index of grid
         N = self.xPoints.size
         self.xMaterialsIdxs = np.empty(N, dtype=int)
