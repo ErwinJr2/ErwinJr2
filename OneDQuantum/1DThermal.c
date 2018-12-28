@@ -142,7 +142,9 @@ double FermiDirac(double T, double EF, const double *EigenEs, numpyint EN,
     }
     for(i=0; i<EN; i++) {
       int j;
-      double nbar = 1/(exp(beta * (EigenEs[i]-EF)) + 1);
+      //double nbar = 1/(exp(beta * (EigenEs[i]-EF)) + 1);
+      double nbarIntegral = EF - EigenEs[i] + log(1+exp(beta*(EigenEs[i]-EF)))/beta;
+      if isinf(nbarIntegral) nbarIntegral = 0.0;
       const double* psi = psis + i*N;
       double invM = 0;
       /* Density of states effective mass should be the Harmonic mean of      
@@ -155,10 +157,10 @@ double FermiDirac(double T, double EF, const double *EigenEs, numpyint EN,
       DoS2D = m0/(M_PI*sq(hbar)*invM)*sq(ANG)*e0;
       /* DoS2D_2D = m/(pi*\hbar^2), spin included, Unit Angstrom^-2eV^-1 */
       for(j=0; j<N; j++) {
-	eDensity[j] += sq(psi[j])*DoS2D*nbar;
+	eDensity[j] += sq(psi[j])*DoS2D*nbarIntegral;
 	/* sheetDensity += eDensity[j]*step; --->X */
       }
-      sheetDensity += DoS2D*nbar;
+      sheetDensity += DoS2D*nbarIntegral;
       /* psi is normalized.. It's equivlent with X */
     }
     return sheetDensity;
