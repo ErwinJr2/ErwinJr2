@@ -19,6 +19,7 @@ class TestUniformPsis(unittest.TestCase):
     step = x[1] - x[0]
     psis = np.ones((2,l))/np.sqrt(l)/np.sqrt(step)
     mass = 1
+    sheet = 0.04179
 
     # Zero-temperature Fermi-Dirac = low temperature Fermi-Dirac
     def testUniformFermiDirac0T(self):
@@ -31,6 +32,27 @@ class TestUniformPsis(unittest.TestCase):
         np.testing.assert_array_almost_equal(eDensity0T, eDensityLowT,
                                              decimal=eDensity_dec,
                                              verbose=True)
+
+    def testUniformFTFD(self):
+        T = 300
+        eDensityN, EF = cFermiDiracN(T, self.sheet, self.EigenEs,
+                                     self.mass, self.psis, self.step)
+        eDensity = cFermiDirac(T, EF, self.EigenEs, self.mass, self.psis,
+                                self.step)
+        self.assertAlmostEqual(self.step * np.sum(eDensityN), self.sheet)
+        self.assertAlmostEqual(self.step * np.sum(eDensity), self.sheet)
+        np.testing.assert_array_almost_equal(eDensityN, eDensity,
+                                             decimal=eDensity_dec,
+                                             verbose=True)
+
+    def testUniformHighT(self):
+        T = 300
+        eDensityFD, EF_FD = cFermiDiracN(T, self.sheet, self.EigenEs, 
+                                     self.mass, self.psis, self.step)
+        eDensityB, EF_B = cBoltzmannN(T, self.sheet, self.EigenEs,
+                                      self.mass, self.psis, self.step)
+        self.assertAlmostEqual(self.step * np.sum(eDensityFD), 
+                               self.step * np.sum(eDensityB))
 
 
 class TestTriangleWellThermal(unittest.TestCase):
@@ -89,14 +111,12 @@ class TestTriangleWellThermal(unittest.TestCase):
     # (at high T, density of states = Boltzmann)
     def testTriangleWellHighT(self):
         T = 3000
-        eDensityN, EF = cFermiDirac0N(self.sheet, self.EigenEs, 
+        eDensityFD, EF_FD = cFermiDiracN(T, self.sheet, self.EigenEs, 
                                       self.mass, self.psis, self.step)
-        eDensityT = cFermiDirac(T, EF, self.EigenEs, self.mass, self.psis, 
-                                self.step)
-        eDensityB = cBoltzmann(T, EF, self.EigenEs, self.mass, self.psis,
-                               self.step)
-        self.assertAlmostEqual(np.sum(eDensityT), np.sum(eDensityB))
-        np.testing.assert_array_almost_equal(eDensityT, eDensityB, 
+        eDensityB, EF_B = cBoltzmannN(T, self.sheet, self.EigenEs,
+                                      self.mass, self.psis, self.step)
+        self.assertAlmostEqual(np.sum(eDensityFD), np.sum(eDensityB))
+        np.testing.assert_array_almost_equal(eDensityFD, eDensityB, 
                                              decimal=eDensity_dec, 
                                              verbose=True)
 
