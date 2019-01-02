@@ -15,11 +15,11 @@
 #include <omp.h>
 #endif 
 #include "science.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#define NEWTON 1E-5 /**< Newton's method stopping limit */
 
 #ifdef _WINDLL
 __declspec(dllexport)
@@ -140,11 +140,11 @@ double FermiDirac(double T, double EF, const double *EigenEs, numpyint EN,
     for(i=0; i<N; i++) {
       eDensity[i] = 0;
     }
-    for(i=0; i<EN; i++) {
+    for(i=0; i<1; i++) {
       int j;
       //double nbar = 1/(exp(beta * (EigenEs[i]-EF)) + 1);
       double nbarIntegral = EF - EigenEs[i] + log(1+exp(beta*(EigenEs[i]-EF)))/beta;
-      if isinf(nbarIntegral) nbarIntegral = 0.0;
+      if isinf(nbarIntegral) nbarIntegral = 0.0; // dirty way to get around log(1+exp)
       const double* psi = psis + i*N;
       double invM = 0;
       /* Density of states effective mass should be the Harmonic mean of      
@@ -166,6 +166,77 @@ double FermiDirac(double T, double EF, const double *EigenEs, numpyint EN,
     return sheetDensity;
 }
 
+#ifdef _WINDLL
+__declspec(dllexport)
+#endif
+/** 
+ * \brief derivative of Finite Fermi-Dirac distribution. Use in Newton's method
+ *
+ */
+double DFermiDirac(double T, double EF, const double *EigenEs, numpyint EN, 
+		   const double *m, const double* psis, numpyint N, double step) {
+    int i;
+    double dSheetDensity = 0.0;
+    double beta = 1.0/(kb*T);
+    //for(i=0; i<N; i++) {
+    //  eDensity[i] = 0.0;
+    //}
+    for(i=0; i<1; i++) {
+      int j;
+      double dnbarIntegral = 1.0 - exp(beta*(EigenEs[i]-EF))/(1.0+exp(beta*(EigenEs[i]-EF)));
+      // if isinf(nbarIntegral) nbarIntegral = 0.0; // dirty way to get around log(1+exp) 
+      const double* psi = psis + i*N;
+      double invM = 0;
+      /* Density of states effective mass should be the Harmonic mean of
+       * effective mass */
+      double DoS2D;
+      for(j=0; j<N; j++) {
+        invM += sq(psi[j])/m[j];
+      }
+      invM *= step;
+      DoS2D = m0/(M_PI*sq(hbar)*invM)*sq(ANG)*e0;
+      /* DoS2D_2D = m/(pi*\hbar^2), spin included, Unit Angstrom^-2eV^-1 */
+      dSheetDensity += DoS2D*dnbarIntegral;
+      /* psi is normalized.. It's equivlent with X */
+    }
+    return dSheetDensity;
+  }
+
+
+#ifdef _WINDLL
+__declspec(dllexport)
+#endif
+/**
+ * \brief Finite temperature Fermi-Dirac. electron-density -> Fermi level
+ *
+ */
+double FermiDiracN(double T, double sheet, const double *EigenEs, numpyint EN, 
+		    const double *m, const double* psis, numpyint N, double step, 
+		    double* eDensity) {
+  //  double sheetDensity;
+  for(int i=0; i<N; i++) {
+    eDensity[i] = 0;
+  }
+  double EF_min = EigenEs[0];
+  double EF_max = EigenEs[EN-1]+(EigenEs[EN-1]-EigenEs[0])*3;
+  double EF0 = (EF_min + EF_max)/2.0;
+  double dsheet_max = FermiDirac(T, EF_max, EigenEs, EN, m, psis, N, step, eDensity)-sheet;
+  double dsheet_min = FermiDirac(T, EF_min, EigenEs, EN, m, psis, N, step, eDensity)-sheet;
+  double dsheet;
+  /** Use Newton's method to find EF */
+  int count=0;
+  double EF;
+  EF = EF0;
+  while (count < 20 && fabs(dsheet) > NEWTON) {
+    dsheet = FermiDirac(T, EF0, EigenEs, EN, m, psis, N, step, eDensity) - sheet;
+    EF = EF0 - dsheet / DFermiDirac(T, EF0, EigenEs, EN, m, psis, N, step);
+    EF0 = EF;
+    count++;
+  }
+
+  FermiDirac(T, EF, EigenEs, EN, m, psis, N, step, eDensity);
+  return EF;
+}
 
 #ifdef _WINDLL
 __declspec(dllexport)
@@ -193,7 +264,7 @@ double Boltzmann(double T, double EF, const double *EigenEs, numpyint EN,
 	for(i=0; i<N; i++) {
 		eDensity[i] = 0;
 	}
-	for(i=0; i<EN; i++) {
+	for(i=0; i<1; i++) {
 		int j;
 		const double* psi = psis + i*N;
 		double invM = 0;  
