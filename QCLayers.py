@@ -74,19 +74,6 @@ class QCLayers(object):
     layerSelected : int
         a label indicating which layer is selected in GUI, with default None 
         indicating no layer is selected
-    
-    xPoints : np.array of float
-        position grid
-    xMaterialsIdxs : np.array of binary int
-        label of materials at each position
-    xDopings : np.array of float
-        Doping per volumn at each position
-    xARs : np.array of bool
-        Binaries indicating if the layer is active(True) or not(False) at
-        each position
-    xLayerNums : np.array of int
-        at xPoints[i] it's xLayerNums[i]-th layer
-    
         
     """
     def __init__(self, substrate="InP", materials=["InGaAs", "AlInAs"], 
@@ -193,8 +180,35 @@ class QCLayers(object):
 
         Yield
         -----
-        xPoints : np.array
-            (TBD) SHOULDN'T BE PARAMETERS
+        xPoints : np.array of float
+            position grid
+        xMaterialsIdxs : np.array of binary int
+            label of materials at each position
+        xDopings : np.array of float
+            Doping per volumn at each position
+        xARs : np.array of bool
+            Binaries indicating if the layer is active(True) or not(False) at
+            each position
+        xLayerNums : np.array of int
+            at xPoints[i] it's xLayerNums[i]-th layer
+        xVc : np.array of float
+            TBD
+        xVX : np.array of float
+            TBD
+        xVL : np.array of float
+            TBD
+        xVLH : np.array of float
+            TBD
+        xVSO : np.array of float
+            TBD
+        xEg : np.array of float
+            TBD
+        xMc : np.array of float
+            TBD
+        xESP : np.array of float
+            TBD
+        xF : np.array of float
+            TBD
 
         """
         layerNumCumSum = [0] + np.cumsum(self.layerWidths).tolist()
@@ -258,6 +272,17 @@ class QCLayers(object):
         return np.ma.masked_where(~self.xARs, self.xVc)
 
     def solve_whole(self):
+        """
+        solve eigen modes for the whole structure
+
+        Yield
+        -----
+        eigenEs : np.array of float
+            the eigenenergy of the layer structure
+        psis : np.array of float
+            the wave function
+
+        """
         mass = self.xMc[np.argmin(self.xVc)]
         # ground state for triangular well
         Emin = 2.33810741 * (hbar**2*(self.EField*EUnit)**2/(
@@ -277,6 +302,18 @@ class QCLayers(object):
         #  self.stateFilter()
 
     def solve_basis(self):
+        """
+        solve basis for the QC device, with each basis being the eigen mode of 
+        a seperate part of the layer structure
+
+        Yield
+        -----
+        eigenEs : np.array of float
+            the eigenenergy of the layer structure
+        psis : np.array of float
+            the wave function
+        
+        """
         IndSep = np.nonzero(np.array(self.layerARs[1:]) !=
                             np.array(self.layerARs[:-1]))[0] + 1
         if self.layerARs[0]:
