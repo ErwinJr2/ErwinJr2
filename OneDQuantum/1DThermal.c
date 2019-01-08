@@ -144,7 +144,9 @@ double FermiDirac(double T, double EF, const double *EigenEs, numpyint EN,
       int j;
       //double nbar = 1/(exp(beta * (EigenEs[i]-EF)) + 1);
       double nbarIntegral = EF - EigenEs[i] + log(1+exp(beta*(EigenEs[i]-EF)))/beta;
-      if isinf(nbarIntegral) nbarIntegral = 0.0; // dirty way to get around log(1+exp)
+      if (isinf(nbarIntegral)) {
+	  nbarIntegral = 0.0;
+	} // dirty way to get around log(1+exp)
       const double* psi = psis + i*N;
       double invM = 0;
       /* Density of states effective mass should be the Harmonic mean of      
@@ -220,8 +222,10 @@ double FermiDiracN(double T, double sheet, const double *EigenEs, numpyint EN,
   double EF_min = EigenEs[0];
   double EF_max = EigenEs[EN-1]+(EigenEs[EN-1]-EigenEs[0])*3;
   double EF0 = (EF_min + EF_max)/2.0;
-  double dsheet_max = FermiDirac(T, EF_max, EigenEs, EN, m, psis, N, step, eDensity)-sheet;
-  double dsheet_min = FermiDirac(T, EF_min, EigenEs, EN, m, psis, N, step, eDensity)-sheet;
+  //double dsheet_max = 
+  FermiDirac(T, EF_max, EigenEs, EN, m, psis, N, step, eDensity);
+  //double dsheet_min = 
+  FermiDirac(T, EF_min, EigenEs, EN, m, psis, N, step, eDensity);
   double dsheet;
   /** Use Newton's method to find EF */
   int count=0;
