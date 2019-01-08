@@ -222,11 +222,9 @@ double FermiDiracN(double T, double sheet, const double *EigenEs, numpyint EN,
   double EF_min = EigenEs[0];
   double EF_max = EigenEs[EN-1]+(EigenEs[EN-1]-EigenEs[0])*3;
   double EF0 = (EF_min + EF_max)/2.0;
-  //double dsheet_max = 
   FermiDirac(T, EF_max, EigenEs, EN, m, psis, N, step, eDensity);
-  //double dsheet_min = 
   FermiDirac(T, EF_min, EigenEs, EN, m, psis, N, step, eDensity);
-  double dsheet;
+  double dsheet = FermiDirac(T, EF0, EigenEs, EN, m, psis, N, step, eDensity)-sheet;
   /** Use Newton's method to find EF */
   int count=0;
   double EF;
