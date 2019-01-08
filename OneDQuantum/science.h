@@ -1,15 +1,15 @@
 #ifndef __SCIENCE
 #define __SCIENCE 
 #include <stdint.h>
-#define sq(X) ((X)*(X))
+#define sq(X) ((X)*(X)) /**< X*X */
 
-#define hbar 1.0545718e-34 /*J.s*/
-#define m0 9.10938356e-31  /*kg*/
-#define e0 1.60217662e-19  /*C*/
-#define eps0 8.854187817620e-22 /*F/Angstrom*/
-#define kb 8.6173303e-5 /*eV/K*/
+#define hbar 1.0545718e-34 /**< 1.0545718e-34 J.s */
+#define m0 9.10938356e-31  /**< 9.10938356e-31 kg */
+#define e0 1.60217662e-19  /**< 1.60217662e-19 C */
+#define eps0 8.854187817620e-22 /**< 8.854187817620e-22 F/Angstrom */
+#define kb 8.6173303e-5 /**< 8.6173303e-5 eV/K */
 /* #define pi 3.1415926535897932385 --> M_PI in math.h*/
-#define ANG 1E-10  
+#define ANG 1E-10  /**< 1E-10 m */
 /* Angstrom in meter: all unit for length is Angstrom in the program */
 
 #ifdef _WINDLL
