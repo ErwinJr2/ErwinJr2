@@ -18,13 +18,12 @@
 #include "science.h"
 #include "band.h"
 
-
-#define NEWTON 1E-5 /**< Newton's method stopping limit */
+/** Newton's method stopping limit. Default value = 1E-5 */
+#define NEWTON 1E-5 
 /** 
- * \brief Stepsize for numerical derivative
+ * NSTEP (unit eV) is the step size to numerically calculate 
+ * the derivative for Newton's method. Default value = 1E-10.
  *
- * NSTEP (unit eV) is the step size to numerically calculate  
- * the derivative for Newton's method. 
  * Optimum step size = (6*epsilon/M3)^(1/3) 
  * where epsilon is numerical error of yend(E) and M3 is maximum yend'''(E)
  * Because of the exponantial behavior when V>E, yend is very sensitive 
@@ -32,7 +31,7 @@
  * Still, it's recommanded to make high V side the starting point
  */
 #define NSTEP 1E-10
-#define Y_EPS 0.1 /**< Default starting point for ode solver */
+#define Y_EPS 0.1 /**< Starting point for ode solver. Default value = 0.1 */
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,15 +43,21 @@ __declspec(dllexport)
 #endif 
 
 /**
- * \brief ODE solver for -hbar^2/(2*m(x)) * y''(x) + V(x) * y = E * y(x) 
  * 
  * An ODE solver for -d/dx(hbar^2/(2*m(x)) * d/dx y(x)) + V(x) * y = E * y(x)
- * with starting x0 and y0, y1, ends at x0 + step*N (x0 label 0)
- * using Euler's algorithm
- * E and V are in unit eV, m are in unit m0 (free electron mass)
- * Don't normalize
- * V[n] and m[n] means potential and effectice mass at x = x0 + n*step
- * return y(x+N*step), put y result in *y
+ * with starting x0 and y0, y1, ends at x0 + step*N
+ * using Numerov's method.
+ * No normalization imposed.
+ *
+ * \param[in] step step size
+ * \param[in] N number of steps
+ * \param[in] y0 value of y at x0
+ * \param[in] y1 value of y at x0 + step
+ * \param[in] E energy, unit eV
+ * \param[in] *V V[n] is the potential at x = x0 + n*step
+ * \param[in] *m m[n] is the effective mass at x = x0 + n*step. m is in unit m0
+ *              (free electron mass)
+ * \param[out] *y (output) value of y at x = x0 + n*step
  */
 inline double ode(double step, numpyint N, double y0, double y1, 
 		double E, const double *V, const double *m, double *y) {
@@ -77,13 +82,26 @@ inline double ode(double step, numpyint N, double y0, double y1,
 
 #ifdef _WINDLL
 __declspec(dllexport)
-#endif 
+#endif
+ 
+/** 
+ * Fill in wavefunctions in psis accroding to eigen energy in EigenEs. 
+ * psi + i*N*sizeof(double) is the wavefunction with Energy EigenEs[i] 
+ * The result is normalized to 1 (so psi is unit sqrt(Angstrom^-1)
+ * 
+ * \param[in] step step size
+ * \param[in] N number of steps
+ * \param[in] *EigenEs list of eigen energies
+ * \param[in] EN number of eigen energies we consider
+ * \param[in] *V V[n] is the potential at x = x0 + n*step
+ * \param[in] *m m[n] is the effective mass at x = x0 + n*step, in unit m0
+ *               (free electron mass)
+ * \param[out] *psis (output) 
+ *                   psi + i*N*sizeof(double) is the 
+ *                   wavefunction with energy EigenEs[i].
+ */
 void SimpleFillPsi(double step, numpyint N, const double *EigenEs,
 		numpyint EN, const double *V, const double *m, double* psis) {
-	/* Fill in wavefunctions in psis accroding to eigen energy in EigenEs. 
-	 * psi + i*N*sizeof(double) is the wavefunction with Energy EigenEs[i] 
-	 * The result is normalized to 1 (so psi is unit sqrt(Angstrom^-1)
-	 */
 	int i; 
 #ifdef __MP
 	#ifdef _DEBUG
@@ -114,30 +132,41 @@ void SimpleFillPsi(double step, numpyint N, const double *EigenEs,
 	return; 
 }
 
-
-#define findZero(x, y, n) ((y[n]*x[n-1] - y[n-1]*x[n])/ (y[n] - y[n-1]))
-/* Find zero x_n between x[n-1] and x[n] of function y(x), 
+/** 
+ * Find zero x_n between x[n-1] and x[n] of function y(x), 
  * s.t. y(x_n) = 0
- * using linear interpolation (to be improved?)
- * assuming y[n] and y[n-1] is opposite sign
- * return x_n
+ * using linear interpolation, 
+ * i.e assuming y[n] and y[n-1] are of opposite signs and
+ * returning x_n
  */
+#define findZero(x, y, n) ((y[n]*x[n-1] - y[n-1]*x[n])/ (y[n] - y[n-1]))
 
 
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif 
+
+/**
+ * Solve 1D shrodinger's equation with potential V, effective mass m and 
+ * in the region x0 <= x < x0+step*N with zero boundary. 
+ * First scan in energy Es[0:EN] and look for zeros(EigenE) by either 
+ * simple linear interpolation if SIMPLE is defined;
+ * or calculate zero using newton's method if SIMPLE is not defined
+ * Es should be in small to large order
+ *
+ * \param[in] step step size
+ * \param[in] N number of steps
+ * \param[in] *Es initial search range of eigen energy
+ * \param[in] EN number of eigen energy to find
+ * \param[in] *V potential 
+ * \param[in] *m effective mass
+ * \param[out] *EigenE (output) eigen energy
+ *
+ */
 numpyint SimpleSolve1D(double step, numpyint N, 
 		const double *Es, numpyint EN, 
 		const double *V, const double *m, 
 		double *EigenE) {
-	/* Solve 1D shrodinger's equation with potential V, effective mass m and 
-	 * in the region x0 <= x < x0+step*N with zero boundary. 
-	 * First scan in energy Es[0:EN] and look for zeros(EigenE) by either 
-	 *    simple linear interpolation if SIMPLE is defined;
-	 * or calculate zero using newton's method if SIMPLE is not defined
-	 * Es should be in small to large order
-	 */
 	double *yend; 
 	int NofZeros=0;
 	int i;
@@ -226,9 +255,9 @@ numpyint SimpleSolve1D(double step, numpyint N,
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif 
+/** Same as SimpleFillPsi except for using band related mass */
 void BandFillPsi(double step, numpyint N, const double *EigenEs,
 		numpyint EN, double* psis, const double* V, Band* mat) {
-	/* Same as SimpleFillPsi except for using band related mass */
 	int i; 
 #ifdef _DEBUG
 	assert(N == mat->N);
@@ -274,17 +303,13 @@ void BandFillPsi(double step, numpyint N, const double *EigenEs,
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif 
+/**
+ * Same as SimpleSolve1D except for using band related mass
+ */
 numpyint BandSolve1D(double step, numpyint N, 
 		const double *Es, numpyint EN, const double *V, Band *mat,
 		double *EigenE) {
-	/* Solve 1D shrodinger's equation with potential V, effective mass m and 
-	 * in the region x0 <= x < x0+step*N with zero boundary. 
-	 * First scan in energy Es[0:EN] and look for zeros(EigenE) by either 
-	 *    simple linear interpolation if SIMPLE is not defined;
-	 * or calculate zero using newton's method if SIMPLE is defined
-	 * Es should be in small to large order
-	 */
-	double *yend; 
+       	double *yend; 
 	int NofZeros=0;
 	int i;
 
@@ -381,6 +406,9 @@ numpyint BandSolve1D(double step, numpyint N,
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif
+/**
+ * Calculate the LO phonon scattering rate
+ */
 double LOphononScatter(double step, numpyint N, double kl,
                const double *psi_i, const double *psi_j) {
        double Iij = 0;
