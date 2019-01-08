@@ -191,24 +191,10 @@ class QCLayers(object):
             each position
         xLayerNums : np.array of int
             at xPoints[i] it's xLayerNums[i]-th layer
-        xVc : np.array of float
-            TBD
-        xVX : np.array of float
-            TBD
-        xVL : np.array of float
-            TBD
-        xVLH : np.array of float
-            TBD
-        xVSO : np.array of float
-            TBD
-        xEg : np.array of float
-            TBD
-        xMc : np.array of float
-            TBD
-        xESP : np.array of float
-            TBD
-        xF : np.array of float
-            TBD
+
+
+        Also update following band structure parameters (with type *np.array of float*):
+        **xVc, xVX, xVL, xVLH, xVSO, xEg, xMc, xESP, xF**
 
         """
         layerNumCumSum = [0] + np.cumsum(self.layerWidths).tolist()
