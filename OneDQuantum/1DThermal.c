@@ -19,8 +19,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define NEWTON_T 1E-5 /**< Newton's method stopping limit. Default = 1E-5 */
 
-#define NEWTON 1E-5 /**< Newton's method stopping limit. Default = 1E-5 */
 
 #ifdef _WINDLL
 __declspec(dllexport)
@@ -153,8 +153,15 @@ double FermiDirac0N(double sheet, const double *EigenEs, numpyint EN,
  * Assumes Fermi-Dirac distribution at finite temperature
  *
  * \param[in] T temperature
+ * \param[in] EF Fermi energy
+ * \param[in] *EigenEs Eigen energy
+ * \param[in] EN number of eigen energies provided
+ * \param[in] *m effective mass
+ * \param[in] *psis wavefunctions for the given eigen energies
+ * \param[in] N number of steps
+ * \param[in] step step size
+ * \param[in] *eDensity (output) electron density (unit Angstrom^-3)
  *
- * Other parameters are the same as in FermiDirac0.
  */
 double FermiDirac(double T, double EF, const double *EigenEs, numpyint EN,
 		     const double *m, const double* psis, numpyint N, double step,
@@ -197,7 +204,7 @@ double FermiDirac(double T, double EF, const double *EigenEs, numpyint EN,
 __declspec(dllexport)
 #endif
 /** 
- * Derivative of sheet density against Fermi energy at finite temperature,
+ * Output the derivative of sheet density against Fermi energy at finite temperature,
  * using Fermi-Dirac distribution. 
  * This derivative is used to solve Fermi energy given sheet density.
  *
@@ -242,9 +249,15 @@ __declspec(dllexport)
  *
  * Assumes Fermi-Dirac distribution at finite temperature.
  *
- * Other parameters are the same as in FermiDirac0N.
- *
  * \param[in] T temperature.
+ * \param[in] sheet sheet density (unit Angstrom^-2)
+ * \param[in] *EigenEs Eigen energy
+ * \param[in] EN number of eigen energies provided
+ * \param[in] *m effective mass
+ * \param[in] *psis wavefunctions for the given eigen energies
+ * \param[in] N number of steps
+ * \param[in] step step size
+ * \param[in] *eDensity (output) electron density (unit Angstrom^-3)
  */
 double FermiDiracN(double T, double sheet, const double *EigenEs, numpyint EN, 
 		    const double *m, const double* psis, numpyint N, double step, 
@@ -264,7 +277,7 @@ double FermiDiracN(double T, double sheet, const double *EigenEs, numpyint EN,
     /** Use Newton's method to find EF */
     int count=0; double EF;
     EF = EF0;
-    while (count < 20 && fabs(dsheet) > NEWTON) {
+    while (count < 20 && fabs(dsheet) > NEWTON_T) {
         dsheet = FermiDirac(T, EF0, EigenEs, EN, m, psis, 
                 N, step, eDensity) - sheet;
         EF = EF0 - dsheet / DFermiDirac(T, EF0, EigenEs, EN, 
