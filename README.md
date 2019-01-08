@@ -6,6 +6,8 @@ master:
 dev:
 [![dev Build Status](https://travis-ci.org/PrincetonUniversity/OneDQ.svg?branch=dev)](https://travis-ci.org/PrincetonUniversity/OneDQ)
 
+![Main Window Screenshot](./docs/mainwindow.png)
+
 This is a extendable Python/C program for 1D quantum problem and Quantum Cascade Laser simulation. 
 
 `OneDQuantum` is A C lib for 1D quantum problem, with python interface. 
