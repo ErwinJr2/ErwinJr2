@@ -145,12 +145,22 @@ double FermiDirac0N(double sheet, const double *EigenEs, numpyint EN,
 #ifdef _WINDLL
   __declspec(dllexport)
 #endif
-/**                                                                                     
- * \brief Finite Fermi-Dirac distribution. Fermi energy -> electron density
- *                                                                                      
- * \param EF Fermi energy
- * \param eDensity output electron density(unit Angstrom^-3)
- * \output sheet density (unit Angstrom^-2)
+/**
+ * Given Fermi energy EF, this function
+ * outputs electron density in eDensity (unit Angstrom^-3)
+ * and return sheet density (unit Angstrom^-2)
+ *
+ * Assumes Fermi-Dirac distribution at finite temperature
+ *
+ * \param[in] T temperature
+ * \param[in] EF Fermi energy
+ * \param[in] *EigenEs Eigen energy
+ * \param[in] EN number of eigen energies provided
+ * \param[in] *m effective mass
+ * \param[in] *psis wavefunctions for the given eigen energies
+ * \param[in] N number of steps
+ * \param[in] step step size
+ * \param[out] *eDensity (output) electron density (unit Angstrom^-3)
  */
 double FermiDirac(double T, double EF, const double *EigenEs, numpyint EN,
 		     const double *m, const double* psis, numpyint N, double step,
@@ -193,7 +203,9 @@ double FermiDirac(double T, double EF, const double *EigenEs, numpyint EN,
 __declspec(dllexport)
 #endif
 /** 
- * \brief derivative of Finite Fermi-Dirac distribution. Use in Newton's method
+ * Derivative of sheet density against Fermi energy at finite temperature,
+ * using Fermi-Dirac distribution. 
+ * This derivative is used to solve Fermi energy given sheet density.
  *
  */
 double DFermiDirac(double T, double EF, const double *EigenEs, numpyint EN, 
@@ -229,9 +241,21 @@ double DFermiDirac(double T, double EF, const double *EigenEs, numpyint EN,
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif
-/**
- * \brief Finite temperature Fermi-Dirac. electron-density -> Fermi level
+/** 
+ * Given temperature and sheet density (unit Angstrom^-2),
+ * outputs electron density in eDensity (unit Angstrom^-3)
+ * and returns Fermi energy using Newton's method.
  *
+ * Assumes Fermi-Dirac distribution at finite temperature.
+ *
+ * \param[in] sheet sheet density (unit Angstrom^-2)
+ * \param[in] *EigenEs Eigen energy
+ * \param[in] EN number of eigen energies provided
+ * \param[in] *m effective mass
+ * \param[in] *psis wavefunctions for the given eigen energies
+ * \param[in] N number of steps
+ * \param[in] step step size
+ * \param[in] *eDensity (output) electron density (unit Angstrom^-3)
  */
 double FermiDiracN(double T, double sheet, const double *EigenEs, numpyint EN, 
 		    const double *m, const double* psis, numpyint N, double step, 
