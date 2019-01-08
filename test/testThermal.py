@@ -110,7 +110,7 @@ class TestTriangleWellThermal(unittest.TestCase):
     # Test for finite temperature Fermi-Dirac 
     # (at high T, density of states = Boltzmann)
     def testTriangleWellHighT(self):
-        T = 3000
+        T = 10
         eDensityFD, EF_FD = cFermiDiracN(T, self.sheet, self.EigenEs, 
                                       self.mass, self.psis, self.step)
         eDensityB, EF_B = cBoltzmannN(T, self.sheet, self.EigenEs,
