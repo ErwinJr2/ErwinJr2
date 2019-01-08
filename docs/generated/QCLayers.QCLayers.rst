@@ -21,7 +21,6 @@ QCLayers.QCLayers
       ~QCLayers.coupleBroadening
       ~QCLayers.del_layer
       ~QCLayers.dipole
-      ~QCLayers.eff_mass
       ~QCLayers.ifrBroadening
       ~QCLayers.loLifeTime
       ~QCLayers.loTransition
