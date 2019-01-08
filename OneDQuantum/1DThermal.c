@@ -153,14 +153,8 @@ double FermiDirac0N(double sheet, const double *EigenEs, numpyint EN,
  * Assumes Fermi-Dirac distribution at finite temperature
  *
  * \param[in] T temperature
- * \param[in] EF Fermi energy
- * \param[in] *EigenEs Eigen energy
- * \param[in] EN number of eigen energies provided
- * \param[in] *m effective mass
- * \param[in] *psis wavefunctions for the given eigen energies
- * \param[in] N number of steps
- * \param[in] step step size
- * \param[out] *eDensity (output) electron density (unit Angstrom^-3)
+ *
+ * Other parameters are the same as in FermiDirac0.
  */
 double FermiDirac(double T, double EF, const double *EigenEs, numpyint EN,
 		     const double *m, const double* psis, numpyint N, double step,
@@ -248,14 +242,9 @@ __declspec(dllexport)
  *
  * Assumes Fermi-Dirac distribution at finite temperature.
  *
- * \param[in] sheet sheet density (unit Angstrom^-2)
- * \param[in] *EigenEs Eigen energy
- * \param[in] EN number of eigen energies provided
- * \param[in] *m effective mass
- * \param[in] *psis wavefunctions for the given eigen energies
- * \param[in] N number of steps
- * \param[in] step step size
- * \param[in] *eDensity (output) electron density (unit Angstrom^-3)
+ * Other parameters are the same as in FermiDirac0N.
+ *
+ * \param[in] T temperature.
  */
 double FermiDiracN(double T, double sheet, const double *EigenEs, numpyint EN, 
 		    const double *m, const double* psis, numpyint N, double step, 
@@ -293,11 +282,19 @@ __declspec(dllexport)
 #endif 
 
 /**
- * \brief Maxwell-Boltzmann distribution at T. Fermi level -> electron density
  *
- * Temperature T Maxwell Boltzmann distribution, given Fermi level EF
+ * Given tempereature T and Fermi level EF,
  * output electron density in eDensity (unit Angstrom^-3)
- * and return sheet density (unit Angstrom^-2)
+ * and return sheet density (unit Angstrom^-2).
+ *
+ * Assumes Maxwell-Boltzmann distribution. Good approximation to Fermi-Dirac
+ * distribution at high temperature.
+ *
+ * Parameters are the same as in FermiDirac.
+ *
+ * Note: assumes zero filling when (eigen energy - EF) > MAXKT * k_B T
+ * Default value for MAXKT = 50
+ * 
  */
 double Boltzmann(double T, double EF, const double *EigenEs, numpyint EN, 
 		const double *m, const double* psis, numpyint N, double step,
@@ -346,11 +343,15 @@ __declspec(dllexport)
 #endif 
 
 /**
- * \brief Maxwell-Boltzmann distribution at T. sheet density -> EF
  *
- * Temperature T Maxwell Boltzmann distribution, given sheet density
+ * Given temperature T and sheet density (unit Angstrom^-2),
  * output electron density in eDensity (unit Angstrom^-3)
- * and return EF (unit eV)
+ * and return EF (unit eV).
+ *
+ * Assumes Maxwell-Boltzmann distribution. 
+ * 
+ * Parameters are the same as in FermiDiracN.
+ *
  */
 double BoltzmannN(double T, double sheet, const double *EigenEs, numpyint EN, 
 		const double *m, const double* psis, numpyint N, double step,
@@ -371,6 +372,9 @@ double BoltzmannN(double T, double sheet, const double *EigenEs, numpyint EN,
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif 
+/**
+ * Checkpoint for python-C interface. Output = 42.
+ */
 numpyint answer()
 {return 42;}
 
