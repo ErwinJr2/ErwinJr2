@@ -19,7 +19,7 @@
 #include "band.h"
 
 /** Newton's method stopping limit. Default value = 1E-5 */
-#define NEWTON 1E-5 
+#define NEWTON_S 1E-5 
 /** 
  * NSTEP (unit eV) is the step size to numerically calculate 
  * the derivative for Newton's method. Default value = 1E-10.
@@ -210,7 +210,7 @@ numpyint SimpleSolve1D(double step, numpyint N,
 			if(fabs(y0) > fabs(yend[i]) || fabs(y0) > fabs(yend[i-1])){
 				continue;
 			}
-			while(fabs(y0) > NEWTON && count < 20){
+			while(fabs(y0) > NEWTON_S && count < 20){
 				double y1 = ode(step, N, 0.0, Y_EPS, E0+NSTEP, V, m, y);
 				double y2 = ode(step, N, 0.0, Y_EPS, E0-NSTEP, V, m, y);
 				double dy = (y1 - y2)/(2*NSTEP);
@@ -358,7 +358,7 @@ numpyint BandSolve1D(double step, numpyint N,
 				if(fabs(y0) > fabs(yend[i]) || fabs(y0) > fabs(yend[i-1])){
 					continue;
 				}
-				while(fabs(y0) > NEWTON && count < 20){
+				while(fabs(y0) > NEWTON_S && count < 20){
 					UpdateBand(mat, E0+NSTEP, V, m);
 					double y1 = ode(step, N, 0.0, Y_EPS, E0+NSTEP, 
 							V, m, y);
@@ -430,6 +430,9 @@ double LOphononScatter(double step, numpyint N, double kl,
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif 
+/**
+ * Checkpoint for python-C interface. Output 137.
+ */
 numpyint invAlpha()
 {return 137;}
 

@@ -1,8 +1,6 @@
 /**
  * \file
  *
- * \brief Zincblende and Wurtzite structure band
- *
  * Zincblende and Wurtzite structure band, compatible
  * with structure BAND.
  */
@@ -21,16 +19,19 @@ numpyint UpdateBand(Band *band, double E, const double *xVc, double *m) {
 }
 /** \endcond */
 
+/**
+ * structure for Zinc-blende band
+ */
 typedef struct ZBBAND {
         UpdateFunc updateM;    /**< Update effective mass */
         numpyint N;            /**< Number of finite x positions */
         const double *xEg;     /**< Direct energy gap  */
         const double *xF;      /**< Kane parameter  */
-	const double *xEp; 
+        const double *xEp;     /**< Matrix element */
         const double *xESO;    /**< Spin-orbit splitting */
 }ZBBand; 
 
-/** \brief  Update effective mass of a Zincblende band semiconductor */
+/** Update effective mass of a Zincblende band semiconductor */
 numpyint ZBupdateM(Band *mat, double Eq, const double *xVc, double *m) {
 	ZBBand *zbmat = (ZBBand *) mat;
 	int q; 
@@ -88,15 +89,16 @@ void ZBband_check(const Band *band, numpyint N, const double *xEg,
 }
 #endif
 
+/** \brief struct for Wurtzite band */
 typedef struct WZBand {
-  UpdateFunc updateM;
-  numpyint N;
-  const double *xEg;
-  const double *xEp;
-  const double *xESO;
+  UpdateFunc updateM;   /**< Update effective mass */
+  numpyint N;           /**< Number of finite x positions */
+  const double *xEg;    /**< Direct energy gap */
+  const double *xEp;    /**< Matrix parameter */
+  const double *xESO;   /**< Spin-orbit splitting */
 }WZBand;
 
-/** \brief  Update effective mass of a Wurtzite band semiconductor */
+/** \brief  Update effective mass of a Wurtzite band semiconductor. Output N */
 numpyint WZupdateM(Band *mat, double Eq, const double *xVc, double *m) {
     WZBand *wzmat = (WZBand *) mat;
     int q;
@@ -111,11 +113,12 @@ numpyint WZupdateM(Band *mat, double Eq, const double *xVc, double *m) {
     return wzmat->N;
 }
 
-
+/** \cond IMPL 
+ * implemtation of functions in header files should be excluded in doxygen */
 Band *WZband_new(numpyint N, const double *xEg,
 		   const double *xEp, const double *xESO) {
     WZBand *wzband = (WZBand *) malloc( sizeof(WZBand) );
-    wzband->updateM = WZupdateM;
+    wzband->updateM = WZupdateM; 
     wzband->N = N;
     wzband->xEg = xEg;
     wzband->xEp = xEp;
@@ -127,6 +130,7 @@ void WZband_free(Band *wzband) {
     free( (WZBand *) wzband );
     return;
 }
+/** \endcond */
 
 #ifdef _DEBUG
 #include <stdio.h>
