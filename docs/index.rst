@@ -11,6 +11,7 @@ Welcome to OneDQ's documentation!
    :caption: Contents:
 
    QCLayers
+   Material
    OneDQuantum
    clib/filelist
 

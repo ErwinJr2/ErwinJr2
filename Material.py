@@ -29,17 +29,43 @@ VARSH  = True
 bandBaseln = 0.22004154
 
 class Material(object):
-    """Creat an semiconductor material class as data collection of its
-    parameters. """
+    """A semiconductor material class that stores material parameters
+    
+    Parameters
+    ----------
+    Name : str
+        Name of material
+    Temperature : int
+        Temperature of the material
+
+    """
     def __init__(self, Name, Temperature=300):
+        """
+        
+        Yields
+        ------
+        type : str
+            Type of the material
+        
+        """
         self.name = Name
         self.parm = MParm[self.name].copy()
         self.type = self.parm.pop("Crystal")
         self.set_temperature(Temperature)
 
     def set_temperature(self, Temperature):
-        """ Set Temperature of the material and update related parameters: 
-        lattice consant and band gap. """
+        """ 
+        Set Temperature of the material and update related parameters: 
+        lattice consant and band gap.
+        
+        Yields
+        ------
+        T : int
+            Updated temperature
+        parm : dict
+            lattice constant and band gap in this dictionary are updated
+
+        """
         self.T = Temperature
         for k in self.parm:
             if k.endswith("lc") and k+"_T" in self.parm:
@@ -58,8 +84,28 @@ class Material(object):
                 self.parm['Eg'+pt] = MParm[self.name]['Eg'+pt] + Varsh
 
     def set_strain(self, a_parallel):
-        """Update parameters' dependence on strain, according to Pikus-Bir 
-        interaction. The input is the lattice constant of the substrate. """
+        """
+        Update parameters' dependence on strain, according to Pikus-Bir 
+        interaction.
+
+        Parameters
+        ----------
+        a_parallel : float
+            lattice constant of the substrate
+        
+
+        Yields
+        ------
+        eps_parallel : float
+            Strain tensor within/parallel to the layer plane
+        a_perp : float
+            Lattice const. perpendicular to the layer plane
+        eps_perp : float
+            Strain tensor perpendicular to the layer plane
+        parm : dict
+            Update parameters' dependence on strain
+            
+        """
         # TODO: crystal with more than one lattice constant? 
         # eps_parallel: strain tensor within/parallel to the layer plane
         self.eps_parallel = a_parallel / self.parm["alc"] - 1
@@ -100,8 +146,19 @@ class Material(object):
                                 - bandBaseln)
 
 class Alloy(Material):
-    """Creat an alloy of material with mole fraction x, 
-    x denotes to the first composition Mole fraction defined in AParm"""
+    """
+    An alloy of material with mole fraction $x$ 
+
+    Parameters
+    ----------
+    Name : str
+        Name of the alloy
+    x : float
+        The first composition's Mole fraction defined in AParm
+    Temperature : int
+        Temperature of the alloy
+
+    """
     def __init__(self, Name, x, Temperature=300):
         self.name = Name
         self.comp = AParm[self.name]["composition"]
@@ -114,15 +171,35 @@ class Alloy(Material):
         self.set_molefrac(x)
 
     def set_temperature(self, Temperature):
-        """ Set Temperature of the material and update related parameters: 
-        lattice consant and band gap. """
+        """ 
+        Set Temperature of the alloy and update related parameters, 
+        lattice consant and band gap, by updating the temperature of the
+        materials in the alloy
+
+
+        Yields
+        ------
+        T : int
+            Updated temperature
+        """
         self.T = Temperature
         self.A.set_temperature(self.T)
         self.B.set_temperature(self.T)
 
     def set_molefrac(self, x):
-        """Update parameters of the alloy with Mole fraction x, 
-        x denotes to the first composition Mole fraction defined in AParm"""
+        """
+        Update parameters of the alloy with Mole fraction x
+
+        Parameters
+        ----------
+        x : float
+            The first composition's Mole fraction defined in AParm
+
+        Yields
+        ------
+        parm : dict
+            stores the parameter of the alloy
+        """
         self.parm = {}
 
         # For the Gamma band gap bowing in AlxGa1-xAs and AlxGa1-xSb
