@@ -2,7 +2,8 @@
  *
  * \file
  *
- * \brief Compute thermodynamic statistics
+ * Compute thermodynamic statistics given eigen energy and wavefunctions
+ * for ??? systems.
  *
  *
  */
@@ -19,22 +20,32 @@
 extern "C" {
 #endif
 
-#define NEWTON 1E-5 /**< Newton's method stopping limit */
+#define NEWTON 1E-5 /**< Newton's method stopping limit. Default = 1E-5 */
 
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif 
  
 /**
- * \brief T=0 Fermi-Dirac distribution. Fermi energy -> electron density
  *
- * T=0 Fermi-Dirac distribution, given Fermi energy
- * output electron density in eDensity (unit Angstrom^-3)	 
- * and return sheet density (unit Angstrom^-2)
+ * Given Fermi energy EF, this function
+ * outputs electron density in eDensity (unit Angstrom^-3)
+ * and return sheet density (unit Angstrom^-2).
+ *
+ * Assumes Fermi-Dirac distribution at zero temperature.
+ *
+ * \param[in] EF Fermi energy
+ * \param[in] *EigenEs Eigen energy
+ * \param[in] EN number of eigen energies provided
+ * \param[in] *m effective mass
+ * \param[in] *psis wavefunctions for the given eigen energies
+ * \param[in] N number of steps
+ * \param[in] step step size
+ * \param[in] *eDensity (output) electron density (unit Angstrom^-3)
  */
 double FermiDirac0(double EF, const double *EigenEs, numpyint EN, 
 		const double *m, const double* psis, numpyint N, double step, 
-		double* eDensity) {
+		double *eDensity) {
         int i;
        	double sheetDensity = 0;
 	/* double beta = 1/(kb*T); */
@@ -73,11 +84,21 @@ __declspec(dllexport)
 #endif
  
 /**
- * \brief T=0 Fermi-Dirac distribution. Sheet density -> Fermi energy
  *
- * T=0 Fermi-Dirac distribution, given sheet density
- * output electron density in eDensity (unit Angstrom^-3)
- * and return EF
+ * Given sheet density (unit Angstrom^-2), 
+ * outputs electron density in eDensity (unit Angstrom^-3)
+ * and returns Fermi energy EF.
+ *
+ * Assumes Fermi-Dirac distribution at zero temperature.
+ *
+ * \param[in] sheet sheet density (unit Angstrom^-2)
+ * \param[in] *EigenEs Eigen energy
+ * \param[in] EN number of eigen energies provided
+ * \param[in] *m effective mass
+ * \param[in] *psis wavefunctions for the given eigen energies
+ * \param[in] N number of steps
+ * \param[in] step step size
+ * \param[in] *eDensity (output) electron density (unit Angstrom^-3)
  */
 double FermiDirac0N(double sheet, const double *EigenEs, numpyint EN, 
 		const double *m, const double* psis, numpyint N, double step, 
