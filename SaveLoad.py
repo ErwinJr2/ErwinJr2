@@ -6,7 +6,21 @@ import sys, json
 import numpy as np
 
 def qclLoad(fhandle):
-    """ Load QCLayers from a json file """
+    """
+    Load QCLayers from a json file
+
+    Parameters
+    ----------
+    fhandle : file handle
+        file handle of a json file to read in
+
+    Examples
+    --------
+    >>> import SaveLoad
+    >>> with open("path/to/file.json") as f:
+    >>>     qcl = SaveLoad.qclLoad(f)
+
+    """
     ldict = json.load(fhandle)
     if ldict["FileType"] != "ErwinJr2 Data File":
         raise TypeError("Wrong file type")
@@ -53,7 +67,16 @@ JSONTemplate = """{
     }
 }"""
 def qclSaveJSON(fhandle, qclayers):
-    "Save file with filename as json"
+    """
+    Save QCLayers as a json file
+
+    Parameters
+    ----------
+    fhandle : file handle
+        File handle of a json file to save to.
+    qclayers : QCLayers.QCLayers
+        The QCLayers class to be saved.
+    """
     if not isinstance(qclayers, QCLayers):
         raise TypeError("qclSave: Nothing to save.."
                         "QCLayers not valid type")

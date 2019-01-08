@@ -16,6 +16,15 @@
 #    semiconductors. physica, 34(1), 149-154
 # ===========================================================================
 
+"""
+This module contains:
+
+* **Material** class;
+* **Alloy** class (inherited from Material class);
+* **MParm** dictionary, which stores constants for different materials
+* **AParm** dictionary, which stores constants for different alloys
+"""
+
 from warnings import warn
 # TODO: add warning for problematic datas
 from numpy import sqrt
