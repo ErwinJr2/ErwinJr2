@@ -44,12 +44,12 @@ __declspec(dllexport)
 
 /**
  * 
- * An ODE solver for -d/dx(hbar^2/(2*m(x)) * d/dx y(x)) + V(x) * y = E * y(x)
- * with starting x0 and y0, y1, ends at x0 + step*N
+ * An ODE solver for \f$ -\frac{d}{dx}(\frac{\hbar^2}{2m(x)} \frac{dy(x)}{dx}) + V(x) y(x) = E y(x) \f$
+ * with starting x0 and y0, y1, ends at x0 + N*step
  * using Numerov's method.
  * No normalization imposed.
  *
- * \param[in] step step size
+ * \param[in] step \f$ \Delta x \f$, stepsize
  * \param[in] N number of steps
  * \param[in] y0 value of y at x0
  * \param[in] y1 value of y at x0 + step
