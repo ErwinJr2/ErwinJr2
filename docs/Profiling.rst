@@ -1,7 +1,7 @@
 Profiling
 =========
 
-The following block of code is profiled by cProfile.
+The following block of code is profiled by cProfile:
 
 .. code-block:: python
    :linenos:
@@ -17,10 +17,38 @@ The following block of code is profiled by cProfile.
    qcl.FoM(19, 15)
 
 
+where *16um.json* is the following file:
+
+.. code-block:: json
+   :linenos:
+
+   {
+       "FileType": "ErwinJr2 Data File", 
+       "Version": "181107", 
+       "Description": "16 um AlGaAs QCL", 
+       "Substrate": "GaAs", 
+       "EField": 25.0, 
+       "x resolution": 0.5, 
+       "E resolution": 0.01, 
+       "Solver": "ODE", 
+       "Temperature": 300.0, 
+       "Repeats": 3, 
+       "Materials": {
+           "Compostion": ["AlGaAs", "AlGaAs"], 
+           "Mole Fraction": [0.0, 0.33]
+       }, 
+       "QC Layers": {
+           "Material": [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1], 
+           "Width": [34.5, 29.5, 36.5, 30.0, 32.0, 30.0, 28.0, 30.0, 25.0, 25.0, 22.5, 25.0, 20.5, 25.0, 19.0, 20.0, 17.5, 15.0, 16.0, 20.0, 15.0, 16.5, 70.0, 5.5, 49.0, 10.0, 46.0, 38.0], 
+           "Doping": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 
+           "Active Region": [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true]
+       }
+   }
+  
 
 
-Before optimizing code performamce, there are 814603 function calls in 52.102
-seconds. The output of cProfile sorted by cumulative time is listed in the
+Before optimizing code performamce, there are 814603 function calls taking 52.102
+seconds in total. The output of cProfile sorted by cumulative time is listed in the
 following table.
 
 
@@ -113,8 +141,8 @@ following table.
 
 
 
-After optimizing code performance, there are 3613 function calls in 31.973
-seconds. The output of cProfile sorted by cumulative time is listed in the
+After optimizing code performance, there are 3613 function calls taking 31.973
+seconds in total. The output of cProfile sorted by cumulative time is listed in the
 following table.
 
 
