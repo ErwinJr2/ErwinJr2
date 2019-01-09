@@ -22,4 +22,4 @@ if __name__ == "__main__":
         qcl.populate_x()
         qcl.solve_whole()
         qcl.dipole(19, 15)
-        qcl.FoM(19, 15)
+        qcl.calc_FoM(19, 15)
