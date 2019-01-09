@@ -1,13 +1,11 @@
 Python Interface of C code
 =============================
 
+We provide a Python interface of the one-dimensional Schrodinger
+equation solver in C. 
+
 .. currentmodule:: OneDQuantum
 .. autosummary::
-   :toctree: generated/
-
-   OneDMaxwell
-   OneDSchrodinger
-   OneDThermal
 
 .. toctree::
    :maxdepth: 2
