@@ -1,7 +1,7 @@
 Profiling
 =========
 
-The following block of code is profiled by cProfile:
+The following block of code is profiled by :py:mod:`cProfile`:
 
 .. code-block:: python
    :linenos:
@@ -48,8 +48,8 @@ where *16um.json* is the following file:
 
 
 Before optimizing code performamce, there are 814603 function calls taking 52.102
-seconds in total. The output of cProfile sorted by cumulative time is listed in the
-following table.
+seconds in total. The output of :py:mod:`cProfile` sorted by cumulative time is
+listed in the following table.
 
 
 
@@ -142,8 +142,8 @@ following table.
 
 
 After optimizing code performance, there are 3613 function calls taking 31.973
-seconds in total. The output of cProfile sorted by cumulative time is listed in the
-following table.
+seconds in total. The output of :py:mod:`cProfile` sorted by cumulative time is
+listed in the following table.
 
 
 =========  =======  =======  =======  ======= ===============================================================
