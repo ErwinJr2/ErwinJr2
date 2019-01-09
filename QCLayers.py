@@ -400,13 +400,15 @@ class QCLayers(object):
         mass = m0 * sqrt(np.sum(self.xMc * psi_i**2 * self.xres)
                          * np.sum(self.xMc * psi_j**2 * self.xres))
         kl = sqrt(2 * mass / hbar**2 * (Ei-Ej-hwLO) * e0)
-        dIij = np.empty(self.xPoints.size)
-        for n in range(self.xPoints.size):
-            x1 = self.xPoints[n]
-            x2 = self.xPoints
-            dIij[n] = np.sum(psi_i * psi_j * exp(-kl * abs(x1 - x2)*1e-10)
-                             * psi_i[n] * psi_j[n] * self.xres**2)
-        Iij = np.sum(dIij)
+        #  dIij = np.empty(self.xPoints.size)
+        #  for n in range(self.xPoints.size):
+        #      x1 = self.xPoints[n]
+        #      x2 = self.xPoints
+        #      dIij[n] = np.sum(psi_i * psi_j * exp(-kl * abs(x1 - x2)*1e-10)
+        #                       * psi_i[n] * psi_j[n] * self.xres**2)
+        #  Iij = np.sum(dIij)
+        Iij = onedq.OneDSchrodinger.cLOphononScatter(self.xres, kl, 
+                                                     psi_i, psi_j)
         epsInf = np.array([a.parm["epsInf"] for a in self.mtrlAlloys])
         epss = np.array([a.parm["epss"] for a in self.mtrlAlloys])
         epsrho = 1 / (1/epsInf - 1/epss)
