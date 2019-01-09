@@ -1,8 +1,9 @@
 OneDQuantum C Library and Python Interface
 ==========================================
 
-In the C part of the software we are going to implement numerical computation
-related to solving 1D Schrodinger's equations. We also provide a Python interface.
+The C library solves 1D quantum problem and the related thermal
+and electrical problems. A Python interface for the C library is
+also included in this package.
 
 
 Numerically solving 1D Schrodinger's Equation
