@@ -1,15 +1,12 @@
 OneDQuantum C Library and Python Interface
 ==========================================
 
-OneDQuantum C Library
----------------------
-
 In the C part of the software we are going to implement numerical computation
-of the following problems. 
+related to solving 1D Schrodinger's equations. We also provide a Python interface.
 
 
 Numerically solving 1D Schrodinger's Equation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------------------------
 
 The time-independent Schrodinger equation has the form
 
@@ -29,17 +26,25 @@ and the Numerov's method that solving for the corresponding eigenfunction
 :math:`\psi(x)` given any specific :math:`E`. 
 
 Algorithm
-^^^^^^^^^
+---------
+
 #. Initialize with a range for eigen energies. 
 #. For each possible eigen energy, solve for the wavefunction using the
    Numerov's method for second order differential equations, and check
    whether the solution satisfies boundary condition. If so, the energy
    is an eigen energy.
-#. Use Newton's method to find eigen energy. The derivative is estimated by finite difference.
+#. Use Newton's method to find eigen energy. The derivative is estimated 
+   by finite difference.
 
+In this C library, the Schrodinger equation solver is implemented
+in :doc:`clib/file/1DSchrodinger_8c`. The Python interface is implemented in
+:doc:`OneDSchrodinger`.
+An example of solving simple Schrodinger equation can be found 
+:ref:`here<example_schrodinger>`.
 
 Effective mass in band 
-^^^^^^^^^^^^^^^^^^^^^^
+----------------------
+
 Band theory predicts that movement of particle in a potential over long
 distance can be very different from the movement of the same particle in
 vacuum. Usually, the movement is complicated; however, when the electron is
@@ -54,7 +59,8 @@ the band structure can be expanded locally as
 .. math:: 
 
    E(k) \approx E_0 + \frac{\hbar^2 k^2}{2 m_\text{eff}},
-   \frac{1}{m_\text{eff}} \equiv \frac{2}{\hbar^2}\frac{\partial^2 E}{\partial k^2}
+   \frac{1}{m_\text{eff}} \equiv \frac{2}{\hbar^2}\frac{\partial^2 E}
+   {\partial k^2}
 
 where :math:`k` is the wave vector, and :math:`E_0` is the edge energy of the band. 
 
@@ -66,7 +72,7 @@ solver and also non-parabolic effective mass computed using
 :math:`k\cdot p` method. 
 
 Self-consistency solver for potential correction
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------------------
 
 Electron-electron Coulomb interaction can be a determinant part of electron
 motion in semiconductors. To the first order this interaction is included by
@@ -82,8 +88,15 @@ equations self-consistently.
 which means that the potential depends on the 
 eigenstates as well as the corresponding occupation number :math:`n_i`.
 
+In this C library, the Maxwell-Poisson equation solver is implemented
+in :doc:`clib/file/1DMaxwell_8c`. The Python interface is implemented in
+:doc:`OneDMaxwell`.
+An example comparing the results from solving the simple Schrodinger equation 
+and from solving the equation with the electron-electron interaction correction
+can be found :ref:`here<example_maxwell>`.
+
 Electron thermal distributions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------
 
 The 1D Schrodinger's equation solver provides the energy bands, which are
 useful for calculations of physical properties of the material. Here, we
@@ -108,15 +121,16 @@ At high temperature, Fermi-Dirac statistics approaches Maxwell-Boltzmann distrib
 
 
 In this package, we provide the zero- and finite-temperature computation of
-the Fermi-Dirac distribution (Eq.~(\ref{eq:zero_temp}) and
-(\ref{eq:finite_temp}) respectively),
-and the high-temperature approximation with the Boltzmann distribution
-(Eq.~(\ref{eq:boltzmann})). All distributions will have two methods, giving
+the Fermi-Dirac statistics, and the high-temperature approximation with the 
+Maxwell-Boltzmann distribution. All distributions will have two methods, giving
 constant chemical potential :math:`\mu` distribution and return total number of
 particles :math:`\sum n_i`, and given total number of particles :math:`\sum n_i` and
 return chemical potential :math:`\mu`.
 
-Python Interface
-----------------
+In this C library, the thermal statistics solver is implemented
+in :doc:`clib/file/1DThermal_8c`. The Python interface is implemented in
+:doc:`OneDThermal`.
+An example of finding the thermal distribution of electrons, 
+given eigen energies and wavefunctions,
+can be found :ref:`here<example_thermal>`.
 
-We provide a Python interface for the OneDQuantum C library. 
