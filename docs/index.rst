@@ -29,6 +29,7 @@ and periodic quantum wells.
    :caption: Developer
 
    code_struct
+   Profiling
    QCLayers
    Material
    SaveLoad
