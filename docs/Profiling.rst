@@ -22,7 +22,7 @@ listed in the following table.
 =========  =======  =======  =======  ======= ===============================================================
    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
 =========  =======  =======  =======  ======= ===============================================================
-        1    0.000    0.000   10.803   10.803 QCLayers.py:425(FoM)
+        1    0.000    0.000   10.803   10.803 QCLayers.py:425(calc_FoM)
        35    9.742    0.278   10.803    0.309 QCLayers.py:383(loTransition)
         2    0.000    0.000   10.449    5.224 QCLayers.py:419(loLifeTime)
         2    0.000    0.000   10.449    5.224 QCLayers.py:422(<listcomp>)
@@ -55,7 +55,7 @@ following table.
 =========  =======  =======  =======  ======= ===============================================================
    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
 =========  =======  =======  =======  ======= ===============================================================
-        1    0.000    0.000    1.205    1.205 QCLayers.py:427(FoM)
+        1    0.000    0.000    1.205    1.205 QCLayers.py:427(calc_FoM)
        35    0.003    0.000    1.205    0.034 QCLayers.py:383(loTransition)
        30    1.199    0.040    1.199    0.040 OneDSchrodinger.py:113(cLOphononScatter)
         2    0.000    0.000    1.166    0.583 QCLayers.py:421(loLifeTime)
