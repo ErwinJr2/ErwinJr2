@@ -19,13 +19,14 @@ This is a extendable Python/C program for 1D quantum problem and Quantum Cascade
 - [ ] ?Add a linear algebra solver using BLAS and/or Lapack
 - [ ] ?NEGF solver
 - [ ] Add scattering: acoustic phonon, interface roughness, ionized impurity
-- [ ] Finite temperature Fermi-Dirac distribution
+- [X] Finite temperature Fermi-Dirac distribution
 - [X] QCLayer class
 - [X] Save/Load using json
 - [ ] setup.py update
 - [ ] Test case improve
-- [ ] Documents
-- [ ] Profile
+- [X] Documents
+- [X] Profile
 - [X] ?Travis CI automatic testing
 - [ ] ?coveralls.io
+- [ ] ?codacy
 - [ ] ?CFFI or SWIG
