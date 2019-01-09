@@ -126,10 +126,10 @@ class QuantumTab(QWidget):
         self.stateHolder = []
         self.pairSelected = False
         # plotType can be mode, wf or DoS (TODO)
-        self.plotType = "wf"
-        #  self.plotType = "mode"
-        self.fillplot = 0.3  # alpha of fill; False for not fill
-        #  self.fillplot = False
+        #  self.plotType = "wf"
+        self.plotType = "mode"
+        #  self.fillplot = 0.3  # alpha of fill; False for not fill
+        self.fillplot = False
 
         # Platform dependent settings, eg. layerout size settings
         if sys.platform.startswith('win'):
@@ -1060,6 +1060,17 @@ class QuantumTab(QWidget):
             self.plotSO = False
         else:
             self.plotSO = True
+        self.update_quantumCanvas()
+
+    def set_plotwf(self):
+        self.plotType = 'wf' if self.plotType != 'wf' else 'mode'
+        self.update_quantumCanvas()
+
+    def set_fill(self):
+        if self.fillplot:
+            self.fillplot = False
+        else:
+            self.fillplot=0.3
         self.update_quantumCanvas()
 
 

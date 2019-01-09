@@ -183,10 +183,20 @@ class MainWindow(QMainWindow):
             "Split Off Valence Band",
             checkable=True, ischecked=self.qtab.plotSO,
             slot=self.qtab.view_SOBand)
+        plotwf = self.create_action(
+            "Plot Wave function", 
+            checkable=True, ischecked=self.qtab.plotType == 'wf', 
+            slot=self.qtab.set_plotwf)
+        plotFill = self.create_action(
+            "Fill wave function curve", 
+            checkable=True, ischecked=self.qtab.fillplot, 
+            slot=self.qtab.set_fill)
         self.add_actions(self.view_menu, (VXBandAction,
                                           VLBandAction,
                                           LHBandAction,
-                                          SOBandAction))
+                                          SOBandAction, 
+                                          None, 
+                                          plotwf, plotFill))
 
         # help menu
         self.help_menu = self.menuBar().addMenu("&Help")
