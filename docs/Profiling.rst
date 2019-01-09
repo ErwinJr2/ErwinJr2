@@ -3,49 +3,15 @@ Profiling
 
 The following block of code is profiled by :py:mod:`cProfile`:
 
-.. code-block:: python
-   :linenos:
+.. literalinclude:: ../tool/profQCLayers.py
+   :language: python
 
-   with open("../example/16um.json") as f:
-       qcl = SaveLoad.qclLoad(f)
-
-   qcl.layerSelected = 3
-   qcl.NonParabolic = False
-   qcl.populate_x()
-   qcl.solve_whole()
-   qcl.dipole(19, 15)
-   qcl.FoM(19, 15)
 
 
 where *16um.json* is the following file:
 
-.. code-block:: json
-   :linenos:
-
-   {
-       "FileType": "ErwinJr2 Data File", 
-       "Version": "181107", 
-       "Description": "16 um AlGaAs QCL", 
-       "Substrate": "GaAs", 
-       "EField": 25.0, 
-       "x resolution": 0.5, 
-       "E resolution": 0.01, 
-       "Solver": "ODE", 
-       "Temperature": 300.0, 
-       "Repeats": 3, 
-       "Materials": {
-           "Compostion": ["AlGaAs", "AlGaAs"], 
-           "Mole Fraction": [0.0, 0.33]
-       }, 
-       "QC Layers": {
-           "Material": [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1], 
-           "Width": [34.5, 29.5, 36.5, 30.0, 32.0, 30.0, 28.0, 30.0, 25.0, 25.0, 22.5, 25.0, 20.5, 25.0, 19.0, 20.0, 17.5, 15.0, 16.0, 20.0, 15.0, 16.5, 70.0, 5.5, 49.0, 10.0, 46.0, 38.0], 
-           "Doping": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 
-           "Active Region": [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true]
-       }
-   }
-  
-
+.. literalinclude:: ../example/16um.json
+   :language: json
 
 
 Before optimizing code performamce, there are 814603 function calls taking 10.835
