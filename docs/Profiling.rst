@@ -22,7 +22,6 @@ listed in the following table.
 =========  =======  =======  =======  ======= ===============================================================
    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
 =========  =======  =======  =======  ======= ===============================================================
-   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
         1    0.000    0.000   10.803   10.803 QCLayers.py:425(FoM)
        35    9.742    0.278   10.803    0.309 QCLayers.py:383(loTransition)
         2    0.000    0.000   10.449    5.224 QCLayers.py:419(loLifeTime)
