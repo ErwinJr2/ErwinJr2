@@ -1,12 +1,15 @@
 OneDQuantum C Library and Python Interface
 ==========================================
 
+OneDQuantum C Library
+---------------------
+
 In the C part of the software we are going to implement numerical computation
 of the following problems. 
 
 
 Numerically solving 1D Schrodinger's Equation
------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The time-independent Schrodinger equation has the form
 
@@ -20,14 +23,23 @@ effective mass :math:`m`, and an eigenstate range specified by the user,
 :math:`\left[E_\text{min}, E_\text{max}\right]`. The outputs are the eigenfunction,
 :math:`\psi`, and the eigenvalue, :math:`E`.
 
-We will implement two methods of solving the 1D Schrodinger's equation. The
-first method combines the Newton's method that searches for eigenvalues :math:`E`
+We solve the 1D Schrodinger's equation numerically. Our
+method combines the Newton's method that searches for eigenvalues :math:`E`
 and the Numerov's method that solving for the corresponding eigenfunction
-:math:`\psi(x)` given any specific :math:`E`. The second method diagonalizes the
-Hamiltonian directly using linear algebra.
+:math:`\psi(x)` given any specific :math:`E`. 
+
+Algorithm
+^^^^^^^^^
+#. Initialize with a range for eigen energies. 
+#. For each possible eigen energy, solve for the wavefunction using the
+   Numerov's method for second order differential equations, and check
+   whether the solution satisfies boundary condition. If so, the energy
+   is an eigen energy.
+#. Use Newton's method to find eigen energy. The derivative is estimated by finite difference.
+
 
 Effective mass in band 
-----------------------
+^^^^^^^^^^^^^^^^^^^^^^
 Band theory predicts that movement of particle in a potential over long
 distance can be very different from the movement of the same particle in
 vacuum. Usually, the movement is complicated; however, when the electron is
@@ -53,8 +65,8 @@ dependence.  In this package, we will offer constant effective mass as simple
 solver and also non-parabolic effective mass computed using 
 :math:`k\cdot p` method. 
 
-Self-consistency solver
------------------------
+Self-consistency solver for potential correction
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Electron-electron Coulomb interaction can be a determinant part of electron
 motion in semiconductors. To the first order this interaction is included by
@@ -71,7 +83,7 @@ which means that the potential depends on the
 eigenstates as well as the corresponding occupation number :math:`n_i`.
 
 Electron thermal distributions
-------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The 1D Schrodinger's equation solver provides the energy bands, which are
 useful for calculations of physical properties of the material. Here, we
@@ -103,3 +115,8 @@ and the high-temperature approximation with the Boltzmann distribution
 constant chemical potential :math:`\mu` distribution and return total number of
 particles :math:`\sum n_i`, and given total number of particles :math:`\sum n_i` and
 return chemical potential :math:`\mu`.
+
+Python Interface
+----------------
+
+We provide a Python interface for the OneDQuantum C library. 
