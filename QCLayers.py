@@ -404,7 +404,7 @@ class QCLayers(object):
         for n in range(self.xPoints.size):
             x1 = self.xPoints[n]
             x2 = self.xPoints
-            dIij[n] = np.sum(psi_i * psi_j * exp(-kl * abs(x1 - x2)*1e10)
+            dIij[n] = np.sum(psi_i * psi_j * exp(-kl * abs(x1 - x2)*1e-10)
                              * psi_i[n] * psi_j[n] * self.xres**2)
         Iij = np.sum(dIij)
         epsInf = np.array([a.parm["epsInf"] for a in self.mtrlAlloys])
