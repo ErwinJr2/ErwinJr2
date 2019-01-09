@@ -14,6 +14,11 @@ def qclLoad(fhandle):
     fhandle : file handle
         file handle of a json file to read in
 
+    Returns
+    -------
+    qclayers : QCLayers.QCLayers
+        The QCLayers class described in the json file
+
     Examples
     --------
     >>> import SaveLoad
