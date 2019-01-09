@@ -1255,7 +1255,7 @@ class QuantumTab(QWidget):
 
         tauUpper = self.qclayers.loLifeTime(upper)
         tauLower = self.qclayers.loLifeTime(lower)
-        FoM = self.qclayers.FoM(upper, lower)
+        FoM = self.qclayers.calc_FoM(upper, lower)
         # tauUpperLower is the inverse of transition rate (lifetime)
         self.alphaISB = self.qclayers.alphaISB(upper, lower)
 

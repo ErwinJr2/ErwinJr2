@@ -424,7 +424,7 @@ class QCLayers(object):
         rate = [self.loTransition(state, q) for q in range(state)]
         return 1/sum(rate)
 
-    def FoM(self, upper, lower):
+    def calc_FoM(self, upper, lower):
         tauLower = self.loLifeTime(lower)
         tauUpper = self.loLifeTime(upper)
         tauUpperLower = 1/self.loTransition(upper, lower)
