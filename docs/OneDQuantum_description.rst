@@ -95,7 +95,6 @@ At high temperature, Fermi-Dirac statistics approaches Maxwell-Boltzmann distrib
     n_i \stackrel{k_BT\gg E-\mu}{=} \exp\left(-\frac{E-\mu}{k_BT}\right).
 
 
-
 In this package, we provide the zero- and finite-temperature computation of
 the Fermi-Dirac distribution (Eq.~(\ref{eq:zero_temp}) and
 (\ref{eq:finite_temp}) respectively),
