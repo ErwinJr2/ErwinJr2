@@ -1,3 +1,12 @@
+/**
+ * \file
+ * 
+ * \brief Solve 1D Schrodinger equation.
+ *
+ *
+ */
+
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -9,18 +18,20 @@
 #include "science.h"
 #include "band.h"
 
-#define NEWTON 1E-3 
-/* Newton's method stopping limit */
-#define NSTEP 1E-10
-/* NSTEP (unit eV) is the step size to numerically calculate  
- * the derivative for Newton's method. 
+/** Newton's method stopping limit. Default value = 1E-5 */
+#define NEWTON_S 1E-5 
+/** 
+ * NSTEP (unit eV) is the step size to numerically calculate 
+ * the derivative for Newton's method. Default value = 1E-10.
+ *
  * Optimum step size = (6*epsilon/M3)^(1/3) 
  * where epsilon is numerical error of yend(E) and M3 is maximum yend'''(E)
  * Because of the exponantial behavior when V>E, yend is very sensitive 
  * to E near EigenE. M3 is very large. 
  * Still, it's recommanded to make high V side the starting point
  */
-#define Y_EPS 0.1 /* Default starting point for Numerov */
+#define NSTEP 1E-10
+#define Y_EPS 0.1 /**< Starting point for ode solver. Default value = 0.1 */
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,24 +41,40 @@ extern "C" {
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif 
-double Numerov(double step, numpyint N, double y0, double y1, 
+
+/**
+ * 
+ * An ODE solver for \f$ -\frac{d}{dx}(\frac{\hbar^2}{2m(x)} \frac{dy(x)}{dx}) + V(x) y(x) = E y(x) \f$
+ * with starting x0 and y0, y1, ends at x0 + N*step
+ * using Numerov's method.
+ * No normalization imposed.
+ *
+ * \param[in] step \f$ \Delta x \f$, stepsize
+ * \param[in] N number of steps
+ * \param[in] y0 value of y at x0
+ * \param[in] y1 value of y at x0 + step
+ * \param[in] E energy, unit eV
+ * \param[in] *V V[n] is the potential at x = x0 + n*step
+ * \param[in] *m m[n] is the effective mass at x = x0 + n*step. m is in unit m0
+ *              (free electron mass)
+ * \param[out] *y (output) value of y at x = x0 + n*step
+ */
+inline double ode(double step, numpyint N, double y0, double y1, 
 		double E, const double *V, const double *m, double *y) {
-	/* An ODE solver for -hbar^2/(2*m(x)) * y''(x) + V(x) * y = E * y(x)
-	 * with starting x0 and y0, y1, ends at x0 + step*N (x0 label 0)
-	 * using Numerov algorithm
-	 * E and V are in unit eV, m are in unit m0 (free electron mass)
-	 * Don't normalize
-	 * V[n] and m[n] means potential and effectice mass at x = x0 + n*step
-	 * return y(x+N*step), put y result in *y
-	 */
 	int n; 
 	y[0] = y0;
 	y[1] = y1;
 	const double unit = 2*m0/sq(hbar)*e0*sq(ANG*step);
 	for (n = 1; n < N-1; n++) {
+		/* Numerov's method, step error O(step^6) */
+		/* is bad for m is in the middle of derivative TODO*/
 		y[n+1] = (2 * y[n] * (1.0 - 5.0/12 * ( E - V[n]) * unit * m[n]) 
-			 - y[n-1] * (1.0 + 1.0/12 * (E - V[n-1]) * unit * m[n])) 
-			/ (1.0 + 1.0/12 * (E - V[n+1]) * unit * m[n]);
+				- y[n-1] * (1.0 + 1.0/12 * (E - V[n-1]) * unit * m[n-1])) 
+			/ (1.0 + 1.0/12 * (E - V[n+1]) * unit * m[n+1]);
+		/* double mmp = (m[n]/m[n+1] - m[n]/m[n-1])/4; [> m*(1/m)' to O(^3)<] */
+		/* Simple Euler's method, setp error O(step^4) */
+		/* y[n+1] = (-(E-V[n])*unit*m[n]*y[n] +
+		         2*y[n] - (1-mmp)*y[n-1])/(1 + mmp); */
 	}
 	return y[N-1];
 }
@@ -55,22 +82,44 @@ double Numerov(double step, numpyint N, double y0, double y1,
 
 #ifdef _WINDLL
 __declspec(dllexport)
-#endif 
+#endif
+ 
+/** 
+ * Fill in wavefunctions in psis accroding to eigen energy in EigenEs. 
+ * psi + i*N*sizeof(double) is the wavefunction with Energy EigenEs[i] 
+ * The result is normalized to 1 (so psi is unit sqrt(Angstrom^-1)
+ * 
+ * \param[in] step step size
+ * \param[in] N number of steps
+ * \param[in] *EigenEs list of eigen energies
+ * \param[in] EN number of eigen energies we consider
+ * \param[in] *V V[n] is the potential at x = x0 + n*step
+ * \param[in] *m m[n] is the effective mass at x = x0 + n*step, in unit m0
+ *               (free electron mass)
+ * \param[out] *psis (output) 
+ *                   psi + i*N*sizeof(double) is the 
+ *                   wavefunction with energy EigenEs[i].
+ */
 void SimpleFillPsi(double step, numpyint N, const double *EigenEs,
 		numpyint EN, const double *V, const double *m, double* psis) {
-	/* Fill in wavefunctions in psis accroding to eigen energy in EigenEs. 
-	 * psi + i*N*sizeof(double) is the wavefunction with Energy EigenEs[i] 
-	 * The result is normalized to 1
-	 */
 	int i; 
 #ifdef __MP
+	#ifdef _DEBUG
+	printf("Start a SimpleFillPsi with openMP.\n");
+	#endif
 	#pragma omp parallel for
 #endif
 	for(i=0; i<EN; i++) {
+#ifdef __MP
+	#ifdef _DEBUG
+		printf("    From thread %d out of %d\n", 
+				omp_get_thread_num(), omp_get_num_threads());
+	#endif
+#endif
 		int j;
 		double* psi = psis + i*N;
 		double modsq = 0;
-		Numerov(step, N, 0.0, Y_EPS, EigenEs[i], V, m, psi);
+		ode(step, N, 0.0, Y_EPS, EigenEs[i], V, m, psi);
 		/* Normalization */
 		for(j=0; j<N; j++) {
 			modsq += sq(psi[j]);
@@ -83,48 +132,63 @@ void SimpleFillPsi(double step, numpyint N, const double *EigenEs,
 	return; 
 }
 
-
-#define findZero(x, y, n) ((y[n]*x[n-1] - y[n-1]*x[n])/ (y[n] - y[n-1]))
-/* Find zero x_n between x[n-1] and x[n] of function y(x), 
+/** 
+ * Find zero x_n between x[n-1] and x[n] of function y(x), 
  * s.t. y(x_n) = 0
- * using linear interpolation (to be improved?)
- * assuming y[n] and y[n-1] is opposite sign
- * return x_n
+ * using linear interpolation, 
+ * i.e assuming y[n] and y[n-1] are of opposite signs and
+ * returning x_n
  */
+#define findZero(x, y, n) ((y[n]*x[n-1] - y[n-1]*x[n])/ (y[n] - y[n-1]))
 
 
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif 
+
+/**
+ * Solve 1D shrodinger's equation with potential V, effective mass m and 
+ * in the region x0 <= x < x0+step*N with zero boundary. 
+ * First scan in energy Es[0:EN] and look for zeros(EigenE) by either 
+ * simple linear interpolation if SIMPLE is defined;
+ * or calculate zero using newton's method if SIMPLE is not defined
+ * Es should be in small to large order
+ *
+ * \param[in] step step size
+ * \param[in] N number of steps
+ * \param[in] *Es initial search range of eigen energy
+ * \param[in] EN number of eigen energy to find
+ * \param[in] *V potential 
+ * \param[in] *m effective mass
+ * \param[out] *EigenE (output) eigen energy
+ *
+ */
 numpyint SimpleSolve1D(double step, numpyint N, 
 		const double *Es, numpyint EN, 
 		const double *V, const double *m, 
 		double *EigenE) {
-	/* Solve 1D shrodinger's equation with potential V, effective mass m and 
-	 * in the region x0 <= x < x0+step*N with zero boundary. 
-	 * First scan in energy Es[0:EN] and look for zeros(EigenE) by either 
-	 *    simple linear interpolation if SIMPLE is defined;
-	 * or calculate zero using newton's method if SIMPLE is not defined
-	 * Es should be in small to large order
-	 */
 	double *yend; 
 	int NofZeros=0;
 	int i;
 
 	yend = (double *)malloc(EN * sizeof(double));
 #ifdef __MP
-	#pragma omp parallel
-	#ifdef __DEBUG
+	#ifdef _DEBUG
 	printf("Start a simpleSolve1D with openMP.\n");
 	#endif
+	#pragma omp parallel
 #endif
 	{
 		double *y = (double *)malloc(N * sizeof(double));
 #ifdef __MP
+	#ifdef _DEBUG
+		printf("    From thread %d out of %d\n", 
+				omp_get_thread_num(), omp_get_num_threads());
+	#endif
 		#pragma omp for
 #endif
 		for(i=0; i<EN; i++) {
-			yend[i] = Numerov(step, N, 0.0, Y_EPS, Es[i], V, m, y);
+			yend[i] = ode(step, N, 0.0, Y_EPS, Es[i], V, m, y);
 		}
 
 #ifdef __MP
@@ -141,23 +205,30 @@ numpyint SimpleSolve1D(double step, numpyint N,
 #ifndef SIMPLE
 			int count=0; 
 			double y0;
-			y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
-			while(fabs(y0) > NEWTON && count < 20){
-				double y1 = Numerov(step, N, 0.0, Y_EPS, E0+NSTEP, V, m, y);
-				double y2 = Numerov(step, N, 0.0, Y_EPS, E0-NSTEP, V, m, y);
+			y0 = ode(step, N, 0.0, Y_EPS, E0, V, m, y);
+			/* Filter singular case */
+			if(fabs(y0) > fabs(yend[i]) || fabs(y0) > fabs(yend[i-1])){
+				continue;
+			}
+			while(fabs(y0) > NEWTON_S && count < 20){
+				double y1 = ode(step, N, 0.0, Y_EPS, E0+NSTEP, V, m, y);
+				double y2 = ode(step, N, 0.0, Y_EPS, E0-NSTEP, V, m, y);
 				double dy = (y1 - y2)/(2*NSTEP);
 				if(y1*y2 < 0) {
-	#ifdef __DEBUG
+	#ifdef _DEBUG
 					printf("  solution error smaller than step at E=%e,"
 							" (count=%d).\n", E0, count);
 	#endif
+					E0 = (E0 + NSTEP)*y0*y2 / ( (y1 - y2)*(y1 - y0) )
+						+ E0*y1*y2 / ( (y0 - y2)*(y0 - y1) )
+						+ (E0 - NSTEP)*y1*y0 / ( (y2 - y0)*(y2 - y1) );
 					break;
 				}
 				E0 -= y0/dy;
-				y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
+				y0 = ode(step, N, 0.0, Y_EPS, E0, V, m, y);
 				count++;
 			}
-	#ifdef __DEBUG
+	#ifdef _DEBUG
 			printf("After %d times Newton, E=%f Err=%e\n", 
 					count, E0, fabs(y0));
 	#endif
@@ -184,19 +255,26 @@ numpyint SimpleSolve1D(double step, numpyint N,
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif 
+/** Same as SimpleFillPsi except for using band related mass */
 void BandFillPsi(double step, numpyint N, const double *EigenEs,
 		numpyint EN, double* psis, const double* V, Band* mat) {
-	/* Same as SimpleFillPsi except for using band related mass */
 	int i; 
-#ifdef __DEBUG
+#ifdef _DEBUG
 	assert(N == mat->N);
 #endif
 #ifdef __MP
+	#ifdef _DEBUG
+	printf("Start a BandFillPsi with openMP.\n");
+	#endif
 	#pragma omp parallel 
 #endif
 	{
 		double* m = (double*)malloc(N*sizeof(double));
 #ifdef __MP
+	#ifdef _DEBUG
+		printf("    From thread %d out of %d\n", 
+				omp_get_thread_num(), omp_get_num_threads());
+	#endif
 		#pragma omp for
 #endif
 		for(i=0; i<EN; i++) {
@@ -205,7 +283,7 @@ void BandFillPsi(double step, numpyint N, const double *EigenEs,
 			double modsq = 0;
 			/*MP assume only mass is updated*/
 			UpdateBand(mat, EigenEs[i], V, m);
-			Numerov(step, N, 0.0, Y_EPS, EigenEs[i], V, m, psi);
+			ode(step, N, 0.0, Y_EPS, EigenEs[i], V, m, psi);
 			/* Normalization */
 			for(j=0; j<N; j++) {
 				modsq += sq(psi[j]);
@@ -225,39 +303,39 @@ void BandFillPsi(double step, numpyint N, const double *EigenEs,
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif 
+/**
+ * Same as SimpleSolve1D except for using band related mass
+ */
 numpyint BandSolve1D(double step, numpyint N, 
 		const double *Es, numpyint EN, const double *V, Band *mat,
 		double *EigenE) {
-	/* Solve 1D shrodinger's equation with potential V, effective mass m and 
-	 * in the region x0 <= x < x0+step*N with zero boundary. 
-	 * First scan in energy Es[0:EN] and look for zeros(EigenE) by either 
-	 *    simple linear interpolation if SIMPLE is not defined;
-	 * or calculate zero using newton's method if SIMPLE is defined
-	 * Es should be in small to large order
-	 */
-	double *yend; 
+       	double *yend; 
 	int NofZeros=0;
 	int i;
 
-#ifdef __DEBUG
+#ifdef _DEBUG
 	assert(N == mat->N);
 #endif
 	yend = (double *)malloc(EN * sizeof(double));
 #ifdef __MP
-	#pragma omp parallel 
-	#ifdef __DEBUG
+	#ifdef _DEBUG
 	printf("Start a BandSolve1D with openMP.\n");
 	#endif
+	#pragma omp parallel 
 #endif
 	{
 		double *y = (double *)malloc(N * sizeof(double));
 		double *m = (double *)malloc(N * sizeof(double));
 #ifdef __MP
+	#ifdef _DEBUG
+		printf("    From thread %d out of %d\n", 
+				omp_get_thread_num(), omp_get_num_threads());
+	#endif
 		#pragma omp for
 #endif
 		for(i=0; i<EN; i++) {
 			UpdateBand(mat, Es[i], V, m);
-			yend[i] = Numerov(step, N, 0.0, Y_EPS, Es[i], V, m, y);
+			yend[i] = ode(step, N, 0.0, Y_EPS, Es[i], V, m, y);
 		}
 
 #ifdef __MP
@@ -275,17 +353,21 @@ numpyint BandSolve1D(double step, numpyint N,
 				int count=0; 
 				double y0;
 				UpdateBand(mat, E0, V, m);
-				y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
-				while(fabs(y0) > NEWTON && count < 20){
+				y0 = ode(step, N, 0.0, Y_EPS, E0, V, m, y);
+				/* Filter singular case */
+				if(fabs(y0) > fabs(yend[i]) || fabs(y0) > fabs(yend[i-1])){
+					continue;
+				}
+				while(fabs(y0) > NEWTON_S && count < 20){
 					UpdateBand(mat, E0+NSTEP, V, m);
-					double y1 = Numerov(step, N, 0.0, Y_EPS, E0+NSTEP, 
+					double y1 = ode(step, N, 0.0, Y_EPS, E0+NSTEP, 
 							V, m, y);
 					UpdateBand(mat, E0-NSTEP, V, m);
-					double y2 = Numerov(step, N, 0.0, Y_EPS, E0-NSTEP, 
+					double y2 = ode(step, N, 0.0, Y_EPS, E0-NSTEP, 
 							V, m, y);
 					double dy = (y1 - y2)/(2*NSTEP);
 					if(y1*y2 < 0) {
-	#ifdef __DEBUG
+	#ifdef _DEBUG
 						printf("  solution error smaller than step at E=%e,"
 								" (count=%d).\n", E0, count);
 	#endif
@@ -293,18 +375,18 @@ numpyint BandSolve1D(double step, numpyint N,
 					}
 					E0 -= y0/dy;
 					UpdateBand(mat, E0, V, m);
-					y0 = Numerov(step, N, 0.0, Y_EPS, E0, V, m, y);
+					y0 = ode(step, N, 0.0, Y_EPS, E0, V, m, y);
 					count++;
 				}
-	#ifdef __DEBUG
+	#ifdef _DEBUG
 				printf("After %d times Newton, E=%f Err=%e\n", 
 						count, E0, fabs(y0));
 	#endif
 #endif
-		}
-		else {
-			continue;
-		}
+			}
+			else {
+				continue;
+			}
 #ifdef __MP
 			#pragma omp ordered
 #endif
@@ -324,6 +406,9 @@ numpyint BandSolve1D(double step, numpyint N,
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif
+/**
+ * Calculate the LO phonon scattering rate
+ */
 double LOphononScatter(double step, numpyint N, double kl,
                const double *psi_i, const double *psi_j) {
        double Iij = 0;
@@ -345,6 +430,9 @@ double LOphononScatter(double step, numpyint N, double kl,
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif 
+/**
+ * Checkpoint for python-C interface. Output 137.
+ */
 numpyint invAlpha()
 {return 137;}
 

@@ -2,6 +2,7 @@
 # -*- coding:utf-8 -*-
 import numpy as np
 from ctypes import *
+__all__ = ['Band', 'cUpdateBand']
 _doubleArray = np.ctypeslib.ndpointer(
     dtype=np.float64, ndim=1, flags="C_CONTIGUOUS")
 

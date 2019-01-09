@@ -1,5 +1,31 @@
 *.so
 *.o
+*.dll
+*.exp
+*.ipdb
+*.lib
+*.iobj
+*.pdb
 tags
+VSCache/
+.vs/
+*.vcxproj.user
+*.ilk
 
 __pycache__/
+*.pyc
+
+## compiled files from docs
+*.aux
+*.pdf
+*.toc
+*.fdb_latexmk
+*.out
+*.log
+*.fls
+*.synctex.gz
+*.xdv
+
+## doxygen gnerated file for C code
+OneDQuantum/docs/html/
+OneDQuantum/docs/xml/

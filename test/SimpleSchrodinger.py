@@ -16,7 +16,7 @@ class TestSimpleSchrodinger(unittest.TestCase):
         x = np.linspace(0, xmax, 200)
         mass = 0.067
         step = x[1] - x[0]
-        Es = np.linspace(0, 0.4, 30)
+        Es = np.linspace(0, 0.4, 300)
         V = np.zeros(x.shape)
         EigenEs = cSimpleSolve1D(step, Es, V, mass)
         psis = cSimpleFillPsi(step, EigenEs, V, mass)
@@ -38,7 +38,7 @@ class TestSimpleSchrodinger(unittest.TestCase):
         x = np.linspace(0, xmax, 200)
         step = x[1] - x[0]
         V = F * (xmax - x)
-        Es = np.linspace(0, 0.2, 30)
+        Es = np.linspace(0, 0.2, 300)
         EigenEs = cSimpleSolve1D(step, Es, V, mass)
         psis = cSimpleFillPsi(step, EigenEs, V, mass)
 

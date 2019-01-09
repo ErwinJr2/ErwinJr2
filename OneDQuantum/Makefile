@@ -1,21 +1,35 @@
-CFLAGS += -Ofast -Wall -fPIC
+CFLAGS += -Ofast -Wall -fPIC #-D _DEBUG
 # CC = icc
 # CFLAGS = -march=native -Ofast -gcc-name=gcc-6 -Wall
+
+ifeq ($(OS),Windows_NT)
+    CFLAGS += -D WIN32
+    EXT := dll
+else 
+    UNAME_S := $(shell uname -s)
+    ifeq ($(UNAME_S),Darwin)
+        EXT := dylib
+    else
+        # Assuming linux
+        EXT := so
+    endif
+endif
 
 .PHONY : all
 .DEFAULT : all
 .SECONDARY : 
 
-all: 1DSchrodinger.so 1DThermal.so 1DMaxwell.so
-MP:  1DSchrodinger_MP.so
 
-1DSchrodinger_MP.so : 1DSchrodinger_MP.o band.o
+all: 1DSchrodinger.$(EXT) 1DThermal.$(EXT) 1DMaxwell.$(EXT)
+MP:  1DSchrodinger_MP.$(EXT)
+
+1DSchrodinger_MP.$(EXT) : 1DSchrodinger_MP.o band.o
 	$(CC) -shared -fPIC -fopenmp $^ -o $@ -lm
 
-1DSchrodinger.so : 1DSchrodinger.o band.o
+1DSchrodinger.$(EXT) : 1DSchrodinger.o band.o
 	$(CC) -shared -fPIC $^ -o $@ -lm
 
-%.so : %.o
+%.$(EXT) : %.o
 	$(CC) -shared -fPIC $^ -o $@ -lm
 
 1DSchrodinger.o : 1DSchrodinger.c science.h band.h
@@ -29,4 +43,4 @@ MP:  1DSchrodinger_MP.so
 
 .PHONY : clean
 clean :
-	@$(RM) {1DSchrodinger,1DThermal,1DMaxwell,1DSchrodinger_MP}.{so,o} band.o
+	@$(RM) {1DSchrodinger,1DThermal,1DMaxwell,1DSchrodinger_MP}.{so,o,dll,dylib} band.o
