@@ -1,2 +1,2 @@
-Graphical User Interface guide
+Graphical User Interface Guide
 ===================================
