@@ -6,10 +6,29 @@
 Welcome to OneDQ's documentation!
 =================================
 
+OneDQ is a cross-platform software for modeling quantum problems in 1D semiconductor
+super lattices. It is specifically optimized for Quantum Cascade Laser (QCL) simulation, 
+but coded in a way that's easy to use for general problems about static state in finite
+and periodic quantum wells. 
+
+.. figure:: figures/mainwindow.png
+
+   Screenshot of OneDQ
+
+
+.. toctree::
+   :caption: Manual
+
+   manual/intro.rst
+   manual/install.rst
+   manual/gui.rst
+   manual/cli.rst
+
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Developer
 
+   code_struct
    QCLayers
    Material
    SaveLoad
