@@ -23,12 +23,14 @@ and periodic quantum wells.
    manual/install.rst
    manual/gui.rst
    manual/cli.rst
+   ack.rst
 
 .. toctree::
    :maxdepth: 2
    :caption: Developer
 
    code_struct
+   Profiling
    QCLayers
    Material
    SaveLoad

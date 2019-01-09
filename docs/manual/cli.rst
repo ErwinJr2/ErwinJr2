@@ -1,2 +1,2 @@
-Command Line Guideline
+Command Line Guide
 ========================
