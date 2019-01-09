@@ -410,20 +410,20 @@ __declspec(dllexport)
  * Calculate the LO phonon scattering rate
  */
 double LOphononScatter(double step, numpyint N, double kl,
-               const double *psi_i, const double *psi_j) {
-       double Iij = 0;
-       int i;
+        const double *psi_i, const double *psi_j) {
+    double Iij = 0;
+    int i;
 #ifdef __MP
-       #pragma omp parallel for reduction(+:Iij)
+#pragma omp parallel for reduction(+:Iij)
 #endif
-       for(i=0; i<N; i++) {
-               int j;
-               for(j=0; j<N; j++) {
-                       Iij += psi_i[i] * psi_j[i] * exp(-kl*abs(i-j)*step)
-                                       * psi_i[j] * psi_j[j];
-               }
-       }
-       return Iij * sq(step*ANG);
+    for(i=0; i<N; i++) {
+        int j;
+        for(j=0; j<N; j++) {
+            Iij += psi_i[i] * psi_j[i] * exp(-kl*abs(i-j)*step*ANG) * 
+                psi_i[j] * psi_j[j];
+        }
+    }
+    return Iij * sq(step);
 }
 
 
