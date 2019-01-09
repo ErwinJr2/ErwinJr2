@@ -31,6 +31,9 @@ _clib.CoulombField0.argtypes = [c_double, c_int, _doubleArray, _doubleArray,
                               _doubleArray]
 _clib.CoulombField0.restype = c_double
 def cCoulombField0(step, eDensity, eps, xmin=0, xmax=None): 
+    """
+    from e density to Coulomb field
+    """
     if not xmax:
         xmax = eDensity.size
     if not isinstance(eps, np.ndarray):

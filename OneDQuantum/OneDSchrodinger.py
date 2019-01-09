@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
+""" Python interface for 1DSchrodinger.c """
 import numpy as np
 from ctypes import *
 from . import band as _bd
@@ -12,6 +13,9 @@ _doubleArray = np.ctypeslib.ndpointer(
     dtype=np.float64, ndim=1, flags="C_CONTIGUOUS")
 
 def bindOpenMP(on=True):
+    """
+    set OpenMP. Default = True
+    """
     global _clib
     if(on):
         _clib = np.ctypeslib.load_library('1DSchrodinger_MP', path)
@@ -55,6 +59,9 @@ bindOpenMP(False)
 #      return yend
 
 def cSimpleSolve1D(step, Es, V, m, xmin=0, xmax=None): 
+    """
+    Find eigen energies. Assume mass as given.
+    """
     if not xmax:
         xmax = V.size
     if not isinstance(m, np.ndarray):
@@ -65,6 +72,9 @@ def cSimpleSolve1D(step, Es, V, m, xmin=0, xmax=None):
     return EigenE[:EigenEN]
 
 def cSimpleFillPsi(step, EigenEs, V, m, xmin=0, xmax=None): 
+    """
+    Find wave functions. Assume mass as given.
+    """
     if not xmax:
         xmax = V.size
     if not isinstance(m, np.ndarray):
@@ -75,6 +85,9 @@ def cSimpleFillPsi(step, EigenEs, V, m, xmin=0, xmax=None):
     return psis.reshape((EigenEs.size, xmax-xmin))
 
 def cBandSolve1D(step, Es, V, band, xmin=0, xmax=None): 
+    """
+    Find eigen energies using band mass.
+    """
     if not xmax:
         xmax = V.size
     EigenE = np.empty(Es.size) 
@@ -83,6 +96,9 @@ def cBandSolve1D(step, Es, V, band, xmin=0, xmax=None):
     return EigenE[:EigenEN]
 
 def cBandFillPsi(step, EigenEs, V, band, xmin=0, xmax=None): 
+    """
+    Find wave functions using band mass.
+    """
     if not xmax:
         xmax = V.size
     psis = np.empty(EigenEs.size*(xmax-xmin))
