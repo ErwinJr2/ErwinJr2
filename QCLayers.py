@@ -27,13 +27,13 @@ class QCLayers(object):
         The substrate material for the device, which determines the well and
         barrier material
 
-        =========    ==============   ==============
-        substrate    well             barrier
-        =========    ==============   ==============
-        InP          In_xGa_{1-x}As   Al_{1-x}In_xAs
-        GaAs         Al_xGa_{1-x}As   Al_xGa_{1-x}As
-        GaSb         InAs_ySb_{1-y}   Al_xGa_{1-x}Sb
-        =========    ==============   ==============
+        =========    ==================================   ==================================
+        substrate             well                        barrier
+        =========    ==================================   ==================================
+        InP          In :math:`_x` Ga :math:`_{1-x}` As   Al :math:`_{1-x}` In :math:`_x` As
+        GaAs         Al :math:`_x` Ga :math:`_{1-x}` As   Al :math:`_x` Ga :math:`_{1-x}` As
+        GaSb         InAs :math:`_y` Sb :math:`_{1-y}`    Al :math:`_x` Ga :math:`_{1-x}` Sb
+        =========    ==================================   ==================================
 
     materials : list of str, len = 2
         Name of alloys

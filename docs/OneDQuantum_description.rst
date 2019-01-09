@@ -70,7 +70,8 @@ mass approximation is sometimes not enough. This can be corrected by
 including non-parabolic effective mass, or effective mass with energy
 dependence.  In this package, we will offer constant effective mass as simple
 solver and also non-parabolic effective mass computed using 
-:math:`k\cdot p` method. 
+:math:`k\cdot p` method. The computation of effective mass is implemented in
+:doc:`clib/file/band_8c` (also see :doc:`clib/file/band_8h`).
 
 Self-consistency solver for potential correction
 ------------------------------------------------

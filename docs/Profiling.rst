@@ -1,7 +1,7 @@
 Profiling
 =========
 
-The following block of code is profiled by cProfile:
+The following block of code is profiled by :py:mod:`cProfile`:
 
 .. code-block:: python
    :linenos:
@@ -47,9 +47,11 @@ where *16um.json* is the following file:
   
 
 
+
 Before optimizing code performamce, there are 814603 function calls taking 10.835
-seconds in total. The output of cProfile sorted by cumulative time is listed in the
-following table.
+seconds in total. The output of :py:mod:`cProfile` sorted by cumulative time is
+listed in the following table.
+
 
 =========  =======  =======  =======  ======= ===============================================================
    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
@@ -77,10 +79,12 @@ following table.
 
 .. currentmodule:: QCLayers
 
+
+
 After optimizing code performance by replace most time consuming function call 
 (:py:meth:`QCLayers.loLifeTime`), by C code and add openMP support, 
 there are 3613 function calls taking 1.255 seconds in total. 
-The output of cProfile sorted by cumulative time is listed in the
+The output of :py:mod:`cProfile` sorted by cumulative time is listed in the
 following table.
 
 =========  =======  =======  =======  ======= ===============================================================
