@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
+""" Python interface for 1DThermal.c """
 import numpy as np
 from ctypes import *
 import os
@@ -18,6 +19,9 @@ _clib.FermiDirac0.argtypes = [c_double, _doubleArray, c_int,
                               _doubleArray]
 _clib.FermiDirac0.restype = c_double
 def cFermiDirac0(EF, EigenEs, m, psis, step):
+    """ 
+    0T Fermi-Dirac: Fermi energy to sheet density
+    """
     if not isinstance(m, np.ndarray):
         m = m*np.ones(psis.shape[1])
     eDensity = np.empty(psis.shape[1])
@@ -30,6 +34,9 @@ _clib.FermiDirac0N.argtypes = [c_double, _doubleArray, c_int,
                                _doubleArray]
 _clib.FermiDirac0N.restype = c_double
 def cFermiDirac0N(sheet, EigenEs, m, psis, step):
+    """
+    0T Fermi-Dirac: sheet density to eDensity, EF
+    """
     if not isinstance(m, np.ndarray):
         m = m*np.ones(psis.shape[1])
     eDensity = np.empty(psis.shape[1])
@@ -42,6 +49,9 @@ _clib.FermiDirac.argtypes = [c_double, c_double, _doubleArray, c_int,
                               _doubleArray]
 _clib.FermiDirac.restype = c_double
 def cFermiDirac(T, EF, EigenEs, m, psis, step):
+    """
+    Finite temperature Fermi-Dirac: Fermi energy to electron density
+    """
     if not isinstance(m, np.ndarray):
         m = m*np.ones(psis.shape[1])
     eDensity = np.empty(psis.shape[1])
@@ -54,6 +64,9 @@ _clib.FermiDiracN.argtypes = [c_double, c_double, _doubleArray, c_int,
                               _doubleArray]
 _clib.FermiDiracN.restype = c_double
 def cFermiDiracN(T, sheet, EigenEs, m, psis, step):
+    """
+    Finite-temperature Fermi-Dirac : sheet density to electron density, EF
+    """
     if not isinstance(m, np.ndarray):
         m = m*np.ones(psis.shape[1])
     eDensity = np.empty(psis.shape[1])
@@ -66,6 +79,9 @@ _clib.Boltzmann.argtypes = [c_double, c_double, _doubleArray, c_int,
                             c_int, c_double, _doubleArray]
 _clib.Boltzmann.restype = c_double
 def cBoltzmann(T, EF, EigenEs, m, psis, step):
+    """
+    Maxwell-Boltzmann: Fermi energy to electron density
+    """
     if not isinstance(m, np.ndarray):
         m = m*np.ones(psis.shape[1])
     eDensity = np.empty(psis.shape[1])
@@ -74,24 +90,14 @@ def cBoltzmann(T, EF, EigenEs, m, psis, step):
                     c_double(step), eDensity)
     return eDensity
 
-
-def cFermiDirac0(EF, EigenEs, m, psis, step):
-    if not isinstance(m, np.ndarray):
-        m = m*np.ones(psis.shape[1])
-    eDensity = np.empty(psis.shape[1])
-    _clib.FermiDirac0(c_double(EF), EigenEs, EigenEs.size,
-                      m, psis, psis.shape[1], c_double(step), eDensity)
-    return eDensity
-
-
-
-
 _clib.BoltzmannN.argtypes = [c_double, c_double, _doubleArray, c_int,
                               _doubleArray, _doubleMatrix, c_int,
                              c_double, _doubleArray]
 _clib.BoltzmannN.restype = c_double
-
 def cBoltzmannN(T, sheet, EigenEs, m, psis, step):
+    """
+    Maxwell-Boltzmann: sheet density to Fermi energy
+    """
     if not isinstance(m, np.ndarray):
         m = m*np.ones(psis.shape[1])
     eDensity = np.empty(psis.shape[1])

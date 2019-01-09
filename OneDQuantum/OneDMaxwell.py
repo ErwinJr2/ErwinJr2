@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
+""" Python interface for 1DMaxwell """
 import numpy as np
 from ctypes import *
 import os
@@ -14,6 +15,9 @@ _clib.CoulombField.argtypes = [c_double, c_int, _doubleArray, _doubleArray,
                               _doubleArray]
 _clib.CoulombField.restype = c_double
 def cCoulombField(step, eDensity, eps, xmin=0, xmax=None): 
+    """ 
+    from e density to coulomb field 
+    """
     if not xmax:
         xmax = eDensity.size
     if not isinstance(eps, np.ndarray):
@@ -27,6 +31,9 @@ _clib.CoulombField0.argtypes = [c_double, c_int, _doubleArray, _doubleArray,
                               _doubleArray]
 _clib.CoulombField0.restype = c_double
 def cCoulombField0(step, eDensity, eps, xmin=0, xmax=None): 
+    """
+    from e density to Coulomb field
+    """
     if not xmax:
         xmax = eDensity.size
     if not isinstance(eps, np.ndarray):
