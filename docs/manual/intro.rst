@@ -1,7 +1,7 @@
 Introduction
 ===============
 
-OnDQ is a corss-platform software with a combination of: 
+OneDQ is a corss-platform software with a combination of: 
 
 1. A C library for solving 1D quantum problem and correlated thermal and electrical problem
 2. A Python interface for the C library

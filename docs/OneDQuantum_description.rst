@@ -1,8 +1,9 @@
 OneDQuantum C Library and Python Interface
 ==========================================
 
-In the C part of the software we are going to implement numerical computation
-related to solving 1D Schrodinger's equations. We also provide a Python interface.
+The C library solves 1D quantum problem and the related thermal
+and electrical problems. A Python interface for the C library is
+also included in this package.
 
 
 Numerically solving 1D Schrodinger's Equation
@@ -38,7 +39,7 @@ Algorithm
 
 In this C library, the Schrodinger equation solver is implemented
 in :doc:`clib/file/1DSchrodinger_8c`. The Python interface is implemented in
-:doc:`OneDSchrodinger`.
+:py:mod:`OneDQuantum.OneDSchrodinger`.
 An example of solving simple Schrodinger equation can be found 
 :ref:`here<example_schrodinger>`.
 
@@ -90,7 +91,7 @@ eigenstates as well as the corresponding occupation number :math:`n_i`.
 
 In this C library, the Maxwell-Poisson equation solver is implemented
 in :doc:`clib/file/1DMaxwell_8c`. The Python interface is implemented in
-:doc:`OneDMaxwell`.
+:py:mod:`OneDQuantum.OneDMaxwell`.
 An example comparing the results from solving the simple Schrodinger equation 
 and from solving the equation with the electron-electron interaction correction
 can be found :ref:`here<example_maxwell>`.
@@ -129,7 +130,7 @@ return chemical potential :math:`\mu`.
 
 In this C library, the thermal statistics solver is implemented
 in :doc:`clib/file/1DThermal_8c`. The Python interface is implemented in
-:doc:`OneDThermal`.
+:py:mod:`OneDQuantum.OneDThermal`.
 An example of finding the thermal distribution of electrons, 
 given eigen energies and wavefunctions,
 can be found :ref:`here<example_thermal>`.
