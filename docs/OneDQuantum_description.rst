@@ -5,22 +5,22 @@ In the C part of the software we are going to implement numerical computation
 of the following problems. 
 
 
-Numerically solving 1D Schr\"odinger's Equation
+Numerically solving 1D Schrodinger's Equation
 -----------------------------------------------
 
-The time-independent Schr\"odinger equation has the form
+The time-independent Schrodinger equation has the form
 
 .. math::
    \left[-\frac{\hbar^2}{2m}\frac{\partial}{\partial x^2} 
    + V(x)\right]\psi_i(x) = E_i\psi_i(x)
 
-The inputs of the Schr\"odinger equation solver include: a finite 1D array 
+The inputs of the Schrodinger equation solver include: a finite 1D array 
 with position :math:`x`, the corresponding potential :math:`V(x)` with the same size, the
 effective mass :math:`m`, and an eigenstate range specified by the user,
 :math:`\left[E_\text{min}, E_\text{max}\right]`. The outputs are the eigenfunction,
 :math:`\psi`, and the eigenvalue, :math:`E`.
 
-We will implement two methods of solving the 1D Schr\"odinger's equation. The
+We will implement two methods of solving the 1D Schrodinger's equation. The
 first method combines the Newton's method that searches for eigenvalues :math:`E`
 and the Numerov's method that solving for the corresponding eigenfunction
 :math:`\psi(x)` given any specific :math:`E`. The second method diagonalizes the
@@ -73,7 +73,7 @@ eigenstates as well as the corresponding occupation number :math:`n_i`.
 Electron thermal distributions
 ------------------------------
 
-The 1D Schr\"odinger's equation solver provides the energy bands, which are
+The 1D Schrodinger's equation solver provides the energy bands, which are
 useful for calculations of physical properties of the material. Here, we
 consider the electron density and the mean energy, predicted by the
 Fermi-Dirac statistics, where the occupation frequency for each eigenstate is
@@ -101,6 +101,6 @@ the Fermi-Dirac distribution (Eq.~(\ref{eq:zero_temp}) and
 (\ref{eq:finite_temp}) respectively),
 and the high-temperature approximation with the Boltzmann distribution
 (Eq.~(\ref{eq:boltzmann})). All distributions will have two methods, giving
-constant chemical potential $\mu$ distribution and return total number of
-particles $\sum n_i$, and given total number of particles $\sum n_i$ and
-return chemical potential $\mu$
+constant chemical potential :math:`\mu` distribution and return total number of
+particles :math:`\sum n_i`, and given total number of particles :math:`\sum n_i` and
+return chemical potential :math:`\mu`.
