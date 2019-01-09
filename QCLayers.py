@@ -377,7 +377,7 @@ class QCLayers(object):
         avgxMc = (self.xMc[:-1] + self.xMc[1:])/2
         self.z = np.sum(avgpsi_i * np.diff(psi_j/self.xMc) 
                    + 1/avgxMc * (avgpsi_i * np.diff(psi_j)))
-        self.z *= hbar**2 / (2 * (Ei - Ej) * e0 * m0) / 1E-10 #Angtrom
+        self.z *= hbar**2 / (2 * (Ei - Ej) * e0 * m0) / (1E-10)**2 #Angtrom
         return self.z
 
     def loTransition(self, upper, lower):
