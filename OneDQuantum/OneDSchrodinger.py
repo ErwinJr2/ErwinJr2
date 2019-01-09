@@ -38,8 +38,12 @@ def bindOpenMP(on=True):
     _clib.BandSolve1D.restype = c_int
 
     _clib.BandFillPsi.argtypes = [c_double, c_int, _doubleArray, c_int, 
-                             _doubleArray, _doubleArray, POINTER(cBand)]
+                                  _doubleArray, _doubleArray, POINTER(cBand)]
     _clib.BandFillPsi.restype = None
+
+    _clib.LOphononScatter.argtypes = [c_double, c_int, c_double, 
+                                      _doubleArray, _doubleArray]
+    _clib.LOphononScatter.restype = c_double
 
 bindOpenMP(False)
 
@@ -90,6 +94,11 @@ def cBandFillPsi(step, EigenEs, V, band, xmin=0, xmax=None):
                   psis, V[xmin:xmax], band.c)
     return psis.reshape((EigenEs.size, xmax-xmin))
 
+def cLOphononScatter(step, kl, psi_i, psi_j, xmin=0, xmax=None):
+    if not xmax:
+        xmax = psi_i.size
+    return  _clib.LOphononScatter(c_double(step), xmax-xmin, kl, 
+                                  psi_i, psi_j)
 
 if __name__ == "__main__":
     print(_clib.invAlpha())
