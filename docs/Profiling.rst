@@ -48,7 +48,7 @@ where *16um.json* is the following file:
 
 
 
-Before optimizing code performamce, there are 814603 function calls taking 52.102
+Before optimizing code performamce, there are 814603 function calls taking 10.835
 seconds in total. The output of :py:mod:`cProfile` sorted by cumulative time is
 listed in the following table.
 
