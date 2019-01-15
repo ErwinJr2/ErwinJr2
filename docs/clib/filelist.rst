@@ -16,8 +16,8 @@ potentials) with zero in one side and symmetric boundary conditions.
 Band Structure 
 -------------------------------
 
-:doc:file/band_8h.rst includes interfaces for band structure and 
-:doc:file/band_8c.rst has two implementation of two different bands: 
+:doc:`file/band_8h` includes interfaces for band structure and 
+:doc:`file/band_8c` has two implementation of two different bands: 
 Zinc-blende structure and Wurtzite structure. 
 
 ``struct BAND`` includes a function pointer for updating parameters 
@@ -33,7 +33,7 @@ are aligned. At the same time add new interface items in :doc:`../bandpy` .
 Memory Management 
 ------------------------
 
-Dynamic memory allocation happened within C functions will be freed within 
+Dynamic memory allocation that happened within C functions will be freed within 
 the function. Memory space for return values should be provided and managed 
 by callers. And in our cases, by Python modules. 
 
