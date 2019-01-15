@@ -63,7 +63,9 @@ The interface includes 4 columns:
                        - Filter: remove unbounded state smartly (to improve)
 ===================== =====================
 
-Export of the figure and data, save and load actions are embaded into `File` menu; 
+And a plotting canvas. 
+
+Export of the figure and data, save and load actions are embedded into `File` menu; 
 temperature setting and advanced table settings are in `Edit` menu;
 options to choose what is included in the plot is listed in `View` menu. 
 
