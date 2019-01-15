@@ -38,7 +38,7 @@ and an improved flexibility in tuning the frequencies.
 Models and Formulas 
 --------------------
 The physics model and formulas used in the software are discussed in 
-:doc:../OneDQuantum_description.rst
+:doc:`../OneDQuantum_description`
 
 
 .. todo::

@@ -1,4 +1,4 @@
-OneDQuantum C Library and Python Interface
+Physics Model and Formulas
 ==========================================
 
 The C library solves 1D quantum problem and the related thermal

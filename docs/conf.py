@@ -148,7 +148,7 @@ latex_engine = 'xelatex'
 latex_show_urls = 'footnote'
 latex_documents = [
     (master_doc, 'OneDQ.tex', 'OneDQ Documentation',
-     'Ming Lyu, Yaofeng (Desmond) Zhong, Xiaowen Chen', 'manual'),
+     'Ming Lyu (CareF), Yaofeng (Desmond) Zhong, Xiaowen Chen', 'manual'),
 ]
 
 

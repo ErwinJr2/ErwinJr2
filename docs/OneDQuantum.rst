@@ -10,7 +10,8 @@ equation solver in C.
 .. toctree::
    :maxdepth: 2
 
-   OneDMaxwell.rst
    OneDSchrodinger.rst
+   OneDMaxwell.rst
    OneDThermal.rst
+   bandpy.rst
    

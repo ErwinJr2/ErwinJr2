@@ -9,4 +9,4 @@ The author contributions:
 - Yaofeng (Desmond) Zhong: Python module, documentation and profiling
 - Xiaowen Chen: C lib testing, physics modeling review/documentation and advanced feature in C code
 
-Sara Kacmoli, Yasin Kaya, Hao Deng also provides ideas about improving the software. 
+Sara Kacmoli, Yasin Kaya, Hao Deng also provide ideas about improving the software. 
