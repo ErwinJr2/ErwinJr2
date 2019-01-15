@@ -439,7 +439,7 @@ class QCLayers(object):
         return inv_tau / 1e12 #unit ps
 
     def loLifeTime(self, state):
-        """ return the life time due to LO phonon scattering of the
+        """ Return the life time due to LO phonon scattering of the
         given state(label)"""
         rate = [self.loTransition(state, q) for q in range(state)]
         return 1/sum(rate)

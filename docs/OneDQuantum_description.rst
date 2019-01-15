@@ -23,7 +23,7 @@ effective mass :math:`m`, and an eigenstate range specified by the user,
 
 We solve the 1D Schrodinger's equation numerically. Our
 method combines the Newton's method that searches for eigenvalues :math:`E`
-and the Numerov's method that solving for the corresponding eigenfunction
+and the Numerov's method that solves for the corresponding eigenfunction
 :math:`\psi(x)` given any specific :math:`E`. 
 
 Algorithm
@@ -46,7 +46,7 @@ An example of solving simple Schrodinger equation can be found
 Effective mass in band 
 ----------------------
 
-Band theory predicts that movement of particle in a potential over long
+Band theory predicts that movement of a particle in a potential over long
 distance can be very different from the movement of the same particle in
 vacuum. Usually, the movement is complicated; however, when the electron is
 in the highest energies of the valence band or the lowest energies of the
@@ -124,7 +124,7 @@ At high temperature, Fermi-Dirac statistics approaches Maxwell-Boltzmann distrib
 
 In this package, we provide the zero- and finite-temperature computation of
 the Fermi-Dirac statistics, and the high-temperature approximation with the 
-Maxwell-Boltzmann distribution. All distributions will have two methods, giving
+Maxwell-Boltzmann distribution. All distributions will have two methods: given
 constant chemical potential :math:`\mu` distribution and return total number of
 particles :math:`\sum n_i`, and given total number of particles :math:`\sum n_i` and
 return chemical potential :math:`\mu`.
