@@ -115,11 +115,31 @@ class QCLayers(object):
         """Set material[n] to new material (mtrl) and/or moleFrac"""
         if not mtrl:
             self.mtrlAlloys[n].set_molefrac(moleFrac)
+            mtrl = self.materials[n]
         if not moleFrac:
             moleFrac = self.moleFracs[n]
             self.mtrlAlloys[n] = Material.Alloy(
                 mtrl, moleFrac, self.Temperature)
         self.mtrlAlloys[n].set_strain(self.a_parallel)
+
+    def add_mtrl(self, mtrl=None, moleFrac=None):
+        """Add a new material possiblities"""
+        self.materials.append(mtrl if mtrl else
+                              qcMaterial[self.substrate][0])
+        self.moleFracs.append(moleFrac if moleFrac else 0.0)
+
+    def del_mtrl(self, n):
+        """Delete materials labeled n. All layers of this material will
+        become previous materials[n-1 if n >0 else 1].  There should be 
+        at least two materials otherwise there will be error"""
+        if len(self.materials) <= 2:
+            raise ValueError("There should be at least 2 materials")
+        self.materials.pop(n)
+        self.moleFracs.pop(n)
+        for i in range(len(self.layerMtrls)):
+            if self.layerMtrls[i] >= n:
+                self.layerMtrls[i] = (layerMtrls[i] - 1 if layerMtrls[i] > 0 
+                                      else 0)
 
     def add_layer(self, n, width, mtrlIdx, AR, doping):
         self.layerWidths.insert(n, width)

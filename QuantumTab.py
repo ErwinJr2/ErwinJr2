@@ -348,12 +348,16 @@ class QuantumTab(QWidget):
         # set up material composition inputs
         self.mtrlTable = QTableWidget()
         #  self.mtrlTable.setSelectionBehavior(QTableWidget.SelectItems)
-        self.mtrlTable.setSelectionMode(QTableWidget.NoSelection)
+        #  self.mtrlTable.setSelectionMode(QTableWidget.NoSelection)
+        self.mtrlTable.setSelectionBehavior(QTableWidget.SelectRows)
+        self.mtrlTable.setSelectionMode(QTableWidget.SingleSelection)
         self.mtrlTable.setMaximumWidth(width)
         self.mtrlTable.setMinimumWidth(width)
         self.mtrlTable.setSizePolicy(
             QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Minimum))
         self.mtrlTable.itemChanged.connect(self.mtrlTable_itemChanged)
+        self.mtrlTable.itemSelectionChanged.connect(
+            self.mtrlTable_itemSelectionChanged)
         self.offsetLabel = QLabel('')
         self.netStrainLabel = QLabel('')
         self.LOPhononLabel = QLabel('')
@@ -831,7 +835,13 @@ class QuantumTab(QWidget):
 
         self.mtrlTable.resizeColumnsToContents()
         self.update_mtrl_info()
+        self.delMtrlButton.setEnabled(False)
         self.mtrlTable.blockSignals(False)
+            
+    def mtrlTable_itemSelectionChanged(self):
+        """SLOT connected to mtrlTable.itemSelectionChanged()"""
+        self.delMtrlButton.setEnabled(len(self.qclayers.materials) > 2)
+
 
     def mtrlTable_mtrlChanged(self, row, selection):
         """SLOT as partial(self.mtrlTable_mrtlChanged, q)) connected to
@@ -855,7 +865,7 @@ class QuantumTab(QWidget):
             # change "mtrl" or material column, should be handled by
             # mtrlTable_mtrlChanged
             return
-        elif column == 3:
+        elif column == 2:
             # change "x" or mole fraction
             try:
                 mf = float(item.text())
@@ -864,7 +874,7 @@ class QuantumTab(QWidget):
             except (ValueError, AssertionError):
                 # Input is not a number or is larger than 1
                 QMessageBox.warning(self, ejError, "invalid mole Fraction")
-            item.setText(str(self.qclayers.moleFracs[row]))
+            #  item.setText(str(self.qclayers.moleFracs[row]))
             self.update_mtrl_info()
         else:
             # Should never be here
@@ -873,14 +883,18 @@ class QuantumTab(QWidget):
     @pyqtSlot()
     def add_mtrl(self): 
         """SLOT connected to self.addMtrlButton.clicked()"""
-        # TODO
-        pass
+        self.qclayers.add_mtrl()
+        self._update_mtrlList()
+        self.mtrlTable_refresh()
+        self.layerTable_refresh()
 
     @pyqtSlot()
     def del_mtrl(self): 
         """SLOT connected to self.delMtrlButton.clicked()"""
-        # TODO
-        pass
+        self.qclayers.del_mtrl(self.mtrlTable.currentRow())
+        self._update_mtrlList()
+        self.mtrlTable_refresh()
+        self.layerTable_refresh()
 
     def update_mtrl_info(self):
         """Update labels below mtrlTable"""
