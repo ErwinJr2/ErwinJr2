@@ -70,7 +70,9 @@ class QCLayers(object):
     Other Parameters
     --------------------
     NonParabolic : bool
-        TBD
+        A flag to decide whether to use a constant effective mass, assuming 
+        perfect parabolic dispersion or an energy dependent effective mass 
+        to correct non-parabolic dispersion relation of electrons. 
     layerSelected : int
         a label indicating which layer is selected in GUI, with default None 
         indicating no layer is selected
