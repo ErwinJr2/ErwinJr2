@@ -1,8 +1,8 @@
 OneDQuantum.OneDSchrodinger module
 ==================================
 
-This module contains OneDSchrodinger functions,
-a Python interface of 1DSchrodinger.c
+This module contains OneDSchrodinger functions.
+It is a Python interface of 1DSchrodinger.c
 
 .. automodule:: OneDQuantum.OneDSchrodinger
    :members:
