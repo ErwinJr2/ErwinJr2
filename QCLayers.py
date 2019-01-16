@@ -27,13 +27,13 @@ class QCLayers(object):
         The substrate material for the device, which determines the well and
         barrier material
 
-        =========    ==============   ==============
-        substrate    well             barrier
-        =========    ==============   ==============
-        InP          In_xGa_{1-x}As   Al_{1-x}In_xAs
-        GaAs         Al_xGa_{1-x}As   Al_xGa_{1-x}As
-        GaSb         InAs_ySb_{1-y}   Al_xGa_{1-x}Sb
-        =========    ==============   ==============
+        =========    ==================================   ==================================
+        substrate             well                        barrier
+        =========    ==================================   ==================================
+        InP          In :math:`_x` Ga :math:`_{1-x}` As   Al :math:`_{1-x}` In :math:`_x` As
+        GaAs         Al :math:`_x` Ga :math:`_{1-x}` As   Al :math:`_x` Ga :math:`_{1-x}` As
+        GaSb         InAs :math:`_y` Sb :math:`_{1-y}`    Al :math:`_x` Ga :math:`_{1-x}` Sb
+        =========    ==================================   ==================================
 
     materials : list of str, len = 2
         Name of alloys
@@ -70,7 +70,9 @@ class QCLayers(object):
     Other Parameters
     --------------------
     NonParabolic : bool
-        TBD
+        A flag to decide whether to use a constant effective mass, assuming 
+        perfect parabolic dispersion or an energy dependent effective mass 
+        to correct non-parabolic dispersion relation of electrons. 
     layerSelected : int
         a label indicating which layer is selected in GUI, with default None 
         indicating no layer is selected
@@ -115,11 +117,31 @@ class QCLayers(object):
         """Set material[n] to new material (mtrl) and/or moleFrac"""
         if not mtrl:
             self.mtrlAlloys[n].set_molefrac(moleFrac)
+            mtrl = self.materials[n]
         if not moleFrac:
             moleFrac = self.moleFracs[n]
             self.mtrlAlloys[n] = Material.Alloy(
                 mtrl, moleFrac, self.Temperature)
         self.mtrlAlloys[n].set_strain(self.a_parallel)
+
+    def add_mtrl(self, mtrl=None, moleFrac=None):
+        """Add a new material possiblities"""
+        self.materials.append(mtrl if mtrl else
+                              qcMaterial[self.substrate][0])
+        self.moleFracs.append(moleFrac if moleFrac else 0.0)
+
+    def del_mtrl(self, n):
+        """Delete materials labeled n. All layers of this material will
+        become previous materials[n-1 if n >0 else 1].  There should be 
+        at least two materials otherwise there will be error"""
+        if len(self.materials) <= 2:
+            raise ValueError("There should be at least 2 materials")
+        self.materials.pop(n)
+        self.moleFracs.pop(n)
+        for i in range(len(self.layerMtrls)):
+            if self.layerMtrls[i] >= n:
+                self.layerMtrls[i] = (layerMtrls[i] - 1 if layerMtrls[i] > 0 
+                                      else 0)
 
     def add_layer(self, n, width, mtrlIdx, AR, doping):
         self.layerWidths.insert(n, width)
@@ -419,7 +441,7 @@ class QCLayers(object):
         return inv_tau / 1e12 #unit ps
 
     def loLifeTime(self, state):
-        """ return the life time due to LO phonon scattering of the
+        """ Return the life time due to LO phonon scattering of the
         given state(label)"""
         rate = [self.loTransition(state, q) for q in range(state)]
         return 1/sum(rate)

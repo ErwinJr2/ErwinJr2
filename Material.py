@@ -64,7 +64,7 @@ class Material(object):
 
     def set_temperature(self, Temperature):
         """ 
-        Set Temperature of the material and update related parameters: 
+        Set temperature of the material and update related parameters: 
         lattice consant and band gap.
         
         Yields
@@ -156,7 +156,7 @@ class Material(object):
 
 class Alloy(Material):
     """
-    An alloy of material with mole fraction $x$ 
+    An alloy of material with Mole fraction x
 
     Parameters
     ----------
@@ -181,7 +181,7 @@ class Alloy(Material):
 
     def set_temperature(self, Temperature):
         """ 
-        Set Temperature of the alloy and update related parameters, 
+        Set temperature of the alloy and update related parameters, 
         lattice consant and band gap, by updating the temperature of the
         materials in the alloy
 

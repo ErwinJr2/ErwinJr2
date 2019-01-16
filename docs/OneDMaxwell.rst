@@ -1,7 +1,8 @@
 OneDQuantum.OneDMaxwell module
 ==============================
 
-This module contains OneDMaxwell functions
+This module contains OneDMaxwell functions.
+It is a Python interface for 1DMaxwell.c
 
 .. automodule:: OneDQuantum.OneDMaxwell
    :members:

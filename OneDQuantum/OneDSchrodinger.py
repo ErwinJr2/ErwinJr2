@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-""" Python interface for 1DSchrodinger.c """
 import numpy as np
 from ctypes import *
 from . import band as _bd

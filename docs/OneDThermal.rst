@@ -1,7 +1,8 @@
 OneDThermal module
 ==================
 
-This module contains OneDThermal functions
+This module contains OneDThermal functions.
+It is a Python interface of 1DThermal.c
 
 .. automodule:: OneDQuantum.OneDThermal
    :members:

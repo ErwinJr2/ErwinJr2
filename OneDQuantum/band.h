@@ -13,7 +13,7 @@
 typedef struct BAND Band;
 
 /**
- * an update parameter function pointer that accepts a pointer to 
+ * An update parameter function pointer that accepts a pointer to 
  * to band struct (with its parameters as members) and according to 
  * the Band parameters and energy, update para (usually effective mass). 
  * The latter two double * parameters are potential (including band offset) 

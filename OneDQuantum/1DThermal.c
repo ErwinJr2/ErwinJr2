@@ -3,7 +3,7 @@
  * \file
  *
  * Compute thermodynamic statistics given eigen energy and wavefunctions
- * for ??? systems.
+ * for one-dimensional quantum systems.
  *
  *
  */
@@ -25,7 +25,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#define NEWTON_T 1E-5 /**< Newton's method stopping limit. Default = 1E-5 */
+#define NEWTON_T 1E-5 /**< Newton's method stopping limit. Default = \f$ 10^{-5} \f$ */
 
 
 #ifdef _WINDLL
@@ -302,7 +302,7 @@ __declspec(dllexport)
 
 /**
  *
- * Given tempereature T and Fermi level EF,
+ * Given tempereature T and Fermi level \f$ E_F \f$,
  * output electron density in eDensity (unit Angstrom^-3)
  * and return sheet density (unit Angstrom^-2).
  *
@@ -311,7 +311,7 @@ __declspec(dllexport)
  *
  * Parameters are the same as in FermiDirac.
  *
- * Note: assumes zero filling when (eigen energy - EF) > MAXKT * k_B T
+ * Note: assumes zero filling when \f$ (E_i - E_F) > MAXKT \times k_B T \f$
  * Default value for MAXKT = 50
  * 
  */

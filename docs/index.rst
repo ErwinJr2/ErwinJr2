@@ -17,7 +17,7 @@ and periodic quantum wells.
 
 
 .. toctree::
-   :caption: Manual
+   :caption: User Manual
 
    manual/intro.rst
    manual/install.rst
@@ -27,14 +27,15 @@ and periodic quantum wells.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Developer
+   :caption: For Developers
 
+   OneDQuantum_description
    code_struct
+   other
    Profiling
    QCLayers
    Material
    SaveLoad
-   OneDQuantum_description
    OneDQuantum
    clib/filelist
 

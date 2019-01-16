@@ -204,7 +204,7 @@ class MainWindow(QMainWindow):
                                           slot=self.on_about)
         licenses_action = self.create_action("&License",
                                              slot=self.on_licenses)
-        tutorialAction = self.create_action("&Tutorial", shortcut='F1',
+        tutorialAction = self.create_action("&Documents", shortcut='F1',
                                             slot=self.on_tutorial)
         self.add_actions(self.help_menu, (tutorialAction,
                                           about_action,
