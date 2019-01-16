@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-""" Python interface for 1DMaxwell """
 import numpy as np
 from ctypes import *
 import os
