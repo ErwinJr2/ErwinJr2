@@ -181,7 +181,7 @@ class Alloy(Material):
 
     def set_temperature(self, Temperature):
         """ 
-        Set Temperature of the alloy and update related parameters, 
+        Set temperature of the alloy and update related parameters, 
         lattice consant and band gap, by updating the temperature of the
         materials in the alloy
 
