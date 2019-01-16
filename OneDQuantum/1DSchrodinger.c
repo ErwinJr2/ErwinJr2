@@ -18,17 +18,17 @@
 #include "science.h"
 #include "band.h"
 
-/** Newton's method stopping limit. Default value = 1E-5 */
+/** Newton's method stopping limit. Default value = \f$ 10^{-5} \f$ */
 #define NEWTON_S 1E-5 
 /** 
  * NSTEP (unit eV) is the step size to numerically calculate 
- * the derivative for Newton's method. Default value = 1E-10.
+ * the derivative for Newton's method. Default value = \f$ 10^{-10} \f$.
  *
- * Optimum step size = (6*epsilon/M3)^(1/3) 
- * where epsilon is numerical error of yend(E) and M3 is maximum yend'''(E)
- * Because of the exponantial behavior when V>E, yend is very sensitive 
- * to E near EigenE. M3 is very large. 
- * Still, it's recommanded to make high V side the starting point
+ * Optimum step size = \f$ (6*\epsilon/M^3)^{1/3} \f$,  
+ * where \f$ \epsilon \f$ is numerical error of yend(E) and \f$ M^3 \f$ is maximum yend(E). 
+ * Because of the exponantial behavior when \f$ V>E \f$, yend is very sensitive 
+ * to \f$ E \f$ near EigenE. \f$ M^3 \f$ is very large. 
+ * Still, it's recommanded to make high \f$ V \f$ side the starting point.
  */
 #define NSTEP 1E-10
 #define Y_EPS 0.1 /**< Starting point for ode solver. Default value = 0.1 */
@@ -44,20 +44,21 @@ __declspec(dllexport)
 
 /**
  * 
- * An ODE solver for \f$ -\frac{d}{dx}(\frac{\hbar^2}{2m(x)} \frac{dy(x)}{dx}) + V(x) y(x) = E y(x) \f$
- * with starting x0 and y0, y1, ends at x0 + N*step
- * using Numerov's method.
+ * An ODE solver for 
+ * \f$ -\frac{d}{dx}(\frac{\hbar^2}{2m(x)} \frac{dy(x)}{dx}) + V(x) y(x) = E y(x) \f$
+ * with starting \f$ x_0 \f$ and \f$ y_0 \f$, \f$ y_1 \f$, 
+ * ends at \f$ x_0 + N \times step \f$.
  * No normalization imposed.
  *
  * \param[in] step \f$ \Delta x \f$, stepsize
  * \param[in] N number of steps
- * \param[in] y0 value of y at x0
- * \param[in] y1 value of y at x0 + step
+ * \param[in] y0 value of y at \f$ x_0 \f$
+ * \param[in] y1 value of y at \f$ x_0 + step \f$
  * \param[in] E energy, unit eV
- * \param[in] *V V[n] is the potential at x = x0 + n*step
- * \param[in] *m m[n] is the effective mass at x = x0 + n*step. m is in unit m0
- *              (free electron mass)
- * \param[out] *y (output) value of y at x = x0 + n*step
+ * \param[in] *V V[n] is the potential at \f$ x = x_0 + n \times step \f$
+ * \param[in] *m m[n] is the effective mass at \f$ x = x_0 + n \times step \f$. 
+ *               m is in unit m0 (free electron mass)
+ * \param[out] *y (output) value of y at \f$ x = x_0 + n \times step \f$.
  */
 inline double ode(double step, numpyint N, double y0, double y1, 
 		double E, const double *V, const double *m, double *y) {
@@ -85,19 +86,19 @@ __declspec(dllexport)
 #endif
  
 /** 
- * Fill in wavefunctions in psis accroding to eigen energy in EigenEs. 
- * psi + i*N*sizeof(double) is the wavefunction with Energy EigenEs[i] 
+ * Fill in wavefunctions in \f$ \psi \f$'s accroding to eigen energy in EigenEs. 
+ * \f$ \psi + i N \times sizeof(double) \f$ is the wavefunction with Energy EigenEs[i] 
  * The result is normalized to 1 (so psi is unit sqrt(Angstrom^-1)
  * 
  * \param[in] step step size
  * \param[in] N number of steps
  * \param[in] *EigenEs list of eigen energies
  * \param[in] EN number of eigen energies we consider
- * \param[in] *V V[n] is the potential at x = x0 + n*step
- * \param[in] *m m[n] is the effective mass at x = x0 + n*step, in unit m0
- *               (free electron mass)
+ * \param[in] *V V[n] is the potential at \f$ x = x_0 + n \times step \f$
+ * \param[in] *m m[n] is the effective mass at \f$ x = x_0 + n \times step \f$, 
+ *                in unit \f$ m_0 \f$ (free electron mass)
  * \param[out] *psis (output) 
- *                   psi + i*N*sizeof(double) is the 
+ *                   \f$ \psi + i N \times sizeof(double) \f$ is the 
  *                   wavefunction with energy EigenEs[i].
  */
 void SimpleFillPsi(double step, numpyint N, const double *EigenEs,
@@ -133,11 +134,11 @@ void SimpleFillPsi(double step, numpyint N, const double *EigenEs,
 }
 
 /** 
- * Find zero x_n between x[n-1] and x[n] of function y(x), 
- * s.t. y(x_n) = 0
+ * Find zero between x[n-1] and x[n] of function y(x), 
+ * s.t. \f$ y(x_n) = 0 \f$
  * using linear interpolation, 
  * i.e assuming y[n] and y[n-1] are of opposite signs and
- * returning x_n
+ * returning \f$ x_n \f$.
  */
 #define findZero(x, y, n) ((y[n]*x[n-1] - y[n-1]*x[n])/ (y[n] - y[n-1]))
 
@@ -147,12 +148,16 @@ __declspec(dllexport)
 #endif 
 
 /**
- * Solve 1D shrodinger's equation with potential V, effective mass m and 
- * in the region x0 <= x < x0+step*N with zero boundary. 
- * First scan in energy Es[0:EN] and look for zeros(EigenE) by either 
+ * Solve 1D Schrodinger's equation with potential \f$ V \f$ and effective 
+ * mass \f$ m \f$ 
+ * in the region \f$ x_0 \leq x < x_0 + step \times N \f$. 
+ * Boundary condition: wavefunction is zero at boundaries.
+ *
+ * Method: First scan in energy Es[0:EN] and look for zeros(EigenE) by either 
  * simple linear interpolation if SIMPLE is defined;
- * or calculate zero using newton's method if SIMPLE is not defined
- * Es should be in small to large order
+ * or calculate zero using Newton's Method if SIMPLE is not defined.
+ *
+ * Es should be in small to large order.
  *
  * \param[in] step step size
  * \param[in] N number of steps
@@ -255,7 +260,9 @@ numpyint SimpleSolve1D(double step, numpyint N,
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif 
-/** Same as SimpleFillPsi except for using band related mass */
+/** 
+ * Same as SimpleFillPsi except for using band related mass 
+ */
 void BandFillPsi(double step, numpyint N, const double *EigenEs,
 		numpyint EN, double* psis, const double* V, Band* mat) {
 	int i; 
