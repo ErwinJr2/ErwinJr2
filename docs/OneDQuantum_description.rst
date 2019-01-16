@@ -77,7 +77,7 @@ Self-consistency solver for potential correction
 ------------------------------------------------
 
 Electron-electron Coulomb interaction can be a determinant part of electron
-motion in semiconductors. To the first order this interaction is included by
+motion in semiconductors. To first order this interaction is included by
 adding a Maxwell-Poisson equation to correct the potential and solve the
 equations self-consistently. 
 
