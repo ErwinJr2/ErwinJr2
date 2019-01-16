@@ -1,17 +1,17 @@
 Introduction
 ===============
 
-OneDQ is a corss-platform software with a combination of: 
+OneDQ is a cross-platform software with a combination of: 
 
-1. A C library for solving 1D quantum problem and correlated thermal and electrical problems
-2. A Python interface for the C library
-3. A set of Python modules for loading, saving, organizing, solving quantum eigen-states in 
+1. a C library for solving 1D quantum problem and the related thermal and electrical problems;
+2. a Python interface for the C library;
+3. a set of Python modules for loading, saving, organizing, solving quantum eigen-states in 
    semiconductor quantum wells or super lattices, and calculating relevant physics parameters 
-   for these states, especially for quantum cascade laser (QCL) design purposes. 
-4. A GUI front-end interface for the above Python modules
+   for these states, especially for quantum cascade laser (QCL) design purposes; 
+4. a GUI front-end interface for the above Python modules.
 
-The C library is based on ANSI C and is tested using gcc(under Linux and MacOS) and visual 
-studio(on windows). It also has optional openmp support for parallel computing if the 
+The C library is based on ANSI C and is tested using GCC (under Linux and MacOS) and Visual 
+Studio (on Windows). It also has optional OpenMP support for parallel computing if the 
 environment supports. 
 
 The C library Python interface is based on :py:mod:`ctypes` in standard Python library and 
@@ -28,7 +28,7 @@ Quantum cascade lasers (QCLs) are semiconductor lasers that emit light
 through inter-subband transitions.
 These lasers consist of periodic series of thin
 layers of various semiconductor materials which creates a one-dimensional
-multiple quantum well confinement.
+multiple-quantum-well confinement.
 Compare to conventional semiconductor lasers which use single material,
 QCLs have the advantage of both a higher output efficiency
 due to possible quantum cascades across different quantum wells,
