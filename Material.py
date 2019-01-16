@@ -64,7 +64,7 @@ class Material(object):
 
     def set_temperature(self, Temperature):
         """ 
-        Set Temperature of the material and update related parameters: 
+        Set temperature of the material and update related parameters: 
         lattice consant and band gap.
         
         Yields
