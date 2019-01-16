@@ -8,7 +8,7 @@ with a plotting canvas.
 
 .. figure:: ../figures/mainwindow.png
 
-   Screenshot of OneDQ
+   A screenshot of the ErwinJr.pyw GUI.
 
 The interface includes 4 columns: 
 
