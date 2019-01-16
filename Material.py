@@ -156,7 +156,7 @@ class Material(object):
 
 class Alloy(Material):
     """
-    An alloy of material with mole fraction $x$ 
+    An alloy of material with Mole fraction x
 
     Parameters
     ----------
