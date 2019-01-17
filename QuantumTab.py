@@ -483,6 +483,8 @@ class QuantumTab(QWidget):
         """ SLOT connected to inputEFieldBox.valueChanged(double)
         update external E field in unit kV/cm """
         self.qclayers.EField = EField
+        self.clear_WFs()
+        self.qclayers.populate_x()
         self.update_quantumCanvas()
         self.dirty.emit()
 
@@ -492,8 +494,10 @@ class QuantumTab(QWidget):
         """ SLOT connected to inputxResBox.valueChanged
         update position resolution (xres), in angstrom """
         self.qclayers.xres = xres
-        self.update_quantumCanvas()
+        self.clear_WFs()
+        self.qclayers.populate_x()
         self.dirty.emit()
+        self.update_quantumCanvas()
 
     @pyqtSlot(float)
     @settingslot
@@ -510,8 +514,10 @@ class QuantumTab(QWidget):
         """SLOT connected to SINGAL self.inputRepeatsBox.valueChanged(int)
         update number of repeats for the whole structure."""
         self.qclayers.repeats = repeat
-        self.update_quantumCanvas()
+        self.clear_WFs()
+        self.qclayers.populate_x()
         self.dirty.emit()
+        self.update_quantumCanvas()
 
     @pyqtSlot()
     def input_basis(self):
