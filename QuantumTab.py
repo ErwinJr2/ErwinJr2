@@ -653,11 +653,9 @@ class QuantumTab(QWidget):
         """SLOT connected to self.insertLayerAboveButton.clicked()"""
         row = self.layerTable.currentRow()
         N = len(self.qclayers.materials)
-        if row == -1:
-            return
-        elif row >= N: 
+        if row >= len(self.qclayers.layerWidths) or row < 0: 
             # Add new lines in the last layer
-            row = N
+            row = len(self.qclayers.layerWidths)
             AR = self.qclayers.layerARs[row-1] and self.qclayers.layerARs[0]
             doping = self.qclayers.layerDopings[row-1]
             mtrlIdx = (self.qclayers.layerMtrls[row-1] + 1)%N
@@ -666,7 +664,7 @@ class QuantumTab(QWidget):
             doping = self.qclayers.layerDopings[row]
             mtrlIdx = (self.qclayers.layerMtrls[row-1] - 1)%N
 
-        self.qclayers.add_layer(row, 0.0, mtrlIndx, AR, doping)
+        self.qclayers.add_layer(row, 0.0, mtrlIdx, AR, doping)
         self.update_Lp_limits()
         self.update_Lp_box()
         self.layerTable_refresh()
