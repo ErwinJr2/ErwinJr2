@@ -140,7 +140,8 @@ class QCLayers(object):
         self.moleFracs.pop(n)
         for i in range(len(self.layerMtrls)):
             if self.layerMtrls[i] >= n:
-                self.layerMtrls[i] = (layerMtrls[i] - 1 if layerMtrls[i] > 0 
+                self.layerMtrls[i] = (self.layerMtrls[i] - 1 
+                                      if self.layerMtrls[i] > 0 
                                       else 0)
 
     def add_layer(self, n, width, mtrlIdx, AR, doping):
