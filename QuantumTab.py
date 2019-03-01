@@ -756,6 +756,8 @@ class QuantumTab(QWidget):
         else:
             raise Exception("Should not be here")
 
+        if hasattr(self.qclayers, 'eigenEs'):
+            delattr(self.qclayers, "eigenEs")
         self.layerTable_refresh() 
         self.layerTable.setCurrentCell(row, column)
         self.update_quantumCanvas()
@@ -767,11 +769,10 @@ class QuantumTab(QWidget):
         row = self.layerTable.currentRow()
         if row < len(self.qclayers.layerWidths):
             self.qclayers.layerSelected = row
-            self.update_quantumCanvas()
         else:
             self.qclayers.layerSelected = None
             self.layerTable.clearSelection()
-            self.update_quantumCanvas()
+        self.update_quantumCanvas()
 
     def layerTable_materialChanged(self, row, selection):
         """SLOT as partial(self.layerTable_materialChanged, q)) connected to
