@@ -340,33 +340,28 @@ class QCLayers(object):
         for n in range(0, len(StartInd)):
             dCL = copy.deepcopy(self)
             dCL.repeats = 1
+            # solve for Active region wavefunctions
             dCL.layerWidths = self.layerWidths[StartInd[n]:EndInd[n]]
-            dCL.layerMtrls = self.layerMtrls[StartInd[n]:
-                                                           EndInd[n]]
+            dCL.layerMtrls = self.layerMtrls[StartInd[n]: EndInd[n]]
             dCL.layerDopings = self.layerDopings[StartInd[n]:EndInd[n]]
             dCL.layerARs = self.layerARs[StartInd[n]:EndInd[n]]
 
             dCL.populate_x()
             dCL.solve_whole()
 
-            xInd_all = (self.xLayerNums >= StartInd[n]) & \
-                (self.xLayerNums < EndInd[n])
-
-            psis_re = np.zeros((0, self.xPoints.size))
-            eigenEs_re = np.zeros(0)
+            # map dCL result back to self
+            xInd_all = ((self.xLayerNums >= StartInd[n]) & 
+                        (self.xLayerNums < EndInd[n]))
             for j in range(0, self.repeats):
                 xInd = xInd_all & (self.xRepeats == j)
-                psis_fill = np.zeros((dCL.eigenEs.shape[0], self.xPoints.size))
+                psis_fill = np.zeros((dCL.eigenEs.shape[0], 
+                                      self.xPoints.size))
                 psis_fill[:, xInd] = dCL.psis
-                psis_re = np.concatenate((psis_re, psis_fill), axis=0)
-
-                eigenEs_re = \
-                    np.concatenate((eigenEs_re,
-                                    dCL.eigenEs -
-                                    j*sum(self.layerWidths)*self.EField*EUnit))
-
-            self.eigenEs = np.concatenate((self.eigenEs, eigenEs_re), axis=0)
-            self.psis = np.concatenate((self.psis, psis_re), axis=0)
+                shift = j*sum(self.layerWidths) + sum(
+                    self.layerWidths[:StartInd[n]])
+                shiftedEigenEs = dCL.eigenEs - shift*self.EField*EUnit
+                self.eigenEs = np.concatenate((self.eigenEs, shiftedEigenEs))
+                self.psis = np.concatenate((self.psis, psis_fill))
 
     def stateFilter(self):
         """Filter unbounded states: 
