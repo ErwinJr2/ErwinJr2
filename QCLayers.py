@@ -45,13 +45,13 @@ class QCLayers(object):
     Eres : float
         External (static) electrical field, in kV/cm = 1e5 V/m
 
-    layerWidths : np.array of float, len = No. of layers
+    layerWidths : list of float, len = No. of layers
         Width of each layer, in mm
-    layerMtrls : np.array of binary int, len = No. of layers
+    layerMtrls : list of int, len = No. of layers
         Label of materials, depending on substrate
-    layerDopings : np.array of float, len = No. of layers
+    layerDopings : list of float, len = No. of layers
         Doping per volumn in unit 1e17 cm-3
-    layerARs : np.array of binary, len = No. of layers
+    layerARs : list of bool, len = No. of layers
         Binaries indicating if the layer is active(True) or not(False), 
         only affects basis solver
 
@@ -323,16 +323,17 @@ class QCLayers(object):
             the wave function
         
         """
-        IndSep = np.nonzero(np.array(self.layerARs[1:]) !=
-                            np.array(self.layerARs[:-1]))[0] + 1
+        StartInd = []
+        EndInd = []
         if self.layerARs[0]:
-            IndSep = np.concatenate(([0], IndSep))
-        if len(IndSep) % 2:
-            IndSep = np.concatenate((IndSep, len(self.layerARs)))
-
-        StartInd = IndSep[0::2]
-        EndInd = IndSep[1::2]
-        # create two lists to store start ind and end ind
+            StartInd.append(0)
+        for n in range(1, len(self.layerARs)):
+            if not self.layerARs[n-1] and  self.layerARs[n]:
+                StartInd.append(n)
+            if self.layerARs[n-1] and not self.layerARs[n]:
+                EndInd.append(n)
+        if self.layerARs[-1]:
+            EndInd.append(len(self.layerARs))
 
         self.eigenEs = np.empty((0))
         self.psis = np.empty((0, self.xPoints.size))
