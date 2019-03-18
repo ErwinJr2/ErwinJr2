@@ -33,8 +33,6 @@
 #define NSTEP 1E-10
 #define Y_EPS 0.1 /**< Starting point for ode solver. Default value = 0.1 */
 
-#define M_EPS 1E-5
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -101,8 +99,9 @@ __declspec(dllexport)
  * \param[in] *m m[n] is the effective mass at \f$ x = x_0 + n \times step \f$, 
  *                in unit \f$ m_0 \f$ (free electron mass), used only when 
  *                mat=Null
- * \param[in] * const mat is a pointer to band structure, for updating
- *                effective mass according to energy. 
+ * \param[in] *mat is a pointer to band structure, for updating
+ *                effective mass according to energy. When it's NULL it means
+ *                using constant mass without non-parabolic effective mass. 
  * \param[out] *psis (output) 
  *                   \f$ \psi + i N \times sizeof(double) \f$ is the 
  *                   wavefunction with energy EigenEs[i].
@@ -195,26 +194,38 @@ __declspec(dllexport)
  * \param[in] EN number of eigen energy to find
  * \param[in] *V potential 
  * \param[in] *m effective mass
+ * \param[in] *mat is a pointer to band structure
  * \param[out] *EigenE (output) eigen energy
  *
  */
-numpyint SimpleSolve1D(double step, numpyint N, 
+numpyint Solve1D(double step, numpyint N, 
 		const double *Es, numpyint EN, 
-		const double *V, const double *m, 
+		const double *V, double *m, Band * const mat,
 		double *EigenE) {
 	double *yend; 
 	int NofZeros=0;
 	int i;
-
+#ifdef _DEBUG
+	if(mat != NULL) {
+		assert(N == mat->N);
+	}
+#endif
 	yend = (double *)malloc(EN * sizeof(double));
 #ifdef __MP
 	#ifdef _DEBUG
-	printf("Start a simpleSolve1D with openMP.\n");
+	printf("Start a Solve1D with openMP.\n");
 	#endif
 	#pragma omp parallel
 #endif
 	{
 		double *y = (double *)malloc(N * sizeof(double));
+		double *mband;
+		if(mat != NULL) { 
+			mband = (double *)malloc(N * sizeof(double));
+		}
+		else {
+			mband = m;
+		}
 #ifdef __MP
 	#ifdef _DEBUG
 		printf("    From thread %d out of %d\n", 
@@ -223,7 +234,10 @@ numpyint SimpleSolve1D(double step, numpyint N,
 		#pragma omp for
 #endif
 		for(i=0; i<EN; i++) {
-			yend[i] = ode(step, N, 0.0, Y_EPS, Es[i], V, m, y);
+			if(mat != NULL) { 
+				UpdateBand(mat, Es[i], V, mband);
+			}
+			yend[i] = ode(step, N, 0.0, Y_EPS, Es[i], V, mband, y);
 		}
 
 #ifdef __MP
@@ -240,14 +254,23 @@ numpyint SimpleSolve1D(double step, numpyint N,
 #ifndef SIMPLE
 			int count=0; 
 			double y0;
-			y0 = ode(step, N, 0.0, Y_EPS, E0, V, m, y);
+			if(mat != NULL) { 
+				UpdateBand(mat, E0, V, mband);
+			}
+			y0 = ode(step, N, 0.0, Y_EPS, E0, V, mband, y);
 			/* Filter singular case */
 			if(fabs(y0) > fabs(yend[i]) || fabs(y0) > fabs(yend[i-1])){
 				continue;
 			}
 			while(fabs(y0) > NEWTON_S && count < 20){
-				double y1 = ode(step, N, 0.0, Y_EPS, E0+NSTEP, V, m, y);
-				double y2 = ode(step, N, 0.0, Y_EPS, E0-NSTEP, V, m, y);
+				if(mat != NULL) { 
+					UpdateBand(mat, E0+NSTEP, V, mband);
+				}
+				double y1 = ode(step, N, 0.0, Y_EPS, E0+NSTEP, V, mband, y);
+				if(mat != NULL) { 
+					UpdateBand(mat, E0-NSTEP, V, mband);
+				}
+				double y2 = ode(step, N, 0.0, Y_EPS, E0-NSTEP, V, mband, y);
 				double dy = (y1 - y2)/(2*NSTEP);
 				if(y1*y2 < 0) {
 	#ifdef _DEBUG
@@ -260,7 +283,10 @@ numpyint SimpleSolve1D(double step, numpyint N,
 					break;
 				}
 				E0 -= y0/dy;
-				y0 = ode(step, N, 0.0, Y_EPS, E0, V, m, y);
+				if(mat != NULL) { 
+					UpdateBand(mat, E0, V, mband);
+				}
+				y0 = ode(step, N, 0.0, Y_EPS, E0, V, mband, y);
 				count++;
 			}
 	#ifdef _DEBUG
@@ -279,6 +305,10 @@ numpyint SimpleSolve1D(double step, numpyint N,
 		}
 		free(y);
 		y = NULL;
+		if (mat != NULL) {
+			free(mband);
+			mband = NULL;
+		}
 	}
 
 	free(yend);
@@ -286,109 +316,6 @@ numpyint SimpleSolve1D(double step, numpyint N,
 	return NofZeros;
 }
 
-
-#ifdef _WINDLL
-__declspec(dllexport)
-#endif 
-/**
- * Same as SimpleSolve1D except for using band related mass
- */
-numpyint BandSolve1D(double step, numpyint N, 
-		const double *Es, numpyint EN, const double *V, Band *mat,
-		double *EigenE) {
-       	double *yend; 
-	int NofZeros=0;
-	int i;
-
-#ifdef _DEBUG
-	assert(N == mat->N);
-#endif
-	yend = (double *)malloc(EN * sizeof(double));
-#ifdef __MP
-	#ifdef _DEBUG
-	printf("Start a BandSolve1D with openMP.\n");
-	#endif
-	#pragma omp parallel 
-#endif
-	{
-		double *y = (double *)malloc(N * sizeof(double));
-		double *m = (double *)malloc(N * sizeof(double));
-#ifdef __MP
-	#ifdef _DEBUG
-		printf("    From thread %d out of %d\n", 
-				omp_get_thread_num(), omp_get_num_threads());
-	#endif
-		#pragma omp for
-#endif
-		for(i=0; i<EN; i++) {
-			UpdateBand(mat, Es[i], V, m);
-			yend[i] = ode(step, N, 0.0, Y_EPS, Es[i], V, m, y);
-		}
-
-#ifdef __MP
-		#pragma omp barrier
-		#pragma omp for ordered
-#endif
-		for(i=1; i<EN; i++) {
-			double E0;
-			if(yend[i] == 0) {
-				E0 = Es[i-1];
-			}
-			else if(yend[i]*yend[i-1] < 0) {
-				E0 = findZero(Es, yend, i);
-#ifndef SIMPLE
-				int count=0; 
-				double y0;
-				UpdateBand(mat, E0, V, m);
-				y0 = ode(step, N, 0.0, Y_EPS, E0, V, m, y);
-				/* Filter singular case */
-				if(fabs(y0) > fabs(yend[i]) || fabs(y0) > fabs(yend[i-1])){
-					continue;
-				}
-				while(fabs(y0) > NEWTON_S && count < 20){
-					UpdateBand(mat, E0+NSTEP, V, m);
-					double y1 = ode(step, N, 0.0, Y_EPS, E0+NSTEP, 
-							V, m, y);
-					UpdateBand(mat, E0-NSTEP, V, m);
-					double y2 = ode(step, N, 0.0, Y_EPS, E0-NSTEP, 
-							V, m, y);
-					double dy = (y1 - y2)/(2*NSTEP);
-					if(y1*y2 < 0) {
-	#ifdef _DEBUG
-						printf("  solution error smaller than step at E=%e,"
-								" (count=%d).\n", E0, count);
-	#endif
-						break;
-					}
-					E0 -= y0/dy;
-					UpdateBand(mat, E0, V, m);
-					y0 = ode(step, N, 0.0, Y_EPS, E0, V, m, y);
-					count++;
-				}
-	#ifdef _DEBUG
-				printf("After %d times Newton, E=%f Err=%e\n", 
-						count, E0, fabs(y0));
-	#endif
-#endif
-			}
-			else {
-				continue;
-			}
-#ifdef __MP
-			#pragma omp ordered
-#endif
-			EigenE[NofZeros++] = E0;
-		}
-		free(y);
-		y = NULL;
-		free(m);
-		m = NULL;
-	}
-
-	free(yend);
-	yend = NULL;
-	return NofZeros;
-}
 
 #ifdef _WINDLL
 __declspec(dllexport)

@@ -28,18 +28,15 @@ def bindOpenMP(on=True):
     #                           c_double, _doubleArray, _doubleArray, _doubleArray]
     #  _clib.Numerov.restype = c_double
 
-    _clib.SimpleSolve1D.argtypes = [c_double, c_int, _doubleArray, c_int,
-                                   _doubleArray, _doubleArray, _doubleArray]
-    _clib.SimpleSolve1D.restype = c_int
+    _clib.Solve1D.argtypes = [c_double, c_int, _doubleArray, c_int,
+                              _doubleArray, _doubleArray,
+                              POINTER(cBand), _doubleArray]
+    _clib.Solve1D.restype = c_int
 
     _clib.FillPsi.argtypes = [c_double, c_int, _doubleArray, c_int, 
                              _doubleArray, _doubleArray, _doubleArray, 
                               POINTER(cBand)]
     _clib.FillPsi.restype = None
-
-    _clib.BandSolve1D.argtypes = [c_double, c_int, _doubleArray, c_int,
-                                   _doubleArray, POINTER(cBand), _doubleArray]
-    _clib.BandSolve1D.restype = c_int
 
     _clib.LOphononScatter.argtypes = [c_double, c_int, c_double, 
                                       _doubleArray, _doubleArray]
@@ -67,8 +64,8 @@ def cSimpleSolve1D(step, Es, V, m, xmin=0, xmax=None):
     if not isinstance(m, np.ndarray):
         m = m*np.ones(V.size)
     EigenE = np.empty(Es.size) 
-    EigenEN = _clib.SimpleSolve1D(c_double(step), xmax-xmin, Es, Es.size, 
-                                 V[xmin:xmax], m[xmin:xmax], EigenE)
+    EigenEN = _clib.Solve1D(c_double(step), xmax-xmin, Es, Es.size, 
+                            V[xmin:xmax], m[xmin:xmax], None, EigenE)
     return EigenE[:EigenEN]
 
 def cSimpleFillPsi(step, EigenEs, V, m, xmin=0, xmax=None): 
@@ -91,8 +88,8 @@ def cBandSolve1D(step, Es, V, band, xmin=0, xmax=None):
     if not xmax:
         xmax = V.size
     EigenE = np.empty(Es.size) 
-    EigenEN = _clib.BandSolve1D(c_double(step), xmax-xmin, Es, Es.size, 
-                                 V[xmin:xmax], band.c, EigenE)
+    EigenEN = _clib.Solve1D(c_double(step), xmax-xmin, Es, Es.size, 
+                            V[xmin:xmax], None, band.c, EigenE)
     return EigenE[:EigenEN]
 
 def cBandFillPsi(step, EigenEs, V, band, xmin=0, xmax=None): 
