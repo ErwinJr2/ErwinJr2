@@ -89,7 +89,7 @@ def cBandSolve1D(step, Es, V, band, xmin=0, xmax=None):
         xmax = V.size
     EigenE = np.empty(Es.size) 
     EigenEN = _clib.Solve1D(c_double(step), xmax-xmin, Es, Es.size, 
-                            V[xmin:xmax], None, band.c, EigenE)
+                            V[xmin:xmax], np.empty(0), band.c, EigenE)
     return EigenE[:EigenEN]
 
 def cBandFillPsi(step, EigenEs, V, band, xmin=0, xmax=None): 
@@ -100,7 +100,7 @@ def cBandFillPsi(step, EigenEs, V, band, xmin=0, xmax=None):
         xmax = V.size
     psis = np.empty(EigenEs.size*(xmax-xmin))
     _clib.FillPsi(c_double(step), xmax-xmin, EigenEs, EigenEs.size, 
-                  V[xmin:xmax], None, psis, band.c)
+                  V[xmin:xmax], np.empty(0), psis, band.c)
     return psis.reshape((EigenEs.size, xmax-xmin))
 
 def cLOphononScatter(step, kl, psi_i, psi_j, xmin=0, xmax=None):
