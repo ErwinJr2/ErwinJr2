@@ -18,19 +18,6 @@
 #include "science.h"
 #include "band.h"
 
-/** Newton's method stopping limit. Default value = \f$ 10^{-5} \f$ */
-#define NEWTON_S 1E-5 
-/** 
- * NSTEP (unit eV) is the step size to numerically calculate 
- * the derivative for Newton's method. Default value = \f$ 10^{-10} \f$.
- *
- * Optimum step size = \f$ (6*\epsilon/M^3)^{1/3} \f$,  
- * where \f$ \epsilon \f$ is numerical error of yend(E) and \f$ M^3 \f$ is maximum yend(E). 
- * Because of the exponantial behavior when \f$ V>E \f$, yend is very sensitive 
- * to \f$ E \f$ near EigenE. \f$ M^3 \f$ is very large. 
- * Still, it's recommanded to make high \f$ V \f$ side the starting point.
- */
-#define NSTEP 1E-10
 #define Y_EPS 0.1 /**< Starting point for ode solver. Default value = 0.1 */
 
 #ifdef __cplusplus
@@ -163,13 +150,13 @@ void FillPsi(double step, numpyint N, const double *EigenEs,
 }
 
 /** 
- * Find zero between x[n-1] and x[n] of function y(x), 
+ * Find zero between x1 and x2 of function y(x), 
  * s.t. \f$ y(x_n) = 0 \f$
  * using linear interpolation, 
- * i.e assuming y[n] and y[n-1] are of opposite signs and
+ * i.e assuming y1 and y2 are of opposite signs and
  * returning \f$ x_n \f$.
  */
-#define findZero(x, y, n) ((y[n]*x[n-1] - y[n-1]*x[n])/ (y[n] - y[n-1]))
+#define findZero(x1, y1, x2, y2) ((x1*y2 - x2*y1)/(y2-y1))
 
 
 #ifdef _WINDLL
@@ -184,7 +171,7 @@ __declspec(dllexport)
  *
  * Method: First scan in energy Es[0:EN] and look for zeros(EigenE) by either 
  * simple linear interpolation if SIMPLE is defined;
- * or calculate zero using Newton's Method if SIMPLE is not defined.
+ * or calculate zero using secant method if SIMPLE is not defined.
  *
  * Es should be in small to large order.
  *
@@ -245,63 +232,66 @@ numpyint Solve1D(double step, numpyint N,
 		#pragma omp for ordered
 #endif
 		for(i=1; i<EN; i++) {
-			double E0;
+			double E0, E1, E2;
+			double y0, y1, y2;
 			if(yend[i] == 0) {
 				E0 = Es[i-1];
 			}
 			else if(yend[i]*yend[i-1] < 0) {
-				E0 = findZero(Es, yend, i);
+                /* Here secant method is used instead of Newton's 
+                 * because secant method is more stable, and since the 
+                 * extra yend evaluation introduced in discret derivative 
+                 * for Newton's method, secant method is still more efficient
+                 * */
+				E0 = findZero(Es[i], yend[i], Es[i-1], yend[i-1]);
 #ifndef SIMPLE
-			int count=0; 
-			double y0;
-			if(mat != NULL) { 
-				UpdateBand(mat, E0, V, mband);
-			}
-			y0 = ode(step, N, 0.0, Y_EPS, E0, V, mband, y);
-			/* Filter singular case */
-			if(fabs(y0) > fabs(yend[i]) || fabs(y0) > fabs(yend[i-1])){
-				continue;
-			}
-			while(fabs(y0) > NEWTON_S && count < 20){
-				if(mat != NULL) { 
-					UpdateBand(mat, E0+NSTEP, V, mband);
-				}
-				double y1 = ode(step, N, 0.0, Y_EPS, E0+NSTEP, V, mband, y);
-				if(mat != NULL) { 
-					UpdateBand(mat, E0-NSTEP, V, mband);
-				}
-				double y2 = ode(step, N, 0.0, Y_EPS, E0-NSTEP, V, mband, y);
-				double dy = (y1 - y2)/(2*NSTEP);
-				if(y1*y2 < 0) {
-	#ifdef _DEBUG
-					printf("  solution error smaller than step at E=%e,"
-							" (count=%d).\n", E0, count);
-	#endif
-					E0 = (E0 + NSTEP)*y0*y2 / ( (y1 - y2)*(y1 - y0) )
-						+ E0*y1*y2 / ( (y0 - y2)*(y0 - y1) )
-						+ (E0 - NSTEP)*y1*y0 / ( (y2 - y0)*(y2 - y1) );
-					break;
-				}
-				E0 -= y0/dy;
+				int count=0; 
 				if(mat != NULL) { 
 					UpdateBand(mat, E0, V, mband);
 				}
 				y0 = ode(step, N, 0.0, Y_EPS, E0, V, mband, y);
-				count++;
-			}
+				y1 = yend[i-1];
+				E1 = Es[i-1];
+				y2 = yend[i];
+				E2 = Es[i];
+				/* Filter singular case */
+				if(fabs(y0) > fabs(yend[i]) || fabs(y0) > fabs(yend[i-1])){
+					continue;
+				}
+				while(fabs(y0) > 1e-14 && fabs(E2-E1) > 1e-7 && count < 20){
 	#ifdef _DEBUG
-			printf("After %d times Newton, E=%f Err=%e\n", 
-					count, E0, fabs(y0));
+                    printf("    Iter No. %d, E0=%.8f, E1=%.8f, E2=%.8f, "
+                            "Delta=%g\n", 
+                            count, E0, E1, E2, fabs(E2-E1));
+	#endif
+					if(y0 * y1 < 0) {
+						y2 = y0;
+						E2 = E0; 
+					}
+					else {
+						y1 = y0;
+						E1 = E0;
+					}
+					E0 = findZero(E1, y1, E2, y2);
+					if(mat != NULL) { 
+						UpdateBand(mat, E0, V, mband);
+					}
+					y0 = ode(step, N, 0.0, Y_EPS, E0, V, mband, y);
+					count++;
+				}
+	#ifdef _DEBUG
+				printf("After %d times secant iteration, E=%.8f Err=%e\n", 
+						count, E0, fabs(y0));
 	#endif
 #endif
-			}
-			else {
-				continue;
-			}
+				}
+				else {
+					continue;
+				}
 #ifdef __MP
-			#pragma omp ordered
+				#pragma omp ordered
 #endif
-			EigenE[NofZeros++] = E0;
+				EigenE[NofZeros++] = E0;
 		}
 		free(y);
 		y = NULL;
