@@ -32,17 +32,14 @@ def bindOpenMP(on=True):
                                    _doubleArray, _doubleArray, _doubleArray]
     _clib.SimpleSolve1D.restype = c_int
 
-    _clib.SimpleFillPsi.argtypes = [c_double, c_int, _doubleArray, c_int, 
-                             _doubleArray, _doubleArray, _doubleArray]
-    _clib.SimpleFillPsi.restype = None
+    _clib.FillPsi.argtypes = [c_double, c_int, _doubleArray, c_int, 
+                             _doubleArray, _doubleArray, _doubleArray, 
+                              POINTER(cBand)]
+    _clib.FillPsi.restype = None
 
     _clib.BandSolve1D.argtypes = [c_double, c_int, _doubleArray, c_int,
                                    _doubleArray, POINTER(cBand), _doubleArray]
     _clib.BandSolve1D.restype = c_int
-
-    _clib.BandFillPsi.argtypes = [c_double, c_int, _doubleArray, c_int, 
-                                  _doubleArray, _doubleArray, POINTER(cBand)]
-    _clib.BandFillPsi.restype = None
 
     _clib.LOphononScatter.argtypes = [c_double, c_int, c_double, 
                                       _doubleArray, _doubleArray]
@@ -83,8 +80,8 @@ def cSimpleFillPsi(step, EigenEs, V, m, xmin=0, xmax=None):
     if not isinstance(m, np.ndarray):
         m = m*np.ones(V.size)
     psis = np.empty(EigenEs.size*(xmax-xmin))
-    _clib.SimpleFillPsi(c_double(step), xmax-xmin, EigenEs, EigenEs.size, 
-                  V[xmin:xmax], m[xmin:xmax], psis)
+    _clib.FillPsi(c_double(step), xmax-xmin, EigenEs, EigenEs.size, 
+                  V[xmin:xmax], m[xmin:xmax], psis, None)
     return psis.reshape((EigenEs.size, xmax-xmin))
 
 def cBandSolve1D(step, Es, V, band, xmin=0, xmax=None): 
@@ -105,8 +102,8 @@ def cBandFillPsi(step, EigenEs, V, band, xmin=0, xmax=None):
     if not xmax:
         xmax = V.size
     psis = np.empty(EigenEs.size*(xmax-xmin))
-    _clib.BandFillPsi(c_double(step), xmax-xmin, EigenEs, EigenEs.size, 
-                  psis, V[xmin:xmax], band.c)
+    _clib.FillPsi(c_double(step), xmax-xmin, EigenEs, EigenEs.size, 
+                  V[xmin:xmax], None, psis, band.c)
     return psis.reshape((EigenEs.size, xmax-xmin))
 
 def cLOphononScatter(step, kl, psi_i, psi_j, xmin=0, xmax=None):

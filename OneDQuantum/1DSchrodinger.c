@@ -99,38 +99,65 @@ __declspec(dllexport)
  * \param[in] EN number of eigen energies we consider
  * \param[in] *V V[n] is the potential at \f$ x = x_0 + n \times step \f$
  * \param[in] *m m[n] is the effective mass at \f$ x = x_0 + n \times step \f$, 
- *                in unit \f$ m_0 \f$ (free electron mass)
+ *                in unit \f$ m_0 \f$ (free electron mass), used only when 
+ *                mat=Null
+ * \param[in] * const mat is a pointer to band structure, for updating
+ *                effective mass according to energy. 
  * \param[out] *psis (output) 
  *                   \f$ \psi + i N \times sizeof(double) \f$ is the 
  *                   wavefunction with energy EigenEs[i].
  */
-void SimpleFillPsi(double step, numpyint N, const double *EigenEs,
-		numpyint EN, const double *V, const double *m, double* psis) {
+void FillPsi(double step, numpyint N, const double *EigenEs,
+		numpyint EN, const double *V, double *m, double* psis, 
+		Band * const mat) {
 	int i; 
+#ifdef _DEBUG
+    if(mat != NULL) {
+		assert(N == mat->N);
+    }
+#endif
 #ifdef __MP
 	#ifdef _DEBUG
-	printf("Start a SimpleFillPsi with openMP.\n");
+	printf("Start a FillPsi with openMP.\n");
 	#endif
-	#pragma omp parallel for
+	#pragma omp parallel
 #endif
-	for(i=0; i<EN; i++) {
-#ifdef __MP
-	#ifdef _DEBUG
-		printf("    From thread %d out of %d\n", 
-				omp_get_thread_num(), omp_get_num_threads());
-	#endif
-#endif
-		int j;
-		double* psi = psis + i*N;
-		double modsq = 0;
-		ode(step, N, 0.0, Y_EPS, EigenEs[i], V, m, psi);
-		/* Normalization */
-		for(j=0; j<N; j++) {
-			modsq += sq(psi[j]);
+	{
+		double *bandm;
+		if (mat != NULL) {
+			bandm = (double*)malloc(N*sizeof(double));
 		}
-		modsq = sqrt(modsq * step);
-		for(j=0; j<N; j++) {
-			psi[j] /= modsq;
+		else {
+			bandm = m;
+		}
+#ifdef __MP
+	#ifdef _DEBUG
+			printf("    From thread %d out of %d\n", 
+					omp_get_thread_num(), omp_get_num_threads());
+	#endif
+	    #pragma omp for
+#endif
+		for(i=0; i<EN; i++) {
+			int j;
+			double* psi = psis + i*N;
+			double modsq = 0;
+			if (mat != NULL) {
+				/*MP assume only mass is updated*/
+				UpdateBand(mat, EigenEs[i], V, bandm);
+			}
+			ode(step, N, 0.0, Y_EPS, EigenEs[i], V, bandm, psi);
+			/* Normalization */
+			for(j=0; j<N; j++) {
+				modsq += sq(psi[j]);
+			}
+			modsq = sqrt(modsq * step);
+			for(j=0; j<N; j++) {
+				psi[j] /= modsq;
+			}
+		}
+		if (mat != NULL) {
+			free(bandm);
+            bandm = NULL;
 		}
 	}
 	return; 
@@ -257,56 +284,6 @@ numpyint SimpleSolve1D(double step, numpyint N,
 	free(yend);
 	yend = NULL;
 	return NofZeros;
-}
-
-
-#ifdef _WINDLL
-__declspec(dllexport)
-#endif 
-/** 
- * Same as SimpleFillPsi except for using band related mass 
- */
-void BandFillPsi(double step, numpyint N, const double *EigenEs,
-		numpyint EN, double* psis, const double* V, Band* mat) {
-	int i; 
-#ifdef _DEBUG
-	assert(N == mat->N);
-#endif
-#ifdef __MP
-	#ifdef _DEBUG
-	printf("Start a BandFillPsi with openMP.\n");
-	#endif
-	#pragma omp parallel 
-#endif
-	{
-		double* m = (double*)malloc(N*sizeof(double));
-#ifdef __MP
-	#ifdef _DEBUG
-		printf("    From thread %d out of %d\n", 
-				omp_get_thread_num(), omp_get_num_threads());
-	#endif
-		#pragma omp for
-#endif
-		for(i=0; i<EN; i++) {
-			int j;
-			double* psi = psis + i*N;
-			double modsq = 0;
-			/*MP assume only mass is updated*/
-			UpdateBand(mat, EigenEs[i], V, m);
-			ode(step, N, 0.0, Y_EPS, EigenEs[i], V, m, psi);
-			/* Normalization */
-			for(j=0; j<N; j++) {
-				modsq += sq(psi[j]);
-			}
-			modsq = sqrt(modsq * step);
-			for(j=0; j<N; j++) {
-				psi[j] /= modsq;
-			}
-		}
-		free(m);
-		m = NULL;
-	}
-	return; 
 }
 
 
