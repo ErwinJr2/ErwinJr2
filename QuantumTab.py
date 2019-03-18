@@ -958,7 +958,7 @@ class QuantumTab(QWidget):
             # filter almost zero part
             for n in range(self.qclayers.eigenEs.size):
                 wf = self.wfs[n,:]
-                nonzero, = np.where(wf > plotconfig["wf_almost_zero"])
+                nonzero, = np.where(abs(wf) > plotconfig["wf_almost_zero"])
                 if nonzero.size:
                     first, last = nonzero[[0, -1]]
                     wf[0: first] = np.NAN
@@ -1220,8 +1220,7 @@ class QuantumTab(QWidget):
         self.wavelength = h * c0 / (e0 * np.abs(Ei - Ej)) * 1e6 #um
 
         if self.solveType is 'basis':
-            couplingEnergy = self.qclayers.coupleBroadening(
-                self.dCL, upper, lower)
+            couplingEnergy = self.qclayers.coupleBroadening(upper, lower)
             self.transitionBroadening = self.qclayers.ifrBroadening(
                 upper, lower)
             self.opticalDipole = self.qclayers.dipole(upper, lower)
