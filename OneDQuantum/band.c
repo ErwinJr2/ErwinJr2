@@ -37,8 +37,8 @@ numpyint ZBupdateM(Band *mat, double Eq, const double *xVc, double *m) {
 	int q; 
 	for(q=0; q<zbmat->N; q++) {
 		double E = Eq - xVc[q];
-		if(E < -zbmat->xEg[q])
-			E = -zbmat->xEg[q] + 1e-7; /* Avoid singularity */
+		if(E < -zbmat->xEg[q]/2)
+			E = -zbmat->xEg[q]/2; /* Avoid singularity */
 		m[q] = 1 / (1 + 2*zbmat->xF[q] + zbmat->xEp[q]/3 * ( 
 					2 / (E + zbmat->xEg[q]) + 
 					1 / (E + zbmat->xEg[q] + zbmat->xESO[q])) );
