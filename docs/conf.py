@@ -19,8 +19,8 @@ sys.path.insert(0, os.path.abspath('..'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'OneDQ'
-copyright = '2018, Princeton APC524'
+project = 'ErwinJr2'
+copyright = '2018, Gmachl Group, Princeton'
 author = 'Ming Lyu, Yaofeng (Desmond) Zhong, Xiaowen Chen'
 
 # The short X.Y version
@@ -115,7 +115,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'OneDQdoc'
+htmlhelp_basename = 'ErwinJr2Doc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -147,7 +147,7 @@ latex_elements = {
 latex_engine = 'xelatex'
 latex_show_urls = 'footnote'
 latex_documents = [
-    (master_doc, 'OneDQ.tex', 'OneDQ Documentation',
+    (master_doc, 'erwinjr2.tex', 'ErwinJr2 Documentation',
      'Ming Lyu (CareF), Yaofeng (Desmond) Zhong, Xiaowen Chen', 'manual'),
 ]
 
@@ -157,7 +157,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'onedq', 'OneDQ Documentation',
+    (master_doc, 'ErwinJr2', 'ErwinJr2 Documentation',
      [author], 1)
 ]
 
@@ -168,8 +168,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'OneDQ', 'OneDQ Documentation',
-     author, 'OneDQ', 'One line description of project.',
+    (master_doc, 'ErwinJr2', 'ErwinJr2 Documentation',
+     author, 'ErwinJr2', 'One line description of project.',
      'Miscellaneous'),
 ]
 
