@@ -474,6 +474,7 @@ class QuantumTab(QWidget):
                 self.inputSubstrateBox.findText(self.qclayers.substrate))
             return
         self.layerTable_refresh()
+        self.mtrlTable_refresh()
         self.update_quantumCanvas()
         self.dirty.emit()
 
@@ -696,6 +697,7 @@ class QuantumTab(QWidget):
         """SLOT connected to layerTable.itemChanged(QTableWidgetItem*)
         Update layer profile after user input"""
         row = item.row()
+        mtrlN = len(self.qclayers.materials)
         if row > len(self.qclayers.layerWidths):
             raise ValueError("Bad layer width input row number")
         column = item.column()
@@ -719,7 +721,7 @@ class QuantumTab(QWidget):
                 # add row at end of list
                 AR = self.qclayers.layerARs[row-1]
                 doping = self.qclayers.layerDopings[row-1]
-                mtrlIdx = (self.qclayers.layerMtrls[row] + 1)%N
+                mtrlIndx = (self.qclayers.layerMtrls[row-1] + 1)%mtrlN
                 self.qclayers.add_layer(row, new_width, mtrlIndx, AR, doping)
                 row += 1  # used so that last (blank) row is again selected
                 self.update_Lp_limits()
@@ -745,7 +747,7 @@ class QuantumTab(QWidget):
             doping = value
             if row == len(self.qclayers.layerWidths):
                 AR = self.qclayers.layerARs[row-1]
-                mtrlIdx = (self.qclayers.layerMtrls[row] + 1)%N
+                mtrlIndx = (self.qclayers.layerMtrls[row-1] + 1)%mtrlN
                 self.qclayers.add_layer(row, 0.0, mtrlIndx, AR, doping)
                 row += 1  # used so that last (blank) row is again selected
                 self.update_Lp_limits()
@@ -852,9 +854,10 @@ class QuantumTab(QWidget):
         """SLOT as partial(self.mtrlTable_mrtlChanged, q)) connected to
         mtrlItem.currentIndexChanged(int) """
         #not decorated by pyqt because it's not a real slot but a meta-slot
-        self.qclayers.materials[row] = qcMaterial[
-            self.qclayers.substrate][selection]
+        self.qclayers.set_mtrl(row, qcMaterial[
+            self.qclayers.substrate][selection])
         self.update_mtrl_info()
+        self.update_quantumCanvas()
         self.dirty.emit()
 
     @pyqtSlot(QTableWidgetItem)
@@ -881,6 +884,8 @@ class QuantumTab(QWidget):
                 QMessageBox.warning(self, ejError, "invalid mole Fraction")
             #  item.setText(str(self.qclayers.moleFracs[row]))
             self.update_mtrl_info()
+            self.update_quantumCanvas()
+            self.dirty.emit()
         else:
             # Should never be here
             raise ValueError

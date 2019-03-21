@@ -115,13 +115,15 @@ class QCLayers(object):
 
     def set_mtrl(self, n, mtrl=None, moleFrac=None):
         """Set material[n] to new material (mtrl) and/or moleFrac"""
-        if not mtrl:
-            self.mtrlAlloys[n].set_molefrac(moleFrac)
+        if mtrl == None and moleFrac == None:
+            raise Exception("Nothing changed")
+        if mtrl == None:
             mtrl = self.materials[n]
-        if not moleFrac:
-            moleFrac = self.moleFracs[n]
-            self.mtrlAlloys[n] = Material.Alloy(
-                mtrl, moleFrac, self.Temperature)
+        if moleFrac == None:
+            moleFrac = self.moleFracs[n] 
+        self.moleFracs[n] = moleFrac
+        self.materials[n] = mtrl
+        self.mtrlAlloys[n] = Material.Alloy(mtrl, moleFrac, self.Temperature)
         self.mtrlAlloys[n].set_strain(self.a_parallel)
 
     def add_mtrl(self, mtrl=None, moleFrac=None):
@@ -163,6 +165,8 @@ class QCLayers(object):
     def set_substrate(self, subs):
         if subs in qcMaterial:
             self.substrate = subs
+            matlN = len(self.materials)
+            self.materials = (qcMaterial[subs]*matlN)[0:matlN]
             self.update_strain()
         else:
             raise TypeError("Substrate %s not supported"%subs)
