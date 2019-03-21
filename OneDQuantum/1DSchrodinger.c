@@ -50,20 +50,20 @@ inline double ode(double step, numpyint N, double y0, double y1,
 	y[1] = y1;
 	const double unit = 2*m0/sq(hbar)*e0*sq(ANG*step);
 	for (n = 1; n < N-1; n++) {
-        if ( fabs(m[n+1]-m[n])/step < 1E-5*m[n] &&
-                fabs(m[n] - m[n-1])/step < 1E-5*m[n-1] ) {
-            /* Numerov's method, step error O(step^6) */
-            /* is bad for m is in the middle of derivative TODO*/
-		y[n+1] = (2 * y[n] * (1.0 - 5.0/12 * ( E - V[n]) * unit * m[n]) 
-				- y[n-1] * (1.0 + 1.0/12 * (E - V[n-1]) * unit * m[n-1])) 
-			/ (1.0 + 1.0/12 * (E - V[n+1]) * unit * m[n+1]);
-        }
-        else {
-            double mmp = (m[n]/m[n+1] - m[n]/m[n-1])/4; // m*(1/m)' to O(^3)
-            /* Simple Euler's method, setp error O(step^4) */
-            y[n+1] = (-(E-V[n])*unit*m[n]*y[n] +
-                     2*y[n] - (1-mmp)*y[n-1])/(1 + mmp);
-        }
+		if(fabs(m[n+1]-m[n])/step < 1E-5*m[n] &&
+				fabs(m[n] - m[n-1])/step < 1E-5*m[n-1] ) {
+			/* Numerov's method, step error O(step^6) */
+			/* is bad for m is in the middle of derivative TODO*/ 
+			y[n+1] = (2 * y[n] * (1.0 - 5.0/12 * ( E - V[n]) * unit * m[n]) 
+					- y[n-1] * (1.0 + 1.0/12 * (E - V[n-1]) * unit * m[n-1])) 
+				/ (1.0 + 1.0/12 * (E - V[n+1]) * unit * m[n+1]);
+		}
+		else {
+			double mmp = (m[n]/m[n+1] - m[n]/m[n-1])/4; // m*(1/m)' to O(^3)
+			/* Simple Euler's method, setp error O(step^4) */
+			y[n+1] = (-(E-V[n])*unit*m[n]*y[n] +
+					2*y[n] - (1-mmp)*y[n-1])/(1 + mmp);
+		}
 	}
 	return y[N-1];
 }

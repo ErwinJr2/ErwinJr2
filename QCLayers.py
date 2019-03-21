@@ -328,7 +328,7 @@ class QCLayers(object):
         if self.layerARs[0]:
             StartInd.append(0)
         for n in range(1, len(self.layerARs)):
-            if not self.layerARs[n-1] and  self.layerARs[n]:
+            if not self.layerARs[n-1] and self.layerARs[n]:
                 StartInd.append(n)
             if self.layerARs[n-1] and not self.layerARs[n]:
                 EndInd.append(n)
