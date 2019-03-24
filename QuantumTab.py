@@ -796,6 +796,11 @@ class QuantumTab(QWidget):
         self.dirty.emit()
 
     @pyqtSlot()
+    def ARonly(self):
+        self.qclayers.basisARonly = not self.qclayers.basisARonly
+        self.clear_WFs()
+
+    @pyqtSlot()
     def copy_structure(self):
         clipboard = QApplication.clipboard()
         string = ''

@@ -158,11 +158,16 @@ class MainWindow(QMainWindow):
         rotateLayerAction = self.create_action(
             "&Rotate Layer Table", slot=self.qtab.rotate_layer,
             tip="Move zeroth layer to first layer")
+        solveARonly = self.create_action(
+            "&Solve Active Only", checkable=True, 
+            ischecked=self.qtab.qclayers.basisARonly, 
+            slot=self.qtab.ARonly)
         copyStructureAction = self.create_action(
             "&Copy Structure", slot=self.qtab.copy_structure,
             tip="Copy Layer Structure to Clipboard")
         self.add_actions(self.edit_menu, (temperatureAction,
                                           rotateLayerAction, None,
+                                          solveARonly, None,
                                           copyStructureAction))
 
         # view menu
