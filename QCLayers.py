@@ -103,6 +103,10 @@ class QCLayers(object):
         self.subM = Material.Material(self.substrate, self.Temperature)
         self.update_strain()
 
+        self.basisARInjector = True
+        self.basisInjectorAR = True
+        self.basisARonly = False
+
     def update_strain(self): 
         self.a_parallel = self.subM.parm['alc']
         self.mtrlAlloys = [Material.Alloy(self.materials[idx], 
@@ -172,7 +176,7 @@ class QCLayers(object):
             raise TypeError("Substrate %s not supported"%subs)
 
     def set_temperature(self, T):
-        self.qclayers.Temperature = T
+        self.Temperature = T
         self.subM.set_temperature(T)
         self.update_strain()
 
@@ -325,18 +329,29 @@ class QCLayers(object):
             the eigenenergy of the layer structure
         psis : np.array of float
             the wave function
-        
         """
         StartInd = []
         EndInd = []
-        if self.layerARs[0]:
+        if self.basisARonly:
+            if self.layerARs[0]:
+                StartInd.append(0)
+            for n in range(1, len(self.layerARs)):
+                if not self.layerARs[n-1] and self.layerARs[n]:
+                    StartInd.append(n)
+                if self.layerARs[n-1] and not self.layerARs[n]:
+                    EndInd.append(n)
+            if self.layerARs[-1]:
+                EndInd.append(len(self.layerARs))
+        else:
             StartInd.append(0)
-        for n in range(1, len(self.layerARs)):
-            if not self.layerARs[n-1] and self.layerARs[n]:
-                StartInd.append(n)
-            if self.layerARs[n-1] and not self.layerARs[n]:
-                EndInd.append(n)
-        if self.layerARs[-1]:
+            for n in range(1, len(self.layerARs)):
+                if ((self.basisInjectorAR and 
+                     not self.layerARs[n-1] and self.layerARs[n]) 
+                        or 
+                    (self.basisARInjector and
+                     self.layerARs[n-1] and not self.layerARs[n])):
+                    StartInd.append(n)
+                    EndInd.append(n)
             EndInd.append(len(self.layerARs))
 
         self.eigenEs = np.empty((0))
