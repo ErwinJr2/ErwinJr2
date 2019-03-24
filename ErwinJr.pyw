@@ -381,13 +381,12 @@ class MainWindow(QMainWindow):
 # Edit Menu Items
 # ===========================================================================
     def set_temperature(self):
-        # TODO
-        nowTemp = 300
+        nowTemp = self.qtab.qclayers.Temperature
         newTemp, buttonResponse = QInputDialog.getDouble(
             self, 'ErwinJr2 Input Dialog', 'Set Temperature',
             value=nowTemp, min=0)
         if buttonResponse:
-            pass
+            self.qtab.set_temperature(nowTemp)
 
 # ===========================================================================
 # Help Menu Items
