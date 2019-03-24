@@ -615,6 +615,8 @@ class QuantumTab(QWidget):
             self.layerTable.setItem(q, 0, width)
 
             # "ML" number of monolayer Setup
+            # TODO: monolayer <-> thickness should not include
+            # temperature/strain correction
             mlThickness = self.qclayers.mtrlAlloys[
                 self.qclayers.layerMtrls[q]].a_perp
             numML = QTableWidgetItem("%5.1f" % (layerWidths / mlThickness))
@@ -1132,6 +1134,7 @@ class QuantumTab(QWidget):
         self.calculating.emit(False)
 
     def filter(self):
+        # TODO
         if self.flted:
             self.solve_whole()
             self.flted = False
