@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Welcome to ErwinJr2's documentation!
-=================================
+=====================================
 
 ErwinJr2 is a cross-platform software for modeling quantum problems in 1D semiconductor
 super lattices. It is specifically optimized for Quantum Cascade Laser (QCL) simulation, 
