@@ -176,8 +176,8 @@ class Alloy(Material):
         assert(self.A.type == self.B.type)
         self.type = self.A.type
         # so alloy is A_x B_(1-x)
+        self.moleFrac = x
         self.set_temperature(Temperature)
-        self.set_molefrac(x)
 
     def set_temperature(self, Temperature):
         """ 
@@ -194,6 +194,7 @@ class Alloy(Material):
         self.T = Temperature
         self.A.set_temperature(self.T)
         self.B.set_temperature(self.T)
+        self.set_molefrac(self.moleFrac)
 
     def set_molefrac(self, x):
         """
@@ -209,6 +210,7 @@ class Alloy(Material):
         parm : dict
             stores the parameter of the alloy
         """
+        self.moleFrac = x
         self.parm = {}
 
         # For the Gamma band gap bowing in AlxGa1-xAs and AlxGa1-xSb
