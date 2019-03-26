@@ -43,7 +43,10 @@ extern "C" {
  *               m is in unit m0 (free electron mass)
  * \param[out] *y (output) value of y at \f$ x = x_0 + n \times step \f$.
  */
-inline double ode(double step, numpyint N, double y0, double y1, 
+#ifndef MACOS
+inline 
+#endif
+double ode(double step, numpyint N, double y0, double y1, 
 		double E, const double *V, const double *m, double *y) {
 	int n; 
 	y[0] = y0;

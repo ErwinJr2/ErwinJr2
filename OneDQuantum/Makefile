@@ -8,6 +8,7 @@ ifeq ($(OS),Windows_NT)
 else 
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
+        CFLAGS += -D MACOS
         EXT := dylib
     else
         # Assuming linux
