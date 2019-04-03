@@ -924,7 +924,7 @@ class QuantumTab(QWidget):
             self.qclayers.netStrain())
         self.LOPhononLabel.setText(
             "<center>E<sub>LO</sub>: <b>%4.1f meV</b></center>" % 
-            self.qclayers.avghwLO())
+            (1000*self.qclayers.avghwLO()))
 
 #=========================================================================
 # Quantum Tab Plotting and Plot Control
