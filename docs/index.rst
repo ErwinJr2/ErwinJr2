@@ -31,7 +31,7 @@ See `Github <https://github.com/PrincetonUniversity/ErwinJr2/>`_ for the source 
    :maxdepth: 2
    :caption: For Developers
 
-   OneDQuantum_description
+   physics
    code_struct
    other
    Profiling
