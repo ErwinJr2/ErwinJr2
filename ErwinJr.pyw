@@ -231,7 +231,7 @@ class MainWindow(QMainWindow):
             self.file_menu.addSeparator()
             for i, fname in enumerate(recentFiles):
                 action = QAction(
-                    "&{1}  {1}".format(i + 1,
+                    "&{0}  {1}".format(i + 1,
                                        QFileInfo(fname).fileName()), self)
                 action.setData(QVariant(fname))
                 action.triggered.connect(partial(self.fileOpen, fname))
