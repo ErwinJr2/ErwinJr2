@@ -26,16 +26,18 @@ method combines the Newton's method that searches for eigenvalues :math:`E`
 and the Numerov's method that solves for the corresponding eigenfunction
 :math:`\psi(x)` given any specific :math:`E`. 
 
-Algorithm
----------
+Shooting algorithm for eigen-problem
+------------------------------------
 
 #. Initialize with a range for eigen energies. 
 #. For each possible eigen energy, solve for the wavefunction using the
    Numerov's method for second order differential equations, and check
    whether the solution satisfies boundary condition. If so, the energy
    is an eigen energy.
-#. Use Newton's method to find eigen energy. The derivative is estimated 
-   by finite difference.
+#. Use secant's method to find eigen energy. Newton's method is not chosen
+   because the root finding converges usually ~10 interaction, and scant's
+   methdo (O(n^0.618)) compare to Newton's (O(n^0.5)) doesn't worth the 
+   extra wavefunction evaluation for numerical derivative. 
 
 In this C library, the Schrodinger equation solver is implemented
 in :doc:`clib/file/1DSchrodinger_8c`. The Python interface is implemented in
@@ -59,8 +61,8 @@ the band structure can be expanded locally as
 
 .. math:: 
 
-   E(k) \approx E_0 + \frac{\hbar^2 k^2}{2 m_\text{eff}},
-   \frac{1}{m_\text{eff}} \equiv \frac{2}{\hbar^2}\frac{\partial^2 E}
+   &E(k) \approx E_0 + \frac{\hbar^2 k^2}{2 m_\text{eff}}\\
+   &\frac{1}{m_\text{eff}} \equiv \frac{2}{\hbar^2}\frac{\partial^2 E}
    {\partial k^2}
 
 where :math:`k` is the wave vector, and :math:`E_0` is the edge energy of the band. 
@@ -73,6 +75,25 @@ solver and also non-parabolic effective mass computed using
 :math:`k\cdot p` method. The computation of effective mass is implemented in
 :doc:`clib/file/band_8c` (also see :doc:`clib/file/band_8h`).
 
+Specifically in Zincblende crystal, the effective mass has the form including 
+non-parabolic dispersion effect: 
+
+.. math::
+    \frac{m_0}{m_\text{eff}} = 1 + 2F 
+    + \frac 13 \frac{E_P}{\Delta E_c + E_g + \Delta_{\text{SO}}}
+    + \frac 23 \frac{E_P}{\Delta E_c + E_g}
+
+Where :math:`m_0` is electron mass in vacuum, :math:`E_g` is the bandgap 
+at :math:`\Gamma` point, :math:`\Delta_{\text{SO}}, E_P, F` are parameters
+describing near-:math:`\Gamma` behavior of the conduction band and valence 
+band, :math:`\Delta E_c` is the energy of electrons above conduction band, 
+or effective kinetic energy.  
+See :cite:`vurgaftman2001band`, :cite:`PhysRevB.50.8663`. 
+
+For Wurtzite crystal, :math:`F=0`. 
+The code structure is also capable of adding new crystal structures. 
+See the material sections for details. 
+
 Self-consistency solver for potential correction
 ------------------------------------------------
 
@@ -83,9 +104,9 @@ equations self-consistently.
 
 .. math::
 
-   V = V_0 + V_c,
-   \nabla^2 V_c = \frac{\rho(x)}{\epsilon} = \sum_i 
-   \frac{e n_i}{\epsilon} |\psi_i(x)|^2
+   &V = V_0 + V_c\\
+   &\nabla^2 V_c = \frac{\rho(x)}{\epsilon} = \sum_i 
+   \frac{e n_i}{\epsilon} \mid\psi_i(x)\mid^2
 
 which means that the potential depends on the 
 eigenstates as well as the corresponding occupation number :math:`n_i`.
@@ -136,3 +157,5 @@ An example of finding the thermal distribution of electrons,
 given eigen energies and wavefunctions,
 can be found :ref:`here<example_thermal>`.
 
+
+.. bibliography:: refs.bib
