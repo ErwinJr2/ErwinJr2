@@ -47,6 +47,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.napoleon',
+    'sphinxcontrib.bibtex',
     'breathe',
 ]
 breathe_projects = { "OneDQuantum": "../OneDQuantum/docs/xml/"}
