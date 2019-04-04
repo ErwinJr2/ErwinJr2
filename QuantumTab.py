@@ -618,7 +618,8 @@ class QuantumTab(QWidget):
             # TODO: monolayer <-> thickness should not include
             # temperature/strain correction
             mlThickness = self.qclayers.mtrlAlloys[
-                self.qclayers.layerMtrls[q]].a_perp
+                self.qclayers.layerMtrls[q]].a_perp / 2
+            # a_perp has two layer of atoms (one III and one V)
             numML = QTableWidgetItem("%5.1f" % (layerWidths / mlThickness))
             numML.setTextAlignment(Qt.AlignCenter)
             numML.setBackground(color)
@@ -717,7 +718,7 @@ class QuantumTab(QWidget):
                 new_width = value
             else:  # column == 1 for "ML" number of monolayers
                 new_width = value * self.qclayers.mtrlAlloys[ 
-                    self.qclayers.layerMtrls[row]].a_perp
+                    self.qclayers.layerMtrls[row]].a_perp/2
 
             if row == len(self.qclayers.layerWidths):
                 # add row at end of list
