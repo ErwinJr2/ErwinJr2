@@ -275,10 +275,14 @@ class QCLayers(object):
         for p in (self.xVc, self.xVX, self.xVL, self.xVLH, self.xVSO):
             p -= ExtField
 
-        self.xRepeats = np.empty((0), dtype=int)
+        self.xRepeats = np.empty(N, dtype=int)
         for k in range(self.repeats):
-            self.xRepeats = np.concatenate(
-                (self.xRepeats, k*np.ones(int(N/self.repeats), dtype=int)))
+            self.xRepeats[(self.xPoints < (k+1)*periodL)
+                           & (self.xPoints >= k*periodL)] = k
+        #  self.xRepeats = np.empty((0), dtype=int)
+        #  for k in range(self.repeats):
+        #      self.xRepeats = np.concatenate(
+        #          (self.xRepeats, k*np.ones(int(N/self.repeats), dtype=int)))
 
     def xLayerSelected(self):
         xSlt = (self.xLayerNums == self.layerSelected)
@@ -375,7 +379,11 @@ class QCLayers(object):
                 xInd = xInd_all & (self.xRepeats == j)
                 psis_fill = np.zeros((dCL.eigenEs.shape[0], 
                                       self.xPoints.size))
-                psis_fill[:, xInd] = dCL.psis
+                # cut the result if it's not aligned (due to rounding error)
+                lenth = np.sum(xInd)
+                psis_fill[:, xInd] = dCL.psis[:, 0:lenth]
+                assert(abs(len(dCL.xPoints)-lenth) <= 1) 
+                # confirm rounding error is bounded
                 shift = j*sum(self.layerWidths) + sum(
                     self.layerWidths[:StartInd[n]])
                 shiftedEigenEs = dCL.eigenEs - shift*self.EField*EUnit
