@@ -5,8 +5,12 @@
 # In plot controls, add "show one period"
 # save and load pickle for qclayers
 # Reverse layers
-# Bug: when delete all layers
 # export excel file for growth sheet
+# conserve zoom status when update quantum canvas
+# Debugging plot
+# Inverse rotate
+# last change
+# History
 
 import sys
 import traceback
@@ -61,12 +65,14 @@ class QuantumTab(QWidget):
             inputxResBox
             inputEresBox
             inputRepeatsBox
+            inputWlBox
             inputARInjectorCheck
             inputInjectorARCheck
             LpFirstSpinbox          LpLastSpinbox
 
         2nd column (layerBox):
             insertLayerAboveButton  deleteLayerButton
+            optimizeLayerButton     globalOptimizeButton
             layerTable
 
         3rd column (solveBox):
@@ -232,6 +238,15 @@ class QuantumTab(QWidget):
         self.inputRepeatsBox.valueChanged[int].connect(self.input_repeats)
         settingBox.addWidget(self.inputRepeatsBox)
 
+        settingBox.addWidget(QLabel(
+            '<center><b>Wavelength</b></center>'))
+        self.inputWlBox = QDoubleSpinBox()
+        self.inputWlBox.setDecimals(1)
+        self.inputWlBox.setRange(1.5, 40)
+        self.inputWlBox.setSingleStep(1)
+        self.inputWlBox.valueChanged[float].connect(self.input_wl)
+        settingBox.addWidget(self.inputWlBox)
+
         # Basis solver devider setting
         basisGroupBox = QGroupBox("Basis Divisions")
         self.inputARInjectorCheck = QCheckBox("AR->Injector")
@@ -285,6 +300,12 @@ class QuantumTab(QWidget):
         self.deleteLayerButton = QPushButton("Delete Layer")
         self.deleteLayerButton.clicked.connect(self.delete_layer)
         layerBox.addWidget(self.deleteLayerButton, 0, 1)
+        self.optimizeLayerButton = QPushButton("Optimize Layer")
+        self.optimizeLayerButton.clicked.connect(self.optimizeLayer)
+        self.globalOptimizeButton = QPushButton("Global Optimize")
+        self.globalOptimizeButton.clicked.connect(self.globalOptimize)
+        layerBox.addWidget(self.optimizeLayerButton, 1, 0)
+        layerBox.addWidget(self.globalOptimizeButton, 1, 1)
 
         # set up layerTable
         self.layerTable = QTableWidget()
@@ -297,7 +318,7 @@ class QuantumTab(QWidget):
         self.layerTable.itemChanged.connect(self.layerTable_itemChanged)
         self.layerTable.itemSelectionChanged.connect(
             self.layerTable_itemSelectionChanged)
-        layerBox.addWidget(self.layerTable, 1, 0, 1, 2)
+        layerBox.addWidget(self.layerTable, 2, 0, 1, 2)
 
         return layerBox
         # _generateLayerBox end
@@ -520,6 +541,11 @@ class QuantumTab(QWidget):
         self.dirty.emit()
         self.update_quantumCanvas()
 
+    @pyqtSlot(float)
+    @settingslot
+    def input_wl(self, wl):
+        self.wl = wl
+
     @pyqtSlot()
     def input_basis(self):
         """SLOT connected to self.inputARInjectorCheck.stateChanged(int) and
@@ -687,13 +713,48 @@ class QuantumTab(QWidget):
             self.qclayers.layerWidths[0] = 0.0
             return
 
+        self.clear_WFs()
         self.qclayers.del_layer(row)
+        self.qclayers.populate_x()
         self.update_Lp_limits()
         self.update_Lp_box()
         self.layerTable_refresh()
         self.layerTable.selectRow(row)
         # Trigger itemSelectionChanged SIGNAL and thus update_quantumCanvas
         self.dirty.emit()
+
+    @pyqtSlot()
+    def optimizeLayer(self):
+        """SLOT connected to self.optimizeLayerButton.clicked()"""
+        n = self.layerTable.currentRow()
+        if n < 0 or n > len(self.qclayers.layerWidths):
+            QMessageBox.warning(self, ejError, 
+                                "Select the layer to optimize.")
+            return
+        try:
+            Ei = self.qclayers.eigenEs[self.stateHolder[0]]
+            Ej = self.qclayers.eigenEs[self.stateHolder[1]]
+            if Ei > Ej:
+                upper = self.stateHolder[0]
+                lower = self.stateHolder[1]
+            else:
+                upper = self.stateHolder[1]
+                lower = self.stateHolder[0]
+        except:
+            QMessageBox.warning(self, ejError, 
+                                "Select state pair to optimize.")
+            return
+        #TODO
+        self.qclayers.optimizeLayer(n, upper, lower, self.wl)
+        self.layerTable_refresh()
+        self.layerTable.setCurrentCell(n, 0)
+    
+    @pyqtSlot()
+    def globalOptimize(self):
+        """SLOT connect to self.globalOptimizeButton.clicked()"""
+        # TODO
+        QMessageBox.warning(self, ejError,
+                            "This feature has not yet implemented.")
 
     @pyqtSlot(QTableWidgetItem)
     def layerTable_itemChanged(self, item):

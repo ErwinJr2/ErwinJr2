@@ -418,6 +418,7 @@ class QCLayers(object):
         psi_j = self.psis[lower, :]
         Ei = self.eigenEs[upper]
         Ej = self.eigenEs[lower]
+        self.deltaE = Ei - Ej
         #TODO: eff mass for non-parabolic
         avgpsi_i = (psi_i[:-1] + psi_i[1:])/2
         avgxMc = (self.xMc[:-1] + self.xMc[1:])/2
@@ -471,10 +472,13 @@ class QCLayers(object):
         return 1/sum(rate)
 
     def calc_FoM(self, upper, lower):
-        tauLower = self.loLifeTime(lower)
-        tauUpper = self.loLifeTime(upper)
-        tauUpperLower = 1/self.loTransition(upper, lower)
-        self.FoM = self.z**2 * tauUpper * (1 - tauLower / tauUpperLower)
+        """Calculate Figure of Merit. 
+        This function must be called after solving for wavefunctions"""
+        self.tauLower = self.loLifeTime(lower)
+        self.tauUpper = self.loLifeTime(upper)
+        self.tauUpperLower = 1/self.loTransition(upper, lower)
+        self.FoM = self.z**2 * self.tauUpper * (
+            1 - self.tauLower / self.tauUpperLower)
         return self.FoM
 
     def coupleBroadening(self, upper, lower):
@@ -491,5 +495,69 @@ class QCLayers(object):
     def alphaISB(self, upper, lower):
         #TODO
         return 0
+
+    # Optimization
+    def optimizeLayer(self, n, upper, lower, wl):
+        """Optmize FoM*lorenzian for n-th layer thickness"""
+        # TODO: this part need to be improved!!!
+        resonancew = self.deltaE/hbar
+        FoMnow = self.calc_FoM(upper, lower)/(self.tauUpperLower**2 + 
+                                              (resonancew-wl)**2)
+        width = self.layerWidths[n]
+        print(("Start Optimizing Layer NO %d "%n)+
+              ("for FoM between state %d and %d.\n"%(upper, lower))+
+              ("\tStart at width=%.1f, FoM=%.1f"%(width, FoMnow)))
+
+        for i in range(20):
+            self.layerWidths[n] = width - self.xres
+            self.populate_x()
+            self.solve_whole()
+            self.dipole(upper, lower)
+            resonancew = self.deltaE/hbar
+            FoMback = self.calc_FoM(upper, lower) /(self.tauUpperLower**2 + 
+                                                   (resonancew-wl)**2)
+
+            self.layerWidths[n] = width + self.xres
+            self.populate_x()
+            self.solve_whole()
+            self.dipole(upper, lower)
+            resonancew = self.deltaE/hbar
+            FoMforward = self.calc_FoM(upper, lower)/(self.tauUpperLower**2 + 
+                                                   (resonancew-wl)**2)
+
+            FoMpp = (FoMforward + FoMback - 2*FoMnow)
+            FoMp = (FoMforward - FoMback)/2
+            diff = -FoMp/FoMpp
+            print("%d-th interation, FoMs=[%f, %f, %f], diff=%.2f"%(
+                i+1, FoMback, FoMnow, FoMforward, diff))
+            if abs(diff) < 0.5:
+                print("Converged at width=%.2f!"%width)
+                self.layerWidths[n] = width
+                self.populate_x()
+                self.solve_whole()
+                return
+            elif FoMpp > 0:
+                print("FoM'' > 0, Newton cannot go maximum. set 5*xres")
+                diff = 5 if FoMp > 0 else -5
+            elif abs(diff) > width/self.xres * 0.2 and abs(diff) > 5:
+                print("Difference too big.. set it to 5*xres")
+                diff = 5 if diff > 0 else -5
+            else:
+                diff = round(diff)
+
+            width += diff * self.xres
+            self.layerWidths[n] = width
+            self.populate_x()
+            self.solve_whole()
+            self.dipole(upper, lower)
+            FoMnow = self.calc_FoM(upper, lower)
+            wl = h * c0 / (e0 * self.deltaE) * 1e6
+            print("\twidth=%.2f, FoM=%.2f, lambda=%.1f"%(width, FoMnow, wl))
+            FoMnow = FoMnow/(self.tauUpperLower**2 + (resonancew-wl)**2)
+
+        print("Maximum iteration reached! width=%.2f"%width)
+        self.layerWidths[n] = width
+        self.populate_x()
+        self.solve_whole()
 
 # vim: ts=4 sw=4 sts=4 expandtab
