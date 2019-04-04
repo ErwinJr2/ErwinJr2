@@ -44,19 +44,19 @@ __declspec(dllexport)
  * \param[out] *Vc (output) Coulomb field (unit = Volt)
  */
 double CoulombField(double step, numpyint N, 
-		const double *eDensity, const double *eps,
-		double *Vc) {
-       	int i;
-	const double eUnit = e0*step;
-	/* Electrical displacement is half a step ahead of Vc */
-	double D = eDensity[0]*eUnit/2; 
-	Vc[0] = 0;
-	for(i=1; i<N; i++) {
-		Vc[i] = Vc[i-1] - D / (eps0*eps[i]) * step;
-		D += (eDensity[i]+eDensity[i-1])/2*eUnit;
-	}
-	D += eDensity[N-1]*eUnit/2;
-	return D;
+        const double *eDensity, const double *eps,
+        double *Vc) {
+           int i;
+    const double eUnit = e0*step;
+    /* Electrical displacement is half a step ahead of Vc */
+    double D = eDensity[0]*eUnit/2; 
+    Vc[0] = 0;
+    for(i=1; i<N; i++) {
+        Vc[i] = Vc[i-1] - D / (eps0*eps[i]) * step;
+        D += (eDensity[i]+eDensity[i-1])/2*eUnit;
+    }
+    D += eDensity[N-1]*eUnit/2;
+    return D;
 }
 
 
@@ -69,15 +69,15 @@ __declspec(dllexport)
  * with is a nature conditon for charge in vaccum. 
  */
 double CoulombField0(double step, numpyint N, 
-		const double *eDensity, const double *eps,
-		double *Vc) {
-       	int i;
-	double D = CoulombField(step, N, eDensity, eps, Vc);
-	D = D/2;
-	for(i=0; i<N; i++) {
-		Vc[i] += D/(eps0 * eps[i])*i*step;
-	}
-	return D;
+        const double *eDensity, const double *eps,
+        double *Vc) {
+           int i;
+    double D = CoulombField(step, N, eDensity, eps, Vc);
+    D = D/2;
+    for(i=0; i<N; i++) {
+        Vc[i] += D/(eps0 * eps[i])*i*step;
+    }
+    return D;
 }
 
 

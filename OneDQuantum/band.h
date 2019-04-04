@@ -23,9 +23,9 @@ typedef numpyint (*UpdateFunc)(Band *, double, const double *, double *);
 
 /** \brief Base class for band structure */
 typedef struct BAND{
-        const UpdateFunc update;  /**< Update band structure */
-	numpyint N;               /**< Size of datas */
-	double *Eg;               /**< Band gap in eV */
+    const UpdateFunc update;  /**< Update band structure */
+    numpyint N;               /**< Size of datas */
+    double *Eg;               /**< Band gap in eV */
 } Band; 
 
 #ifdef _WINDLL
@@ -39,7 +39,7 @@ __declspec(dllexport)
 #endif 
 /** \brief Initiate new Zinc-blende semiconductor */
 Band *ZBband_new(numpyint N, const double *xEg, const double *xF,
-		const double *xEp, const double *xESO);
+        const double *xEp, const double *xESO);
 
 #ifdef _WINDLL
 __declspec(dllexport)
@@ -52,7 +52,7 @@ __declspec(dllexport)
 #endif
 /** \brief Initiate new Wurtzite semiconductor */
 Band *WZband_new(numpyint N, const double *xEg, 
-		 const double *xEp, const double *xESO);
+        const double *xEp, const double *xESO);
 
 #ifdef _WINDLL
 __declspec(dllexport)

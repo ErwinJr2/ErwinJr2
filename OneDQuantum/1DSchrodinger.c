@@ -47,28 +47,29 @@ extern "C" {
 inline 
 #endif
 double ode(double step, numpyint N, double y0, double y1, 
-		double E, const double *V, const double *m, double *y) {
-	int n; 
-	y[0] = y0;
-	y[1] = y1;
-	const double unit = 2*m0/sq(hbar)*e0*sq(ANG*step);
-	for (n = 1; n < N-1; n++) {
-		if(fabs(m[n+1]-m[n])/step < 1E-5*m[n] &&
-				fabs(m[n] - m[n-1])/step < 1E-5*m[n-1] ) {
-			/* Numerov's method, step error O(step^6) */
-			/* is bad for m is in the middle of derivative TODO*/ 
-			y[n+1] = (2 * y[n] * (1.0 - 5.0/12 * ( E - V[n]) * unit * m[n]) 
-					- y[n-1] * (1.0 + 1.0/12 * (E - V[n-1]) * unit * m[n-1])) 
-				/ (1.0 + 1.0/12 * (E - V[n+1]) * unit * m[n+1]);
-		}
-		else {
-			double mmp = (m[n]/m[n+1] - m[n]/m[n-1])/4; // m*(1/m)' to O(^3)
-			/* Simple Euler's method, setp error O(step^4) */
-			y[n+1] = (-(E-V[n])*unit*m[n]*y[n] +
-					2*y[n] - (1-mmp)*y[n-1])/(1 + mmp);
-		}
-	}
-	return y[N-1];
+        double E, const double *V, const double *m, double *y) {
+    int n; 
+    y[0] = y0;
+    y[1] = y1;
+    const double unit = 2*m0/sq(hbar)*e0*sq(ANG*step);
+    for (n = 1; n < N-1; n++) {
+        if(fabs(m[n+1]-m[n])/step < 1E-5*m[n] &&
+                fabs(m[n] - m[n-1])/step < 1E-5*m[n-1] ) {
+            /* Numerov's method, step error O(step^6) */
+            /* is bad for m is in the middle of derivative TODO*/ 
+            y[n+1] = (2 * y[n] * (1.0 - 5.0/12 * ( E - V[n]) * unit * m[n]) 
+                    - y[n-1] * (1.0 + 1.0/12 * (E - V[n-1]) * unit * m[n-1])) 
+                / (1.0 + 1.0/12 * (E - V[n+1]) * unit * m[n+1]);
+        }
+        else {
+            double mmp = (m[n]/m[n+1] - m[n]/m[n-1])/4; // m*(1/m)' to O(^3)
+            /* Simple Euler's method, setp error O(step^4), 
+             * TODO: try RK4 */
+            y[n+1] = (-(E-V[n])*unit*m[n]*y[n] +
+                    2*y[n] - (1-mmp)*y[n-1])/(1 + mmp);
+        }
+    }
+    return y[N-1];
 }
 
 
@@ -97,59 +98,59 @@ __declspec(dllexport)
  *                   wavefunction with energy EigenEs[i].
  */
 void FillPsi(double step, numpyint N, const double *EigenEs,
-		numpyint EN, const double *V, double *m, double* psis, 
-		Band * const mat) {
-	int i; 
+        numpyint EN, const double *V, double *m, double* psis, 
+        Band * const mat) {
+    int i; 
 #ifdef _DEBUG
     if(mat != NULL) {
-		assert(N == mat->N);
+        assert(N == mat->N);
     }
 #endif
 #ifdef __MP
-	#ifdef _DEBUG
-	printf("Start a FillPsi with openMP.\n");
-	#endif
-	#pragma omp parallel
+    #ifdef _DEBUG
+    printf("Start a FillPsi with openMP.\n");
+    #endif
+    #pragma omp parallel
 #endif
-	{
-		double *bandm;
-		if (mat != NULL) {
-			bandm = (double*)malloc(N*sizeof(double));
-		}
-		else {
-			bandm = m;
-		}
+    {
+        double *bandm;
+        if (mat != NULL) {
+            bandm = (double*)malloc(N*sizeof(double));
+        }
+        else {
+            bandm = m;
+        }
 #ifdef __MP
-	#ifdef _DEBUG
-			printf("    From thread %d out of %d\n", 
-					omp_get_thread_num(), omp_get_num_threads());
-	#endif
-	    #pragma omp for
+    #ifdef _DEBUG
+            printf("    From thread %d out of %d\n", 
+                    omp_get_thread_num(), omp_get_num_threads());
+    #endif
+        #pragma omp for
 #endif
-		for(i=0; i<EN; i++) {
-			int j;
-			double* psi = psis + i*N;
-			double modsq = 0;
-			if (mat != NULL) {
-				/*MP assume only mass is updated*/
-				UpdateBand(mat, EigenEs[i], V, bandm);
-			}
-			ode(step, N, 0.0, Y_EPS, EigenEs[i], V, bandm, psi);
-			/* Normalization */
-			for(j=0; j<N; j++) {
-				modsq += sq(psi[j]);
-			}
-			modsq = sqrt(modsq * step);
-			for(j=0; j<N; j++) {
-				psi[j] /= modsq;
-			}
-		}
-		if (mat != NULL) {
-			free(bandm);
+        for(i=0; i<EN; i++) {
+            int j;
+            double* psi = psis + i*N;
+            double modsq = 0;
+            if (mat != NULL) {
+                /*MP assume only mass is updated*/
+                UpdateBand(mat, EigenEs[i], V, bandm);
+            }
+            ode(step, N, 0.0, Y_EPS, EigenEs[i], V, bandm, psi);
+            /* Normalization */
+            for(j=0; j<N; j++) {
+                modsq += sq(psi[j]);
+            }
+            modsq = sqrt(modsq * step);
+            for(j=0; j<N; j++) {
+                psi[j] /= modsq;
+            }
+        }
+        if (mat != NULL) {
+            free(bandm);
             bandm = NULL;
-		}
-	}
-	return; 
+        }
+    }
+    return; 
 }
 
 /** 
@@ -189,124 +190,124 @@ __declspec(dllexport)
  *
  */
 numpyint Solve1D(double step, numpyint N, 
-		const double *Es, numpyint EN, 
-		const double *V, double *m, Band * const mat,
-		double *EigenE) {
-	double *yend; 
-	int NofZeros=0;
-	int i;
+        const double *Es, numpyint EN, 
+        const double *V, double *m, Band * const mat,
+        double *EigenE) {
+    double *yend; 
+    int NofZeros=0;
+    int i;
 #ifdef _DEBUG
-	if(mat != NULL) {
-		assert(N == mat->N);
-	}
+    if(mat != NULL) {
+        assert(N == mat->N);
+    }
 #endif
-	yend = (double *)malloc(EN * sizeof(double));
+    yend = (double *)malloc(EN * sizeof(double));
 #ifdef __MP
-	#ifdef _DEBUG
-	printf("Start a Solve1D with openMP.\n");
-	#endif
-	#pragma omp parallel
+    #ifdef _DEBUG
+    printf("Start a Solve1D with openMP.\n");
+    #endif
+    #pragma omp parallel
 #endif
-	{
-		double *y = (double *)malloc(N * sizeof(double));
-		double *mband;
-		if(mat != NULL) { 
-			mband = (double *)malloc(N * sizeof(double));
-		}
-		else {
-			mband = m;
-		}
+    {
+        double *y = (double *)malloc(N * sizeof(double));
+        double *mband;
+        if(mat != NULL) { 
+            mband = (double *)malloc(N * sizeof(double));
+        }
+        else {
+            mband = m;
+        }
 #ifdef __MP
-	#ifdef _DEBUG
-		printf("    From thread %d out of %d\n", 
-				omp_get_thread_num(), omp_get_num_threads());
-	#endif
-		#pragma omp for
+    #ifdef _DEBUG
+        printf("    From thread %d out of %d\n", 
+                omp_get_thread_num(), omp_get_num_threads());
+    #endif
+        #pragma omp for
 #endif
-		for(i=0; i<EN; i++) {
-			if(mat != NULL) { 
-				UpdateBand(mat, Es[i], V, mband);
-			}
-			yend[i] = ode(step, N, 0.0, Y_EPS, Es[i], V, mband, y);
-		}
+        for(i=0; i<EN; i++) {
+            if(mat != NULL) { 
+                UpdateBand(mat, Es[i], V, mband);
+            }
+            yend[i] = ode(step, N, 0.0, Y_EPS, Es[i], V, mband, y);
+        }
 
 #ifdef __MP
-		#pragma omp barrier
-		#pragma omp for ordered
+        #pragma omp barrier
+        #pragma omp for ordered
 #endif
-		for(i=1; i<EN; i++) {
-			double E0, E1, E2;
-			double y0, y1, y2;
-			if(yend[i] == 0) {
-				E0 = Es[i-1];
-			}
-			else if(yend[i]*yend[i-1] < 0) {
+        for(i=1; i<EN; i++) {
+            double E0, E1, E2;
+            double y0, y1, y2;
+            if(yend[i] == 0) {
+                E0 = Es[i-1];
+            }
+            else if(yend[i]*yend[i-1] < 0) {
                 /* Here secant method is used instead of Newton's 
-                 * because secant method is more stable, and since the 
-                 * extra yend evaluation introduced in discret derivative 
-                 * for Newton's method, secant method is still more efficient
-                 * */
-				E0 = findZero(Es[i], yend[i], Es[i-1], yend[i-1]);
+                 * * because secant method is more stable, and since the 
+                 * * extra yend evaluation introduced in discret derivative 
+                 * * for Newton's method, secant method is still more efficient
+                 * * */
+                E0 = findZero(Es[i], yend[i], Es[i-1], yend[i-1]);
 #ifndef SIMPLE
-				int count=0; 
-				if(mat != NULL) { 
-					UpdateBand(mat, E0, V, mband);
-				}
-				y0 = ode(step, N, 0.0, Y_EPS, E0, V, mband, y);
-				y1 = yend[i-1];
-				E1 = Es[i-1];
-				y2 = yend[i];
-				E2 = Es[i];
-				/* Filter singular case */
-				if(fabs(y0) > fabs(yend[i]) || fabs(y0) > fabs(yend[i-1])){
-					continue;
-				}
-				while(fabs(y0) > 1e-14 && fabs(E2-E1) > 1e-7 && count < 20){
-	#ifdef _DEBUG
+                int count=0; 
+                if(mat != NULL) { 
+                    UpdateBand(mat, E0, V, mband);
+                }
+                y0 = ode(step, N, 0.0, Y_EPS, E0, V, mband, y);
+                y1 = yend[i-1];
+                E1 = Es[i-1];
+                y2 = yend[i];
+                E2 = Es[i];
+                /* Filter singular case */
+                if(fabs(y0) > fabs(yend[i]) || fabs(y0) > fabs(yend[i-1])){
+                    continue;
+                }
+                while(fabs(y0) > 1e-14 && fabs(E2-E1) > 1e-7 && count < 20){
+    #ifdef _DEBUG
                     printf("    Iter No. %d, E0=%.8f, E1=%.8f, E2=%.8f, "
                             "Delta=%g\n", 
                             count, E0, E1, E2, fabs(E2-E1));
-	#endif
-					if(y0 * y1 < 0) {
-						y2 = y0;
-						E2 = E0; 
-					}
-					else {
-						y1 = y0;
-						E1 = E0;
-					}
-					E0 = findZero(E1, y1, E2, y2);
-					if(mat != NULL) { 
-						UpdateBand(mat, E0, V, mband);
-					}
-					y0 = ode(step, N, 0.0, Y_EPS, E0, V, mband, y);
-					count++;
-				}
-	#ifdef _DEBUG
-				printf("After %d times secant iteration, E=%.8f Err=%e\n", 
-						count, E0, fabs(y0));
-	#endif
+    #endif
+                    if(y0 * y1 < 0) {
+                        y2 = y0;
+                        E2 = E0; 
+                    }
+                    else {
+                        y1 = y0;
+                        E1 = E0;
+                    }
+                    E0 = findZero(E1, y1, E2, y2);
+                    if(mat != NULL) { 
+                        UpdateBand(mat, E0, V, mband);
+                    }
+                    y0 = ode(step, N, 0.0, Y_EPS, E0, V, mband, y);
+                    count++;
+                }
+    #ifdef _DEBUG
+                printf("After %d times secant iteration, E=%.8f Err=%e\n", 
+                        count, E0, fabs(y0));
+    #endif
 #endif
-				}
-				else {
-					continue;
-				}
+                }
+                else {
+                    continue;
+                }
 #ifdef __MP
-				#pragma omp ordered
+                #pragma omp ordered
 #endif
-				EigenE[NofZeros++] = E0;
-		}
-		free(y);
-		y = NULL;
-		if (mat != NULL) {
-			free(mband);
-			mband = NULL;
-		}
-	}
+                EigenE[NofZeros++] = E0;
+        }
+        free(y);
+        y = NULL;
+        if (mat != NULL) {
+            free(mband);
+            mband = NULL;
+        }
+    }
 
-	free(yend);
-	yend = NULL;
-	return NofZeros;
+    free(yend);
+    yend = NULL;
+    return NofZeros;
 }
 
 

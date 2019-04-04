@@ -50,38 +50,38 @@ __declspec(dllexport)
  * \param[in] *eDensity (output) electron density (unit Angstrom^-3)
  */
 double FermiDirac0(double EF, const double *EigenEs, numpyint EN, 
-		const double *m, const double* psis, numpyint N, double step, 
-		double *eDensity) {
+        const double *m, const double* psis, numpyint N, double step, 
+        double *eDensity) {
         int i;
-       	double sheetDensity = 0;
-	/* double beta = 1/(kb*T); */
-	for(i=0; i<N; i++) {
-		eDensity[i] = 0;
-	}
-	for(i=0; i<EN; i++) {
-		int j;
-		/* double nbar = 1/(exp(beta * (EigenEs[i]-EF)) + 1); */
-		const double* psi = psis + i*N;
-		double invM = 0;  
-		/* Density of states effective mass should be the Harmonic mean of
-		 * effective mass */
-		double DoS2D;
-		if(EigenEs[i] > EF)
-			break;
-		for(j=0; j<N; j++) {
-			invM += sq(psi[j])/m[j];
-		}
-		invM *= step;
-		DoS2D = m0/(M_PI*sq(hbar)*invM)*sq(ANG)*e0; 
-		/* DoS2D_2D = m/(pi*\hbar^2), spin included, Unit Angstrom^-2eV^-1 */
-		for(j=0; j<N; j++) {
-		        eDensity[j] += sq(psi[j])*DoS2D*(EF-EigenEs[i]);
-			/* sheetDensity += eDensity[j]*step; --->X */
-		}
-		sheetDensity += DoS2D*(EF-EigenEs[i]);
-		/* psi is normalized.. It's equivlent with X */
-	}
-	return sheetDensity;
+           double sheetDensity = 0;
+    /* double beta = 1/(kb*T); */
+    for(i=0; i<N; i++) {
+        eDensity[i] = 0;
+    }
+    for(i=0; i<EN; i++) {
+        int j;
+        /* double nbar = 1/(exp(beta * (EigenEs[i]-EF)) + 1); */
+        const double* psi = psis + i*N;
+        double invM = 0;  
+        /* Density of states effective mass should be the Harmonic mean of
+         * effective mass */
+        double DoS2D;
+        if(EigenEs[i] > EF)
+            break;
+        for(j=0; j<N; j++) {
+            invM += sq(psi[j])/m[j];
+        }
+        invM *= step;
+        DoS2D = m0/(M_PI*sq(hbar)*invM)*sq(ANG)*e0; 
+        /* DoS2D_2D = m/(pi*\hbar^2), spin included, Unit Angstrom^-2eV^-1 */
+        for(j=0; j<N; j++) {
+                eDensity[j] += sq(psi[j])*DoS2D*(EF-EigenEs[i]);
+            /* sheetDensity += eDensity[j]*step; --->X */
+        }
+        sheetDensity += DoS2D*(EF-EigenEs[i]);
+        /* psi is normalized.. It's equivlent with X */
+    }
+    return sheetDensity;
 }
 
 
@@ -107,45 +107,45 @@ __declspec(dllexport)
  * \param[in] *eDensity (output) electron density (unit Angstrom^-3)
  */
 double FermiDirac0N(double sheet, const double *EigenEs, numpyint EN, 
-		const double *m, const double* psis, numpyint N, double step, 
-		double* eDensity) {
-       	int i;
-	double sheetDensity = 0;
-	double DoS2Dsum = 0;
-	for(i=0; i<N; i++) {
-		eDensity[i] = 0;
-	}
-	for(i=0; i<EN; i++) {
-		int j;
-		const double* psi = psis + i*N;
-		double invM = 0;  
-		/* Density of states effective mass should be the Harmonic mean of
-		 * effective mass */
-		double Emax;
-		for(j=0; j<N; j++) {
-			invM += sq(psi[j])/m[j];
-		}
-		invM *= step;
-		DoS2Dsum += m0/(M_PI*sq(hbar)*invM)*sq(ANG)*e0; 
-		/* DoS2D_2D = m/(pi*\hbar^2), spin included, Unit Angstrom^-2eV^-1 */
+        const double *m, const double* psis, numpyint N, double step, 
+        double* eDensity) {
+           int i;
+    double sheetDensity = 0;
+    double DoS2Dsum = 0;
+    for(i=0; i<N; i++) {
+        eDensity[i] = 0;
+    }
+    for(i=0; i<EN; i++) {
+        int j;
+        const double* psi = psis + i*N;
+        double invM = 0;  
+        /* Density of states effective mass should be the Harmonic mean of
+         * effective mass */
+        double Emax;
+        for(j=0; j<N; j++) {
+            invM += sq(psi[j])/m[j];
+        }
+        invM *= step;
+        DoS2Dsum += m0/(M_PI*sq(hbar)*invM)*sq(ANG)*e0; 
+        /* DoS2D_2D = m/(pi*\hbar^2), spin included, Unit Angstrom^-2eV^-1 */
 #ifdef _DEBUG 
-		printf("Energy at %e, Dossum=%e, m* = %e\n", 
-				EigenEs[i], DoS2Dsum, 1/invM);
+        printf("Energy at %e, Dossum=%e, m* = %e\n", 
+                EigenEs[i], DoS2Dsum, 1/invM);
 #endif
-		Emax = (sheet - sheetDensity)/(DoS2Dsum); 
-		if(i == EN-1 || EigenEs[i] + Emax <= EigenEs[i+1]) {
-			for(j=0; j<N; j++) {
-				eDensity[j] += sq(psi[j])*DoS2Dsum*Emax;
-			}
-			return EigenEs[i] + Emax;
-		}
-		for(j=0; j<N; j++) {
-		  eDensity[j] += sq(psi[j])*DoS2Dsum*(EigenEs[i+1]-EigenEs[i]);
-		}
-		sheetDensity += DoS2Dsum * (EigenEs[i+1]-EigenEs[i]);
-	}
-	printf("Error: You shouldn't reach here!\n");
-	return NAN;
+        Emax = (sheet - sheetDensity)/(DoS2Dsum); 
+        if(i == EN-1 || EigenEs[i] + Emax <= EigenEs[i+1]) {
+            for(j=0; j<N; j++) {
+                eDensity[j] += sq(psi[j])*DoS2Dsum*Emax;
+            }
+            return EigenEs[i] + Emax;
+        }
+        for(j=0; j<N; j++) {
+          eDensity[j] += sq(psi[j])*DoS2Dsum*(EigenEs[i+1]-EigenEs[i]);
+        }
+        sheetDensity += DoS2Dsum * (EigenEs[i+1]-EigenEs[i]);
+    }
+    printf("Error: You shouldn't reach here!\n");
+    return NAN;
 }
 
 #ifdef _WINDLL
@@ -170,8 +170,8 @@ double FermiDirac0N(double sheet, const double *EigenEs, numpyint EN,
  *
  */
 double FermiDirac(double T, double EF, const double *EigenEs, numpyint EN,
-		     const double *m, const double* psis, numpyint N, double step,
-		     double* eDensity) {
+             const double *m, const double* psis, numpyint N, double step,
+             double* eDensity) {
     int i;
     double sheetDensity = 0;
     double beta = 1/(kb*T);
@@ -183,22 +183,22 @@ double FermiDirac(double T, double EF, const double *EigenEs, numpyint EN,
       //double nbar = 1/(exp(beta * (EigenEs[i]-EF)) + 1);
       double nbarIntegral = EF - EigenEs[i] + log(1+exp(beta*(EigenEs[i]-EF)))/beta;
       if (isinf(nbarIntegral)) {
-	  nbarIntegral = 0.0;
-	} // dirty way to get around log(1+exp)
+      nbarIntegral = 0.0;
+    } // dirty way to get around log(1+exp)
       const double* psi = psis + i*N;
       double invM = 0;
       /* Density of states effective mass should be the Harmonic mean of      
        * effective mass */
       double DoS2D;
       for(j=0; j<N; j++) {
-	invM += sq(psi[j])/m[j];
+    invM += sq(psi[j])/m[j];
       }
       invM *= step;
       DoS2D = m0/(M_PI*sq(hbar)*invM)*sq(ANG)*e0;
       /* DoS2D_2D = m/(pi*\hbar^2), spin included, Unit Angstrom^-2eV^-1 */
       for(j=0; j<N; j++) {
-	eDensity[j] += sq(psi[j])*DoS2D*nbarIntegral;
-	/* sheetDensity += eDensity[j]*step; --->X */
+    eDensity[j] += sq(psi[j])*DoS2D*nbarIntegral;
+    /* sheetDensity += eDensity[j]*step; --->X */
       }
       sheetDensity += DoS2D*nbarIntegral;
       /* psi is normalized.. It's equivlent with X */
@@ -216,7 +216,7 @@ __declspec(dllexport)
  *
  */
 double DFermiDirac(double T, double EF, const double *EigenEs, numpyint EN, 
-		   const double *m, const double* psis, numpyint N, double step) {
+           const double *m, const double* psis, numpyint N, double step) {
     int i;
     double dSheetDensity = 0.0;
     double beta = 1.0/(kb*T);
@@ -266,8 +266,8 @@ __declspec(dllexport)
  * \param[in] *eDensity (output) electron density (unit Angstrom^-3)
  */
 double FermiDiracN(double T, double sheet, const double *EigenEs, numpyint EN, 
-		    const double *m, const double* psis, numpyint N, double step, 
-		    double* eDensity) {
+            const double *m, const double* psis, numpyint N, double step, 
+            double* eDensity) {
     int i;
     /* double sheetDensity; */
     for(i=0; i<N; i++) {
@@ -316,44 +316,44 @@ __declspec(dllexport)
  * 
  */
 double Boltzmann(double T, double EF, const double *EigenEs, numpyint EN, 
-		const double *m, const double* psis, numpyint N, double step,
-		double* eDensity) {
-	const double MAXKT = 50;
-	int i;
-	double sheetDensity = 0;
-	double kt = kb*T;
-	/* if(EigenEs[0] < EF + 2*kt) { */
-	/*     printf("Warning: " */
-	/*             "Ground state lower than Fermi energy + Thermal scale\n"); */
-	/*     printf("  E_F=%e; kbT=%e; E_0=%e\n", EF, kt, EigenEs[0]); */
-	/* } */
-	for(i=0; i<N; i++) {
-		eDensity[i] = 0;
-	}
-	for(i=0; i<1; i++) {
-		int j;
-		const double* psi = psis + i*N;
-		double invM = 0;  
-		/* Density of states effective mass should be the Harmonic mean of
-		 * effective mass */
-		double DoS2D;
-		double DeltaE = EigenEs[i] - EF;
-		if(DeltaE > MAXKT*kt)
-			break;
-		for(j=0; j<N; j++) {
-			invM += sq(psi[j])/m[j];
-		}
-		invM *= step;
-		DoS2D = m0/(M_PI*sq(hbar)*invM)*sq(ANG)*e0; 
-		/* DoS2D_2D = m/(pi*\hbar^2), spin included, Unit Angstrom^-2eV^-1 */
-		for(j=0; j<N; j++) {
-			eDensity[j] += sq(psi[j])*DoS2D*kt*exp(-DeltaE/kt);
-			/* sheetDensity += eDensity[j]*step; --> X */
-		}
-		sheetDensity += DoS2D*kt*exp(-DeltaE/kt); 
-		/* psi is normalized.. It's equivlent with X */
-	}
-	return sheetDensity;
+        const double *m, const double* psis, numpyint N, double step,
+        double* eDensity) {
+    const double MAXKT = 50;
+    int i;
+    double sheetDensity = 0;
+    double kt = kb*T;
+    /* if(EigenEs[0] < EF + 2*kt) { */
+    /*     printf("Warning: " */
+    /*             "Ground state lower than Fermi energy + Thermal scale\n"); */
+    /*     printf("  E_F=%e; kbT=%e; E_0=%e\n", EF, kt, EigenEs[0]); */
+    /* } */
+    for(i=0; i<N; i++) {
+        eDensity[i] = 0;
+    }
+    for(i=0; i<1; i++) {
+        int j;
+        const double* psi = psis + i*N;
+        double invM = 0;  
+        /* Density of states effective mass should be the Harmonic mean of
+         * effective mass */
+        double DoS2D;
+        double DeltaE = EigenEs[i] - EF;
+        if(DeltaE > MAXKT*kt)
+            break;
+        for(j=0; j<N; j++) {
+            invM += sq(psi[j])/m[j];
+        }
+        invM *= step;
+        DoS2D = m0/(M_PI*sq(hbar)*invM)*sq(ANG)*e0; 
+        /* DoS2D_2D = m/(pi*\hbar^2), spin included, Unit Angstrom^-2eV^-1 */
+        for(j=0; j<N; j++) {
+            eDensity[j] += sq(psi[j])*DoS2D*kt*exp(-DeltaE/kt);
+            /* sheetDensity += eDensity[j]*step; --> X */
+        }
+        sheetDensity += DoS2D*kt*exp(-DeltaE/kt); 
+        /* psi is normalized.. It's equivlent with X */
+    }
+    return sheetDensity;
 }
 
 
@@ -373,18 +373,18 @@ __declspec(dllexport)
  *
  */
 double BoltzmannN(double T, double sheet, const double *EigenEs, numpyint EN, 
-		const double *m, const double* psis, numpyint N, double step,
-		double* eDensity) {
-	double sheet0 = Boltzmann(T, 0, EigenEs, EN, m, psis, N, step, eDensity); 
-	double EF = kb * T * log(sheet / sheet0);
+        const double *m, const double* psis, numpyint N, double step,
+        double* eDensity) {
+    double sheet0 = Boltzmann(T, 0, EigenEs, EN, m, psis, N, step, eDensity); 
+    double EF = kb * T * log(sheet / sheet0);
 #ifdef _DEBUG
-	printf("Sheet density = %e at EF = 0, so EF = %e\n", sheet0, EF);
+    printf("Sheet density = %e at EF = 0, so EF = %e\n", sheet0, EF);
 #endif
-	int i;
-	for(i=0; i<N; i++) {
-		eDensity[i] *= sheet/sheet0;
-	}
-	return EF;
+    int i;
+    for(i=0; i<N; i++) {
+        eDensity[i] *= sheet/sheet0;
+    }
+    return EF;
 }
 
 
