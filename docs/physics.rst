@@ -12,7 +12,7 @@ Numerically solving 1D Schrodinger's Equation
 The time-independent Schrodinger equation has the form
 
 .. math::
-   \left[-\frac{\hbar^2}{2m}\frac{\partial}{\partial x^2} 
+   \left[-\frac{\hbar^2}{2}\frac{\partial}{\partial x} \frac{1}{m} \frac{\partial}{\partial x}
    + V(x)\right]\psi_i(x) = E_i\psi_i(x)
 
 The inputs of the Schrodinger equation solver include: a finite 1D array 
@@ -20,6 +20,8 @@ with position :math:`x`, the corresponding potential :math:`V(x)` with the same 
 effective mass :math:`m`, and an eigenstate range specified by the user,
 :math:`\left[E_\text{min}, E_\text{max}\right]`. The outputs are the eigenfunction,
 :math:`\psi`, and the eigenvalue, :math:`E`.
+The difference from standard form of the mass between spatial derivative is the requirement 
+of Hermiticity for spatial dependent mass. 
 
 We solve the 1D Schrodinger's equation numerically. Our
 method combines the Newton's method that searches for eigenvalues :math:`E`
@@ -31,13 +33,17 @@ Shooting algorithm for eigen-problem
 
 #. Initialize with a range for eigen energies. 
 #. For each possible eigen energy, solve for the wavefunction using the
-   Numerov's method for second order differential equations, and check
-   whether the solution satisfies boundary condition. If so, the energy
-   is an eigen energy.
+   Numerov's method for second order differential equations (if the mass is constant, 
+   otherwise Euler's method), and check whether the solution satisfies boundary condition.
+   If so, the energy is an eigen energy.
 #. Use secant's method to find eigen energy. Newton's method is not chosen
    because the root finding converges usually ~10 interaction, and scant's
-   methdo (O(n^0.618)) compare to Newton's (O(n^0.5)) doesn't worth the 
+   method (O(n^0.618)) compare to Newton's (O(n^0.5)) doesn't worth the 
    extra wavefunction evaluation for numerical derivative. 
+#. One noticeable problem for shooting algorithm is that it can miss state pairs that are 
+   almost degenerate. When running the software and seeing missing of state, it is 
+   recommended to change the global field slightly and/or rotate the layer design and 
+   try again. 
 
 In this C library, the Schrodinger equation solver is implemented
 in :doc:`clib/file/1DSchrodinger_8c`. The Python interface is implemented in
@@ -61,9 +67,7 @@ the band structure can be expanded locally as
 
 .. math:: 
 
-   &E(k) \approx E_0 + \frac{\hbar^2 k^2}{2 m_\text{eff}}\\
-   &\frac{1}{m_\text{eff}} \equiv \frac{2}{\hbar^2}\frac{\partial^2 E}
-   {\partial k^2}
+   E(k) \approx E_0 + \frac{\hbar^2 k^2}{2 m_\text{eff}}
 
 where :math:`k` is the wave vector, and :math:`E_0` is the edge energy of the band. 
 
@@ -87,7 +91,8 @@ Where :math:`m_0` is electron mass in vacuum, :math:`E_g` is the bandgap
 at :math:`\Gamma` point, :math:`\Delta_{\text{SO}}, E_P, F` are parameters
 describing near-:math:`\Gamma` behavior of the conduction band and valence 
 band, :math:`\Delta E_c` is the energy of electrons above conduction band, 
-or effective kinetic energy.  
+or effective kinetic energy. When :math:`\Delta E_c=0` the model reduces to 
+standard effective mass model without non-parabolic dispersion. 
 See :cite:`vurgaftman2001band`, :cite:`PhysRevB.50.8663`. 
 
 For Wurtzite crystal, :math:`F=0`. 
