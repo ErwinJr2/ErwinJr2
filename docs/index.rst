@@ -1,4 +1,4 @@
-.. OneDQ documentation master file, created by
+.. ErwinJr2 documentation master file, created by
    sphinx-quickstart on Thu Dec  6 20:04:16 2018.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
@@ -25,13 +25,13 @@ See `Github <https://github.com/PrincetonUniversity/ErwinJr2/>`_ for the source 
    manual/install.rst
    manual/gui.rst
    manual/cli.rst
+   manual/physics
    ack.rst
 
 .. toctree::
    :maxdepth: 2
    :caption: For Developers
 
-   physics
    code_struct
    other
    Profiling

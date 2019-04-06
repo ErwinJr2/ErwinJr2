@@ -6,7 +6,7 @@ and electrical problems. A Python interface for the C library is
 also included in this package.
 
 
-Numerically solving 1D Schrodinger's Equation
+Numerically Solving 1D Schrodinger's Equation
 ---------------------------------------------
 
 The time-independent Schrodinger equation has the form
@@ -28,7 +28,7 @@ method combines the Newton's method that searches for eigenvalues :math:`E`
 and the Numerov's method that solves for the corresponding eigenfunction
 :math:`\psi(x)` given any specific :math:`E`. 
 
-Shooting algorithm for eigen-problem
+Shooting Algorithm for Eigen-problem
 ------------------------------------
 
 #. Initialize with a range for eigen energies. 
@@ -45,13 +45,10 @@ Shooting algorithm for eigen-problem
    recommended to change the global field slightly and/or rotate the layer design and 
    try again. 
 
-In this C library, the Schrodinger equation solver is implemented
-in :doc:`clib/file/1DSchrodinger_8c`. The Python interface is implemented in
-:py:mod:`OneDQuantum.OneDSchrodinger`.
 An example of solving simple Schrodinger equation can be found 
 :ref:`here<example_schrodinger>`.
 
-Effective mass in band 
+Effective Mass in Band 
 ----------------------
 
 Band theory predicts that movement of a particle in a potential over long
@@ -76,8 +73,7 @@ mass approximation is sometimes not enough. This can be corrected by
 including non-parabolic effective mass, or effective mass with energy
 dependence.  In this package, we will offer constant effective mass as simple
 solver and also non-parabolic effective mass computed using 
-:math:`k\cdot p` method. The computation of effective mass is implemented in
-:doc:`clib/file/band_8c` (also see :doc:`clib/file/band_8h`).
+:math:`k\cdot p` method. 
 
 Specifically in Zincblende crystal, the effective mass has the form including 
 non-parabolic dispersion effect: 
@@ -96,11 +92,14 @@ standard effective mass model without non-parabolic dispersion.
 See :cite:`vurgaftman2001band`, :cite:`PhysRevB.50.8663`. 
 
 For Wurtzite crystal, :math:`F=0`. 
+
+The computation of effective mass is implemented in
+:doc:`../clib/file/band_8c` (also see :doc:`../clib/file/band_8h`).
 The code structure is also capable of adding new crystal structures. 
 See the material sections for details. 
 
-Self-consistency solver for potential correction
-------------------------------------------------
+Self-consistency Solver for Electron Coulomb Potential
+------------------------------------------------------
 
 Electron-electron Coulomb interaction can be a determinant part of electron
 motion in semiconductors. To first order this interaction is included by
@@ -116,14 +115,11 @@ equations self-consistently.
 which means that the potential depends on the 
 eigenstates as well as the corresponding occupation number :math:`n_i`.
 
-In this C library, the Maxwell-Poisson equation solver is implemented
-in :doc:`clib/file/1DMaxwell_8c`. The Python interface is implemented in
-:py:mod:`OneDQuantum.OneDMaxwell`.
 An example comparing the results from solving the simple Schrodinger equation 
 and from solving the equation with the electron-electron interaction correction
 can be found :ref:`here<example_maxwell>`.
 
-Electron thermal distributions
+Electron Thermal Distributions
 ------------------------------
 
 The 1D Schrodinger's equation solver provides the energy bands, which are
@@ -155,9 +151,6 @@ constant chemical potential :math:`\mu` distribution and return total number of
 particles :math:`\sum n_i`, and given total number of particles :math:`\sum n_i` and
 return chemical potential :math:`\mu`.
 
-In this C library, the thermal statistics solver is implemented
-in :doc:`clib/file/1DThermal_8c`. The Python interface is implemented in
-:py:mod:`OneDQuantum.OneDThermal`.
 An example of finding the thermal distribution of electrons, 
 given eigen energies and wavefunctions,
 can be found :ref:`here<example_thermal>`.
