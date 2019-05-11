@@ -107,7 +107,7 @@ The scattering rate between state :math:`\psi_u` and :math:`\psi_l` is:
 
 .. math::
     &\frac{1}{\tau_{ul}} = 
-    \frac{m_{\text{eff}} e^2 \omega_{\text{LO}}}{2\hbar^2\epsilon_\rho}
+    \frac{m_{\text{eff}} e^2 \omega_{\text{LO}}}{8\pi\hbar^2\epsilon_\rho}
     \int_0^{2\pi} \frac{I_{ul}(Q_\theta)}{Q_\theta} \mathrm{d}\theta\\
     &I_{ul}(Q) = \iint \mathrm{d}z\mathrm{d}z' \psi_u(z)\psi_l(z)
     \mathrm{e}^{-Q\mid z-z'\mid}\psi_u(z')\psi_l(z') \\
