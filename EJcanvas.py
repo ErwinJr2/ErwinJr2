@@ -60,14 +60,15 @@ class EJcanvas(FigureCanvas):
         self.ylabel = ylabel
 
     def set_axes(self, fsize=config["fontsize"]):
-        self.axes.autoscale(enable=True, axis='x', tight=True)
-        self.axes.autoscale(enable=True, axis='y', tight=False)
+        self.axes.tick_params(axis='both', which='major', labelsize=fsize)
         self.axes.spines['top'].set_color('none')
         self.axes.spines['right'].set_color('none')
         self.axes.spines['bottom'].set_position(('outward', 5))
         self.axes.set_xlabel(self.xlabel, fontsize=fsize)
         self.axes.spines['left'].set_position(('outward', 5))
         self.axes.set_ylabel(self.ylabel, fontsize=fsize)
+        self.axes.autoscale(enable=True, axis='x', tight=True)
+        self.axes.autoscale(enable=True, axis='y', tight=True)
 
     def test(self):
         """A test function, plotting sin(x)"""
