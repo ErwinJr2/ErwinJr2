@@ -6,6 +6,8 @@ master:
 dev:
 [![dev Build Status](https://travis-ci.org/PrincetonUniversity/OneDQ.svg?branch=dev)](https://travis-ci.org/PrincetonUniversity/OneDQ)
 
+This branch is intended as part of personal final project for Princeton APC523 class, to compare different algorithms for eigenproblems. 
+
 ![Main Window Screenshot](./docs/figures/mainwindow.png)
 
 This is a extendable Python/C program for 1D quantum problem and Quantum Cascade Laser simulation. 
