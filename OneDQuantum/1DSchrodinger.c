@@ -262,7 +262,8 @@ numpyint Solve1D(double step, numpyint N,
                 if(fabs(y0) > fabs(yend[i]) || fabs(y0) > fabs(yend[i-1])){
                     continue;
                 }
-                while(fabs(y0) > 1e-14 && fabs(E2-E1) > 1e-7 && count < 20){
+                while(count < 40 && fabs(y0) > 1e-14 
+                        && fmin(fabs(E2-E0), fabs(E1-E0)) > 1e-14){
     #ifdef _DEBUG
                     printf("    Iter No. %d, E0=%.8f, E1=%.8f, E2=%.8f, "
                             "Delta=%g\n", 
