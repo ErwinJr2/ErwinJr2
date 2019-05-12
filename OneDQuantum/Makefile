@@ -23,18 +23,19 @@ endif
 
 all: 1DSchrodinger.$(EXT) 1DThermal.$(EXT) 1DMaxwell.$(EXT)
 MP:  1DSchrodinger_MP.$(EXT)
+RK4:  1DSchrodinger_RK4.$(EXT)
 
 1DSchrodinger_MP.$(EXT) : 1DSchrodinger_MP.o band.o
 	$(CC) -shared -fPIC -fopenmp $^ -o $@ -lm
 
-1DSchrodinger.$(EXT) : 1DSchrodinger.o band.o
-	$(CC) -shared -fPIC $^ -o $@ -lm
-
-%.$(EXT) : %.o
+%.$(EXT) : %.o band.o
 	$(CC) -shared -fPIC $^ -o $@ -lm
 
 1DSchrodinger.o : 1DSchrodinger.c science.h band.h
 	$(CC) $(CFLAGS) -c $< -o $@
+
+1DSchrodinger_RK4.o : 1DSchrodinger.c science.h band.h
+	$(CC) $(CFLAGS) -D __RK4 -c $< -o $@
 
 1DSchrodinger_MP.o : 1DSchrodinger.c science.h band.h
 	$(CC) $(CFLAGS) -fopenmp -D __MP -c $< -o $@
