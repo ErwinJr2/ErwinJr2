@@ -99,6 +99,7 @@ class QCLayers(object):
         self.Solver = Solver
         self.description = description
         self.NonParabolic = True
+        self.solveMatrix = False
         self.layerSelected = None
 
         self.subM = Material.Material(self.substrate, self.Temperature)
@@ -294,8 +295,10 @@ class QCLayers(object):
         return np.ma.masked_where(~self.xARs, self.xVc)
 
     def solve_whole(self):
-        # return self.solve_whole_ode()
-        return self.solve_whole_matrix()
+        if self.solveMatrix: 
+            return self.solve_whole_matrix()
+        else: 
+            return self.solve_whole_ode()
 
     def solve_whole_ode(self):
         """
@@ -313,9 +316,9 @@ class QCLayers(object):
         # # ground state for triangular well
         # Emin = 2.33810741 * (hbar**2*(self.EField*EUnit)**2/(
         #     2*m0*mass*e0**2))**(1/3)
-        # Es = np.linspace(np.min(self.xVc)+Emin, np.max(self.xVc), 1000)
-        Es = np.linspace(np.min(self.xVc), np.max(self.xVc), 1000)
-        # self.NonParabolic = False
+        # Es = np.linspace(np.min(self.xVc)+Emin, np.max(self.xVc), 1024)
+        Es = np.linspace(np.min(self.xVc), np.max(self.xVc), 1024)
+        self.NonParabolic = False
         if self.NonParabolic:
             band = onedq.Band("ZincBlende", self.xEg, self.xF, self.xEp,
                               self.xESO)

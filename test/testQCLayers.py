@@ -41,9 +41,9 @@ class TestQCLayers(unittest.TestCase):
         # plot_band(axes, qcl)
         # plt.show()
 
-        np.testing.assert_equal(qcl.eigenEs.shape, (36,),
+        np.testing.assert_equal(qcl.eigenEs.shape, (37,),
                                 'solve_whole eigenEs calculation wrong')
-        np.testing.assert_equal(qcl.psis.shape, (36, 1038),
+        np.testing.assert_equal(qcl.psis.shape, (37, 1038),
                                 'solve_whole psis calculation wrong')
 
     def test_solve_basis(self):
