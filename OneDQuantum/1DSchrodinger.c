@@ -64,10 +64,15 @@ double numerov(double step, numpyint N, double y0, double y1,
         }
         else {
             /* m*(1/m)'*step/2 to O(step^3) */
-            double mmp = (m[n]/m[n+1] - m[n]/m[n-1])/4; 
+            /* double mmp = (m[n]/m[n+1] - m[n]/m[n-1])/4;  */
+            /* double mmp = -(m[n+1]/m[n] - m[n-1]/m[n])/4;  */
             /* Simple Euler's method, setp error O(step^4) */
-            y[n+1] = (-(E-V[n])*unit*m[n]*y[n] +
-                    2*y[n] - (1-mmp)*y[n-1])/(1 + mmp);
+            /* y[n+1] = (-(E-V[n])*unit*m[n]*y[n] + 2*y[n]  */
+            /*           - (1-mmp)*y[n-1])/(1 + mmp); */
+            double mplus = (m[n+1] + m[n])/2;
+            double mminus = (m[n] + m[n-1])/2;
+            y[n+1] = (-(E-V[n])*unit*y[n] + (1/mplus + 1/mminus)*y[n] 
+                      - y[n-1]/mminus)*mplus;
         }
     }
     return y[N-1];
