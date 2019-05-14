@@ -55,6 +55,7 @@ double numerov(double step, numpyint N, double y0, double y1,
     for (n = 1; n < N-1; n++) {
         if(fabs(m[n+1]-m[n])/step < 1E-5*m[n] &&
                 fabs(m[n] - m[n-1])/step < 1E-5*m[n-1] ) {
+        /* if(0){ */
             /* Numerov's method, step error O(step^6) */
             /* is bad for m is in the middle of derivative TODO*/ 
             y[n+1] = (2 * y[n] * (1.0 - 5.0/12 * ( E - V[n]) * unit * m[n]) 
@@ -305,7 +306,7 @@ numpyint Solve1D(double step, numpyint N,
                 if(fabs(y0) > fabs(yend[i]) || fabs(y0) > fabs(yend[i-1])){
                     continue;
                 }
-                while(fabs(y0) > 1e-14 && fabs(E2-E1) > 1e-7 && count < 20){
+                while(fabs(y0) > 1e-20 && fabs(E2-E1) > 1e-14 && count < 40){
     #ifdef _DEBUG
                     printf("    Iter No. %d, E0=%.8f, E1=%.8f, E2=%.8f, "
                             "Delta=%g\n", 

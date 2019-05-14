@@ -28,6 +28,9 @@ RK4:  1DSchrodinger_RK4.$(EXT)
 1DSchrodinger_MP.$(EXT) : 1DSchrodinger_MP.o band.o
 	$(CC) -shared -fPIC -fopenmp $^ -o $@ -lm
 
+1DSchrodinger_RK4.$(EXT) : 1DSchrodinger_RK4.o band.o
+	$(CC) -shared -fPIC -fopenmp $^ -o $@ -lm
+
 %.$(EXT) : %.o band.o
 	$(CC) -shared -fPIC $^ -o $@ -lm
 
@@ -35,7 +38,7 @@ RK4:  1DSchrodinger_RK4.$(EXT)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 1DSchrodinger_RK4.o : 1DSchrodinger.c science.h band.h
-	$(CC) $(CFLAGS) -D __RK4 -c $< -o $@
+	$(CC) $(CFLAGS) -fopenmp -D __RK4 -D __MP -c $< -o $@
 
 1DSchrodinger_MP.o : 1DSchrodinger.c science.h band.h
 	$(CC) $(CFLAGS) -fopenmp -D __MP -c $< -o $@

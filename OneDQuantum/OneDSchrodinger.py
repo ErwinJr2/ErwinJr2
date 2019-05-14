@@ -11,12 +11,14 @@ __all__ = ['cSimpleSolve1D', 'cSimpleFillPsi',
 _doubleArray = np.ctypeslib.ndpointer(
     dtype=np.float64, ndim=1, flags="C_CONTIGUOUS")
 
-def bindOpenMP(on=True):
+def bindOpenMP(on=True, rk4=False):
     """
     set OpenMP. Default = True
     """
     global _clib
-    if(on):
+    if(rk4):
+        _clib = np.ctypeslib.load_library('1DSchrodinger_RK4', path)
+    elif(on):
         _clib = np.ctypeslib.load_library('1DSchrodinger_MP', path)
     else:
         _clib = np.ctypeslib.load_library('1DSchrodinger', path)

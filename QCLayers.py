@@ -9,6 +9,7 @@ import scipy.linalg as slg
 import OneDQuantum as onedq
 import Material
 import copy
+# onedq.OneDSchrodinger.bindOpenMP(rk4=True)
 
 EUnit = 1e-5    # E field unit from kV/cm to V/Angtrom
 
@@ -273,6 +274,20 @@ class QCLayers(object):
                              (self.xVSO, 'EvSO'), (self.xF, 'F')):
                 p[Indices] = self.mtrlAlloys[self.layerMtrls[n]].parm[key]
 
+        # populate mass half grid self.xMc[i] is m at i+-0.5
+        # for matrix solver only
+        self.xMcplus = np.empty(self.xPoints.size)
+        self.xMcminus = np.empty(self.xPoints.size)
+        for n in range(len(self.layerWidths)):
+            Indices = np.logical_or.reduce([
+                (self.xPoints >= layerNumCumSum[n] + k * periodL - self.xres/2) 
+                & (self.xPoints < layerNumCumSum[n+1] + k * periodL - self.xres/2)
+                for k in range(self.repeats)])
+            self.xMcplus[Indices] = self.mtrlAlloys[self.layerMtrls[n]].parm['me0']
+        self.xMcplus[-1] = self.xMcplus[-2]
+        self.xMcminus[1:] = self.xMcplus[:-1]
+        self.xMcminus[0] = self.xMcminus[1]
+
         ExtField = self.xPoints * self.EField * EUnit
         for p in (self.xVc, self.xVX, self.xVL, self.xVLH, self.xVSO):
             p -= ExtField
@@ -296,6 +311,7 @@ class QCLayers(object):
 
     def solve_whole(self):
         if self.solveMatrix: 
+        # if True: 
             return self.solve_whole_matrix()
         else: 
             return self.solve_whole_ode()
@@ -317,7 +333,7 @@ class QCLayers(object):
         # Emin = 2.33810741 * (hbar**2*(self.EField*EUnit)**2/(
         #     2*m0*mass*e0**2))**(1/3)
         # Es = np.linspace(np.min(self.xVc)+Emin, np.max(self.xVc), 1024)
-        Es = np.linspace(np.min(self.xVc), np.max(self.xVc), 1024)
+        Es = np.linspace(np.min(self.xVc), np.max(self.xVc), 2048)
         self.NonParabolic = False
         if self.NonParabolic:
             band = onedq.Band("ZincBlende", self.xEg, self.xF, self.xEp,
@@ -345,29 +361,16 @@ class QCLayers(object):
             the wave function
 
         """
-        # re-populate mass half grid self.xMc[i] is m at i+-0.5
-        layerNumCumSum = [0] + np.cumsum(self.layerWidths).tolist()
-        periodL = layerNumCumSum[-1]
-        self.xMcplus = np.empty(self.xPoints.size)
-        self.xMcminus = np.empty(self.xPoints.size)
-        for n in range(len(self.layerWidths)):
-            Indices = np.logical_or.reduce([
-                (self.xPoints >= layerNumCumSum[n] + k * periodL - self.xres/2) 
-                & (self.xPoints < layerNumCumSum[n+1] + k * periodL - self.xres/2)
-                for k in range(self.repeats)])
-            self.xMcplus[Indices] = self.mtrlAlloys[self.layerMtrls[n]].parm['me0']
-        self.xMcplus[-1] = self.xMcplus[-2]
-        self.xMcminus[1:] = self.xMcplus[:-1]
-        self.xMcminus[0] = self.xMcminus[1]
         # unit eV/step^2
         unit = hbar**2/(2*e0*m0*(1E-10*self.xres)**2)
         # diagonal and subdiagonal of Hamiltonian
-        Hdiag = unit*(1/self.xMcplus + 1/self.xMcminus) + self.xVc
-        Hsubd = -unit / self.xMcplus[:-1]
-        self.eigenEs, self.psis = slg.eigh_tridiagonal(Hdiag, Hsubd, 
+        self.Hdiag = unit*(1/self.xMcplus + 1/self.xMcminus) + self.xVc
+        self.Hsubd = -unit / self.xMcplus[:-1]
+        self.eigenEs, self.psis = slg.eigh_tridiagonal(self.Hdiag, self.Hsubd, 
             select='v', select_range=(np.min(self.xVc), np.max(self.xVc)))
+        # unit = hbar**2/(2*e0*m0*(1E-10*self.xres)**2)
         # Hsubd = -unit / self.xMcminus
-        # H = np.array([Hsubd, Hdiag])
+        # H = np.array([Hsubd, self.Hdiag])
         # self.eigenEs, self.psis = slg.eig_banded(H, overwrite_a_band=True, 
         #     select='v', select_range=(np.min(self.xVc), np.max(self.xVc)))
         self.psis /= sqrt(self.xres)
