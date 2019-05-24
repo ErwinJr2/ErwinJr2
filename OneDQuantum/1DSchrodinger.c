@@ -27,7 +27,7 @@ extern "C" {
 
 /**
  * 
- * An ODE solver for 
+ * An ODE solver using Numerov's method for 
  * \f$ -\frac{d}{dx}(\frac{\hbar^2}{2m(x)} \frac{dy(x)}{dx}) + V(x) y(x) = E y(x) \f$
  * with starting \f$ x_0 \f$ and \f$ y_0 \f$, \f$ y_1 \f$, 
  * ends at \f$ x_0 + N \times step \f$.
@@ -78,6 +78,16 @@ double numerov(double step, numpyint N, double y0, double y1,
     return y[N-1];
 }
 
+/**
+ * 
+ * An ODE solver using RK4 method for 
+ * \f$ -\frac{d}{dx}(\frac{\hbar^2}{2m(x)} \frac{dy(x)}{dx}) + V(x) y(x) = E y(x) \f$
+ * with starting \f$ x_0 \f$ and \f$ y_0 \f$, \f$ y_1 \f$, 
+ * ends at \f$ x_0 + N \times step \f$.
+ * No normalization imposed.
+ * See numerov() for arguments explaination 
+ *
+ */
 #ifndef MACOS
 inline 
 #endif
@@ -115,12 +125,7 @@ double rk4(double step, numpyint N, double y0, double y1,
     return y[N-1];
 }
 
-#ifdef __RK4
-#define ode rk4
-#else
-#define ode numerov
-#endif
-
+#define ode rk4 /**< Use RK4 as the default ODE solver */
 
 #ifdef _WINDLL
 __declspec(dllexport)

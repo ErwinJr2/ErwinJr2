@@ -333,7 +333,6 @@ class QCLayers(object):
         #     2*m0*mass*e0**2))**(1/3)
         # Es = np.linspace(np.min(self.xVc)+Emin, np.max(self.xVc), 1024)
         Es = np.linspace(np.min(self.xVc), np.max(self.xVc), 2048)
-        self.NonParabolic = False
         if self.NonParabolic:
             band = onedq.Band("ZincBlende", self.xEg, self.xF, self.xEp,
                               self.xESO)
