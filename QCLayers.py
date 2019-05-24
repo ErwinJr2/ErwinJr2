@@ -5,9 +5,11 @@ from numpy import sqrt, exp, pi
 import scipy
 from scipy.constants import (e as e0, epsilon_0 as eps0, h as h, 
                              hbar as hbar, electron_mass as m0, c as c0)
+import scipy.linalg as slg
 import OneDQuantum as onedq
 import Material
 import copy
+# onedq.OneDSchrodinger.bindOpenMP(rk4=True)
 
 EUnit = 1e-5    # E field unit from kV/cm to V/Angtrom
 
@@ -98,6 +100,7 @@ class QCLayers(object):
         self.Solver = Solver
         self.description = description
         self.NonParabolic = True
+        self.solveMatrix = False
         self.layerSelected = None
 
         self.subM = Material.Material(self.substrate, self.Temperature)
@@ -271,6 +274,20 @@ class QCLayers(object):
                              (self.xVSO, 'EvSO'), (self.xF, 'F')):
                 p[Indices] = self.mtrlAlloys[self.layerMtrls[n]].parm[key]
 
+        # populate mass half grid self.xMc[i] is m at i+-0.5
+        # for matrix solver only
+        self.xMcplus = np.empty(self.xPoints.size)
+        self.xMcminus = np.empty(self.xPoints.size)
+        for n in range(len(self.layerWidths)):
+            Indices = np.logical_or.reduce([
+                (self.xPoints >= layerNumCumSum[n] + k * periodL - self.xres/2) 
+                & (self.xPoints < layerNumCumSum[n+1] + k * periodL - self.xres/2)
+                for k in range(self.repeats)])
+            self.xMcplus[Indices] = self.mtrlAlloys[self.layerMtrls[n]].parm['me0']
+        self.xMcplus[-1] = self.xMcplus[-2]
+        self.xMcminus[1:] = self.xMcplus[:-1]
+        self.xMcminus[0] = self.xMcminus[1]
+
         ExtField = self.xPoints * self.EField * EUnit
         for p in (self.xVc, self.xVX, self.xVL, self.xVLH, self.xVSO):
             p -= ExtField
@@ -293,6 +310,12 @@ class QCLayers(object):
         return np.ma.masked_where(~self.xARs, self.xVc)
 
     def solve_whole(self):
+        if self.solveMatrix: 
+            return self.solve_whole_matrix()
+        else: 
+            return self.solve_whole_ode()
+
+    def solve_whole_ode(self):
         """
         solve eigen modes for the whole structure
 
@@ -304,11 +327,13 @@ class QCLayers(object):
             the wave function
 
         """
-        mass = self.xMc[np.argmin(self.xVc)]
-        # ground state for triangular well
-        Emin = 2.33810741 * (hbar**2*(self.EField*EUnit)**2/(
-            2*m0*mass*e0**2))**(1/3)
-        Es = np.linspace(np.min(self.xVc)+Emin, np.max(self.xVc), 1000)
+        # mass = self.xMc[np.argmin(self.xVc)]
+        # # ground state for triangular well
+        # Emin = 2.33810741 * (hbar**2*(self.EField*EUnit)**2/(
+        #     2*m0*mass*e0**2))**(1/3)
+        # Es = np.linspace(np.min(self.xVc)+Emin, np.max(self.xVc), 1024)
+        Es = np.linspace(np.min(self.xVc), np.max(self.xVc), 2048)
+        self.NonParabolic = False
         if self.NonParabolic:
             band = onedq.Band("ZincBlende", self.xEg, self.xF, self.xEp,
                               self.xESO)
@@ -320,7 +345,47 @@ class QCLayers(object):
                                                 self.xVc, self.xMc)
             self.psis = onedq.cSimpleFillPsi(self.xres, self.eigenEs,
                                              self.xVc, self.xMc)
+        return self.eigenEs
         #  self.stateFilter()
+
+    def solve_whole_matrix(self):
+        """
+        solve eigen modes for the whole structure with matrix eigen-solver
+
+        Yield
+        -----
+        eigenEs : np.array of float
+            the eigenenergy of the layer structure
+        psis : np.array of float
+            the wave function
+
+        """
+        # populate mass half grid self.xMc[i] is m at i+-0.5
+        # for matrix solver only
+        layerNumCumSum = [0] + np.cumsum(self.layerWidths).tolist()
+        periodL = layerNumCumSum[-1]
+        self.xMcplus = np.empty(self.xPoints.size)
+        self.xMcminus = np.empty(self.xPoints.size)
+        for n in range(len(self.layerWidths)):
+            Indices = np.logical_or.reduce([
+                (self.xPoints >= layerNumCumSum[n] + k * periodL - self.xres/2) 
+                & (self.xPoints < layerNumCumSum[n+1] + k * periodL - self.xres/2)
+                for k in range(self.repeats)])
+            self.xMcplus[Indices] = self.mtrlAlloys[self.layerMtrls[n]].parm['me0']
+        self.xMcplus[-1] = self.xMcplus[-2]
+        self.xMcminus[1:] = self.xMcplus[:-1]
+        self.xMcminus[0] = self.xMcminus[1]
+
+        # unit eV/step^2
+        unit = hbar**2/(2*e0*m0*(1E-10*self.xres)**2)
+        # diagonal and subdiagonal of Hamiltonian
+        self.Hdiag = unit*(1/self.xMcplus + 1/self.xMcminus) + self.xVc
+        self.Hsubd = -unit / self.xMcplus[:-1]
+        self.eigenEs, self.psis = slg.eigh_tridiagonal(self.Hdiag, self.Hsubd, 
+            select='v', select_range=(np.min(self.xVc), np.max(self.xVc)))
+        self.psis /= sqrt(self.xres)
+        self.psis = self.psis.T
+        return self.eigenEs
 
     def solve_basis(self):
         """

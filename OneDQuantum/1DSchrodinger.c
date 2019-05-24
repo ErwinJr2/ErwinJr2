@@ -46,7 +46,7 @@ extern "C" {
 #ifndef MACOS
 inline 
 #endif
-double ode(double step, numpyint N, double y0, double y1, 
+double numerov(double step, numpyint N, double y0, double y1, 
         double E, const double *V, const double *m, double *y) {
     int n; 
     y[0] = y0;
@@ -55,6 +55,7 @@ double ode(double step, numpyint N, double y0, double y1,
     for (n = 1; n < N-1; n++) {
         if(fabs(m[n+1]-m[n])/step < 1E-5*m[n] &&
                 fabs(m[n] - m[n-1])/step < 1E-5*m[n-1] ) {
+        /* if(0){ */
             /* Numerov's method, step error O(step^6) */
             /* is bad for m is in the middle of derivative TODO*/ 
             y[n+1] = (2 * y[n] * (1.0 - 5.0/12 * ( E - V[n]) * unit * m[n]) 
@@ -62,15 +63,63 @@ double ode(double step, numpyint N, double y0, double y1,
                 / (1.0 + 1.0/12 * (E - V[n+1]) * unit * m[n+1]);
         }
         else {
-            double mmp = (m[n]/m[n+1] - m[n]/m[n-1])/4; // m*(1/m)' to O(^3)
-            /* Simple Euler's method, setp error O(step^4), 
-             * TODO: try RK4 */
-            y[n+1] = (-(E-V[n])*unit*m[n]*y[n] +
-                    2*y[n] - (1-mmp)*y[n-1])/(1 + mmp);
+            /* m*(1/m)'*step/2 to O(step^3) */
+            /* double mmp = (m[n]/m[n+1] - m[n]/m[n-1])/4;  */
+            /* double mmp = -(m[n+1]/m[n] - m[n-1]/m[n])/4;  */
+            /* Simple Euler's method, setp error O(step^4) */
+            /* y[n+1] = (-(E-V[n])*unit*m[n]*y[n] + 2*y[n]  */
+            /*           - (1-mmp)*y[n-1])/(1 + mmp); */
+            double mplus = (m[n+1] + m[n])/2;
+            double mminus = (m[n] + m[n-1])/2;
+            y[n+1] = (-(E-V[n])*unit*y[n] + (1/mplus + 1/mminus)*y[n] 
+                      - y[n-1]/mminus)*mplus;
         }
     }
     return y[N-1];
 }
+
+#ifndef MACOS
+inline 
+#endif
+double rk4(double step, numpyint N, double y0, double y1, 
+        double E, const double *V, const double *m, double *y) {
+    int n; 
+    double yp;
+    const double unit = 2*m0/sq(hbar)*e0*sq(ANG*step);
+    double k11, k12, k21, k22, k31, k32, k41, k42;
+    y[0] = y0;
+    yp = (y1 - y0)/m[0];
+    for (n = 0; n < N-1; n++) {
+        /* RK4 ODE solver */
+        double mplus = (m[n] + m[n+1])/2;
+        double Vplus = (V[n] + V[n+1])/2;
+
+        k11 = m[n] * yp; 
+        k12 = (V[n] - E) * y[n] * unit; 
+
+        k21 = mplus * (yp + k12/2);
+        k22 = (Vplus - E) * (y[n] + k11/2) * unit;
+
+        k31 = mplus * (yp + k22/2);
+        k32 = (Vplus - E) * (y[n] + k21/2) * unit;
+
+        k41 = m[n+1] * (yp + k32);
+        k42 = (V[n+1] - E) * (y[n] + k31) * unit;
+
+        y[n+1] = y[n] + (k11 + 2*(k21+k31) + k41)/6;
+        yp += (k12 + 2*(k22+k32) + k42)/6;
+        // Euler 
+        // y[n+1] = y[n] + k11;
+        // yp += k12;
+    }
+    return y[N-1];
+}
+
+#ifdef __RK4
+#define ode rk4
+#else
+#define ode numerov
+#endif
 
 
 #ifdef _WINDLL
@@ -262,8 +311,7 @@ numpyint Solve1D(double step, numpyint N,
                 if(fabs(y0) > fabs(yend[i]) || fabs(y0) > fabs(yend[i-1])){
                     continue;
                 }
-                while(count < 40 && fabs(y0) > 1e-14 
-                        && fmin(fabs(E2-E0), fabs(E1-E0)) > 1e-14){
+                while(fabs(y0) > 1e-20 && fabs(E2-E1) > 1e-14 && count < 40){
     #ifdef _DEBUG
                     printf("    Iter No. %d, E0=%.8f, E1=%.8f, E2=%.8f, "
                             "Delta=%g\n", 
