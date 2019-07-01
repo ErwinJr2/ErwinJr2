@@ -624,7 +624,7 @@ class QuantumTab(QWidget):
         self.layerTable.setColumnCount(5)
         # An extra blanck line for adding new layers
         self.layerTable.setRowCount(len(self.qclayers.layerWidths) + 1)
-        vertLabels = [str(n) for n in range(len(self.qclayers.layerWidths))]
+        vertLabels = [str(n+1) for n in range(len(self.qclayers.layerWidths))]
         self.layerTable.setHorizontalHeaderLabels(
             ('Width', 'ML', 'Mtrl', 'AR', 'Doping'))
         self.layerTable.setVerticalHeaderLabels(vertLabels)
