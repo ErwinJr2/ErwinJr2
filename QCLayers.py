@@ -284,9 +284,10 @@ class QCLayers(object):
                 & (self.xPoints < layerNumCumSum[n+1] + k * periodL - self.xres/2)
                 for k in range(self.repeats)])
             self.xMcplus[Indices] = self.mtrlAlloys[self.layerMtrls[n]].parm['me0']
-        self.xMcplus[-1] = self.xMcplus[-2]
-        self.xMcminus[1:] = self.xMcplus[:-1]
-        self.xMcminus[0] = self.xMcminus[1]
+        if N > 1:
+            self.xMcplus[-1] = self.xMcplus[-2]
+            self.xMcminus[1:] = self.xMcplus[:-1]
+            self.xMcminus[0] = self.xMcminus[1]
 
         ExtField = self.xPoints * self.EField * EUnit
         for p in (self.xVc, self.xVX, self.xVL, self.xVLH, self.xVSO):
