@@ -10,6 +10,8 @@ __all__ = ['cSimpleSolve1D', 'cSimpleFillPsi',
 
 _doubleArray = np.ctypeslib.ndpointer(
     dtype=np.float64, ndim=1, flags="C_CONTIGUOUS")
+_intArray = np.ctypeslib.ndpointer(
+    dtype=np.int64, ndim=1, flags="C_CONTIGUOUS")
 
 def bindOpenMP(on=True):
     """
@@ -35,7 +37,7 @@ def bindOpenMP(on=True):
 
     _clib.FillPsi.argtypes = [c_double, c_int, _doubleArray, c_int, 
                              _doubleArray, _doubleArray, _doubleArray, 
-                              POINTER(cBand)]
+                             _intArray, _intArray, POINTER(cBand)]
     _clib.FillPsi.restype = None
 
     _clib.LOphononScatter.argtypes = [c_double, c_int, c_double, 
@@ -78,7 +80,10 @@ def cSimpleFillPsi(step, EigenEs, V, m, xmin=0, xmax=None):
         m = m*np.ones(V.size)
     psis = np.empty(EigenEs.size*(xmax-xmin))
     _clib.FillPsi(c_double(step), xmax-xmin, EigenEs, EigenEs.size, 
-                  V[xmin:xmax], m[xmin:xmax], psis, None)
+                  V[xmin:xmax], m[xmin:xmax], psis,
+                  np.zeros(xmax-xmin, dtype=np.int64),
+                  (xmax-xmin)*np.ones(xmax-xmin, dtype=np.int64),
+                  None)
     return psis.reshape((EigenEs.size, xmax-xmin))
 
 def cBandSolve1D(step, Es, V, band, xmin=0, xmax=None): 
@@ -100,7 +105,10 @@ def cBandFillPsi(step, EigenEs, V, band, xmin=0, xmax=None):
         xmax = V.size
     psis = np.empty(EigenEs.size*(xmax-xmin))
     _clib.FillPsi(c_double(step), xmax-xmin, EigenEs, EigenEs.size, 
-                  V[xmin:xmax], np.empty(0), psis, band.c)
+                  V[xmin:xmax], np.empty(0), psis, 
+                  np.zeros(xmax-xmin, dtype=np.int64),
+                  (xmax-xmin)*np.ones(xmax-xmin, dtype=np.int64),
+                  band.c)
     return psis.reshape((EigenEs.size, xmax-xmin))
 
 def cLOphononScatter(step, kl, psi_i, psi_j, xmin=0, xmax=None):

@@ -144,6 +144,8 @@ __declspec(dllexport)
  * \param[in] *m m[n] is the effective mass at \f$ x = x_0 + n \times step \f$, 
  *                in unit \f$ m_0 \f$ (free electron mass), used only when 
  *                mat=Null
+ * \param[in] *starts
+ * \param[in] *ends wavefuntion limited to psi[starts[i]:ends[i]]
  * \param[in] *mat is a pointer to band structure, for updating
  *                effective mass according to energy. When it's NULL it means
  *                using constant mass without non-parabolic effective mass. 
@@ -153,6 +155,7 @@ __declspec(dllexport)
  */
 void FillPsi(double step, numpyint N, const double *EigenEs,
         numpyint EN, const double *V, double *m, double* psis, 
+        numpyint *starts, numpyint *ends,
         Band * const mat) {
     int i; 
 #ifdef _DEBUG
@@ -184,18 +187,23 @@ void FillPsi(double step, numpyint N, const double *EigenEs,
         for(i=0; i<EN; i++) {
             int j;
             double* psi = psis + i*N;
+            for(j = 0; j<starts[i]; j++) {
+                psi[j] = 0;
+            }
+            psi += starts[i];
+            int len = ends[i] - starts[i];
             double modsq = 0;
             if (mat != NULL) {
                 /*MP assume only mass is updated*/
                 UpdateBand(mat, EigenEs[i], V, bandm);
             }
-            ode(step, N, 0.0, Y_EPS, EigenEs[i], V, bandm, psi);
+            ode(step, len, 0.0, Y_EPS, EigenEs[i], V, bandm, psi);
             /* Normalization */
-            for(j=0; j<N; j++) {
+            for(j=0; j<len; j++) {
                 modsq += sq(psi[j]);
             }
             modsq = sqrt(modsq * step);
-            for(j=0; j<N; j++) {
+            for(j=0; j<len; j++) {
                 psi[j] /= modsq;
             }
         }
