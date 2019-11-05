@@ -383,13 +383,15 @@ double LOphononScatter(double step, numpyint N, double kl,
         const double *psi_i, const double *psi_j) {
     double Iij = 0;
     int i;
+    double powerUnit = -kl*step*ANG;
+    int cutoff = 1+abs(-20/powerUnit);
 #ifdef __MP
 #pragma omp parallel for reduction(+:Iij)
 #endif
     for(i=0; i<N; i++) {
         int j;
-        for(j=0; j<N; j++) {
-            Iij += psi_i[i] * psi_j[i] * exp(-kl*abs(i-j)*step*ANG) * 
+        for(j= i-cutoff>0 ? i-cutoff : 0; j<i+cutoff; j++) {
+            Iij += psi_i[i] * psi_j[i] * exp(powerUnit*abs(i-j)) * 
                 psi_i[j] * psi_j[j];
         }
     }
