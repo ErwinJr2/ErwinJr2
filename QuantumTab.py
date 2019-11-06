@@ -1260,6 +1260,9 @@ class QuantumTab(QWidget):
             r = np.nanmin(sqrt(((xData - x) / xScale)**2 +
                                ((yData - y) / yScale)**2), axis=0)
             ss = np.nanargmin(r)
+            if len(self.stateHolder) == 1 and self.stateHolder[0] == ss:
+                r[ss] = np.nan
+                ss = np.nanargmin(r)
             self.stateHolder.append(ss)
             #  self.curveWF[ss].set_color('black')
             #  self.curveWF[ss].set_linewidth(2)
