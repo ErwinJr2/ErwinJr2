@@ -18,7 +18,7 @@ import numpy as np
 from numpy import pi, sqrt
 from functools import partial, wraps
 
-from QCLayers import QCLayers, qcMaterial, h, c0, e0
+from QCLayers import QCLayers, qcMaterial, h, c0, e0, EUnit
 from EJcanvas import EJcanvas, EJplotControl
 from EJcanvas import config as plotconfig
 
@@ -56,6 +56,7 @@ class QuantumTab(QWidget):
         solveType: 'basis' or 'whole', decide different kinds of solving
         !plotVX, !plotVL, !plotLH, !plotSO: show X point of conduction band 
                                             (L point, LH band, SO band)
+        !showPbound: show E(x) bond for periodic solver
 
         --- GUI widget ---
         1st column (settingBox):
@@ -128,6 +129,7 @@ class QuantumTab(QWidget):
         self.plotVL = False
         self.plotLH = False
         self.plotSO = False
+        self.showPbound = False
 
         self.stateHolder = []
         self.pairSelected = False
@@ -1057,6 +1059,12 @@ class QuantumTab(QWidget):
                     self.qclayers.xPoints,
                     self.wfs[n, :] + self.qclayers.eigenEs[n],
                     'k', linewidth=2)
+            if self.qclayers.periodic and self.showPbound:
+                field = -self.qclayers.xPoints * self.qclayers.EField * EUnit
+                for E in (self.qclayers.Emin, self.qclayers.Emax):
+                    self.quantumCanvas.axes.plot(
+                        self.qclayers.xPoints, E + field, 
+                        'k--', linewidth=0.5)
 
         self.quantumCanvas.draw()
 
@@ -1128,31 +1136,23 @@ class QuantumTab(QWidget):
         self.update_quantumCanvas()
 
     def view_VXBand(self):
-        if self.plotVX:
-            self.plotVX = False
-        else:
-            self.plotVX = True
+        self.plotVX = not self.plotVX
         self.update_quantumCanvas()
 
     def view_VLBand(self):
-        if self.plotVL:
-            self.plotVL = False
-        else:
-            self.plotVL = True
+        self.plotVL = not self.plotVL
         self.update_quantumCanvas()
 
     def view_LHBand(self):
-        if self.plotLH:
-            self.plotLH = False
-        else:
-            self.plotLH = True
+        self.plotLH = not self.plotLH
         self.update_quantumCanvas()
 
     def view_SOBand(self):
-        if self.plotSO:
-            self.plotSO = False
-        else:
-            self.plotSO = True
+        self.plotSO = not self.plotSO
+        self.update_quantumCanvas()
+
+    def view_PBound(self):
+        self.showPbound = not self.showPbound
         self.update_quantumCanvas()
 
     def set_plotwf(self):
