@@ -6,7 +6,6 @@
 # save and load pickle for qclayers
 # Reverse layers
 # export excel file for growth sheet
-# conserve zoom status when update quantum canvas
 # Debugging plot
 # Inverse rotate
 # last change
@@ -996,6 +995,14 @@ class QuantumTab(QWidget):
     def update_quantumCanvas(self):
         """Update the canvas to show band diagram, and if self.quantum has
         eigen states infomation (.hasattr("eigenEs")), draw wavefuntions"""
+        try:
+            if self.plotControl.zoomed:
+                xmin, xmax = self.quantumCanvas.axes.get_xlim()
+                ymin, ymax = self.quantumCanvas.axes.get_ylim()
+            else:
+                raise
+        except:
+            xmin = xmax = ymin = ymax = None
         self.qclayers.populate_x()
         self.quantumCanvas.clear()
         self.quantumCanvas.axes.plot(self.qclayers.xPoints,
@@ -1066,6 +1073,9 @@ class QuantumTab(QWidget):
                         self.qclayers.xPoints, E + field, 
                         'k--', linewidth=0.5)
 
+        if xmin is not None:
+            self.quantumCanvas.axes.set_xlim(xmin, xmax)
+            self.quantumCanvas.axes.set_ylim(ymin, ymax)
         self.quantumCanvas.draw()
 
     @pyqtSlot(bool)
