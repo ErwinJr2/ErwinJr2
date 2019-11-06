@@ -6,7 +6,8 @@ from . import band as _bd
 import os
 path = os.path.dirname(__file__)
 __all__ = ['cSimpleSolve1D', 'cSimpleFillPsi', 
-           'Band', 'cBandFillPsi', 'cBandSolve1D']
+           'Band', 'cBandFillPsi', 'cBandSolve1D',
+           'cBandSolve1DBonded']
 
 _doubleArray = np.ctypeslib.ndpointer(
     dtype=np.float64, ndim=1, flags="C_CONTIGUOUS")
@@ -34,6 +35,12 @@ def bindOpenMP(on=True):
                               _doubleArray, _doubleArray,
                               POINTER(cBand), _doubleArray]
     _clib.Solve1D.restype = c_int
+
+    _clib.Solve1DBonded.argtypes = [c_double, c_int, c_double, c_double,
+                                    c_double, _doubleArray, c_int,
+                                    _doubleArray, _doubleArray,
+                                    POINTER(cBand), _doubleArray]
+    _clib.Solve1DBonded.restype = c_int
 
     _clib.FillPsi.argtypes = [c_double, c_int, _doubleArray, c_int, 
                              _doubleArray, _doubleArray, _doubleArray, 
@@ -97,19 +104,40 @@ def cBandSolve1D(step, Es, V, band, xmin=0, xmax=None):
                             V[xmin:xmax], np.empty(0), band.c, EigenE)
     return EigenE[:EigenEN]
 
-def cBandFillPsi(step, EigenEs, V, band, xmin=0, xmax=None): 
+def cBandFillPsi(step, EigenEs, V, band, xmin=0, xmax=None,
+                 Elower=None, Eupper=None, field=None): 
     """
     Find wave functions using band mass.
     """
     if not xmax:
         xmax = V.size
     psis = np.empty(EigenEs.size*(xmax-xmin))
+    if field is not None:
+        starts = np.floor((Elower - EigenEs)/(field*step*1E-5)).astype(int)
+        starts[starts<xmin] = xmin
+        ends = np.ceil((Eupper - EigenEs)/(field*step*1E-5)).astype(int)
+        ends[ends>xmax] = xmax
+    else:
+        starts = np.zeros(xmax-xmin, dtype=np.int64)
+        ends = (xmax-xmin)*np.ones(xmax-xmin, dtype=np.int64)
     _clib.FillPsi(c_double(step), xmax-xmin, EigenEs, EigenEs.size, 
                   V[xmin:xmax], np.empty(0), psis, 
-                  np.zeros(xmax-xmin, dtype=np.int64),
-                  (xmax-xmin)*np.ones(xmax-xmin, dtype=np.int64),
-                  band.c)
+                  starts, ends, band.c)
     return psis.reshape((EigenEs.size, xmax-xmin))
+
+def cBandSolve1DBonded(step, Es, Elower, Eupper, field, 
+                       V, band, xmin=0, xmax=None):
+    """
+    Find eigen energies using band mass.
+    bonded by [Elower-field*x, Eupper-field*x]
+    """
+    if not xmax:
+        xmax = V.size
+    EigenE = np.empty(Es.size) 
+    EigenEN = _clib.Solve1DBonded(c_double(step), xmax-xmin, Elower, Eupper,
+                                  field, Es, Es.size, V[xmin:xmax], 
+                                  np.empty(0), band.c, EigenE)
+    return EigenE[:EigenEN]
 
 def cLOphononScatter(step, kl, psi_i, psi_j, xmin=0, xmax=None):
     if not xmax:

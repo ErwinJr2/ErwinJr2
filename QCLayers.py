@@ -12,6 +12,9 @@ import copy
 # onedq.OneDSchrodinger.bindOpenMP(rk4=True)
 
 EUnit = 1e-5    # E field unit from kV/cm to V/Angtrom
+# upper and lower bond extension for periodic solver
+PeriodU = 0.1
+PeriodL = 0.1
 
 qcMaterial = {
     "InP":  ["InGaAs", "AlInAs"], 
@@ -100,6 +103,7 @@ class QCLayers(object):
         self.Solver = Solver
         self.description = description
         self.NonParabolic = True
+        self.periodic = True
         self.solveMatrix = False
         self.layerSelected = None
 
@@ -333,8 +337,24 @@ class QCLayers(object):
         # Emin = 2.33810741 * (hbar**2*(self.EField*EUnit)**2/(
         #     2*m0*mass*e0**2))**(1/3)
         # Es = np.linspace(np.min(self.xVc)+Emin, np.max(self.xVc), 1024)
-        Es = np.linspace(np.min(self.xVc), np.max(self.xVc), 2048)
-        if self.NonParabolic:
+        Es = np.arange(np.min(self.xVc), np.max(self.xVc), self.Eres/1E3)
+        if self.periodic:
+        #  if False:
+            band = onedq.Band("ZincBlende", self.xEg, self.xF, self.xEp,
+                              self.xESO)
+            self.Emin = min(m.parm['EcG'] for m in self.mtrlAlloys) - PeriodL
+            self.Emax = max(m.parm['EcG'] for m in self.mtrlAlloys) + PeriodU
+            Eshift = self.EField*EUnit*sum(self.layerWidths)
+            Es = np.arange(self.Emin - Eshift, self.Emin, self.Eres/1E3)
+            eigenEs = onedq.cBandSolve1DBonded(
+                self.xres, Es, self.Emin, self.Emax, 
+                self.EField, self.xVc, band)
+            psis = onedq.cBandFillPsi(
+                self.xres, eigenEs, self.xVc, band, 
+                Elower=self.Emin, Eupper=self.Emax, field=self.EField)
+            self.psis, self.eigenEs = self.shiftPeriod(
+                (-1,0,1), psis, eigenEs)
+        elif self.NonParabolic:
             band = onedq.Band("ZincBlende", self.xEg, self.xF, self.xEp,
                               self.xESO)
             self.eigenEs = onedq.cBandSolve1D(self.xres, Es, self.xVc, band)
@@ -428,6 +448,7 @@ class QCLayers(object):
         for n in range(0, len(StartInd)):
             dCL = copy.deepcopy(self)
             dCL.repeats = 1
+            dCL.periodic = False
             # solve for Active region wavefunctions
             dCL.layerWidths = self.layerWidths[StartInd[n]:EndInd[n]]
             dCL.layerMtrls = self.layerMtrls[StartInd[n]: EndInd[n]]
@@ -438,22 +459,48 @@ class QCLayers(object):
             dCL.solve_whole()
 
             # map dCL result back to self
-            xInd_all = ((self.xLayerNums >= StartInd[n]) & 
-                        (self.xLayerNums < EndInd[n]))
-            for j in range(0, self.repeats):
-                xInd = xInd_all & (self.xRepeats == j)
-                psis_fill = np.zeros((dCL.eigenEs.shape[0], 
-                                      self.xPoints.size))
-                # cut the result if it's not aligned (due to rounding error)
-                lenth = np.sum(xInd)
-                psis_fill[:, xInd] = dCL.psis[:, 0:lenth]
-                assert(abs(len(dCL.xPoints)-lenth) <= 1) 
-                # confirm rounding error is bounded
-                shift = j*sum(self.layerWidths) + sum(
-                    self.layerWidths[:StartInd[n]])
-                shiftedEigenEs = dCL.eigenEs - shift*self.EField*EUnit
-                self.eigenEs = np.concatenate((self.eigenEs, shiftedEigenEs))
-                self.psis = np.concatenate((self.psis, psis_fill))
+            shift = sum(self.layerWidths[:StartInd[n]])
+            psis, eigenEs = self.shiftPeriod(
+                range(self.repeats), dCL.psis, 
+                dCL.eigenEs - shift*self.EField*EUnit,
+                dCL.xPoints + shift)
+            self.eigenEs = np.concatenate((self.eigenEs, eigenEs))
+            self.psis = np.concatenate((self.psis, psis))
+            #  xInd_all = ((self.xLayerNums >= StartInd[n]) & 
+            #              (self.xLayerNums < EndInd[n]))
+            #  for j in range(0, self.repeats):
+            #      xInd = xInd_all & (self.xRepeats == j)
+            #      psis_fill = np.zeros((dCL.eigenEs.shape[0], 
+            #                            self.xPoints.size))
+            #      # cut the result if it's not aligned (due to rounding error)
+            #      lenth = np.sum(xInd)
+            #      psis_fill[:, xInd] = dCL.psis[:, 0:lenth]
+            #      assert(abs(len(dCL.xPoints)-lenth) <= 1) 
+            #      # confirm rounding error is bounded
+            #      shift = j*sum(self.layerWidths) + sum(
+            #          self.layerWidths[:StartInd[n]])
+            #      shiftedEigenEs = dCL.eigenEs - shift*self.EField*EUnit
+            #      self.eigenEs = np.concatenate((self.eigenEs, shiftedEigenEs))
+            #      self.psis = np.concatenate((self.psis, psis_fill))
+
+    def shiftPeriod(self, ns, psis0, eigenEs0, xPoints=None):
+        """Shift wavefunctions n (in ns) period(s) and return coorelated
+        wavefunctions and EigenEs. psis0 corresponds to xPoints[0:]"""
+        if xPoints is None:
+            xPoints = self.xPoints
+        period = sum(self.layerWidths)
+        Eshift = period * self.EField * EUnit
+        psis = np.empty((0, self.xPoints.size))
+        eigenEs = np.empty(0)
+        for n in sorted(ns, reverse=True):
+            xpn = xPoints + period*n
+            psisn = np.array([np.interp(self.xPoints, xPoints+period*n,
+                                       psi) for psi in psis0])
+            # filter almost zero sols)
+            idx = np.sum(psisn**2, axis=1)*self.xres > 0.1
+            psis = np.concatenate((psis, psisn[idx]))
+            eigenEs = np.concatenate((eigenEs, eigenEs0[idx] - Eshift*n))
+        return psis, eigenEs
 
     def stateFilter(self):
         """Filter unbounded states: 
