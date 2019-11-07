@@ -541,6 +541,14 @@ __declspec(dllexport)
 #endif
 /**
  * Calculate the LO phonon scattering rate
+ *
+ * \param[in] step step size
+ * \param[in] N number of steps
+ * \param[in] kl wavevector of LO phonon
+ * \param[in] *psi_i \f$\psi_i\f$ wavefunction i
+ * \param[in] *psi_j \f$\psi_j\f$ wavefunction j
+ * \return    \f$I_{ij} = \int\mathrm dx\mathrm dy\, \psi_i(x)\psi_j(x)
+ *             \exp\left[-k_l|x-y|\right]\psi_i(y)\psi_j(y) \f$
  */
 double LOphononScatter(double step, numpyint N, double kl,
         const double *psi_i, const double *psi_j) {
