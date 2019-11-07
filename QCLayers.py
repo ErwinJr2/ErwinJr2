@@ -580,8 +580,7 @@ class QCLayers(object):
     def loLifeTime(self, state):
         """ Return the life time due to LO phonon scattering of the
         given state(label)"""
-        rate = [self.loTransition(state, q) for q in range(state)]
-        return 1/sum(rate)
+        return 1/sum(self.loTransition(state, q) for q in range(state))
 
     def calc_FoM(self, upper, lower):
         """Calculate Figure of Merit. 
