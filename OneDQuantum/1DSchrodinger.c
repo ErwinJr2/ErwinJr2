@@ -127,6 +127,7 @@ double rk4(double step, numpyint N, double y0, double y1,
 
 #define ode rk4 /**< Use RK4 as the default ODE solver */
 
+
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif
@@ -154,9 +155,9 @@ __declspec(dllexport)
  *                   wavefunction with energy EigenEs[i].
  */
 void FillPsi(double step, numpyint N, const double *EigenEs,
-        numpyint EN, const double *V, double *m, double* psis, 
+        numpyint EN, const double *V, double *m, double *psis, 
         numpyint *starts, numpyint *ends,
-        Band * const mat) {
+        Band *const mat) {
     int i; 
 #ifdef _DEBUG
     if(mat != NULL) {
@@ -536,6 +537,7 @@ numpyint Solve1DBonded(double step, numpyint N,
 }
 
 
+# define MINPSI 1E-5 /**< The min cutoff for integral of wavefunctions */
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif
@@ -557,7 +559,6 @@ double LOphononScatter(double step, numpyint N, double kl,
     double powerUnit = -kl*step*ANG;
     int cutoff = 1+abs(-20/powerUnit);
     int start, end;
-# define MINPSI 1E-5
     for(start = 0; start < N && 
             (fabs(psi_i[start]) < MINPSI || fabs(psi_j[start]) < MINPSI);
             start++);
@@ -571,12 +572,90 @@ double LOphononScatter(double step, numpyint N, double kl,
         int j;
         int startj = i-cutoff>start ? i-cutoff : start;
         int endj   = i+cutoff<end   ? i+cutoff : end;
+#ifdef __MP
+/* #pragma omp simd reduction(+: Iij) */
+#endif
         for(j=startj; j<=endj; j++) {
             Iij += psi_i[i] * psi_j[i] * exp(powerUnit*abs(i-j)) * 
                 psi_i[j] * psi_j[j];
         }
     }
     return Iij * sq(step);
+}
+
+
+#ifdef _WINDLL
+__declspec(dllexport)
+#endif
+/**
+ * Calculate sum LO phonon scattering rate from psi_i to all psi_j's
+ *
+ * \param[in] step step size
+ * \param[in] N number of steps
+ * \param[in] *kls wavevector of LO phonon between psi_i to psi_j's
+ * \param[in] *psi_i \f$\psi_i\f$ wavefunction i
+ * \param[in] *psi_js psi_j = psi_js[n*N] \f$\psi_j\f$ wavefunction j
+ * \param[in] *factor_js the factor \f$f_j\f$ before \f$I_{ij}\f$ before sum
+ * \param[in] Nj number of psi_j
+ * \return    \f$\sum_j f_j I_{ij} = 
+ *             \sum_j f_j \int\mathrm dx\mathrm dy\, \psi_i(x)\psi_j(x)
+ *             \exp\left[-k_l|x-y|\right]\psi_i(y)\psi_j(y) \f$
+ */
+double LOtotal(double step, numpyint N, const double *kls,
+        const double *psi_i, const double *psi_js, const double *fjs,
+        int Nj) {
+    double Iij = 0;
+    int j,n;
+    int starti, endi;
+    for(starti = 0; starti < N && fabs(psi_i[starti]) < MINPSI; starti++);
+    for(endi = N-1; endi >= starti && fabs(psi_i[endi]) < MINPSI; endi--);
+#ifdef __MP
+#pragma omp parallel for reduction(+:Iij)
+#endif
+    for(n=0; n<Nj; n++) {
+        const double *psi_j = psi_js + N*n;
+        double powerUnit = -kls[n]*step*ANG;
+        int cutoff = 1+abs(-20/powerUnit);
+        int start, end;
+        for(start=starti; start<N && fabs(psi_j[start])<MINPSI;  start++);
+        for(end=endi;     end>=start && fabs(psi_j[end])<MINPSI; end--);
+        for(j=start; j<=end; j++) {
+            int i;
+            int startc = j-cutoff>start ? j-cutoff : start;
+            int endc   = j+cutoff<end   ? j+cutoff : end;
+            double Iisum = 0;
+            for(i=startc; i<=endc; i++) {
+                Iisum += psi_i[i] * psi_j[i] * exp(powerUnit*abs(i-j));
+            }
+            Iij += Iisum * fjs[n] * psi_i[j] * psi_j[j];
+        }
+    }
+    return Iij * sq(step);
+}
+
+
+#ifdef _WINDLL
+__declspec(dllexport)
+#endif 
+/**
+ *
+ * \param[in] step step size
+ * \param[in] N number of steps
+ * \param[in] *EigenEs list of eigen energies
+ * \param[in] EN number of eigen energies we consider
+ * \param[in] *psis psis[n*N:(n+1)*N] is the wavefunction for EigenEs[n]
+ * \param[in] *masses masses[n] is the x-y effective mass for psis[n]
+ * \param[in] Eshift the energy shift (period*field) between periods
+ *                   should >= max(EigenEs) - min(EigenEs)
+ * \param[in] xShift position translation in pixal between periods
+ * \param[out] *loMatrix gamma[n,m] == loMatrix[EN*n+m] is the LO transition
+ *                       rate between psis[n] and psis[m], 
+ *                       EigenEs[n] > EigenEs[m] (mod Eshift)
+ */
+void LOMatrix(double step, numpyint N, const double *EigenEs, numpyint EN, 
+        double *psis, const double *masses, double Eshift, int xShift,
+        double *loMatrix){
+    /*TODO*/
 }
 
 

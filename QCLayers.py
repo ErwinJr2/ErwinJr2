@@ -365,6 +365,8 @@ class QCLayers(object):
                                                 self.xVc, self.xMc)
             self.psis = onedq.cSimpleFillPsi(self.xres, self.eigenEs,
                                              self.xVc, self.xMc)
+        self.loMatrix = [[None]*len(self.eigenEs) 
+                         for _ in range(len(self.eigenEs))]
         return self.eigenEs
         #  self.stateFilter()
 
@@ -405,6 +407,8 @@ class QCLayers(object):
             select='v', select_range=(np.min(self.xVc), np.max(self.xVc)))
         self.psis /= sqrt(self.xres)
         self.psis = self.psis.T
+        self.loMatrix = [[None]*len(self.eigenEs) 
+                         for _ in range(len(self.eigenEs))]
         return self.eigenEs
 
     def solve_basis(self):
@@ -482,6 +486,9 @@ class QCLayers(object):
             #      shiftedEigenEs = dCL.eigenEs - shift*self.EField*EUnit
             #      self.eigenEs = np.concatenate((self.eigenEs, shiftedEigenEs))
             #      self.psis = np.concatenate((self.psis, psis_fill))
+        self.loMatrix = [[None]*len(self.eigenEs) 
+                         for _ in range(len(self.eigenEs))]
+        return self.eigenEs
 
     def shiftPeriod(self, ns, psis0, eigenEs0, xPoints=None):
         """Shift wavefunctions n (in ns) period(s) and return coorelated
@@ -544,43 +551,65 @@ class QCLayers(object):
         if upper < lower:
             upper, lower = lower, upper
 
-        psi_i = self.psis[upper, :]
-        psi_j = self.psis[lower, :]
-        Ei = self.eigenEs[upper]
-        Ej = self.eigenEs[lower]
-        hwLO = self.avghwLO()
+        if self.loMatrix[upper][lower] is None:
 
-        if Ei - Ej - hwLO < 0:
-            # energy difference is smaller than a LO phonon
-            # LO phonon scatering doesn't happen
-            return INV_INF
+            psi_i = self.psis[upper, :]
+            psi_j = self.psis[lower, :]
+            Ei = self.eigenEs[upper]
+            Ej = self.eigenEs[lower]
+            hwLO = self.avghwLO()
 
-        # TODO: imporve expression for eff mass
-        mass = m0 * sqrt(np.sum(self.xMc * psi_i**2 * self.xres)
-                         * np.sum(self.xMc * psi_j**2 * self.xres))
-        kl = sqrt(2 * mass / hbar**2 * (Ei-Ej-hwLO) * e0)
-        #  dIij = np.empty(self.xPoints.size)
-        #  for n in range(self.xPoints.size):
-        #      x1 = self.xPoints[n]
-        #      x2 = self.xPoints
-        #      dIij[n] = np.sum(psi_i * psi_j * exp(-kl * abs(x1 - x2)*1e-10)
-        #                       * psi_i[n] * psi_j[n] * self.xres**2)
-        #  Iij = np.sum(dIij)
-        Iij = onedq.OneDSchrodinger.cLOphononScatter(self.xres, kl, 
-                                                     psi_i, psi_j)
-        epsInf = np.array([a.parm["epsInf"] for a in self.mtrlAlloys])
-        epss = np.array([a.parm["epss"] for a in self.mtrlAlloys])
-        epsrho = 1 / (1/epsInf - 1/epss)
-        epsrho = (np.sum(epsrho[self.layerMtrls] * self.layerWidths) 
-                  / sum(self.layerWidths))
-        inv_tau = (mass * e0**2 * self.avghwLO() * e0 / hbar * Iij 
-                   / (4 * hbar**2 * epsrho * eps0 * kl))
-        return inv_tau / 1e12 #unit ps
+            if Ei - Ej - hwLO < 0:
+                # energy difference is smaller than a LO phonon
+                # LO phonon scatering doesn't happen
+                return INV_INF
+
+            # TODO: imporve expression for eff mass
+            mass = m0 * sqrt(np.sum(self.xMc * psi_i**2 * self.xres)
+                             * np.sum(self.xMc * psi_j**2 * self.xres))
+            kl = sqrt(2 * mass / hbar**2 * (Ei-Ej-hwLO) * e0)
+            #  dIij = np.empty(self.xPoints.size)
+            #  for n in range(self.xPoints.size):
+            #      x1 = self.xPoints[n]
+            #      x2 = self.xPoints
+            #      dIij[n] = np.sum(psi_i * psi_j * exp(-kl * abs(x1 - x2)*1e-10)
+            #                       * psi_i[n] * psi_j[n] * self.xres**2)
+            #  Iij = np.sum(dIij)
+            Iij = onedq.OneDSchrodinger.cLOphononScatter(self.xres, kl, 
+                                                         psi_i, psi_j)
+            epsInf = np.array([a.parm["epsInf"] for a in self.mtrlAlloys])
+            epss = np.array([a.parm["epss"] for a in self.mtrlAlloys])
+            epsrho = 1 / (1/epsInf - 1/epss)
+            epsrho = (np.sum(epsrho[self.layerMtrls] * self.layerWidths) 
+                      / sum(self.layerWidths))
+            self.loMatrix[upper][lower] = (
+                mass * e0**2 * hwLO * e0 / hbar * Iij 
+                / (4 * hbar**2 * epsrho * eps0 * kl))
+        return self.loMatrix[upper][lower] / 1e12 #unit ps^-1
 
     def loLifeTime(self, state):
         """ Return the life time due to LO phonon scattering of the
         given state(label)"""
         return 1/sum(self.loTransition(state, q) for q in range(state))
+        #  Ei = self.eigenEs[state]
+        #  psi_i = self.psis[state]
+        #  hwLO = self.avghwLO()
+        #  idxs = self.eigenEs <= Ei - hwLO
+        #  psi_js = self.psis[idxs]
+        #  Ejs = self.eigenEs[idxs]
+        #  masses = m0 * sqrt(np.sum(self.xMc*psi_i**2*self.xres) *
+        #                     np.sum(self.xMc*psi_js**2*self.xres, axis=1))
+        #  kls = sqrt(2 * masses / hbar**2 * (Ei - Ejs - hwLO) * e0)
+        #  epsInf = np.array([a.parm["epsInf"] for a in self.mtrlAlloys])
+        #  epss = np.array([a.parm["epss"] for a in self.mtrlAlloys])
+        #  epsrho = 1 / (1/epsInf - 1/epss)
+        #  epsrho = (np.sum(epsrho[self.layerMtrls] * self.layerWidths) 
+        #            / sum(self.layerWidths))
+        #  fjs = (masses * e0**2 * hwLO * e0 / hbar
+        #             / (4 * hbar**2 * epsrho * eps0 * kls))
+        #  Iijtotal = onedq.OneDSchrodinger.cLOtotal(
+        #      self.xres, kls, psi_i, psi_js, fjs)
+        #  return 1e12 / Iijtotal if Iijtotal > 0 else 1E20
 
     def calc_FoM(self, upper, lower):
         """Calculate Figure of Merit. 

@@ -7,6 +7,7 @@ import os
 path = os.path.dirname(__file__)
 __all__ = ['cSimpleSolve1D', 'cSimpleFillPsi', 
            'Band', 'cBandFillPsi', 'cBandSolve1D',
+           'cLOphononScatter', 'cLOtotal',
            'cBandSolve1DBonded']
 
 _doubleArray = np.ctypeslib.ndpointer(
@@ -50,6 +51,10 @@ def bindOpenMP(on=True):
     _clib.LOphononScatter.argtypes = [c_double, c_int, c_double, 
                                       _doubleArray, _doubleArray]
     _clib.LOphononScatter.restype = c_double
+
+    _clib.LOtotal.argtypes = [c_double, c_int, _doubleArray, _doubleArray,
+                              _doubleArray, _doubleArray, c_int]
+    _clib.LOtotal.restype = c_double
 
 bindOpenMP(False)
 
@@ -144,6 +149,10 @@ def cLOphononScatter(step, kl, psi_i, psi_j, xmin=0, xmax=None):
         xmax = psi_i.size
     return  _clib.LOphononScatter(c_double(step), xmax-xmin, kl, 
                                   psi_i, psi_j)
+
+def cLOtotal(step, kls, psi_i, psi_js, fjs):
+    return  _clib.LOtotal(c_double(step), len(psi_i), kls, psi_i,
+                          psi_js.flatten(), fjs, len(psi_js))
 
 if __name__ == "__main__":
     print(_clib.invAlpha())
