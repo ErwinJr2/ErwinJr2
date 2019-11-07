@@ -13,7 +13,7 @@ import copy
 
 EUnit = 1e-5    # E field unit from kV/cm to V/Angtrom
 # upper and lower bond extension for periodic solver
-PeriodU = 0.1
+PeriodU = 0.2
 PeriodL = 0.1
 
 qcMaterial = {
@@ -353,7 +353,7 @@ class QCLayers(object):
                 self.xres, eigenEs, self.xVc, band, 
                 Elower=self.Emin, Eupper=self.Emax, field=self.EField)
             self.psis, self.eigenEs = self.shiftPeriod(
-                (-1,0,1), psis, eigenEs)
+                (-1,0,1,2), psis, eigenEs)
         elif self.NonParabolic:
             band = onedq.Band("ZincBlende", self.xEg, self.xF, self.xEp,
                               self.xESO)
