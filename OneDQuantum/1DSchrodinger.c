@@ -405,7 +405,7 @@ numpyint Solve1DBonded(double step, numpyint N,
         const double *V, double *m, Band * const mat, double *EigenE) {
     double *yend; 
     int NofZeros=0;
-    int i, length;
+    int length;
     /* convert kV/cm to eV/pixal */
     field *= ANG*step*1E5;
     length = ceil((Eupper - Elower)/field);
@@ -422,6 +422,7 @@ numpyint Solve1DBonded(double step, numpyint N,
     #pragma omp parallel
 #endif
     {
+        int i;
         double *y = (double *)malloc(N * sizeof(double));
         double *mband;
         if(mat != NULL) { 
@@ -437,7 +438,7 @@ numpyint Solve1DBonded(double step, numpyint N,
     #endif
         #pragma omp for
 #endif
-        for(int i=0; i < EN; i++) {
+        for(i=0; i < EN; i++) {
             double E = Es[i];
             int start = floor((Elower - E)/field);
             if(start < 0)
