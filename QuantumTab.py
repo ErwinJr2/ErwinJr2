@@ -1307,7 +1307,7 @@ class QuantumTab(QWidget):
         self.eDiff = 1000 * (Ei - Ej) # from eV to meV
         self.wavelength = h * c0 / (e0 * np.abs(Ei - Ej)) * 1e6 #um
 
-        if self.solveType is 'basis':
+        if self.solveType == 'basis':
             couplingEnergy = self.qclayers.coupleBroadening(upper, lower)
             self.transitionBroadening = self.qclayers.ifrBroadening(
                 upper, lower)
@@ -1328,7 +1328,7 @@ class QuantumTab(QWidget):
                     self.opticalDipole,
                     self.tauUpperLower)
 
-        elif self.solveType is 'whole':
+        elif self.solveType == 'whole':
             self.opticalDipole = self.qclayers.dipole(upper, lower)
             self.tauUpperLower = 1 / self.qclayers.loTransition(
                 upper, lower)
