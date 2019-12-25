@@ -4,3 +4,4 @@ matplotlib
 sphinx
 sphinx_rtd_theme
 breathe
+PyQt5
