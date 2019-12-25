@@ -1,4 +1,5 @@
 *.so
+*.dylib
 *.o
 *.dll
 *.exp
@@ -30,3 +31,5 @@ __pycache__/
 OneDQuantum/docs/html/
 OneDQuantum/docs/xml/
 example/
+
+.DS_Store
