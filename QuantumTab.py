@@ -6,7 +6,6 @@
 # save and load pickle for qclayers
 # Reverse layers
 # export excel file for growth sheet
-# conserve zoom status when update quantum canvas
 # Debugging plot
 # Inverse rotate
 # last change
@@ -18,7 +17,7 @@ import numpy as np
 from numpy import pi, sqrt
 from functools import partial, wraps
 
-from QCLayers import QCLayers, qcMaterial, h, c0, e0
+from QCLayers import QCLayers, qcMaterial, h, c0, e0, EUnit
 from EJcanvas import EJcanvas, EJplotControl
 from EJcanvas import config as plotconfig
 
@@ -56,6 +55,7 @@ class QuantumTab(QWidget):
         solveType: 'basis' or 'whole', decide different kinds of solving
         !plotVX, !plotVL, !plotLH, !plotSO: show X point of conduction band 
                                             (L point, LH band, SO band)
+        !showPbound: show E(x) bond for periodic solver
 
         --- GUI widget ---
         1st column (settingBox):
@@ -128,6 +128,7 @@ class QuantumTab(QWidget):
         self.plotVL = False
         self.plotLH = False
         self.plotSO = False
+        self.showPbound = False
 
         self.stateHolder = []
         self.pairSelected = False
@@ -994,6 +995,14 @@ class QuantumTab(QWidget):
     def update_quantumCanvas(self):
         """Update the canvas to show band diagram, and if self.quantum has
         eigen states infomation (.hasattr("eigenEs")), draw wavefuntions"""
+        try:
+            if self.plotControl.zoomed:
+                xmin, xmax = self.quantumCanvas.axes.get_xlim()
+                ymin, ymax = self.quantumCanvas.axes.get_ylim()
+            else:
+                raise
+        except:
+            xmin = xmax = ymin = ymax = None
         self.qclayers.populate_x()
         self.quantumCanvas.clear()
         self.quantumCanvas.axes.plot(self.qclayers.xPoints,
@@ -1057,7 +1066,16 @@ class QuantumTab(QWidget):
                     self.qclayers.xPoints,
                     self.wfs[n, :] + self.qclayers.eigenEs[n],
                     'k', linewidth=2)
+            if self.qclayers.periodic and self.showPbound:
+                field = -self.qclayers.xPoints * self.qclayers.EField * EUnit
+                for E in (self.qclayers.Emin, self.qclayers.Emax):
+                    self.quantumCanvas.axes.plot(
+                        self.qclayers.xPoints, E + field, 
+                        'k--', linewidth=0.5)
 
+        if xmin is not None:
+            self.quantumCanvas.axes.set_xlim(xmin, xmax)
+            self.quantumCanvas.axes.set_ylim(ymin, ymax)
         self.quantumCanvas.draw()
 
     @pyqtSlot(bool)
@@ -1128,31 +1146,23 @@ class QuantumTab(QWidget):
         self.update_quantumCanvas()
 
     def view_VXBand(self):
-        if self.plotVX:
-            self.plotVX = False
-        else:
-            self.plotVX = True
+        self.plotVX = not self.plotVX
         self.update_quantumCanvas()
 
     def view_VLBand(self):
-        if self.plotVL:
-            self.plotVL = False
-        else:
-            self.plotVL = True
+        self.plotVL = not self.plotVL
         self.update_quantumCanvas()
 
     def view_LHBand(self):
-        if self.plotLH:
-            self.plotLH = False
-        else:
-            self.plotLH = True
+        self.plotLH = not self.plotLH
         self.update_quantumCanvas()
 
     def view_SOBand(self):
-        if self.plotSO:
-            self.plotSO = False
-        else:
-            self.plotSO = True
+        self.plotSO = not self.plotSO
+        self.update_quantumCanvas()
+
+    def view_PBound(self):
+        self.showPbound = not self.showPbound
         self.update_quantumCanvas()
 
     def set_plotwf(self):
@@ -1260,6 +1270,9 @@ class QuantumTab(QWidget):
             r = np.nanmin(sqrt(((xData - x) / xScale)**2 +
                                ((yData - y) / yScale)**2), axis=0)
             ss = np.nanargmin(r)
+            if len(self.stateHolder) == 1 and self.stateHolder[0] == ss:
+                r[ss] = np.nan
+                ss = np.nanargmin(r)
             self.stateHolder.append(ss)
             #  self.curveWF[ss].set_color('black')
             #  self.curveWF[ss].set_linewidth(2)
@@ -1294,7 +1307,7 @@ class QuantumTab(QWidget):
         self.eDiff = 1000 * (Ei - Ej) # from eV to meV
         self.wavelength = h * c0 / (e0 * np.abs(Ei - Ej)) * 1e6 #um
 
-        if self.solveType is 'basis':
+        if self.solveType == 'basis':
             couplingEnergy = self.qclayers.coupleBroadening(upper, lower)
             self.transitionBroadening = self.qclayers.ifrBroadening(
                 upper, lower)
@@ -1315,7 +1328,7 @@ class QuantumTab(QWidget):
                     self.opticalDipole,
                     self.tauUpperLower)
 
-        elif self.solveType is 'whole':
+        elif self.solveType == 'whole':
             self.opticalDipole = self.qclayers.dipole(upper, lower)
             self.tauUpperLower = 1 / self.qclayers.loTransition(
                 upper, lower)

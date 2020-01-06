@@ -22,8 +22,8 @@ from warnings import warn
 config = {
     "PlotMargin": {'l': 0.9, 'r': 0.12, 'b': 0.6, 't': 0.09}, 
     "fontsize": 12,
-    "wfscale": 0.3, 
-    "modescale": 5,
+    "wfscale": 0.2, 
+    "modescale": 3,
     "wf_almost_zero": 3e-4,
 }
 if sys.platform == 'win32': 
@@ -200,7 +200,12 @@ class EJplotControl(NavigationToolbar2, QObject):
 
     def zoom(self, *args):
         super(EJplotControl, self).zoom(*args)
+        self.zoomed = True
         self._update_buttons_checked()
+
+    def home(self, *args):
+        super(EJplotControl, self).home(*args)
+        self.zoomed = False
 
     def custom(self, mode):
         if self._active == mode:

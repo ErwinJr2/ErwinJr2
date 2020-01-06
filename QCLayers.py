@@ -12,6 +12,9 @@ import copy
 # onedq.OneDSchrodinger.bindOpenMP(rk4=True)
 
 EUnit = 1e-5    # E field unit from kV/cm to V/Angtrom
+# upper and lower bond extension for periodic solver
+PeriodU = 0.2
+PeriodL = 0.1
 
 qcMaterial = {
     "InP":  ["InGaAs", "AlInAs"], 
@@ -100,6 +103,7 @@ class QCLayers(object):
         self.Solver = Solver
         self.description = description
         self.NonParabolic = True
+        self.periodic = True
         self.solveMatrix = False
         self.layerSelected = None
 
@@ -333,8 +337,24 @@ class QCLayers(object):
         # Emin = 2.33810741 * (hbar**2*(self.EField*EUnit)**2/(
         #     2*m0*mass*e0**2))**(1/3)
         # Es = np.linspace(np.min(self.xVc)+Emin, np.max(self.xVc), 1024)
-        Es = np.linspace(np.min(self.xVc), np.max(self.xVc), 2048)
-        if self.NonParabolic:
+        Es = np.arange(np.min(self.xVc), np.max(self.xVc), self.Eres/1E3)
+        if self.periodic:
+        #  if False:
+            band = onedq.Band("ZincBlende", self.xEg, self.xF, self.xEp,
+                              self.xESO)
+            self.Emin = min(m.parm['EcG'] for m in self.mtrlAlloys) - PeriodL
+            self.Emax = max(m.parm['EcG'] for m in self.mtrlAlloys) + PeriodU
+            Eshift = self.EField*EUnit*sum(self.layerWidths)
+            Es = np.arange(self.Emin - Eshift, self.Emin, self.Eres/1E3)
+            eigenEs = onedq.cBandSolve1DBonded(
+                self.xres, Es, self.Emin, self.Emax, 
+                self.EField, self.xVc, band)
+            psis = onedq.cBandFillPsi(
+                self.xres, eigenEs, self.xVc, band, 
+                Elower=self.Emin, Eupper=self.Emax, field=self.EField)
+            self.psis, self.eigenEs = self.shiftPeriod(
+                (-1,0,1,2), psis, eigenEs)
+        elif self.NonParabolic:
             band = onedq.Band("ZincBlende", self.xEg, self.xF, self.xEp,
                               self.xESO)
             self.eigenEs = onedq.cBandSolve1D(self.xres, Es, self.xVc, band)
@@ -345,6 +365,8 @@ class QCLayers(object):
                                                 self.xVc, self.xMc)
             self.psis = onedq.cSimpleFillPsi(self.xres, self.eigenEs,
                                              self.xVc, self.xMc)
+        self.loMatrix = [[None]*len(self.eigenEs) 
+                         for _ in range(len(self.eigenEs))]
         return self.eigenEs
         #  self.stateFilter()
 
@@ -385,6 +407,8 @@ class QCLayers(object):
             select='v', select_range=(np.min(self.xVc), np.max(self.xVc)))
         self.psis /= sqrt(self.xres)
         self.psis = self.psis.T
+        self.loMatrix = [[None]*len(self.eigenEs) 
+                         for _ in range(len(self.eigenEs))]
         return self.eigenEs
 
     def solve_basis(self):
@@ -428,6 +452,7 @@ class QCLayers(object):
         for n in range(0, len(StartInd)):
             dCL = copy.deepcopy(self)
             dCL.repeats = 1
+            dCL.periodic = False
             # solve for Active region wavefunctions
             dCL.layerWidths = self.layerWidths[StartInd[n]:EndInd[n]]
             dCL.layerMtrls = self.layerMtrls[StartInd[n]: EndInd[n]]
@@ -438,22 +463,51 @@ class QCLayers(object):
             dCL.solve_whole()
 
             # map dCL result back to self
-            xInd_all = ((self.xLayerNums >= StartInd[n]) & 
-                        (self.xLayerNums < EndInd[n]))
-            for j in range(0, self.repeats):
-                xInd = xInd_all & (self.xRepeats == j)
-                psis_fill = np.zeros((dCL.eigenEs.shape[0], 
-                                      self.xPoints.size))
-                # cut the result if it's not aligned (due to rounding error)
-                lenth = np.sum(xInd)
-                psis_fill[:, xInd] = dCL.psis[:, 0:lenth]
-                assert(abs(len(dCL.xPoints)-lenth) <= 1) 
-                # confirm rounding error is bounded
-                shift = j*sum(self.layerWidths) + sum(
-                    self.layerWidths[:StartInd[n]])
-                shiftedEigenEs = dCL.eigenEs - shift*self.EField*EUnit
-                self.eigenEs = np.concatenate((self.eigenEs, shiftedEigenEs))
-                self.psis = np.concatenate((self.psis, psis_fill))
+            shift = sum(self.layerWidths[:StartInd[n]])
+            psis, eigenEs = self.shiftPeriod(
+                range(self.repeats), dCL.psis, 
+                dCL.eigenEs - shift*self.EField*EUnit,
+                dCL.xPoints + shift)
+            self.eigenEs = np.concatenate((self.eigenEs, eigenEs))
+            self.psis = np.concatenate((self.psis, psis))
+            #  xInd_all = ((self.xLayerNums >= StartInd[n]) & 
+            #              (self.xLayerNums < EndInd[n]))
+            #  for j in range(0, self.repeats):
+            #      xInd = xInd_all & (self.xRepeats == j)
+            #      psis_fill = np.zeros((dCL.eigenEs.shape[0], 
+            #                            self.xPoints.size))
+            #      # cut the result if it's not aligned (due to rounding error)
+            #      lenth = np.sum(xInd)
+            #      psis_fill[:, xInd] = dCL.psis[:, 0:lenth]
+            #      assert(abs(len(dCL.xPoints)-lenth) <= 1) 
+            #      # confirm rounding error is bounded
+            #      shift = j*sum(self.layerWidths) + sum(
+            #          self.layerWidths[:StartInd[n]])
+            #      shiftedEigenEs = dCL.eigenEs - shift*self.EField*EUnit
+            #      self.eigenEs = np.concatenate((self.eigenEs, shiftedEigenEs))
+            #      self.psis = np.concatenate((self.psis, psis_fill))
+        self.loMatrix = [[None]*len(self.eigenEs) 
+                         for _ in range(len(self.eigenEs))]
+        return self.eigenEs
+
+    def shiftPeriod(self, ns, psis0, eigenEs0, xPoints=None):
+        """Shift wavefunctions n (in ns) period(s) and return coorelated
+        wavefunctions and EigenEs. psis0 corresponds to xPoints[0:]"""
+        if xPoints is None:
+            xPoints = self.xPoints
+        period = sum(self.layerWidths)
+        Eshift = period * self.EField * EUnit
+        psis = np.empty((0, self.xPoints.size))
+        eigenEs = np.empty(0)
+        for n in sorted(ns, reverse=True):
+            xpn = xPoints + period*n
+            psisn = np.array([np.interp(self.xPoints, xPoints+period*n,
+                                       psi) for psi in psis0])
+            # filter almost zero sols)
+            idx = np.sum(psisn**2, axis=1)*self.xres > 0.1
+            psis = np.concatenate((psis, psisn[idx]))
+            eigenEs = np.concatenate((eigenEs, eigenEs0[idx] - Eshift*n))
+        return psis, eigenEs
 
     def stateFilter(self):
         """Filter unbounded states: 
@@ -497,44 +551,65 @@ class QCLayers(object):
         if upper < lower:
             upper, lower = lower, upper
 
-        psi_i = self.psis[upper, :]
-        psi_j = self.psis[lower, :]
-        Ei = self.eigenEs[upper]
-        Ej = self.eigenEs[lower]
-        hwLO = self.avghwLO()
+        if self.loMatrix[upper][lower] is None:
 
-        if Ei - Ej - hwLO < 0:
-            # energy difference is smaller than a LO phonon
-            # LO phonon scatering doesn't happen
-            return INV_INF
+            psi_i = self.psis[upper, :]
+            psi_j = self.psis[lower, :]
+            Ei = self.eigenEs[upper]
+            Ej = self.eigenEs[lower]
+            hwLO = self.avghwLO()
 
-        # TODO: imporve expression for eff mass
-        mass = m0 * sqrt(np.sum(self.xMc * psi_i**2 * self.xres)
-                         * np.sum(self.xMc * psi_j**2 * self.xres))
-        kl = sqrt(2 * mass / hbar**2 * (Ei-Ej-hwLO) * e0)
-        #  dIij = np.empty(self.xPoints.size)
-        #  for n in range(self.xPoints.size):
-        #      x1 = self.xPoints[n]
-        #      x2 = self.xPoints
-        #      dIij[n] = np.sum(psi_i * psi_j * exp(-kl * abs(x1 - x2)*1e-10)
-        #                       * psi_i[n] * psi_j[n] * self.xres**2)
-        #  Iij = np.sum(dIij)
-        Iij = onedq.OneDSchrodinger.cLOphononScatter(self.xres, kl, 
-                                                     psi_i, psi_j)
-        epsInf = np.array([a.parm["epsInf"] for a in self.mtrlAlloys])
-        epss = np.array([a.parm["epss"] for a in self.mtrlAlloys])
-        epsrho = 1 / (1/epsInf - 1/epss)
-        epsrho = (np.sum(epsrho[self.layerMtrls] * self.layerWidths) 
-                  / sum(self.layerWidths))
-        inv_tau = (mass * e0**2 * self.avghwLO() * e0 / hbar * Iij 
-                   / (4 * hbar**2 * epsrho * eps0 * kl))
-        return inv_tau / 1e12 #unit ps
+            if Ei - Ej - hwLO < 0:
+                # energy difference is smaller than a LO phonon
+                # LO phonon scatering doesn't happen
+                return INV_INF
+
+            # TODO: imporve expression for eff mass
+            mass = m0 * sqrt(np.sum(self.xMc * psi_i**2 * self.xres)
+                             * np.sum(self.xMc * psi_j**2 * self.xres))
+            kl = sqrt(2 * mass / hbar**2 * (Ei-Ej-hwLO) * e0)
+            #  dIij = np.empty(self.xPoints.size)
+            #  for n in range(self.xPoints.size):
+            #      x1 = self.xPoints[n]
+            #      x2 = self.xPoints
+            #      dIij[n] = np.sum(psi_i * psi_j * exp(-kl * abs(x1 - x2)*1e-10)
+            #                       * psi_i[n] * psi_j[n] * self.xres**2)
+            #  Iij = np.sum(dIij)
+            Iij = onedq.OneDSchrodinger.cLOphononScatter(self.xres, kl, 
+                                                         psi_i, psi_j)
+            epsInf = np.array([a.parm["epsInf"] for a in self.mtrlAlloys])
+            epss = np.array([a.parm["epss"] for a in self.mtrlAlloys])
+            epsrho = 1 / (1/epsInf - 1/epss)
+            epsrho = (np.sum(epsrho[self.layerMtrls] * self.layerWidths) 
+                      / sum(self.layerWidths))
+            self.loMatrix[upper][lower] = (
+                mass * e0**2 * hwLO * e0 / hbar * Iij 
+                / (4 * hbar**2 * epsrho * eps0 * kl))
+        return self.loMatrix[upper][lower] / 1e12 #unit ps^-1
 
     def loLifeTime(self, state):
         """ Return the life time due to LO phonon scattering of the
         given state(label)"""
-        rate = [self.loTransition(state, q) for q in range(state)]
-        return 1/sum(rate)
+        return 1/sum(self.loTransition(state, q) for q in range(state))
+        #  Ei = self.eigenEs[state]
+        #  psi_i = self.psis[state]
+        #  hwLO = self.avghwLO()
+        #  idxs = self.eigenEs <= Ei - hwLO
+        #  psi_js = self.psis[idxs]
+        #  Ejs = self.eigenEs[idxs]
+        #  masses = m0 * sqrt(np.sum(self.xMc*psi_i**2*self.xres) *
+        #                     np.sum(self.xMc*psi_js**2*self.xres, axis=1))
+        #  kls = sqrt(2 * masses / hbar**2 * (Ei - Ejs - hwLO) * e0)
+        #  epsInf = np.array([a.parm["epsInf"] for a in self.mtrlAlloys])
+        #  epss = np.array([a.parm["epss"] for a in self.mtrlAlloys])
+        #  epsrho = 1 / (1/epsInf - 1/epss)
+        #  epsrho = (np.sum(epsrho[self.layerMtrls] * self.layerWidths) 
+        #            / sum(self.layerWidths))
+        #  fjs = (masses * e0**2 * hwLO * e0 / hbar
+        #             / (4 * hbar**2 * epsrho * eps0 * kls))
+        #  Iijtotal = onedq.OneDSchrodinger.cLOtotal(
+        #      self.xres, kls, psi_i, psi_js, fjs)
+        #  return 1e12 / Iijtotal if Iijtotal > 0 else 1E20
 
     def calc_FoM(self, upper, lower):
         """Calculate Figure of Merit. 
