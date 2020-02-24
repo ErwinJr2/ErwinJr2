@@ -118,9 +118,11 @@ def cBandFillPsi(step, EigenEs, V, band, xmin=0, xmax=None,
         xmax = V.size
     psis = np.empty(EigenEs.size*(xmax-xmin))
     if field is not None:
-        starts = np.floor((Elower - EigenEs)/(field*step*1E-5)).astype(int)
+        starts = np.floor((Elower - EigenEs)/(field*step*1E-5)
+                          ).astype(np.int64)
         starts[starts<xmin] = xmin
-        ends = np.ceil((Eupper - EigenEs)/(field*step*1E-5)).astype(int)
+        ends = np.ceil((Eupper - EigenEs)/(field*step*1E-5)
+                       ).astype(np.int64)
         ends[ends>xmax] = xmax
     else:
         starts = np.zeros(xmax-xmin, dtype=np.int64)
