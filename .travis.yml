@@ -13,7 +13,7 @@ addons:
             - doxygen-gui
             - graphviz
 install:
-    - pip install -r requirements.txt
+    - pip install numpy scipy matplotlib sphinx sphinx_rtd_theme sphinxcontrib-bibtex breathe
     - python install.py
 script:
     - pytest -v test/SimpleSchrodinger.py
