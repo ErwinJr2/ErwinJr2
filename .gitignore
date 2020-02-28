@@ -30,6 +30,6 @@ __pycache__/
 ## doxygen gnerated file for C code
 OneDQuantum/docs/html/
 OneDQuantum/docs/xml/
-example/
+example/*
 
 .DS_Store
