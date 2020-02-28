@@ -558,7 +558,7 @@ double LOphononScatter(double step, numpyint N, double kl,
     double Iij = 0;
     int i;
     double powerUnit = -kl*step*ANG;
-    int cutoff = 1+abs(-20/powerUnit);
+    int cutoff = 1+abs(-(int)(20/powerUnit));
     int start, end;
     for(start = 0; start < N && 
             (fabs(psi_i[start]) < MINPSI || fabs(psi_j[start]) < MINPSI);
@@ -616,7 +616,7 @@ double LOtotal(double step, numpyint N, const double *kls,
     for(n=0; n<Nj; n++) {
         const double *psi_j = psi_js + N*n;
         double powerUnit = -kls[n]*step*ANG;
-        int cutoff = 1+abs(-20/powerUnit);
+        int cutoff = 1+abs(-(int)(20/powerUnit));
         int start, end;
         for(start=starti; start<N && fabs(psi_j[start])<MINPSI;  start++);
         for(end=endi;     end>=start && fabs(psi_j[end])<MINPSI; end--);
