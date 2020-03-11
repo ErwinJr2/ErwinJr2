@@ -13,8 +13,8 @@ import copy
 
 EUnit = 1e-5    # E field unit from kV/cm to V/Angtrom
 # upper and lower bond extension for periodic solver
-PeriodU = 0.2
-PeriodL = 0.1
+PeriodU = 1
+PeriodL = 0.2
 
 qcMaterial = {
     "InP":  ["InGaAs", "AlInAs"], 
@@ -24,7 +24,7 @@ qcMaterial = {
 
 class QCLayers(object):
     """
-    Class for QCLayers
+    Class for Quantum Cascade Layers
 
     Parameters
     ----------
@@ -103,7 +103,7 @@ class QCLayers(object):
         self.Solver = Solver
         self.description = description
         self.NonParabolic = True
-        self.periodic = True
+        self.periodic = False
         self.solveMatrix = False
         self.layerSelected = None
 
@@ -342,8 +342,9 @@ class QCLayers(object):
         #  if False:
             band = onedq.Band("ZincBlende", self.xEg, self.xF, self.xEp,
                               self.xESO)
-            self.Emin = min(m.parm['EcG'] for m in self.mtrlAlloys) - PeriodL
-            self.Emax = max(m.parm['EcG'] for m in self.mtrlAlloys) + PeriodU
+            offset = self.offset()
+            self.Emin = min(m.parm['EcG'] for m in self.mtrlAlloys) - PeriodL*offset
+            self.Emax = max(m.parm['EcG'] for m in self.mtrlAlloys) + PeriodU*offset
             Eshift = self.EField*EUnit*sum(self.layerWidths)
             Es = np.arange(self.Emin - Eshift, self.Emin, self.Eres/1E3)
             eigenEs = onedq.cBandSolve1DBonded(
@@ -504,9 +505,10 @@ class QCLayers(object):
             psisn = np.array([np.interp(self.xPoints, xPoints+period*n,
                                        psi) for psi in psis0])
             # filter almost zero sols)
-            idx = np.sum(psisn**2, axis=1)*self.xres > 0.1
-            psis = np.concatenate((psis, psisn[idx]))
-            eigenEs = np.concatenate((eigenEs, eigenEs0[idx] - Eshift*n))
+            if len(psisn) > 0:
+                idx = np.sum(psisn**2, axis=1)*self.xres > 0.1
+                psis = np.concatenate((psis, psisn[idx]))
+                eigenEs = np.concatenate((eigenEs, eigenEs0[idx] - Eshift*n))
         return psis, eigenEs
 
     def stateFilter(self):
