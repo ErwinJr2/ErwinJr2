@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 
 # TODO:
@@ -23,11 +23,12 @@ from QuantumTab import QuantumTab
 
 Version = '0.1'
 
+
 class MainWindow(QMainWindow):
     def __init__(self, fname=None, parent=None):
         super(MainWindow, self).__init__(parent)
-        self.qsettings = QSettings(QSettings.IniFormat, QSettings.UserScope, 
-                                    "ErwinJr", "ErwinJr2", self)
+        self.qsettings = QSettings(QSettings.IniFormat, QSettings.UserScope,
+                                   "ErwinJr", "ErwinJr2", self)
 
         if self.qsettings.value('firstRun', True, type=bool):
             self.qsettings.setValue("firstRun", False)
@@ -36,7 +37,7 @@ class MainWindow(QMainWindow):
                     QMessageBox.Question, 'EwrinJr2 ' + Version,
                     ("Welcome to ErwinJr2!\n"
                      "Since this is your first time running the program, "
-                     "would you like to open an example file or a blank file?"),
+                     "would you like to open an example or a blank file?"),
                     parent=self)
                 firstRunBox.addButton("Blank File", QMessageBox.NoRole)
                 firstRunBox.addButton("Example File", QMessageBox.YesRole)
@@ -83,7 +84,7 @@ class MainWindow(QMainWindow):
 
         if self.qsettings.value("MainWindow/Geometry"):
             self.restoreGeometry(self.qsettings.value("MainWindow/Geometry"))
-        if self.qsettings.value("MainWindow/State"): 
+        if self.qsettings.value("MainWindow/State"):
             self.restoreState(self.qsettings.value("MainWindow/State"))
         self.updateFileMenu()
         self.updateWindowTitle()
@@ -160,8 +161,8 @@ class MainWindow(QMainWindow):
             tip="Move zeroth layer to first layer")
         rotateLayerAction.setShortcut("Ctrl+T")
         solveARonly = self.create_action(
-            "&Solve Active Only", checkable=True, 
-            ischecked=self.qtab.qclayers.basisARonly, 
+            "&Solve Active Only", checkable=True,
+            ischecked=self.qtab.qclayers.basisARonly,
             slot=self.qtab.ARonly)
         copyStructureAction = self.create_action(
             "&Copy Structure", slot=self.qtab.copy_structure,
@@ -190,28 +191,28 @@ class MainWindow(QMainWindow):
             checkable=True, ischecked=self.qtab.plotSO,
             slot=self.qtab.view_SOBand)
         PBoundAction = self.create_action(
-            "Show Periodic Energy Boundary", 
-            checkable=True, ischecked=self.qtab.showPbound, 
+            "Show Periodic Energy Boundary",
+            checkable=True, ischecked=self.qtab.showPbound,
             slot=self.qtab.view_PBound)
         plotwf = self.create_action(
-            "Plot Wave function", 
-            checkable=True, ischecked=self.qtab.plotType == 'wf', 
+            "Plot Wave function",
+            checkable=True, ischecked=self.qtab.plotType == 'wf',
             slot=self.qtab.set_plotwf)
         plotFill = self.create_action(
-            "Fill wave function curve", 
-            checkable=True, ischecked=self.qtab.fillplot, 
+            "Fill wave function curve",
+            checkable=True, ischecked=self.qtab.fillplot,
             slot=self.qtab.set_fill)
         self.add_actions(self.view_menu, (VXBandAction,
                                           VLBandAction,
                                           LHBandAction,
-                                          SOBandAction, 
+                                          SOBandAction,
                                           PBoundAction,
-                                          None, 
+                                          None,
                                           plotwf, plotFill))
 
         # help menu
         self.help_menu = self.menuBar().addMenu("&Help")
-        about_action = self.create_action("&About", 
+        about_action = self.create_action("&About",
                                           slot=self.on_about)
         licenses_action = self.create_action("&License",
                                              slot=self.on_licenses)
@@ -245,21 +246,20 @@ class MainWindow(QMainWindow):
         self.file_menu.addSeparator()
         self.file_menu.addAction(self.fileMenuActions[-1])
 
-
 # ===========================================================================
-# Save, Load, RecentFiles 
+# Save, Load, RecentFiles
 # ===========================================================================
     def updateWindowTitle(self):
         title = "ErwinJr2 " + Version
         if self.filename:
-            title += " - %s"%os.path.basename(self.filename)
+            title += " - %s" % os.path.basename(self.filename)
         if self.dirty:
             title += "[*]"
         self.setWindowTitle(title)
         self.setWindowModified(self.dirty)
 
     def addRecentFile(self, fname):
-        if fname in self.recentFiles: 
+        if fname in self.recentFiles:
             self.recentFiles.pop(self.recentFiles.index(fname))
         self.recentFiles.insert(0, fname)
         while len(self.recentFiles) > 9:
@@ -292,7 +292,7 @@ class MainWindow(QMainWindow):
 
     def fileOpen(self, fname=None):
         """ Clear all old data and load a new file. This will check
-        self.unsaveConfirm and return False if user cancels it. 
+        self.unsaveConfirm and return False if user cancels it.
         This is used as user action and SLOT to fileOpen related signals."""
         if not self.unsaveConfirm():
             return False
@@ -301,7 +301,7 @@ class MainWindow(QMainWindow):
                 self, "ErwinJr2 - Choose file",
                 os.path.dirname(self.filename) if self.filename else ".",
                 "ErwinJr2 files (*.json)\nAll files (*.*)")
-        if fname: 
+        if fname:
             self.qclLoad(fname)
             return True
         else:
@@ -371,7 +371,6 @@ class MainWindow(QMainWindow):
         else:
             event.ignore()
 
-
 # ===========================================================================
 # Export Functions
 # ===========================================================================
@@ -386,7 +385,6 @@ class MainWindow(QMainWindow):
         if fname:
             # if user doesn't click cancel
             self.qtab.export_band_data(fname)
-
 
 # ===========================================================================
 # Edit Menu Items
@@ -455,12 +453,13 @@ def main(filename=None):
     app = QApplication(sys.argv)
     app.setOrganizationName("ErwinJr")
     app.setOrganizationDomain("princetonuniversity.github.io/ErwinJr2")
-    app.setApplicationName("ErwinJr2") 
+    app.setApplicationName("ErwinJr2")
     app.setWindowIcon(QIcon('images/EJpng48x48.png'))
 
     form = MainWindow(fileName)
     form.show()
     app.exec_()
+
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))

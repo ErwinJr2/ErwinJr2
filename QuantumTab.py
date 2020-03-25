@@ -1,5 +1,7 @@
-#!/usr/bin/env python
-# -*- coding:utf-8 -*-
+"""
+This file defines the quantum tab of ErwinJr, for simulating electron spectrum
+and scattering
+"""
 
 # TODO:
 # In plot controls, add "show one period"

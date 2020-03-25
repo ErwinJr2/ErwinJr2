@@ -1,15 +1,17 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 from context import *
 from OneDQuantum import *
 import numpy as np
 import unittest
 from scipy.constants import hbar, e, m_e, pi
-ANG=1E-10
 
-#test precision
+ANG = 1E-10
+# test precision
 wf_dec = 3
 E_dec  = 6
+
+
 class TestSimpleSchrodinger(unittest.TestCase):
     def test_inf_sq_well(self):
         xmax = 200
@@ -47,13 +49,13 @@ class TestSimpleSchrodinger(unittest.TestCase):
         from scipy.special import airy, ai_zeros
         an = ai_zeros(nmax)[0]
         EigenEs_th = -(hbar**2*F**2/(2*m_e*mass*e*ANG**2))**(1/3)*an
-        psis_th = np.array([airy((2*mass*m_e*e*ANG**2*F/hbar**2)**(1/3) 
+        psis_th = np.array([airy((2*mass*m_e*e*ANG**2*F/hbar**2)**(1/3)
                                  * (x-E/F))[0] for E in EigenEs_th])
         psis_th /= (np.linalg.norm(psis_th, axis=1) * np.sqrt(step))[:, None]
 
-        np.testing.assert_array_almost_equal(EigenEs[:nmax], EigenEs_th, 
+        np.testing.assert_array_almost_equal(EigenEs[:nmax], EigenEs_th,
                                              decimal=E_dec, verbose=True)
-        np.testing.assert_array_almost_equal(psis[:nmax,::-1], psis_th,
+        np.testing.assert_array_almost_equal(psis[:nmax, ::-1], psis_th,
                                              decimal=wf_dec, verbose=True)
 
 if __name__ == "__main__":

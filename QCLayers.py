@@ -1,9 +1,9 @@
-#!/usr/bin/env python
-# -*- coding:utf-8 -*-
+"""
+This file defines the QCLayer class for simulating QC structure
+"""
 import numpy as np
-from numpy import sqrt, exp, pi
-import scipy
-from scipy.constants import (e as e0, epsilon_0 as eps0, h as h, 
+from numpy import sqrt
+from scipy.constants import (e as e0, epsilon_0 as eps0, h as h,
                              hbar as hbar, electron_mass as m0, c as c0)
 import scipy.linalg as slg
 import OneDQuantum as onedq
@@ -17,8 +17,8 @@ PeriodU = 1
 PeriodL = 0.2
 
 qcMaterial = {
-    "InP":  ["InGaAs", "AlInAs"], 
-    "GaAs": ["AlGaAs"], 
+    "InP":  ["InGaAs", "AlInAs"],
+    "GaAs": ["AlGaAs"],
     "GaSb": ["InAsSb", "AlGaSb"]
 }
 
@@ -44,7 +44,7 @@ class QCLayers(object):
     materials : list of str, len = 2
         Name of alloys
     moleFrac : list of float
-        mole fraction for each possible layer material, 
+        mole fraction for each possible layer material,
         in format [well, barrier]*4
     xres : float
         Position resolution, in armstrong
@@ -58,7 +58,7 @@ class QCLayers(object):
     layerDopings : list of float, len = No. of layers
         Doping per volumn in unit 1e17 cm-3
     layerARs : list of bool, len = No. of layers
-        Binaries indicating if the layer is active(True) or not(False), 
+        Binaries indicating if the layer is active(True) or not(False),
         only affects basis solver
 
     EField : float
@@ -72,22 +72,21 @@ class QCLayers(object):
     description : str
         Description of the data
 
-    
+
     Other Parameters
     --------------------
     NonParabolic : bool
-        A flag to decide whether to use a constant effective mass, assuming 
-        perfect parabolic dispersion or an energy dependent effective mass 
-        to correct non-parabolic dispersion relation of electrons. 
+        A flag to decide whether to use a constant effective mass, assuming
+        perfect parabolic dispersion or an energy dependent effective mass
+        to correct non-parabolic dispersion relation of electrons.
     layerSelected : int
-        a label indicating which layer is selected in GUI, with default None 
+        a label indicating which layer is selected in GUI, with default None
         indicating no layer is selected
-        
     """
-    def __init__(self, substrate="InP", materials=["InGaAs", "AlInAs"], 
-                 moleFracs=[0.53, 0.52], xres=0.5, Eres=0.5, 
-                 layerWidths=[0.0], layerMtrls=[0], layerDopings=[0.0], 
-                 layerARs=[True], EField=0, repeats=3, T=300.0, Solver="ODE", 
+    def __init__(self, substrate="InP", materials=["InGaAs", "AlInAs"],
+                 moleFracs=[0.53, 0.52], xres=0.5, Eres=0.5,
+                 layerWidths=[0.0], layerMtrls=[0], layerDopings=[0.0],
+                 layerARs=[True], EField=0, repeats=3, T=300.0, Solver="ODE",
                  description=""):
         self.substrate = substrate
         self.materials = materials
@@ -115,10 +114,10 @@ class QCLayers(object):
         self.basisInjectorAR = True
         self.basisARonly = False
 
-    def update_strain(self): 
+    def update_strain(self):
         self.a_parallel = self.subM.parm['alc']
-        self.mtrlAlloys = [Material.Alloy(self.materials[idx], 
-                                          self.moleFracs[idx], 
+        self.mtrlAlloys = [Material.Alloy(self.materials[idx],
+                                          self.moleFracs[idx],
                                           self.Temperature)
                            for idx in range(len(self.materials))]
 
@@ -127,12 +126,12 @@ class QCLayers(object):
 
     def set_mtrl(self, n, mtrl=None, moleFrac=None):
         """Set material[n] to new material (mtrl) and/or moleFrac"""
-        if mtrl == None and moleFrac == None:
+        if mtrl is None and moleFrac is None:
             raise Exception("Nothing changed")
-        if mtrl == None:
+        if mtrl is None:
             mtrl = self.materials[n]
-        if moleFrac == None:
-            moleFrac = self.moleFracs[n] 
+        if moleFrac is None:
+            moleFrac = self.moleFracs[n]
         self.moleFracs[n] = moleFrac
         self.materials[n] = mtrl
         self.mtrlAlloys[n] = Material.Alloy(mtrl, moleFrac, self.Temperature)
@@ -146,7 +145,7 @@ class QCLayers(object):
 
     def del_mtrl(self, n):
         """Delete materials labeled n. All layers of this material will
-        become previous materials[n-1 if n >0 else 1].  There should be 
+        become previous materials[n-1 if n >0 else 1].  There should be
         at least two materials otherwise there will be error"""
         if len(self.materials) <= 2:
             raise ValueError("There should be at least 2 materials")
@@ -154,8 +153,8 @@ class QCLayers(object):
         self.moleFracs.pop(n)
         for i in range(len(self.layerMtrls)):
             if self.layerMtrls[i] >= n:
-                self.layerMtrls[i] = (self.layerMtrls[i] - 1 
-                                      if self.layerMtrls[i] > 0 
+                self.layerMtrls[i] = (self.layerMtrls[i] - 1
+                                      if self.layerMtrls[i] > 0
                                       else 0)
 
     def add_layer(self, n, width, mtrlIdx, AR, doping):
@@ -163,7 +162,7 @@ class QCLayers(object):
         self.layerMtrls.insert(n, mtrlIdx)
         self.layerARs.insert(n, AR)
         self.layerDopings.insert(n, doping)
-    
+
     def del_layer(self, n):
         for layerList in (self.layerWidths, self.layerARs,
                           self.layerMtrls, self.layerDopings):
@@ -181,7 +180,7 @@ class QCLayers(object):
             self.materials = (qcMaterial[subs]*matlN)[0:matlN]
             self.update_strain()
         else:
-            raise TypeError("Substrate %s not supported"%subs)
+            raise TypeError("Substrate %s not supported" % subs)
 
     def set_temperature(self, T):
         self.Temperature = T
@@ -190,7 +189,7 @@ class QCLayers(object):
 
     def offset(self):
         """Return the conduction band offset (difference between highest
-        conduction band and lowest conduction band energy) of materials, 
+        conduction band and lowest conduction band energy) of materials,
         in unit eV"""
         ecgs = [alloy.parm['EcG'] for alloy in self.mtrlAlloys]
         return max(ecgs) - min(ecgs)
@@ -198,20 +197,20 @@ class QCLayers(object):
     def netStrain(self):
         """Return average strain perpendicular to the layer plane, in
         percentage."""
-        if sum(self.layerWidths) <= 1e-5: 
+        if sum(self.layerWidths) <= 1e-5:
             return -1
         totalStrain = sum(self.mtrlAlloys[self.layerMtrls[n]].eps_perp
-                          * self.layerWidths[n] 
+                          * self.layerWidths[n]
                           for n in range(len(self.layerWidths)))
         return 100 * totalStrain / sum(self.layerWidths)
 
     def avghwLO(self):
         """Return average LO phonont energy in unit eV"""
-        if sum(self.layerWidths) <= 1e-5: 
+        if sum(self.layerWidths) <= 1e-5:
             return -1
         sumhwlo = sum(self.mtrlAlloys[self.layerMtrls[n]].parm['hwLO']
-                          * self.layerWidths[n] 
-                          for n in range(len(self.layerWidths)))
+                      * self.layerWidths[n]
+                      for n in range(len(self.layerWidths)))
         return sumhwlo / sum(self.layerWidths)
 
     def populate_x(self):
@@ -232,13 +231,13 @@ class QCLayers(object):
             at xPoints[i] it's xLayerNums[i]-th layer
 
 
-        Also update following band structure parameters (with type *np.array of float*):
-        **xVc, xVX, xVL, xVLH, xVSO, xEg, xMc, xESP, xF**
+        Also update following band structure parameters (with type *np.array
+        of float*): **xVc, xVX, xVL, xVLH, xVSO, xEg, xMc, xESP, xF**
 
         """
-        layerNumCumSum = [0] + np.cumsum(self.layerWidths).tolist()
-        periodL = layerNumCumSum[-1]
-        self.xPoints = np.arange(0, periodL* self.repeats, self.xres)
+        layerCumSum = [0] + np.cumsum(self.layerWidths).tolist()
+        periodL = layerCumSum[-1]
+        self.xPoints = np.arange(0, periodL * self.repeats, self.xres)
         """ np.array """
         # largest index of grid
         N = self.xPoints.size
@@ -246,13 +245,11 @@ class QCLayers(object):
         self.xDopings = np.empty(N)
         self.xARs = np.empty(N, dtype=bool)
         self.xLayerNums = np.empty(N, dtype=int)
-
         self.xVc = np.empty(N)
         self.xVX = np.empty(N)
         self.xVL = np.empty(N)
         self.xVLH = np.empty(N)
         self.xVSO = np.empty(N)
-        
         self.xEg = np.empty(N)
         self.xMc = np.empty(N)
         self.xESO = np.empty(N)
@@ -260,13 +257,11 @@ class QCLayers(object):
         self.xF = np.empty(N)
 
         for n in range(len(self.layerWidths)):
-            #  Indices = np.logical_and(self.xPoints >= layerNumCumSum[n],
-            #                           self.xPoints < layerNumCumSum[n+1])
             Indices = np.logical_or.reduce([
-                (self.xPoints >= layerNumCumSum[n] + k * periodL) 
-                & (self.xPoints < layerNumCumSum[n+1] + k * periodL)
+                (self.xPoints >= layerCumSum[n] + k * periodL)
+                & (self.xPoints < layerCumSum[n+1] + k * periodL)
                 for k in range(self.repeats)])
-            
+
             self.xLayerNums[Indices] = n
             self.xMaterialsIdxs[Indices] = self.layerMtrls[n]
             self.xDopings[Indices] = self.layerDopings[n]
@@ -285,10 +280,11 @@ class QCLayers(object):
         self.xMcminus = np.empty(self.xPoints.size)
         for n in range(len(self.layerWidths)):
             Indices = np.logical_or.reduce([
-                (self.xPoints >= layerNumCumSum[n] + k * periodL - self.xres/2) 
-                & (self.xPoints < layerNumCumSum[n+1] + k * periodL - self.xres/2)
+                (self.xPoints >= layerCumSum[n] + k * periodL - self.xres/2)
+                & (self.xPoints < layerCumSum[n+1] + k * periodL - self.xres/2)
                 for k in range(self.repeats)])
-            self.xMcplus[Indices] = self.mtrlAlloys[self.layerMtrls[n]].parm['me0']
+            self.xMcplus[Indices] = self.mtrlAlloys[
+                                        self.layerMtrls[n]].parm['me0']
         if N > 1:
             self.xMcplus[-1] = self.xMcplus[-2]
             self.xMcminus[1:] = self.xMcplus[:-1]
@@ -301,7 +297,7 @@ class QCLayers(object):
         self.xRepeats = np.empty(N, dtype=int)
         for k in range(self.repeats):
             self.xRepeats[(self.xPoints < (k+1)*periodL)
-                           & (self.xPoints >= k*periodL)] = k
+                          & (self.xPoints >= k*periodL)] = k
         #  self.xRepeats = np.empty((0), dtype=int)
         #  for k in range(self.repeats):
         #      self.xRepeats = np.concatenate(
@@ -316,9 +312,9 @@ class QCLayers(object):
         return np.ma.masked_where(~self.xARs, self.xVc)
 
     def solve_whole(self):
-        if self.solveMatrix: 
+        if self.solveMatrix:
             return self.solve_whole_matrix()
-        else: 
+        else:
             return self.solve_whole_ode()
 
     def solve_whole_ode(self):
@@ -340,22 +336,23 @@ class QCLayers(object):
         # Es = np.linspace(np.min(self.xVc)+Emin, np.max(self.xVc), 1024)
         Es = np.arange(np.min(self.xVc), np.max(self.xVc), self.Eres/1E3)
         if self.periodic:
-        #  if False:
             band = onedq.Band("ZincBlende", self.xEg, self.xF, self.xEp,
                               self.xESO)
             offset = self.offset()
-            self.Emin = min(m.parm['EcG'] for m in self.mtrlAlloys) - PeriodL*offset
-            self.Emax = max(m.parm['EcG'] for m in self.mtrlAlloys) + PeriodU*offset
+            self.Emin = (min(m.parm['EcG'] for m in self.mtrlAlloys)
+                         - PeriodL*offset)
+            self.Emax = (max(m.parm['EcG'] for m in self.mtrlAlloys)
+                         + PeriodU*offset)
             Eshift = self.EField*EUnit*sum(self.layerWidths)
             Es = np.arange(self.Emin - Eshift, self.Emin, self.Eres/1E3)
             eigenEs = onedq.cBandSolve1DBonded(
-                self.xres, Es, self.Emin, self.Emax, 
+                self.xres, Es, self.Emin, self.Emax,
                 self.EField, self.xVc, band)
             psis = onedq.cBandFillPsi(
-                self.xres, eigenEs, self.xVc, band, 
+                self.xres, eigenEs, self.xVc, band,
                 Elower=self.Emin, Eupper=self.Emax, field=self.EField)
             self.psis, self.eigenEs = self.shiftPeriod(
-                (-1,0,1,2), psis, eigenEs)
+                                          (-1, 0, 1, 2), psis, eigenEs)
         elif self.NonParabolic:
             band = onedq.Band("ZincBlende", self.xEg, self.xF, self.xEp,
                               self.xESO)
@@ -367,7 +364,7 @@ class QCLayers(object):
                                                 self.xVc, self.xMc)
             self.psis = onedq.cSimpleFillPsi(self.xres, self.eigenEs,
                                              self.xVc, self.xMc)
-        self.loMatrix = [[None]*len(self.eigenEs) 
+        self.loMatrix = [[None]*len(self.eigenEs)
                          for _ in range(len(self.eigenEs))]
         return self.eigenEs
         #  self.stateFilter()
@@ -386,16 +383,17 @@ class QCLayers(object):
         """
         # populate mass half grid self.xMc[i] is m at i+-0.5
         # for matrix solver only
-        layerNumCumSum = [0] + np.cumsum(self.layerWidths).tolist()
-        periodL = layerNumCumSum[-1]
+        layerCumSum = [0] + np.cumsum(self.layerWidths).tolist()
+        periodL = layerCumSum[-1]
         self.xMcplus = np.empty(self.xPoints.size)
         self.xMcminus = np.empty(self.xPoints.size)
         for n in range(len(self.layerWidths)):
             Indices = np.logical_or.reduce([
-                (self.xPoints >= layerNumCumSum[n] + k * periodL - self.xres/2) 
-                & (self.xPoints < layerNumCumSum[n+1] + k * periodL - self.xres/2)
+                (self.xPoints >= layerCumSum[n] + k * periodL - self.xres/2)
+                & (self.xPoints < layerCumSum[n+1] + k * periodL - self.xres/2)
                 for k in range(self.repeats)])
-            self.xMcplus[Indices] = self.mtrlAlloys[self.layerMtrls[n]].parm['me0']
+            self.xMcplus[Indices] = self.mtrlAlloys[
+                                        self.layerMtrls[n]].parm['me0']
         self.xMcplus[-1] = self.xMcplus[-2]
         self.xMcminus[1:] = self.xMcplus[:-1]
         self.xMcminus[0] = self.xMcminus[1]
@@ -405,17 +403,18 @@ class QCLayers(object):
         # diagonal and subdiagonal of Hamiltonian
         self.Hdiag = unit*(1/self.xMcplus + 1/self.xMcminus) + self.xVc
         self.Hsubd = -unit / self.xMcplus[:-1]
-        self.eigenEs, self.psis = slg.eigh_tridiagonal(self.Hdiag, self.Hsubd, 
-            select='v', select_range=(np.min(self.xVc), np.max(self.xVc)))
+        self.eigenEs, self.psis = slg.eigh_tridiagonal(
+            self.Hdiag, self.Hsubd, select='v',
+            select_range=(np.min(self.xVc), np.max(self.xVc)))
         self.psis /= sqrt(self.xres)
         self.psis = self.psis.T
-        self.loMatrix = [[None]*len(self.eigenEs) 
+        self.loMatrix = [[None]*len(self.eigenEs)
                          for _ in range(len(self.eigenEs))]
         return self.eigenEs
 
     def solve_basis(self):
         """
-        solve basis for the QC device, with each basis being the eigen mode of 
+        solve basis for the QC device, with each basis being the eigen mode of
         a seperate part of the layer structure
 
         Yield
@@ -440,9 +439,8 @@ class QCLayers(object):
         else:
             StartInd.append(0)
             for n in range(1, len(self.layerARs)):
-                if ((self.basisInjectorAR and 
-                     not self.layerARs[n-1] and self.layerARs[n]) 
-                        or 
+                if ((self.basisInjectorAR and
+                     not self.layerARs[n-1] and self.layerARs[n]) or
                     (self.basisARInjector and
                      self.layerARs[n-1] and not self.layerARs[n])):
                     StartInd.append(n)
@@ -467,28 +465,12 @@ class QCLayers(object):
             # map dCL result back to self
             shift = sum(self.layerWidths[:StartInd[n]])
             psis, eigenEs = self.shiftPeriod(
-                range(self.repeats), dCL.psis, 
+                range(self.repeats), dCL.psis,
                 dCL.eigenEs - shift*self.EField*EUnit,
                 dCL.xPoints + shift)
             self.eigenEs = np.concatenate((self.eigenEs, eigenEs))
             self.psis = np.concatenate((self.psis, psis))
-            #  xInd_all = ((self.xLayerNums >= StartInd[n]) & 
-            #              (self.xLayerNums < EndInd[n]))
-            #  for j in range(0, self.repeats):
-            #      xInd = xInd_all & (self.xRepeats == j)
-            #      psis_fill = np.zeros((dCL.eigenEs.shape[0], 
-            #                            self.xPoints.size))
-            #      # cut the result if it's not aligned (due to rounding error)
-            #      lenth = np.sum(xInd)
-            #      psis_fill[:, xInd] = dCL.psis[:, 0:lenth]
-            #      assert(abs(len(dCL.xPoints)-lenth) <= 1) 
-            #      # confirm rounding error is bounded
-            #      shift = j*sum(self.layerWidths) + sum(
-            #          self.layerWidths[:StartInd[n]])
-            #      shiftedEigenEs = dCL.eigenEs - shift*self.EField*EUnit
-            #      self.eigenEs = np.concatenate((self.eigenEs, shiftedEigenEs))
-            #      self.psis = np.concatenate((self.psis, psis_fill))
-        self.loMatrix = [[None]*len(self.eigenEs) 
+        self.loMatrix = [[None]*len(self.eigenEs)
                          for _ in range(len(self.eigenEs))]
         return self.eigenEs
 
@@ -502,9 +484,8 @@ class QCLayers(object):
         psis = np.empty((0, self.xPoints.size))
         eigenEs = np.empty(0)
         for n in sorted(ns, reverse=True):
-            xpn = xPoints + period*n
             psisn = np.array([np.interp(self.xPoints, xPoints+period*n,
-                                       psi) for psi in psis0])
+                                        psi) for psi in psis0])
             # filter almost zero sols)
             if len(psisn) > 0:
                 idx = np.sum(psisn**2, axis=1)*self.xres > 0.1
@@ -513,7 +494,7 @@ class QCLayers(object):
         return psis, eigenEs
 
     def stateFilter(self):
-        """Filter unbounded states: 
+        """Filter unbounded states:
         States with energy higher than potential at the end and wf[-2] higher
         than a threshold (1e-4) is considered unbounded. """
         bounded = []
@@ -521,17 +502,17 @@ class QCLayers(object):
         for n in range(self.eigenEs.size):
             #  E = self.eigenEs[n]
             #  k = sqrt((E-self.xVc[-1])*2*self.xMc[-1])/hbar
-            wf = self.psis[n,:]
+            wf = self.psis[n, :]
             if self.eigenEs[n] < self.xVc[-1] or abs(wf[-2]) < 1e-4:
                 bounded.append(n)
-            elif np.all(self.xVc[wf**2 > 1e-4 ] > self.eigenEs[n]):
+            elif np.all(self.xVc[wf**2 > 1e-4] > self.eigenEs[n]):
                 semiBounded.append(n)
         ss = sorted(bounded + semiBounded)
         self.eigenEs = self.eigenEs[ss]
-        self.psis = self.psis[ss,:]
+        self.psis = self.psis[ss, :]
 
     def dipole(self, upper, lower):
-        """Return Electrical dipole between upper and lower states, 
+        """Return Electrical dipole between upper and lower states,
         update self.dipole. Should be called for any other related physics
         quantities."""
         if upper < lower:
@@ -541,12 +522,12 @@ class QCLayers(object):
         Ei = self.eigenEs[upper]
         Ej = self.eigenEs[lower]
         self.deltaE = Ei - Ej
-        #TODO: eff mass for non-parabolic
+        # TODO: eff mass for non-parabolic
         avgpsi_i = (psi_i[:-1] + psi_i[1:])/2
         avgxMc = (self.xMc[:-1] + self.xMc[1:])/2
-        self.z = np.sum(avgpsi_i * np.diff(psi_j/self.xMc) 
-                   + 1/avgxMc * (avgpsi_i * np.diff(psi_j)))
-        self.z *= hbar**2 / (2 * (Ei - Ej) * e0 * m0) / (1E-10)**2 #Angtrom
+        self.z = np.sum(avgpsi_i * np.diff(psi_j/self.xMc)
+                        + 1/avgxMc * (avgpsi_i * np.diff(psi_j)))
+        self.z *= hbar**2 / (2 * (Ei - Ej) * e0 * m0) / (1E-10)**2  # Angtrom
         return self.z
 
     def loTransition(self, upper, lower):
@@ -575,20 +556,20 @@ class QCLayers(object):
             #  for n in range(self.xPoints.size):
             #      x1 = self.xPoints[n]
             #      x2 = self.xPoints
-            #      dIij[n] = np.sum(psi_i * psi_j * exp(-kl * abs(x1 - x2)*1e-10)
+            #      dIij[n] = np.sum(psi_i * psi_j * exp(-kl*abs(x1 - x2)*1e-10)
             #                       * psi_i[n] * psi_j[n] * self.xres**2)
             #  Iij = np.sum(dIij)
-            Iij = onedq.OneDSchrodinger.cLOphononScatter(self.xres, kl, 
+            Iij = onedq.OneDSchrodinger.cLOphononScatter(self.xres, kl,
                                                          psi_i, psi_j)
             epsInf = np.array([a.parm["epsInf"] for a in self.mtrlAlloys])
             epss = np.array([a.parm["epss"] for a in self.mtrlAlloys])
             epsrho = 1 / (1/epsInf - 1/epss)
-            epsrho = (np.sum(epsrho[self.layerMtrls] * self.layerWidths) 
+            epsrho = (np.sum(epsrho[self.layerMtrls] * self.layerWidths)
                       / sum(self.layerWidths))
             self.loMatrix[upper][lower] = (
-                mass * e0**2 * hwLO * e0 / hbar * Iij 
+                mass * e0**2 * hwLO * e0 / hbar * Iij
                 / (4 * hbar**2 * epsrho * eps0 * kl))
-        return self.loMatrix[upper][lower] / 1e12 #unit ps^-1
+        return self.loMatrix[upper][lower] / 1e12  # unit ps^-1
 
     def loLifeTime(self, state):
         """ Return the life time due to LO phonon scattering of the
@@ -606,7 +587,7 @@ class QCLayers(object):
         #  epsInf = np.array([a.parm["epsInf"] for a in self.mtrlAlloys])
         #  epss = np.array([a.parm["epss"] for a in self.mtrlAlloys])
         #  epsrho = 1 / (1/epsInf - 1/epss)
-        #  epsrho = (np.sum(epsrho[self.layerMtrls] * self.layerWidths) 
+        #  epsrho = (np.sum(epsrho[self.layerMtrls] * self.layerWidths)
         #            / sum(self.layerWidths))
         #  fjs = (masses * e0**2 * hwLO * e0 / hbar
         #             / (4 * hbar**2 * epsrho * eps0 * kls))
@@ -615,7 +596,7 @@ class QCLayers(object):
         #  return 1e12 / Iijtotal if Iijtotal > 0 else 1E20
 
     def calc_FoM(self, upper, lower):
-        """Calculate Figure of Merit. 
+        """Calculate Figure of Merit.
         This function must be called after solving for wavefunctions"""
         self.tauLower = self.loLifeTime(lower)
         self.tauUpper = self.loLifeTime(upper)
@@ -627,16 +608,16 @@ class QCLayers(object):
     def coupleBroadening(self, upper, lower):
         """Boradening of nergy difference between upper state and lower state
         due to coupling to other states"""
-        #TODO
+        # TODO
         return 0
 
     def ifrBroadening(self, upper, lower):
         """Interface roughness induced broadening"""
-        #TODO
+        # TODO
         return 0
 
     def alphaISB(self, upper, lower):
-        #TODO
+        # TODO
         return 0
 
     # Optimization
@@ -644,12 +625,12 @@ class QCLayers(object):
         """Optmize FoM*lorenzian for n-th layer thickness"""
         # TODO: this part need to be improved!!!
         resonancew = self.deltaE/hbar
-        FoMnow = self.calc_FoM(upper, lower)/(self.tauUpperLower**2 + 
+        FoMnow = self.calc_FoM(upper, lower)/(self.tauUpperLower**2 +
                                               (resonancew-wl)**2)
         width = self.layerWidths[n]
-        print(("Start Optimizing Layer NO %d "%n)+
-              ("for FoM between state %d and %d.\n"%(upper, lower))+
-              ("\tStart at width=%.1f, FoM=%.1f"%(width, FoMnow)))
+        print(("Start Optimizing Layer NO %d " % n) +
+              ("for FoM between state %d and %d.\n" % (upper, lower)) +
+              ("\tStart at width=%.1f, FoM=%.1f" % (width, FoMnow)))
 
         for i in range(20):
             self.layerWidths[n] = width - self.xres
@@ -657,7 +638,7 @@ class QCLayers(object):
             self.solve_whole()
             self.dipole(upper, lower)
             resonancew = self.deltaE/hbar
-            FoMback = self.calc_FoM(upper, lower) /(self.tauUpperLower**2 + 
+            FoMback = self.calc_FoM(upper, lower)/(self.tauUpperLower**2 +
                                                    (resonancew-wl)**2)
 
             self.layerWidths[n] = width + self.xres
@@ -665,16 +646,16 @@ class QCLayers(object):
             self.solve_whole()
             self.dipole(upper, lower)
             resonancew = self.deltaE/hbar
-            FoMforward = self.calc_FoM(upper, lower)/(self.tauUpperLower**2 + 
-                                                   (resonancew-wl)**2)
+            FoMforward = self.calc_FoM(upper, lower)/(self.tauUpperLower**2 +
+                                                      (resonancew-wl)**2)
 
             FoMpp = (FoMforward + FoMback - 2*FoMnow)
             FoMp = (FoMforward - FoMback)/2
             diff = -FoMp/FoMpp
-            print("%d-th interation, FoMs=[%f, %f, %f], diff=%.2f"%(
+            print("%d-th interation, FoMs=[%f, %f, %f], diff=%.2f" % (
                 i+1, FoMback, FoMnow, FoMforward, diff))
             if abs(diff) < 0.5:
-                print("Converged at width=%.2f!"%width)
+                print("Converged at width=%.2f!" % width)
                 self.layerWidths[n] = width
                 self.populate_x()
                 self.solve_whole()
@@ -695,10 +676,10 @@ class QCLayers(object):
             self.dipole(upper, lower)
             FoMnow = self.calc_FoM(upper, lower)
             wl = h * c0 / (e0 * self.deltaE) * 1e6
-            print("\twidth=%.2f, FoM=%.2f, lambda=%.1f"%(width, FoMnow, wl))
+            print("\twidth=%.2f, FoM=%.2f, lambda=%.1f" % (width, FoMnow, wl))
             FoMnow = FoMnow/(self.tauUpperLower**2 + (resonancew-wl)**2)
 
-        print("Maximum iteration reached! width=%.2f"%width)
+        print("Maximum iteration reached! width=%.2f" % width)
         self.layerWidths[n] = width
         self.populate_x()
         self.solve_whole()

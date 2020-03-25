@@ -1,9 +1,10 @@
-#!/usr/bin/env python
-# -*- coding:utf-8 -*-
+"""
+This file defines functions to save and load JSON files from ErwinJr
+"""
 
 from QCLayers import QCLayers
-import sys, json
-import numpy as np
+import json
+
 
 def qclLoad(fhandle):
     """
@@ -31,46 +32,49 @@ def qclLoad(fhandle):
         raise TypeError("Wrong file type")
     if ldict["Version"] == "181107":
         o = QCLayers(ldict["Substrate"],
-                     ldict["Materials"]["Compostion"], 
-                     ldict["Materials"]["Mole Fraction"], 
-                     ldict["x resolution"], 
-                     ldict["E resolution"], 
+                     ldict["Materials"]["Compostion"],
+                     ldict["Materials"]["Mole Fraction"],
+                     ldict["x resolution"],
+                     ldict["E resolution"],
                      ldict["QC Layers"]["Width"], 
-                     ldict["QC Layers"]["Material"], 
+                     ldict["QC Layers"]["Material"],
                      ldict["QC Layers"]["Doping"],
-                     ldict["QC Layers"]["Active Region"], 
-                     ldict["EField"], 
-                     ldict["Repeats"], 
-                     ldict["Temperature"], 
-                     ldict["Solver"], 
+                     ldict["QC Layers"]["Active Region"],
+                     ldict["EField"],
+                     ldict["Repeats"],
+                     ldict["Temperature"],
+                     ldict["Solver"],
                      ldict["Description"])
-    else: 
+    else:
         raise NotImplementedError("Version %s not supported" %
                                   ldict["Version"])
     return o
 
+
 JSONTemplate = """{
-    "FileType": "ErwinJr2 Data File", 
-    "Version": "181107", 
-    "Description": %s, 
-    "Substrate": %s, 
-    "EField": %s, 
-    "x resolution": %s, 
-    "E resolution": %s, 
-    "Solver": %s, 
-    "Temperature": %s, 
-    "Repeats": %s, 
+    "FileType": "ErwinJr2 Data File",
+    "Version": "181107",
+    "Description": %s,
+    "Substrate": %s,
+    "EField": %s,
+    "x resolution": %s,
+    "E resolution": %s,
+    "Solver": %s,
+    "Temperature": %s,
+    "Repeats": %s,
     "Materials": {
-        "Compostion": %s, 
+        "Compostion": %s,
         "Mole Fraction": %s
-    }, 
+    },
     "QC Layers": {
-        "Material": %s, 
-        "Width": %s, 
-        "Doping": %s, 
+        "Material": %s,
+        "Width": %s,
+        "Doping": %s,
         "Active Region": %s
     }
 }"""
+
+
 def qclSaveJSON(fhandle, qclayers):
     """
     Save QCLayers as a json file
@@ -85,10 +89,10 @@ def qclSaveJSON(fhandle, qclayers):
     if not isinstance(qclayers, QCLayers):
         raise TypeError("qclSave: Nothing to save.."
                         "QCLayers not valid type")
-    o=qclayers
+    o = qclayers
     parameters = [json.dumps(s) for s in (o.description, o.substrate,
-                                          o.EField, o.xres, o.Eres, o.Solver, 
-                                          o.Temperature, o.repeats, 
+                                          o.EField, o.xres, o.Eres, o.Solver,
+                                          o.Temperature, o.repeats,
                                           o.materials, o.moleFracs,
                                           o.layerMtrls, o.layerWidths,
                                           o.layerDopings, o.layerARs)]

@@ -1,5 +1,8 @@
-#!/usr/bin/env python3
-# -*- coding:utf-8 -*-
+"""
+This file defined the Stratum class for confined optical mode in 1D using
+transfer matrix method
+"""
+
 import numpy as np
 from numpy import sqrt, exp, pi, sin, cos, sinc
 from rFittings import AlGaAsIndex, SiNxIndex, SiO2Index

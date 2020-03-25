@@ -1,5 +1,6 @@
-#!/usr/bin/env python
-# -*- coding:utf-8 -*-
+"""
+This file defines class for plotting figures in ErwinJr
+"""
 
 import numpy as np
 import os
@@ -20,16 +21,17 @@ from PyQt5.QtWidgets import (QSizePolicy, QMessageBox, QInputDialog,
 import sys, json
 from warnings import warn
 config = {
-    "PlotMargin": {'l': 0.9, 'r': 0.12, 'b': 0.6, 't': 0.09}, 
+    "PlotMargin": {'l': 0.9, 'r': 0.12, 'b': 0.6, 't': 0.09},
     "fontsize": 12,
-    "wfscale": 0.2, 
+    "wfscale": 0.2,
     "modescale": 3,
     "wf_almost_zero": 3e-4,
 }
-if sys.platform == 'win32': 
+if sys.platform == 'win32':
     config["PlotMargin"] = {'l': 0.9, 'r': 0.12, 'b': 0.55, 't': 0.09}
 elif sys.platform == 'darwin':
     config["PlotMargin"] = {'l': 0.90, 'r': 0.12, 'b': 0.55, 't': 0.09}
+
 
 def LoadConfig(fname="plotconfig.json"):
     try:
@@ -37,10 +39,11 @@ def LoadConfig(fname="plotconfig.json"):
             userConfig = json.load(f)
     except:
         userConfig = {}
-        warn("Cannot load plot config file %s. Use default config."%fname, 
+        warn("Cannot load plot config file %s. Use default config." % fname,
              UserWarning)
     for k in userConfig:
         config[k] = userConfig[k]
+
 
 class EJcanvas(FigureCanvas):
     """EJcanvas is designed for ErwinJr as a canvas for energy band and
@@ -52,7 +55,7 @@ class EJcanvas(FigureCanvas):
         self.setParent(parent)
         self.setMinimumWidth(200)
         self.setMinimumHeight(200)
-        self.setSizePolicy(QSizePolicy.MinimumExpanding, 
+        self.setSizePolicy(QSizePolicy.MinimumExpanding,
                            QSizePolicy.MinimumExpanding)
         self.updateGeometry()
         self.axes = self.figure.add_subplot(111)
@@ -151,15 +154,15 @@ class EJplotControl(NavigationToolbar2, QObject):
             raise TypeError("%s not supported." % callback)
 
     def set_custom(self, name, button, callback, cursor=cursors.HAND):
-            """cusomized callback action,
-            s.t. this class manages the button's check status
-            and its interaction with canvas.
-            Note that callback is called when clicke on canvas"""
-            self._custom_active[name] = callback
-            self._actions[name] = button
-            self._custom_cursor[name] = cursor
-            button.setCheckable(True)
-            # TODO Can this function become a decorator?
+        """cusomized callback action,
+        s.t. this class manages the button's check status
+        and its interaction with canvas.
+        Note that callback is called when clicke on canvas"""
+        self._custom_active[name] = callback
+        self._actions[name] = button
+        self._custom_cursor[name] = cursor
+        button.setCheckable(True)
+        # TODO Can this function become a decorator?
 
     def edit_parameters(self):
         allaxes = self.canvas.figure.get_axes()
@@ -223,7 +226,7 @@ class EJplotControl(NavigationToolbar2, QObject):
 
         if self._active:
             #  self._idPress = self.canvas.mpl_connect('button_press_event',
-                                                    #  self.press[mode])
+            #                                          self.press[mode])
             self._idRelease = self.canvas.mpl_connect(
                 'button_release_event', self._custom_active[mode])
             self.mode = mode

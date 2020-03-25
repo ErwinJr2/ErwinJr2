@@ -1,8 +1,7 @@
-#!/usr/bin/env python
-# -*- coding:utf-8 -*-
-
-# This script contains some exnternal fitting/theoretical functions for 
-# refractive indices
+"""
+This script contains some exnternal fitting/theoretical functions for
+refractive indices
+"""
 
 def AlGaAsIndex(wl, x):
     # from indexAlexey

@@ -1,6 +1,7 @@
-#!/usr/bin/env python
-# -*- coding:utf-8 -*-
-from PyQt5.QtWidgets import QWidget, QComboBox, QFrame
+"""This file defined customed Qt widgets for ErwinJr"""
+from PyQt5.QtWidgets import QComboBox, QFrame
+
+
 class mtrlComboBox(QComboBox):
     """A QComboBox that pops up on the right"""
     def __init__(self, parent=None):
