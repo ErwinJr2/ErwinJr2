@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 import numpy as np
 from numpy import sqrt, exp, pi, sin, cos, sinc
@@ -54,14 +54,36 @@ Dopable = ['GaAs', 'InAs', 'AlAs', 'InP'] + list(Alloy.keys())
 
 
 class Stratum(object):
-    """Class for groups of stratum"""
+    """Class for groups of stratum
+
+    Parameters
+    ----------
+    wl : float
+        Wavelength in vacuum to guide in the stratum
+    materials : list(str)
+        Name of the material for each strata, with materials[0] being the top
+        (usually air) and materials[-1] the substrate.
+    moleFracs : list(float)
+        Mole fractions for each material. The number should be between 0 and 1.
+        For strata that the parameter is not applicable, the number doesn't
+        influence the result.
+    dopings : list(float)
+        The doping level in unit 1E17 cm^-3 for the material. 
+        For strata that the parameter is not applicable, the number doesn't
+        influence the result.
+    Ls : list(float))
+        Thickness of  stratum, same unit as wl
+    mobilities : None or list(float)
+        Mobility influence the relaxation rate for plasmon resonance.
+        When it's None, it is assumed to have 1E13 s^1 relaxation.
+    """
     def __init__(self, wl, materials=['Air', 'InP'], moleFracs=[0.0, 0.0],
-                 dopings=[0.0, 0.0], thicknesses=[], mobilities=None):
+                 dopings=[0.0, 0.0], Ls=[], mobilities=None):
         self.wl = wl
         self.materials = materials
         self.moleFracs = moleFracs
         self.dopings = dopings
-        self.Ls = np.array(thicknesses)
+        self.Ls = np.array(Ls)
         self.mobilities = ([None]*len(materials)
                            if mobilities is None else mobilities)
         self.custom = dict()
@@ -104,6 +126,17 @@ class Stratum(object):
         return layerRIdx
 
     def updateIndices(self):
+        """Update indices information according to material info
+
+        Yield
+        -----
+        indices : list(complex)
+            complex refractive index of the stratum
+        index0 : complex
+            Refractive index of the top (before Ls[0]) strata
+        indexs : complex
+            refractive index of the substrate (after Ls[-1])
+        """
         self.index0 = self.indexOf(0)
         self.indexs = self.indexOf(-1)
         self.indices = np.array(
@@ -122,10 +155,6 @@ class Stratum(object):
         beta: complex
             The normalized wavenumber along z.
             :math:`k_z = 2\\pi/\\lambda *\\beta`
-        wl : float
-            Wavelength in vaccumn to guide in the stratum
-        Ls (list(float)) : Thickness of  stratum, same unit as wl
-        indices (list(complex)) : complex refractive index of the stratum
 
         Returns
         -------
@@ -155,16 +184,6 @@ class Stratum(object):
         beta : complex
             The normalized wavenumber along z.
             :math:`k_z = 2\\pi/\\lambda*\\beta`
-        wl : float
-            Wavelength in vacuum to guide in the stratum
-        Ls : list(float))
-            Thickness of  stratum, same unit as wl
-        indices : list(complex)
-            complex refractive index of the stratum
-        index0 : complex
-            Refractive index of the top (before Ls[0]) strata
-        indexs : complex
-            refractive index of the substrate (after Ls[-1])
 
         Returns
         -------
@@ -193,16 +212,6 @@ class Stratum(object):
         ----------
         beta : complex
             The effective refractive index traveling along z (initial guess)
-        wl : float
-            Wavelength in vacuum to guide in the stratum
-        Ls : list(float))
-            Thickness of  stratum, same unit as wl
-        indices : list(complex)
-            complex refractive index of the stratum
-        index0 : complex
-            Refractive index of the top (before Ls[0]) strata
-        indexs : complex
-            refractive index of the substrate (after Ls[-1])
 
         Returns
         -------
@@ -255,16 +264,6 @@ class Stratum(object):
             The effective refractive index traveling along z
         xs : np.ndarray
             The position coordinate to calculate field on
-        wl : float
-            Wavelength in vacuum to guide in the stratum
-        Ls : list(float))
-            Thickness of  stratum, same unit as wl
-        indices : list(complex)
-            complex refractive index of the stratum
-        index0 : complex
-            Refractive index of the top (before Ls[0]) strata
-        indexs : complex
-            refractive index of the substrate (after Ls[-1])
 
         Returns
         -------
@@ -328,6 +327,18 @@ class Stratum(object):
         return Ey, Hx, Ez
 
     def populateIndices(self, xs):
+        """Generate indices position array xs
+
+        Parameters
+        ----------
+        xs : np.ndarray
+            The position coordinate to calculate field on
+
+        Returns
+        -------
+        np.ndarray:
+            refractive indices of the material at position xs
+        """
         lsum = np.zeros(len(self.Ls)+1)
         lsum[1:] = np.cumsum(self.Ls)
         n = np.piecewise(xs+0j, [(xs >= lsum[i]) & (xs < lsum[i+1])
@@ -336,9 +347,5 @@ class Stratum(object):
         n[xs < 0] = self.index0
         n[xs >= lsum[-1]] = self.indexs
         return n
-
-
-if __name__ == '__main__':
-    print("Test")
 
 # vim: ts=4 sw=4 sts=4 expandtab

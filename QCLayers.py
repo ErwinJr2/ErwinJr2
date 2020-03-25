@@ -22,6 +22,7 @@ qcMaterial = {
     "GaSb": ["InAsSb", "AlGaSb"]
 }
 
+
 class QCLayers(object):
     """
     Class for Quantum Cascade Layers
