@@ -6,7 +6,7 @@ import numpy as np
 import unittest
 
 
-class TestMaxwell(unittest.TestCase):
+class TestTransferMatrix(unittest.TestCase):
     def test_real_bound_mode(self):
         """TM0 mode in [John Chilwell and Ian Hodgkinson,
         J. Opt. Soc. Am. A 1, 742-753 (1984)"""
@@ -15,8 +15,9 @@ class TestMaxwell(unittest.TestCase):
         n0 = 1.0
         ns = 1.5
         wl = 632.8
-        stratum = OptStratum(wl, ["test"]*len(hs), [0.0]*len(hs),
-                             [0.0]*len(hs), hs)
+        NLayer = len(hs) + 2
+        stratum = OptStratum(wl, ["test"]*NLayer, [0.0]*NLayer,
+                             [0.0]*NLayer, hs)
         stratum.index0 = n0
         stratum.indexs = ns
         stratum.indices = indices

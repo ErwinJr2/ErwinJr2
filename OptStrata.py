@@ -75,7 +75,8 @@ class OptStratum(object):
         For strata that the parameter is not applicable, the number doesn't
         influence the result.
     Ls : list(float)
-        Thickness of  stratum, same unit as wl
+        Thickness of  stratum, same unit as wl. The first and last elements
+        are for top and substrate and is not used for calculation
     mobilities : None or list(float)
         Mobility influence the relaxation rate for plasmon resonance.
         When it's None, it is assumed to have 1E13 s^1 relaxation.
@@ -84,12 +85,13 @@ class OptStratum(object):
         the complex refractive index
     """
     def __init__(self, wl, materials=['Air', 'InP'], moleFracs=[0.0, 0.0],
-                 dopings=[0.0, 0.0], Ls=[], mobilities=None):
+                 dopings=[0.0, 0.0], Ls=[1.0, 1.0], mobilities=None):
         self.wl = wl
-        self.materials = materials
-        self.moleFracs = moleFracs
-        self.dopings = dopings
-        self.Ls = np.array(Ls)
+        self.materials = list(materials)
+        self.moleFracs = list(moleFracs)
+        self.dopings = list(dopings)
+        self.Ls = (np.array(Ls) if len(Ls) == len(materials)
+                   else np.array([1.0] + list(Ls) + [1.0]))
         self.mobilities = ([None]*len(materials)
                            if mobilities is None else mobilities)
         self.custom = dict()
@@ -124,7 +126,7 @@ class OptStratum(object):
                               self.moleFracs[row])
         self.dopings.insert(row, doping if doping is not None else
                             self.dopings[row])
-        self.Ls = np.insert(self.Ls, row-1, 1.0)
+        self.Ls = np.insert(self.Ls, row, 1.0)
         self.mobilities.insert(row, mobility if mobility else
                                self.mobilities[row])
 
@@ -133,7 +135,7 @@ class OptStratum(object):
         del self.moleFracs[row]
         del self.dopings[row]
         del self.mobilities[row]
-        self.Ls = np.delete(self.Ls, row-1)
+        self.Ls = np.delete(self.Ls, row)
 
     def indexOf(self, n):
         mtrl = self.materials[n]
@@ -172,10 +174,11 @@ class OptStratum(object):
         indexs : complex
             refractive index of the substrate (after Ls[-1])
         """
-        self.index0 = self.indexOf(0)
-        self.indexs = self.indexOf(-1)
         self.indices = np.array(
-            [self.indexOf(n) for n in range(1, len(self.materials)-1)])
+            [self.indexOf(n) for n in range(len(self.materials))])
+        self.index0 = self.indices[0]
+        self.indexs = self.indices[-1]
+        self.indices = self.indices[1:-1]
 
     def transferTM(self, beta):
         """Tranfer matrix for TM wave
@@ -198,10 +201,11 @@ class OptStratum(object):
         """
         alpha = np.sqrt((1+0j)*self.indices**2 - beta**2)
         k = 2 * pi / self.wl
-        phi = alpha * k * self.Ls
+        phi = alpha * k * self.Ls[1:-1]
         ms = np.moveaxis(np.array([
             [cos(phi), -1j*sin(phi)*alpha/self.indices**2],
-            [-1j*sinc(phi/pi)*self.indices**2*k * self.Ls, cos(phi)]]), -1, 0)
+            [-1j*sinc(phi/pi)*self.indices**2*k * self.Ls[1:-1], cos(phi)]]),
+            -1, 0)
         # np.sinc (x) is defined as sin(pi*x)/(pi*x)
         return np.linalg.multi_dot(ms)
 
@@ -281,7 +285,7 @@ class OptStratum(object):
             beta = beta - residule / fp
             residule = self.chiMTM(beta)
             if t > 200:
-                raise Exception("Doesn't converge")
+                raise TimeoutError("Doesn't converge")
                 break
         return beta
 
@@ -326,12 +330,11 @@ class OptStratum(object):
         Ey[xs < 0] = -beta*Hx[xs < 0]/self.index0**2
 
         # middle stratum
-        lsum = np.zeros(len(self.Ls)+1)
-        lsum[1:] = np.cumsum(self.Ls)
+        lsum = np.cumsum(self.Ls[:-1]) - self.Ls[0]
         alpha = np.sqrt((1+0j)*self.indices**2 - beta**2)
         # [[cos(phi), 1j*sin(phi)*alpha/indices**2],
         #  [1j*sinc(phi/pi)*indices**2*k * Ls, cos(phi)]]
-        for n in range(len(self.Ls)):
+        for n in range(len(lsum)-1):
             idx = (xs >= lsum[n]) & (xs < lsum[n+1])
             phi = alpha[n]*k*(xs[idx] - lsum[n])
             Ez[idx] = cos(phi)*Ez0 + 1j*(
@@ -339,10 +342,10 @@ class OptStratum(object):
             Hx[idx] = cos(phi)*Hx0 + 1j*k*(xs[idx] - lsum[n])*(
                                 sinc(phi/pi)*self.indices[n]**2*Ez0)
             Ey[idx] = -beta*Hx[idx]/self.indices[n]**2
-            phiL = alpha[n]*k*self.Ls[n]
+            phiL = alpha[n]*k*self.Ls[n+1]
             Ez0, Hx0 = (cos(phiL)*Ez0 + 1j*alpha[n]/self.indices[n]**2*(
                                            sin(phiL)*Hx0),
-                        cos(phiL)*Hx0 + 1j*k*self.Ls[n]*sinc(phiL/pi)*(
+                        cos(phiL)*Hx0 + 1j*k*self.Ls[n+1]*sinc(phiL/pi)*(
                                            self.indices[n]**2*Ez0))
 
         # last substrate
@@ -374,10 +377,9 @@ class OptStratum(object):
         np.ndarray:
             refractive indices of the material at position xs
         """
-        lsum = np.zeros(len(self.Ls)+1)
-        lsum[1:] = np.cumsum(self.Ls)
+        lsum = np.cumsum(self.Ls[:-1]) - self.Ls[0]
         n = np.piecewise(xs+0j, [(xs >= lsum[i]) & (xs < lsum[i+1])
-                                 for i in range(len(self.Ls))],
+                                 for i in range(len(lsum)-1)],
                          self.indices, dtype=np.complex128)
         n[xs < 0] = self.index0
         n[xs >= lsum[-1]] = self.indexs
