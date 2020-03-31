@@ -53,10 +53,10 @@ Alloy = {"AlGaAs": ("AlAs", "GaAs"),
 AlloyDisplay = {'AlGaAs': 'Al<sub>x</sub>Ga<sub>1-x</sub>As',
                 'InGaAs': 'In<sub>x</sub>Ga<sub>1-x</sub>As',
                 'AlInAs': 'Al<sub>1-x</sub>In<sub>x</sub>As'}
-Dopable = ['GaAs', 'InAs', 'AlAs', 'InP'] + list(Alloy.keys())
+Dopable = set(['GaAs', 'InAs', 'AlAs', 'InP'] + list(Alloy.keys()))
 
 
-class Stratum(object):
+class OptStratum(object):
     """Class for groups of stratum
 
     Parameters
@@ -71,14 +71,17 @@ class Stratum(object):
         For strata that the parameter is not applicable, the number doesn't
         influence the result.
     dopings : list(float)
-        The doping level in unit 1E17 cm^-3 for the material. 
+        The doping level in unit 1E17 cm^-3 for the material.
         For strata that the parameter is not applicable, the number doesn't
         influence the result.
-    Ls : list(float))
+    Ls : list(float)
         Thickness of  stratum, same unit as wl
     mobilities : None or list(float)
         Mobility influence the relaxation rate for plasmon resonance.
         When it's None, it is assumed to have 1E13 s^1 relaxation.
+    custom : dict
+        A dictionary of customized material, with key the name and value
+        the complex refractive index
     """
     def __init__(self, wl, materials=['Air', 'InP'], moleFracs=[0.0, 0.0],
                  dopings=[0.0, 0.0], Ls=[], mobilities=None):
@@ -100,8 +103,37 @@ class Stratum(object):
         # 5.3088E-3 = 1E7/(2*pi*c)
         # gammaUnit * gamma_c (unit 1E13 s-1) * wl (unit um) = gamma_c/omega
 
-    def addCustomMtrl(self, name, index):
-        self.custom[name] = index
+    def __str__(self):
+        return "\n".join(("wavelength: %f" % self.wl,
+                          "materials: %s" % str(self.materials),
+                          "moleFracs: %s" % str(self.moleFracs),
+                          "dopings: %s" % str(self.dopings),
+                          "Ls: %s" % str(self.Ls),
+                          "mobilities: %s" % str(self.mobilities),
+                          "custom: %s" % str(self.custom)))
+
+    def setWl(self, wl):
+        self.wl = wl
+        self.plasmonUnit = 8.9698E-5 * self.wl**2
+
+    def insert(self, row, material=None, moleFrac=None, doping=None,
+               L=None, mobility=None):
+        self.materials.insert(row, material if material else
+                              self.materials[row])
+        self.moleFracs.insert(row, moleFrac if moleFrac is not None else
+                              self.moleFracs[row])
+        self.dopings.insert(row, doping if doping is not None else
+                            self.dopings[row])
+        self.Ls = np.insert(self.Ls, row-1, 1.0)
+        self.mobilities.insert(row, mobility if mobility else
+                               self.mobilities[row])
+
+    def delete(self, row):
+        del self.materials[row]
+        del self.moleFracs[row]
+        del self.dopings[row]
+        del self.mobilities[row]
+        self.Ls = np.delete(self.Ls, row-1)
 
     def indexOf(self, n):
         mtrl = self.materials[n]

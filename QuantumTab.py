@@ -34,14 +34,13 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLabel, QComboBox,
 from customQTClass import mtrlComboBox
 
 from Material import AParm
-ejError = "ErwinJr2 - Error"
-ejWarning = "ErwinJr2 - Warning"
+from versionAndName import ejError, ejWarning
 
 
 class QuantumTab(QWidget):
     """The Quantum Tab of ErwinJr. This is designed to be a GUI wrapper of
     the class QCLayers
-    Member viable (! label public interface):
+    Member variable (! label public interface):
         !qclayers: A class to describe the physics of QC layers
         mtrlList: for Material column in the layerTable
         colors: colors for different wavefunctions
@@ -147,9 +146,9 @@ class QuantumTab(QWidget):
             layerBoxWidth = 230
             solveBoxWidth = 170
         elif sys.platform.startswith('darwin'):
-            settingBoxWidth = 90
+            settingBoxWidth = 160
             layerBoxWidth = 250
-            solveBoxWidth = 150
+            solveBoxWidth = 180
         elif sys.platform.startswith('linux'):
             settingBoxWidth = 130
             layerBoxWidth = 275
@@ -162,6 +161,7 @@ class QuantumTab(QWidget):
             solveBoxWidth = 190
 
         quantumLayout = QHBoxLayout()
+        quantumLayout.setSpacing(1)
         settingBox = self._generateSettingBox(settingBoxWidth)
         layerBox = self._generateLayerBox(layerBoxWidth)
         figureBox, plotControlGrid = self._generateFigureBox()
@@ -183,20 +183,16 @@ class QuantumTab(QWidget):
         settingBox = QVBoxLayout()
 
         # set up description box
+        settingBox.addWidget(QLabel("<center><b>Description</b></center>"))
         self.descBox = QTextEdit('')
         self.descBox.setReadOnly(False)
-        self.descBox.setMinimumHeight(40)
-        self.descBox.setMaximumHeight(100)
-        self.descBox.setMaximumWidth(width)
-        self.descBox.setMinimumWidth(width)
+        self.descBox.setMinimumHeight(50)
+        self.descBox.setMaximumHeight(80)
+        self.descBox.setFixedWidth(width)
         self.descBox.setSizePolicy(QSizePolicy(
-            QSizePolicy.Fixed, QSizePolicy.Preferred))
+            QSizePolicy.Fixed, QSizePolicy.Expanding))
         self.descBox.textChanged.connect(self.input_description)
-        descLayout = QVBoxLayout()
-        descLayout.addWidget(self.descBox)
-        descLayoutGroupBox = QGroupBox("Description")
-        descLayoutGroupBox.setLayout(descLayout)
-        settingBox.addWidget(descLayoutGroupBox)
+        settingBox.addWidget(self.descBox)
 
         settingBox.addWidget(QLabel(
             "<center><b>Substrate</b></center>"))
@@ -248,6 +244,7 @@ class QuantumTab(QWidget):
         self.inputWlBox.setDecimals(1)
         self.inputWlBox.setRange(1.5, 40)
         self.inputWlBox.setSingleStep(1)
+        self.inputWlBox.setSuffix(' μm')
         self.inputWlBox.valueChanged[float].connect(self.input_wl)
         settingBox.addWidget(self.inputWlBox)
 
@@ -267,6 +264,7 @@ class QuantumTab(QWidget):
 
         # Period information groupbox
         LpLayoutGroupBox = QGroupBox("Period Info")
+        LpLayoutGroupBox.setFixedWidth(width)
         self.LpFirstSpinbox = QSpinBox()
         self.LpFirstSpinbox.setValue(1)
         self.LpFirstSpinbox.setRange(1, 1)
@@ -278,16 +276,15 @@ class QuantumTab(QWidget):
         self.LpStringBox.setReadOnly(True)
         self.LpStringBox.setSizePolicy(
             QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred))
-        self.LpStringBox.setMinimumHeight(80)
-        self.LpStringBox.setMaximumHeight(120)
-        self.LpStringBox.setMaximumWidth(width)
-        self.LpStringBox.setMinimumWidth(width)
+        self.LpStringBox.setMinimumHeight(30)
+        # self.LpStringBox.setMaximumHeight(120)
         LpLayout = QGridLayout()
         LpLayout.addWidget(QLabel('<b>first</b>'), 0, 0)
         LpLayout.addWidget(QLabel('<b>last</b>'), 0, 1)
         LpLayout.addWidget(self.LpFirstSpinbox, 1, 0)
         LpLayout.addWidget(self.LpLastSpinbox, 1, 1)
         LpLayout.addWidget(self.LpStringBox, 2, 0, 1, 2)
+        LpLayout.setSpacing(1)
         LpLayoutGroupBox.setLayout(LpLayout)
         settingBox.addWidget(LpLayoutGroupBox)
 
@@ -298,6 +295,7 @@ class QuantumTab(QWidget):
     def _generateLayerBox(self, width):
         """ Return a Qt Layout object containning all layer parameters """
         layerBox = QGridLayout()
+        layerBox.setSpacing(5)
         self.insertLayerAboveButton = QPushButton("Insert Layer")
         self.insertLayerAboveButton.clicked.connect(self.insert_layerAbove)
         layerBox.addWidget(self.insertLayerAboveButton, 0, 0)
@@ -315,8 +313,7 @@ class QuantumTab(QWidget):
         self.layerTable = QTableWidget()
         self.layerTable.setSelectionBehavior(QTableWidget.SelectRows)
         self.layerTable.setSelectionMode(QTableWidget.SingleSelection)
-        self.layerTable.setMaximumWidth(width)
-        self.layerTable.setMinimumWidth(width)
+        self.layerTable.setFixedWidth(width)
         self.layerTable.setSizePolicy(
             QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding))
         self.layerTable.itemChanged.connect(self.layerTable_itemChanged)
@@ -334,6 +331,8 @@ class QuantumTab(QWidget):
         self.quantumCanvas = EJcanvas(xlabel='Position (Å)',
                                       ylabel='Energy (eV)', parent=self)
         self.plotControl = EJplotControl(self.quantumCanvas, self)
+        self.quantumCanvas.setSizePolicy(QSizePolicy.Expanding,
+                                         QSizePolicy.Expanding)
         figureBox = QVBoxLayout()
         figureBox.addWidget(self.quantumCanvas)
 
@@ -355,6 +354,7 @@ class QuantumTab(QWidget):
         plotControlGrid.addWidget(self.zoomOutButton, 1, 1, 1, 1)
         plotControlGrid.addWidget(self.panButton, 2, 0, 1, 1)
         plotControlGrid.addWidget(self.clearWFsButton, 2, 1, 1, 1)
+        plotControlGrid.setSpacing(5)
 
         return figureBox, plotControlGrid
         # _generateFigureBox end
@@ -378,6 +378,7 @@ class QuantumTab(QWidget):
         self.mtrlTable.setSelectionMode(QTableWidget.SingleSelection)
         self.mtrlTable.setMaximumWidth(width)
         self.mtrlTable.setMinimumWidth(width)
+        self.mtrlTable.setMinimumHeight(100)
         self.mtrlTable.setSizePolicy(
             QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Minimum))
         self.mtrlTable.itemChanged.connect(self.mtrlTable_itemChanged)
@@ -397,6 +398,7 @@ class QuantumTab(QWidget):
         mtrlGrid.addWidget(self.offsetLabel, 2, 0, 1, 2)
         mtrlGrid.addWidget(self.netStrainLabel, 3, 0, 1, 2)
         mtrlGrid.addWidget(self.LOPhononLabel, 4, 0, 1, 2)
+        mtrlGrid.setSpacing(5)
         mtrlGroupBox = QGroupBox("Materials")
         mtrlGroupBox.setLayout(mtrlGrid)
         solveBox.addWidget(mtrlGroupBox)
@@ -422,13 +424,16 @@ class QuantumTab(QWidget):
         self.stateParmText.setReadOnly(True)
         self.stateParmText.setMaximumWidth(width)
         self.stateParmText.setMinimumWidth(width)
+        self.stateParmText.setMinimumHeight(120)
         self.stateParmText.setSizePolicy(QSizePolicy(
-            QSizePolicy.Fixed, QSizePolicy.Fixed))
+            QSizePolicy.Fixed, QSizePolicy.Expanding))
         calculateControlGrid = QGridLayout()
         calculateControlGrid.addWidget(self.pairSelectButton, 0, 0, 1, 2)
         calculateControlGrid.addWidget(self.FoMButton, 1, 0, 1, 1)
         calculateControlGrid.addWidget(self.filterButton, 1, 1, 1, 1)
         calculateControlGrid.addWidget(self.stateParmText, 2, 0, 1, 2)
+        calculateControlGrid.setSpacing(5)
+        # TODO: voltage efficiency, hbar omega / field * Lp
         calculateControlGroupBox = QGroupBox("Calculate")
         calculateControlGroupBox.setLayout(calculateControlGrid)
         solveBox.addWidget(calculateControlGroupBox)

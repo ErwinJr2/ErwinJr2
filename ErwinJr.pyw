@@ -5,7 +5,8 @@
 # Ctrl+z support
 # add status bar
 
-import os, sys
+import os
+import sys
 import traceback
 from functools import partial
 
@@ -13,15 +14,16 @@ from QCLayers import QCLayers
 import SaveLoad
 
 from PyQt5.QtCore import (QSettings, QFile, QUrl,
-                          QFileInfo, QVariant, Qt)
-from PyQt5.QtGui import QIcon, QKeySequence, QPalette, QDesktopServices
+                          QFileInfo, QVariant)
+from PyQt5.QtGui import QIcon, QKeySequence, QDesktopServices
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTabWidget,
                              QAction, QMessageBox, QFileDialog,
                              QInputDialog, QSplashScreen)
 
 from QuantumTab import QuantumTab
+from OpticalTab import OpticalTab
 
-Version = '0.1'
+from versionAndName import Version
 
 
 class MainWindow(QMainWindow):
@@ -77,7 +79,9 @@ class MainWindow(QMainWindow):
         # ==========================
         # Optical Tab
         # ==========================
-        # TODO
+        self.otab = OpticalTab()
+        self.otab.dirty.connect(self.thingsChanged)
+        self.mainTabWidget.addTab(self.otab, 'Optical')
 
         self.setCentralWidget(self.mainTabWidget)
         self.create_menu()

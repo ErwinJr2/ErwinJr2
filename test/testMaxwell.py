@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 import context
-from OptStrata import Stratum
+from OptStrata import OptStratum
 import numpy as np
 import unittest
 
@@ -15,8 +15,8 @@ class TestMaxwell(unittest.TestCase):
         n0 = 1.0
         ns = 1.5
         wl = 632.8
-        stratum = Stratum(wl, ["test"]*len(hs), [0.0]*len(hs), [0.0]*len(hs),
-                          hs)
+        stratum = OptStratum(wl, ["test"]*len(hs), [0.0]*len(hs),
+                             [0.0]*len(hs), hs)
         stratum.index0 = n0
         stratum.indexs = ns
         stratum.indices = indices
