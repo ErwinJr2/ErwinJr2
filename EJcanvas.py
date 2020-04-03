@@ -104,6 +104,7 @@ class EJplotControl(NavigationToolbar2, QObject):
         self._actions = {}
         self._custom_active = {}
         self._custom_cursor = {}
+        self.zoomed = False
 
         NavigationToolbar2.__init__(self, canvas)
 

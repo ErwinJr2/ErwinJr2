@@ -1002,14 +1002,10 @@ class QuantumTab(QWidget):
     def update_quantumCanvas(self):
         """Update the canvas to show band diagram, and if self.quantum has
         eigen states infomation (.hasattr("eigenEs")), draw wavefuntions"""
-        try:
-            if self.plotControl.zoomed:
-                xmin, xmax = self.quantumCanvas.axes.get_xlim()
-                ymin, ymax = self.quantumCanvas.axes.get_ylim()
-            else:
-                raise
-        except:
-            # TODO: remove bare exception
+        if self.plotControl.zoomed:
+            xmin, xmax = self.quantumCanvas.axes.get_xlim()
+            ymin, ymax = self.quantumCanvas.axes.get_ylim()
+        else:
             xmin = xmax = ymin = ymax = None
         self.qclayers.populate_x()
         self.quantumCanvas.clear()
