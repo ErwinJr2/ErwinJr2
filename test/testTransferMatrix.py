@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 import context
-from OptStrata import OptStratum
+from OptStrata import OptStrata
 import numpy as np
 import unittest
 
@@ -16,8 +16,8 @@ class TestTransferMatrix(unittest.TestCase):
         ns = 1.5
         wl = 632.8
         NLayer = len(hs) + 2
-        stratum = OptStratum(wl, ["test"]*NLayer, [0.0]*NLayer,
-                             [0.0]*NLayer, hs)
+        stratum = OptStrata(wl, ["test"]*NLayer, [0.0]*NLayer,
+                            [0.0]*NLayer, hs)
         stratum.index0 = n0
         stratum.indexs = ns
         stratum.indices = indices

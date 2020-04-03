@@ -36,7 +36,7 @@ rIdx = {
     # from old ej
     # "Au": lambda wl: (-0.1933-0.382j + (0.3321+6.8522j)*wl
     #                   + (0.0938**2+0.1289**2*1j)*wl),
-    "AlGaAs": lambda wl, x: AlGaAsIndex(wl, x),
+    "AlxGa1-xAs": lambda wl, x: AlGaAsIndex(wl, x),
     "SiNx": lambda wl: SiNxIndex(wl),
     "SiO2": lambda wl: SiO2Index(wl),
     "Air": lambda wl: 1
@@ -47,16 +47,16 @@ rIdx = {
 # Not using Material.py data to reduce dependence
 EffectiveMass = {'GaAs': 0.067, 'InAs': 0.026, 'AlAs': 0.15, 'InP': 0.0795}
 
-Alloy = {"AlGaAs": ("AlAs", "GaAs"),
-         "InGaAs": ("InAs", "GaAs"),
-         "AlInAs": ("InAs", "AlAs")}
-AlloyDisplay = {'AlGaAs': 'Al<sub>x</sub>Ga<sub>1-x</sub>As',
-                'InGaAs': 'In<sub>x</sub>Ga<sub>1-x</sub>As',
-                'AlInAs': 'Al<sub>1-x</sub>In<sub>x</sub>As'}
+Alloy = {"AlxGa1-xAs": ("AlAs", "GaAs"),
+         "InxGa1-xAs": ("InAs", "GaAs"),
+         "Al1-xInxAs": ("InAs", "AlAs")}
+AlloyNick = {'AlGaAs': 'AlxGa1-xAs',
+             'InGaAs': 'InxGa1-xAs',
+             'AlInAs': 'Al1-xInxAs'}
 Dopable = set(['GaAs', 'InAs', 'AlAs', 'InP'] + list(Alloy.keys()))
 
 
-class OptStratum(object):
+class OptStrata(object):
     """Class for groups of stratum
 
     Parameters
@@ -80,21 +80,31 @@ class OptStratum(object):
     mobilities : None or list(float)
         Mobility influence the relaxation rate for plasmon resonance.
         When it's None, it is assumed to have 1E13 s^1 relaxation.
-    custom : dict
+    cstmIdx : dict
         A dictionary of customized material, with key the name and value
         the complex refractive index
+    cstmPrd : dict
+        A dictionary of customized material, with key the name and value a
+        list of two elements, 0-th being the period length (float in unit
+        Angstrom) and 1-st (int) being the nubmer of periods.
+        If the 0-th value is 0 or not key not exists, it's not a peirodic
+        structure. The variable is only for book keeping and is
+        not used to validate Ls within the class
     """
     def __init__(self, wl, materials=['Air', 'InP'], moleFracs=[0.0, 0.0],
-                 dopings=[0.0, 0.0], Ls=[1.0, 1.0], mobilities=None):
+                 dopings=[0.0, 0.0], Ls=[1.0, 1.0], mobilities=None,
+                 cstmIndx=dict(), cstmPrd=dict()):
         self.wl = wl
-        self.materials = list(materials)
+        self.materials = list(AlloyNick[m] if m in AlloyNick else m
+                              for m in materials)
         self.moleFracs = list(moleFracs)
         self.dopings = list(dopings)
         self.Ls = (np.array(Ls) if len(Ls) == len(materials)
                    else np.array([1.0] + list(Ls) + [1.0]))
         self.mobilities = ([None]*len(materials)
                            if mobilities is None else mobilities)
-        self.custom = dict()
+        self.cstmIndx = cstmIndx
+        self.cstmPrd = cstmPrd
 
         self.plasmonUnit = 8.9698E-5 * self.wl**2
         # 8.9698e-05 = mu_0*1E23*e**2*(1E-6)**2/(electron_mass*4*pi**2)
@@ -112,7 +122,7 @@ class OptStratum(object):
                           "dopings: %s" % str(self.dopings),
                           "Ls: %s" % str(self.Ls),
                           "mobilities: %s" % str(self.mobilities),
-                          "custom: %s" % str(self.custom)))
+                          "custom: %s" % str(self.cstmIndx)))
 
     def setWl(self, wl):
         self.wl = wl
@@ -139,8 +149,8 @@ class OptStratum(object):
 
     def indexOf(self, n):
         mtrl = self.materials[n]
-        if mtrl in self.custom:
-            return self.custom[mtrl]
+        if mtrl in self.cstmIndx:
+            return self.cstmIndx[mtrl]
         if mtrl in Alloy:
             # linear interpolation
             layerRIdx = (
@@ -265,7 +275,7 @@ class OptStratum(object):
 
         """
         if beta is None:
-            beta = max(np.abs(self.indices))
+            beta = max(np.abs(self.indices), default=1.5*self.indexs)
         # # Minimization algo. for complex function zero searching
         # beta0 = newton(lambda beta:
         #                chiMTM(beta, wl, Ls, indices, index0, indexs).imag,
@@ -378,9 +388,12 @@ class OptStratum(object):
             refractive indices of the material at position xs
         """
         lsum = np.cumsum(self.Ls[:-1]) - self.Ls[0]
-        n = np.piecewise(xs+0j, [(xs >= lsum[i]) & (xs < lsum[i+1])
-                                 for i in range(len(lsum)-1)],
-                         self.indices, dtype=np.complex128)
+        if len(self.indices) > 0:
+            n = np.piecewise(xs+0j, [(xs >= lsum[i]) & (xs < lsum[i+1])
+                                     for i in range(len(lsum)-1)],
+                             self.indices)
+        else:
+            n = np.empty(xs.shape, dtype=np.complex128)
         n[xs < 0] = self.index0
         n[xs >= lsum[-1]] = self.indexs
         return n
