@@ -2,6 +2,7 @@
 This script contains some exnternal fitting/theoretical functions for
 refractive indices
 """
+from numpy import sqrt, pi
 
 def AlGaAsIndex(wl, x):
     # from indexAlexey
