@@ -11,6 +11,7 @@ import traceback
 from functools import partial
 
 from QCLayers import QCLayers
+from OptStrata import OptStrata
 import SaveLoad
 
 from PyQt5.QtCore import (QSettings, QFile, QUrl,
@@ -56,7 +57,7 @@ class MainWindow(QMainWindow):
         if fname and QFile.exists(fname):
             try:
                 with open(fname, 'r') as f:
-                    qclayers = SaveLoad.qclLoad(f)
+                    qclayers, stratum = SaveLoad.loadBoth(f)
                 self.filename = fname
                 self.addRecentFile(fname)
                 self.dirty = False
@@ -65,6 +66,7 @@ class MainWindow(QMainWindow):
                                     "Could not load the *.json file.\n" +
                                     traceback.format_exc())
                 qclayers = None
+                stratum = None
                 self.filename = None
         else:
             self.filename = None
@@ -79,9 +81,10 @@ class MainWindow(QMainWindow):
         # ==========================
         # Optical Tab
         # ==========================
-        self.otab = OpticalTab()
+        self.otab = OpticalTab(stratum)
         self.otab.dirty.connect(self.thingsChanged)
         self.mainTabWidget.addTab(self.otab, 'Optical')
+        self.mainTabWidget.setCurrentIndex(1)
 
         self.setCentralWidget(self.mainTabWidget)
         self.create_menu()
@@ -295,7 +298,7 @@ class MainWindow(QMainWindow):
         return True
 
     def fileOpen(self, fname=None):
-        """ Clear all old data and load a new file. This will check
+        """Clear all old data and load a new file. This will check
         self.unsaveConfirm and return False if user cancels it.
         This is used as user action and SLOT to fileOpen related signals."""
         if not self.unsaveConfirm():
@@ -317,12 +320,17 @@ class MainWindow(QMainWindow):
         try:
             with open(fname, 'r') as f:
                 self.qtab.qclayers = SaveLoad.qclLoad(f)
+                try:
+                    self.otab.stratum = SaveLoad.strataLoad(f)
+                except NotImplementedError:
+                    self.otab.stratum = OptStrata()
         except Exception:
             QMessageBox.warning(self, "ErwinJr2 - Warning",
                                 "Could not load the *.json file.\n" +
                                 traceback.format_exc())
             return
         self.qtab.reload()
+        self.otab.reload()
         self.filename = fname
         self.addRecentFile(fname)
         self.dirty = False
@@ -334,8 +342,9 @@ class MainWindow(QMainWindow):
         if self.filename.split('.')[-1] == 'json':
             try:
                 with open(self.filename, 'w') as f:
-                    SaveLoad.qclSaveJSON(f, self.qtab.qclayers)
-            except:
+                    SaveLoad.EJSaveJSON(f, self.qtab.qclayers,
+                                        self.otab.stratum)
+            except OSError:
                 QMessageBox.warning(self, "ErwinJr2 - Warning",
                                     "Could not save *.json file.\n" +
                                     traceback.format_exc())

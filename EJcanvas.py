@@ -6,7 +6,6 @@ import numpy as np
 import os
 
 import matplotlib
-matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg as
                                                 FigureCanvas)
 from matplotlib.backends.backend_qt5 import cursord
@@ -18,8 +17,10 @@ from PyQt5.QtCore import QObject, Signal
 from PyQt5.QtWidgets import (QSizePolicy, QMessageBox, QInputDialog,
                              QFileDialog)
 
-import sys, json
+import sys
+import json
 from warnings import warn
+matplotlib.use('Qt5Agg')
 config = {
     "PlotMargin": {'l': 0.9, 'r': 0.12, 'b': 0.6, 't': 0.09},
     "fontsize": 12,
@@ -37,7 +38,7 @@ def LoadConfig(fname="plotconfig.json"):
     try:
         with open(fname, 'r') as f:
             userConfig = json.load(f)
-    except:
+    except FileNotFoundError:
         userConfig = {}
         warn("Cannot load plot config file %s. Use default config." % fname,
              UserWarning)

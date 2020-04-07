@@ -100,7 +100,7 @@ class OptStrata(object):
         self.moleFracs = list(moleFracs)
         self.dopings = list(dopings)
         self.Ls = (np.array(Ls) if len(Ls) == len(materials)
-                   else np.array([1.0] + list(Ls) + [1.0]))
+                   else np.array([1.0] + list(Ls) + [2.0]))
         self.mobilities = ([None]*len(materials)
                            if mobilities is None else mobilities)
         self.cstmIndx = cstmIndx
@@ -130,15 +130,16 @@ class OptStrata(object):
 
     def insert(self, row, material=None, moleFrac=None, doping=None,
                L=None, mobility=None):
+        if row <= 0 or row >= len(self.materials):
+            raise IndexError("Cannot inser strata beyond top and substrate.")
         self.materials.insert(row, material if material else
-                              self.materials[row])
+                              self.materials[row-1])
         self.moleFracs.insert(row, moleFrac if moleFrac is not None else
-                              self.moleFracs[row])
-        self.dopings.insert(row, doping if doping is not None else
-                            self.dopings[row])
+                              self.moleFracs[row-1])
+        self.dopings.insert(row, doping if doping is not None else 0)
         self.Ls = np.insert(self.Ls, row, 1.0)
         self.mobilities.insert(row, mobility if mobility else
-                               self.mobilities[row])
+                               self.mobilities[row-1])
 
     def delete(self, row):
         del self.materials[row]
@@ -275,7 +276,7 @@ class OptStrata(object):
 
         """
         if beta is None:
-            beta = max(np.abs(self.indices), default=1.5*self.indexs)
+            beta = max(self.indices.real, default=1.5*self.indexs)
         # # Minimization algo. for complex function zero searching
         # beta0 = newton(lambda beta:
         #                chiMTM(beta, wl, Ls, indices, index0, indexs).imag,
@@ -287,14 +288,17 @@ class OptStrata(object):
         # residule = abs(chiMTM(beta, wl, Ls, indices, index0, indexs))
         # print(res)
         residule = self.chiMTM(beta)
+        betaDiff = beta
         t = 0
         dbeta = 1E-6
-        while abs(residule) > 1E-10:
+        while abs(betaDiff) > 1E-5 and abs(residule) > 1E-10:
+            # print(beta, residule)
             t += 1
             fp = (self.chiMTM(beta+dbeta) - self.chiMTM(beta-dbeta))/(2*dbeta)
-            beta = beta - residule / fp
+            betaDiff = residule / fp
+            beta = beta - betaDiff
             residule = self.chiMTM(beta)
-            if t > 200:
+            if t > 500:
                 raise TimeoutError("Doesn't converge")
                 break
         return beta
