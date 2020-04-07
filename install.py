@@ -32,7 +32,10 @@ def build_doc(path, MSBuild=None):
         return
     os.chdir(os.path.join(path, 'docs'))
     print("Building Documents")
-    subprocess.check_call(make_cmd)
+    try:
+        subprocess.check_call(make_cmd)
+    except subprocess.CalledProcessError:
+        print("Building documents failed")
 
 
 if __name__ == "__main__":
