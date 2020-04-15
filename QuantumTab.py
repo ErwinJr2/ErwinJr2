@@ -35,6 +35,7 @@ from customQTClass import mtrlComboBox
 
 from Material import AParm
 from versionAndName import ejError, ejWarning
+from darkDetect import isdark
 
 
 class QuantumTab(QWidget):
@@ -119,10 +120,13 @@ class QuantumTab(QWidget):
                        (0.078, 0.078, 0.078), (0.431, 0.803, 0.870),
                        (0.223, 0.321, 0.643))
         # colors for different materials in tables
-        self.mtrlcolors = tuple([QColor(*rgb) for rgb in (
-            (255, 255, 255), (230, 230, 240), (230, 240, 230),
-            (240, 230, 230), (230, 240, 240), (240, 230, 240),
-            (240, 240, 230), (230, 230, 230))])
+        mtrlcolors_RGB = ((255, 255, 255), (230, 230, 240), (230, 240, 230),
+                          (240, 230, 230), (230, 240, 240), (240, 230, 240),
+                          (240, 240, 230), (230, 230, 230))
+        self.mtrlcolors = tuple([QColor(*rgb) for rgb in mtrlcolors_RGB])
+        if isdark:
+            self.mtrlcolors = tuple([QColor(*(2*(255-c) for c in rgb))
+                                     for rgb in mtrlcolors_RGB])
 
         self.updating = False
         self.solveType = None
