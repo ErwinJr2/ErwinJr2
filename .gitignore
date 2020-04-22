@@ -33,3 +33,4 @@ OneDQuantum/docs/xml/
 example/*
 
 .DS_Store
+.vscode/*
