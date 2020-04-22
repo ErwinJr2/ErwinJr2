@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 import context
-from OptStrata import OptStrata
+from OptStrata import MaxwellLayer
 import numpy as np
 import unittest
 
@@ -11,16 +11,9 @@ class TestTransferMatrix(unittest.TestCase):
         """TM0 mode in [John Chilwell and Ian Hodgkinson,
         J. Opt. Soc. Am. A 1, 742-753 (1984)"""
         hs = np.array([500]*4)
-        indices = np.array([1.66, 1.53, 1.60, 1.66])
-        n0 = 1.0
-        ns = 1.5
+        indices = np.array([1.0, 1.66, 1.53, 1.60, 1.66, 1.5])
         wl = 632.8
-        NLayer = len(hs) + 2
-        stratum = OptStrata(wl, ["test"]*NLayer, [0.0]*NLayer,
-                            [0.0]*NLayer, hs)
-        stratum.index0 = n0
-        stratum.indexs = ns
-        stratum.indices = indices
+        stratum = MaxwellLayer(wl, indices, hs)
         beta = stratum.boundModeTM(max(indices))
         self.assertTrue(abs(beta - 1.620031) < 1e-6)
 

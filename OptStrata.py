@@ -56,140 +56,27 @@ AlloyNick = {'AlGaAs': 'AlxGa1-xAs',
 Dopable = set(['GaAs', 'InAs', 'AlAs', 'InP'] + list(Alloy.keys()))
 
 
-class OptStrata(object):
-    """Class for groups of stratum
+class MaxwellLayer(object):
+    """Class for layer structure for Maxwell solver using transfer matrix
+    method
 
     Parameters
     ----------
     wl : float
         Wavelength in vacuum to guide in the stratum
-    materials : list(str)
-        Name of the material for each strata, with materials[0] being the top
-        (usually air) and materials[-1] the substrate.
-    moleFracs : list(float)
-        Mole fractions for each material. The number should be between 0 and 1.
-        For strata that the parameter is not applicable, the number doesn't
-        influence the result.
-    dopings : list(float)
-        The doping level in unit 1E17 cm^-3 for the material.
-        For strata that the parameter is not applicable, the number doesn't
-        influence the result.
+    indices : list(complex)
+        refractive indicies of the layers
     Ls : list(float)
         Thickness of  stratum, same unit as wl. The first and last elements
         are for top and substrate and is not used for calculation
-    mobilities : None or list(float)
-        Mobility influence the relaxation rate for plasmon resonance.
-        When it's None, it is assumed to have 1E13 s^1 relaxation.
-    cstmIdx : dict
-        A dictionary of customized material, with key the name and value
-        the complex refractive index
-    cstmPrd : dict
-        A dictionary of customized material, with key the name and value a
-        list of two elements, 0-th being the period length (float in unit
-        Angstrom) and 1-st (int) being the nubmer of periods.
-        If the 0-th value is 0 or not key not exists, it's not a peirodic
-        structure. The variable is only for book keeping and is
-        not used to validate Ls within the class
     """
-    def __init__(self, wl, materials=['Air', 'InP'], moleFracs=[0.0, 0.0],
-                 dopings=[0.0, 0.0], Ls=[1.0, 1.0], mobilities=None,
-                 cstmIndx=dict(), cstmPrd=dict()):
+    def __init__(self, wl, indices=[1.0, 1.0], Ls=[1.0, 1.0]):
         self.wl = wl
-        self.materials = list(AlloyNick[m] if m in AlloyNick else m
-                              for m in materials)
-        self.moleFracs = list(moleFracs)
-        self.dopings = list(dopings)
-        self.Ls = (np.array(Ls) if len(Ls) == len(materials)
+        self.index0 = indices[0]
+        self.indexs = indices[-1]
+        self.indices = np.array(indices[1:-1], dtype=np.complex128)
+        self.Ls = (np.array(Ls) if len(Ls) == len(indices)
                    else np.array([1.0] + list(Ls) + [2.0]))
-        self.mobilities = ([None]*len(materials)
-                           if mobilities is None else mobilities)
-        self.cstmIndx = cstmIndx
-        self.cstmPrd = cstmPrd
-
-        self.plasmonUnit = 8.9698E-5 * self.wl**2
-        # 8.9698e-05 = mu_0*1E23*e**2*(1E-6)**2/(electron_mass*4*pi**2)
-        # omega_P = plasmonUnit * doping / me / (1 + 1j gamma/omega)
-        # doping in unit 1E17 cm^-3,
-        # electron effective mass me in unit free electron mass
-        self.gammaUnit = 5.3088E-3
-        # 5.3088E-3 = 1E7/(2*pi*c)
-        # gammaUnit * gamma_c (unit 1E13 s-1) * wl (unit um) = gamma_c/omega
-
-    def __str__(self):
-        return "\n".join(("wavelength: %f" % self.wl,
-                          "materials: %s" % str(self.materials),
-                          "moleFracs: %s" % str(self.moleFracs),
-                          "dopings: %s" % str(self.dopings),
-                          "Ls: %s" % str(self.Ls),
-                          "mobilities: %s" % str(self.mobilities),
-                          "custom: %s" % str(self.cstmIndx)))
-
-    def setWl(self, wl):
-        self.wl = wl
-        self.plasmonUnit = 8.9698E-5 * self.wl**2
-
-    def insert(self, row, material=None, moleFrac=None, doping=None,
-               L=None, mobility=None):
-        if row <= 0 or row >= len(self.materials):
-            raise IndexError("Cannot inser strata beyond top and substrate.")
-        self.materials.insert(row, material if material else
-                              self.materials[row-1])
-        self.moleFracs.insert(row, moleFrac if moleFrac is not None else
-                              self.moleFracs[row-1])
-        self.dopings.insert(row, doping if doping is not None else 0)
-        self.Ls = np.insert(self.Ls, row, 1.0)
-        self.mobilities.insert(row, mobility if mobility else
-                               self.mobilities[row-1])
-
-    def delete(self, row):
-        del self.materials[row]
-        del self.moleFracs[row]
-        del self.dopings[row]
-        del self.mobilities[row]
-        self.Ls = np.delete(self.Ls, row)
-
-    def indexOf(self, n):
-        mtrl = self.materials[n]
-        if mtrl in self.cstmIndx:
-            return self.cstmIndx[mtrl]
-        if mtrl in Alloy:
-            # linear interpolation
-            layerRIdx = (
-                self.moleFracs[n] * rIdx[Alloy[mtrl][0]](self.wl)
-                + (1 - self.moleFracs[n]) * rIdx[Alloy[mtrl][1]](self.wl))
-        else:
-            layerRIdx = rIdx[mtrl](self.wl)
-        if mtrl in Dopable:
-            if mtrl in Alloy:
-                me = (EffectiveMass[Alloy[mtrl][0]] * self.moleFracs[n] +
-                      EffectiveMass[Alloy[mtrl][1]] * (1 - self.moleFracs[n]))
-            else:
-                me = EffectiveMass[mtrl]
-            nue = (1.0 if self.mobilities[n] is None else
-                   1.7588E11/(me * self.mobilities[n] * 1E-4))
-            # 1.7588E11 = electron charge / free electron mass
-            layerRIdx = sqrt(layerRIdx**2 - (
-                self.plasmonUnit * self.dopings[n]/me
-                / (1 + 1j*self.gammaUnit * nue)))
-        return layerRIdx
-
-    def updateIndices(self):
-        """Update indices information according to material info
-
-        Yield
-        -----
-        indices : list(complex)
-            complex refractive index of the stratum
-        index0 : complex
-            Refractive index of the top (before Ls[0]) strata
-        indexs : complex
-            refractive index of the substrate (after Ls[-1])
-        """
-        self.indices = np.array(
-            [self.indexOf(n) for n in range(len(self.materials))])
-        self.index0 = self.indices[0]
-        self.indexs = self.indices[-1]
-        self.indices = self.indices[1:-1]
 
     def transferTM(self, beta):
         """Tranfer matrix for TM wave
@@ -401,5 +288,148 @@ class OptStrata(object):
         n[xs < 0] = self.index0
         n[xs >= lsum[-1]] = self.indexs
         return n
+
+
+class OptStrata(MaxwellLayer):
+    """Class for groups of stratum, a wrapper of :class:`.MaxwellLayer`
+    with material parsing support
+
+    Parameters
+    ----------
+    wl : float
+        Wavelength in vacuum to guide in the stratum
+    materials : list(str)
+        Name of the material for each strata, with materials[0] being the top
+        (usually air) and materials[-1] the substrate.
+    moleFracs : list(float)
+        Mole fractions for each material. The number should be between 0 and 1.
+        For strata that the parameter is not applicable, the number doesn't
+        influence the result.
+    dopings : list(float)
+        The doping level in unit 1E17 cm^-3 for the material.
+        For strata that the parameter is not applicable, the number doesn't
+        influence the result.
+    Ls : list(float)
+        Thickness of  stratum, same unit as wl. The first and last elements
+        are for top and substrate and is not used for calculation
+    mobilities : None or list(float)
+        Mobility influence the relaxation rate for plasmon resonance.
+        When it's None, it is assumed to have 1E13 s^1 relaxation.
+    cstmIdx : dict
+        A dictionary of customized material, with key the name and value
+        the complex refractive index
+    cstmPrd : dict
+        A dictionary of customized material, with key the name and value a
+        list of two elements, 0-th being the period length (float in unit
+        Angstrom) and 1-st (int) being the nubmer of periods.
+        If the 0-th value is 0 or not key not exists, it's not a peirodic
+        structure. The variable is only for book keeping and is
+        not used to validate Ls within the class
+    """
+    def __init__(self, wl, materials=['Air', 'InP'], moleFracs=[0.0, 0.0],
+                 dopings=[0.0, 0.0], Ls=[1.0, 1.0], mobilities=None,
+                 cstmIndx=dict(), cstmPrd=dict()):
+        super(OptStrata, self).__init__(wl)
+        self.materials = list(AlloyNick[m] if m in AlloyNick else m
+                              for m in materials)
+        self.moleFracs = list(moleFracs)
+        self.dopings = list(dopings)
+        self.Ls = (np.array(Ls) if len(Ls) == len(materials)
+                   else np.array([1.0] + list(Ls) + [2.0]))
+        self.mobilities = ([None]*len(materials)
+                           if mobilities is None else mobilities)
+        self.cstmIndx = cstmIndx
+        self.cstmPrd = cstmPrd
+
+        self.plasmonUnit = 8.9698E-5 * self.wl**2
+        # 8.9698e-05 = mu_0*1E23*e**2*(1E-6)**2/(electron_mass*4*pi**2)
+        # omega_P = plasmonUnit * doping / me / (1 + 1j gamma/omega)
+        # doping in unit 1E17 cm^-3,
+        # electron effective mass me in unit free electron mass
+        self.gammaUnit = 5.3088E-3
+        # 5.3088E-3 = 1E7/(2*pi*c)
+        # gammaUnit * gamma_c (unit 1E13 s-1) * wl (unit um) = gamma_c/omega
+
+    def __str__(self):
+        return "\n".join(("wavelength: %f" % self.wl,
+                          "materials: %s" % str(self.materials),
+                          "moleFracs: %s" % str(self.moleFracs),
+                          "dopings: %s" % str(self.dopings),
+                          "Ls: %s" % str(self.Ls),
+                          "mobilities: %s" % str(self.mobilities),
+                          "custom: %s" % str(self.cstmIndx)))
+
+    def setWl(self, wl):
+        self.wl = wl
+        self.plasmonUnit = 8.9698E-5 * self.wl**2
+
+    def insert(self, row, material=None, moleFrac=None, doping=None,
+               L=None, mobility=None):
+        """Insert a strata indexed with row (top air and bottom substrate
+        included) with parameters listed"""
+        if row <= 0 or row >= len(self.materials):
+            raise IndexError("Cannot inser strata beyond top and substrate.")
+        self.materials.insert(row, material if material else
+                              self.materials[row-1])
+        self.moleFracs.insert(row, moleFrac if moleFrac is not None else
+                              self.moleFracs[row-1])
+        self.dopings.insert(row, doping if doping is not None else 0)
+        self.Ls = np.insert(self.Ls, row, 1.0)
+        self.mobilities.insert(row, mobility if mobility else
+                               self.mobilities[row-1])
+
+    def delete(self, row):
+        """Delete the strata indexed with row (top air and bottom substrate
+        included)"""
+        del self.materials[row]
+        del self.moleFracs[row]
+        del self.dopings[row]
+        del self.mobilities[row]
+        self.Ls = np.delete(self.Ls, row)
+
+    def indexOf(self, n):
+        """Return the refractive of the strata indexed with row
+        (top air and bottom substrate included)"""
+        mtrl = self.materials[n]
+        if mtrl in self.cstmIndx:
+            return self.cstmIndx[mtrl]
+        if mtrl in Alloy:
+            # linear interpolation
+            layerRIdx = (
+                self.moleFracs[n] * rIdx[Alloy[mtrl][0]](self.wl)
+                + (1 - self.moleFracs[n]) * rIdx[Alloy[mtrl][1]](self.wl))
+        else:
+            layerRIdx = rIdx[mtrl](self.wl)
+        if mtrl in Dopable:
+            if mtrl in Alloy:
+                me = (EffectiveMass[Alloy[mtrl][0]] * self.moleFracs[n] +
+                      EffectiveMass[Alloy[mtrl][1]] * (1 - self.moleFracs[n]))
+            else:
+                me = EffectiveMass[mtrl]
+            nue = (1.0 if self.mobilities[n] is None else
+                   1.7588E11/(me * self.mobilities[n] * 1E-4))
+            # 1.7588E11 = electron charge / free electron mass
+            layerRIdx = sqrt(layerRIdx**2 - (
+                self.plasmonUnit * self.dopings[n]/me
+                / (1 + 1j*self.gammaUnit * nue)))
+        return layerRIdx
+
+    def updateIndices(self):
+        """Update indices information according to material info
+
+        Yield
+        -----
+        indices : list(complex)
+            complex refractive index of the stratum
+        index0 : complex
+            Refractive index of the top (before Ls[0]) strata
+        indexs : complex
+            refractive index of the substrate (after Ls[-1])
+        """
+        self.indices = np.array(
+            [self.indexOf(n) for n in range(len(self.materials))])
+        self.index0 = self.indices[0]
+        self.indexs = self.indices[-1]
+        self.indices = self.indices[1:-1]
 
 # vim: ts=4 sw=4 sts=4 expandtab
