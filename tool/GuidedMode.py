@@ -26,6 +26,8 @@ def firstGaAs():
     Ey, Hx, Ez = stratum.populateMode(beta, xs)
     plt.plot(xs, n.real)
     plt.plot(xs, abs(Ey)**2)
+    for xx in stratum.populateMtrl(xs):
+        plt.plot(xs[xx], n.real[xx], 'r')
     plt.show()
 
 
@@ -50,7 +52,7 @@ def firstPlasmon():
 
 
 if __name__ == '__main__':
-    firstPlasmon()
+    # firstPlasmon()
     firstGaAs()
 
 # vim: ts=4 sw=4 sts=4 expandtab
