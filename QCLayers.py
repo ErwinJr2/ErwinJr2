@@ -8,6 +8,7 @@ from scipy.constants import (e as e0, epsilon_0 as eps0, h as h,
 import scipy.linalg as slg
 import OneDQuantum as onedq
 import Material
+from OptStrata import rIdx
 import copy
 # onedq.OneDSchrodinger.bindOpenMP(rk4=True)
 
@@ -574,6 +575,7 @@ class QCLayers(object):
     def loLifeTime(self, state):
         """ Return the life time due to LO phonon scattering of the
         given state(label)"""
+        # TODO: try fft convolution
         return 1/sum(self.loTransition(state, q) for q in range(state))
         #  Ei = self.eigenEs[state]
         #  psi_i = self.psis[state]
@@ -595,9 +597,37 @@ class QCLayers(object):
         #      self.xres, kls, psi_i, psi_js, fjs)
         #  return 1e12 / Iijtotal if Iijtotal > 0 else 1E20
 
+    def dephasing(self, upper, lower):
+        """Calculate the broadening gamma of transition between upper ->
+        lower transition, return gamma/omega"""
+        # TODO
+        return 0.1
+
     def calc_FoM(self, upper, lower):
         """Calculate Figure of Merit.
-        This function must be called after solving for wavefunctions"""
+        This function must be called after solving for wavefunctions
+
+        Parameters
+        ----------
+        upper : int
+        lower : int
+            define the transition from upper to lower
+
+        Reterun
+        -------
+        float: Figure of Merit
+
+        Yield
+        ------
+        tauLower : float
+            the lower state lifetime from LO scattering
+        tauUpper : float
+            the upper state lifetime from LO scattering
+        tauUpperLower : float
+            the transition rate from upper to lower due to LO scattering
+        FoM : float
+            the Figure of Merit in unit angstrom^2 ps
+        """
         self.tauLower = self.loLifeTime(lower)
         self.tauUpper = self.loLifeTime(upper)
         self.tauUpperLower = 1/self.loTransition(upper, lower)
@@ -605,8 +635,17 @@ class QCLayers(object):
             1 - self.tauLower / self.tauUpperLower)
         return self.FoM
 
+    def effective_ridx(self, wl):
+        """Return the effective refractive index for TM mode"""
+        self.mtrlRIdx = [(m.moleFrac * rIdx[m.A.name](wl) +
+                          (1 - m.moleFrac) * rIdx[m.B.name](wl))
+                         for m in self.mtrlAlloys]
+        self.layerRIdx = np.array([self.mtrlRIdx[n] for n in self.layerMtrls])
+        return np.average(1/self.layerRIdx**2, 
+                          weights=self.layerWidths)**(-1/2)
+
     def coupleBroadening(self, upper, lower):
-        """Boradening of nergy difference between upper state and lower state
+        """Boradening of energy difference between upper state and lower state
         due to coupling to other states"""
         # TODO
         return 0
@@ -616,9 +655,40 @@ class QCLayers(object):
         # TODO
         return 0
 
-    def alphaISB(self, upper, lower):
-        # TODO
-        return 0
+    def gainCoefficient(self, upper, lower):
+        """Calculate the gain coefficient from upper -> lower transition,
+        in unit cm/kA (gain/current density)
+
+        Parameters
+        ----------
+        upper : int
+        lower : int
+            define the transition from upper to lower
+
+        Return
+        -------
+        float : gain coefficient
+
+        Yield
+        ------
+        wl : float
+            the wavelength corresponds to upper -> lower transition, unit um
+        neff : float
+            the effective refractive index for wl
+        gaincoef : float
+            the gain coefficient on wl from upper -> lower transition,
+            unit kA/cm
+        """
+        self.wl = c0 * h / (e0 *
+                            np.abs(self.eigenEs[upper] - self.eigenEs[lower]))
+        self.wl *= 1E6  # m->um
+        self.neff = self.effective_ridx(self.wl)
+        delta = self.dephasing(upper, lower)
+        Lp = np.sum(self.layerWidths) * 1E-10  # m
+        # 1E-32 angstrom^2 ps -> m^2 s, 1E5 m/A -> cm/kA
+        self.gaincoef = e0 * self.FoM * 1E-27 / (
+            delta * hbar * c0 * eps0 * self.effective_ridx(self.wl) * Lp)
+        return self.gaincoef
 
     # Optimization
     def optimizeLayer(self, n, upper, lower, wl):

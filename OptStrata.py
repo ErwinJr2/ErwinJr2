@@ -6,6 +6,7 @@ transfer matrix method
 import numpy as np
 from numpy import sqrt, exp, pi, sin, cos, sinc
 from rFittings import AlGaAsIndex, SiNxIndex, SiO2Index
+from collections import defaultdict
 # from OneDQuantum.OneDMaxwell import *
 
 # refractive indices
@@ -325,10 +326,15 @@ class OptStrata(MaxwellLayer):
         If the 0-th value is 0 or not key not exists, it's not a peirodic
         structure. The variable is only for book keeping and is
         not used to validate Ls within the class
+    cstmGain : dict
+        A dictionary of customized material, with key the name and value
+        the gain coefficient. The variable is only for book keeping and is
+        not used for any calculation.
     """
-    def __init__(self, wl, materials=['Air', 'InP'], moleFracs=[0.0, 0.0],
+    def __init__(self, wl=3.0, materials=['Air', 'InP'], moleFracs=[0.0, 0.0],
                  dopings=[0.0, 0.0], Ls=[1.0, 1.0], mobilities=None,
-                 cstmIndx=dict(), cstmPrd=dict()):
+                 cstmIndx=dict(), cstmPrd=defaultdict(float),
+                 cstmGain=defaultdict(float)):
         super(OptStrata, self).__init__(wl)
         self.materials = list(AlloyNick[m] if m in AlloyNick else m
                               for m in materials)
@@ -340,6 +346,7 @@ class OptStrata(MaxwellLayer):
                            if mobilities is None else mobilities)
         self.cstmIndx = cstmIndx
         self.cstmPrd = cstmPrd
+        self.cstmGain = cstmGain
 
         self.plasmonUnit = 8.9698E-5 * self.wl**2
         # 8.9698e-05 = mu_0*1E23*e**2*(1E-6)**2/(electron_mass*4*pi**2)
@@ -431,5 +438,32 @@ class OptStrata(MaxwellLayer):
         self.index0 = self.indices[0]
         self.indexs = self.indices[-1]
         self.indices = self.indices[1:-1]
+
+    def populateMtrl(self, xs, mtrlList=None):
+        """Populate a boolean array for index slicing on xs for material
+        in the mtrlList
+
+        Parameters
+        ----------
+        mtrlList : list(str) or tuple(str)
+            name of materials to be labeled
+        xs : np.ndarray
+            The position coordinate to label material
+
+        Returns
+        -------
+        list(np.ndarray(bool))
+            list of slicing indices to label materials
+        """
+        res = []
+        lsum = np.empty(len(self.Ls)+1)
+        lsum[1:] = np.cumsum(self.Ls) - self.Ls[0]
+        lsum[0] = -np.inf
+        lsum[-1] = np.inf
+        for i in range(len(self.materials)):
+            if (self.materials[i] in mtrlList if mtrlList else
+                    self.materials[i].startswith('Active')):
+                res.append((xs > lsum[i]) & (xs < lsum[i+1]))
+        return res
 
 # vim: ts=4 sw=4 sts=4 expandtab

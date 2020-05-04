@@ -106,6 +106,7 @@ class QuantumTab(QWidget):
         """
     dirty = pyqtSignal()
     calculating = pyqtSignal(bool)
+    toOptics = pyqtSignal(QCLayers)
 
     def __init__(self, qclayers=None, parent=None):
         super(QuantumTab, self).__init__(parent)
@@ -423,6 +424,9 @@ class QuantumTab(QWidget):
         self.FoMButton.clicked.connect(self.updateFoM)
         self.filterButton = QPushButton("Filter")
         self.filterButton.clicked.connect(self.filter)
+        self.toOpticsButton = QPushButton("->Optics")
+        self.toOpticsButton.setEnabled(False)
+        # signal is processed in ErwinJr main window
         self.flted = False
         self.stateParmText = QTextEdit('')
         self.stateParmText.setReadOnly(True)
@@ -431,10 +435,14 @@ class QuantumTab(QWidget):
         self.stateParmText.setMinimumHeight(120)
         self.stateParmText.setSizePolicy(QSizePolicy(
             QSizePolicy.Fixed, QSizePolicy.Expanding))
+        self.stateParmText.textChanged.connect(
+            lambda: self.toOpticsButton.setEnabled(False))
         calculateControlGrid = QGridLayout()
         calculateControlGrid.addWidget(self.pairSelectButton, 0, 0, 1, 2)
         calculateControlGrid.addWidget(self.FoMButton, 1, 0, 1, 1)
-        calculateControlGrid.addWidget(self.filterButton, 1, 1, 1, 1)
+        # TODO: filter button place?
+        # calculateControlGrid.addWidget(self.filterButton, 1, 1, 1, 1)
+        calculateControlGrid.addWidget(self.toOpticsButton, 1, 1, 1, 1)
         calculateControlGrid.addWidget(self.stateParmText, 2, 0, 1, 2)
         calculateControlGrid.setSpacing(5)
         # TODO: voltage efficiency, hbar omega / field * Lp
@@ -604,12 +612,14 @@ class QuantumTab(QWidget):
                           "cm<sup>-3</sup><br>")
         else:
             nD = ns / Lp
-            Lp_string += ("n<sub>D</sub>: %6.3f\u00D710<sup>17</sup>"
+            Lp_string += ("N<sub>D</sub>: %6.3f\u00D710<sup>17</sup>"
                           "cm<sup>-3</sup><br>") % nD
         # 2D carrier density in 1E11cm-2
         ns = ns * 1e-2
-        Lp_string += ("n<sub>s</sub>: %6.3f\u00D710<sup>11</sup>"
-                      "cm<sup>-2</sup") % ns
+        Lp_string += ("N<sub>s</sub>: %6.3f\u00D710<sup>11</sup>"
+                      "cm<sup>-2</sup><br>") % ns
+        Lp_string += ("n<sub>eff</sub>: %.2f" % self.qclayers.effective_ridx(
+            self.inputWlBox.value()))
         self.LpStringBox.setText(Lp_string)
 
     @pyqtSlot()
@@ -740,6 +750,9 @@ class QuantumTab(QWidget):
     def optimizeLayer(self):
         """SLOT connected to self.optimizeLayerButton.clicked()"""
         n = self.layerTable.currentRow()
+        if not hasattr(self.qclayers, "eigenEs"):
+            QMessageBox.warning(self, ejWarning, "Solve the model first.")
+            return
         if n < 0 or n > len(self.qclayers.layerWidths):
             QMessageBox.warning(self, ejError,
                                 "Select the layer to optimize.")
@@ -1341,7 +1354,8 @@ class QuantumTab(QWidget):
             self.transitionBroadening = 0.1 * self.eDiff  # TODO
             self.pairString = (
                 "selected: %d, %d<br>"
-                "energy diff: <b>%6.1f meV</b> (%6.1f \u00B5m)<br>"
+                "energy diff:<br>&nbsp;&nbsp;"
+                "<b>%6.1f meV</b> (%6.1f \u00B5m)<br>"
                 "dipole: %6.1f \u212B<br>" "LO scattering: %6.3g ps<br>"
             ) % (self.stateHolder[0], self.stateHolder[1], self.eDiff,
                  self.wavelength, self.opticalDipole, self.tauUpperLower)
@@ -1368,18 +1382,19 @@ class QuantumTab(QWidget):
         tauUpper = self.qclayers.loLifeTime(upper)
         tauLower = self.qclayers.loLifeTime(lower)
         FoM = self.qclayers.calc_FoM(upper, lower)
+        gaincoeff = self.qclayers.gainCoefficient(upper, lower)
         # tauUpperLower is the inverse of transition rate (lifetime)
-        self.alphaISB = self.qclayers.alphaISB(upper, lower)
 
         self.FoMString = (
             "<i>\u03C4<sub>upper</sub></i> : %6.3f ps<br>"
-            "<i>\u03C4<sub>lower</sub></i> : %6.3f ps"
-            "<br>FoM: <b>%6.0f ps \u212B<sup>2</sup></b>"
-            "<br><i>\u03B1<sub>ISB</sub></i> : %.3f cm<sup>2</sup>") % (
-                tauUpper, tauLower, FoM, self.alphaISB)
+            "<i>\u03C4<sub>lower</sub></i> : %6.3f ps<br>"
+            "FoM: <b>%6.0f ps \u212B<sup>2</sup></b><br>"
+            "Gain coefficient:<br>&nbsp;&nbsp; %.2f cm/kA"
+            ) % (tauUpper, tauLower, FoM, gaincoeff)
         self.stateParmText.setText(self.pairString + self.FoMString)
 
         self.calculating.emit(False)
         self.FoMButton.setEnabled(True)
+        self.toOpticsButton.setEnabled(True)
 
 # vim: ts=4 sw=4 sts=4 expandtab

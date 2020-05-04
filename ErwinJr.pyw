@@ -72,6 +72,21 @@ class MainWindow(QMainWindow):
             self.filename = None
 
         self.mainTabWidget = QTabWidget()
+        self._setTabs(qclayers, stratum)
+        self.mainTabWidget.setCurrentIndex(1)
+
+        self.setCentralWidget(self.mainTabWidget)
+        self.create_menu()
+
+        if self.qsettings.value("MainWindow/Geometry"):
+            self.restoreGeometry(self.qsettings.value("MainWindow/Geometry"))
+        if self.qsettings.value("MainWindow/State"):
+            self.restoreState(self.qsettings.value("MainWindow/State"))
+        self.updateFileMenu()
+        self.updateWindowTitle()
+
+    def _setTabs(self, qclayers, stratum):
+        self.mainTabWidget.clear()
         # ==========================
         # Quantum Tab
         # ==========================
@@ -84,17 +99,18 @@ class MainWindow(QMainWindow):
         self.otab = OpticalTab(stratum)
         self.otab.dirty.connect(self.thingsChanged)
         self.mainTabWidget.addTab(self.otab, 'Optical')
+        self.qtab.toOpticsButton.clicked.connect(self.q2o)
+        self.otab.fieldBox.setValue(qclayers.EField)
+
+    def q2o(self):
+        # print(self.qtab.qclayers.wl,
+        #       self.qtab.qclayers.EField,
+        #       self.qtab.qclayers.gaincoef,
+        #       sum(self.qtab.qclayers.layerWidths))
+        self.otab.setupActive(self.qtab.qclayers.wl, self.qtab.qclayers.EField,
+                              self.qtab.qclayers.gaincoef,
+                              sum(self.qtab.qclayers.layerWidths))
         self.mainTabWidget.setCurrentIndex(1)
-
-        self.setCentralWidget(self.mainTabWidget)
-        self.create_menu()
-
-        if self.qsettings.value("MainWindow/Geometry"):
-            self.restoreGeometry(self.qsettings.value("MainWindow/Geometry"))
-        if self.qsettings.value("MainWindow/State"):
-            self.restoreState(self.qsettings.value("MainWindow/State"))
-        self.updateFileMenu()
-        self.updateWindowTitle()
 
     def thingsChanged(self):
         """ SLOT connected to self.qtab.dirty"""
@@ -290,8 +306,7 @@ class MainWindow(QMainWindow):
         """Start a new file, confirm if there's unsaved data"""
         if not self.unsaveConfirm():
             return False
-        self.qtab.qclayers = QCLayers()
-        self.qtab.reload()
+        self._setTabs(QCLayers(), OptStrata())
         self.filename = None
         self.dirty = True
         self.updateWindowTitle()
@@ -319,18 +334,15 @@ class MainWindow(QMainWindow):
         """Load from file "fname", and update everything for consistency."""
         try:
             with open(fname, 'r') as f:
-                self.qtab.qclayers = SaveLoad.qclLoad(f)
-                try:
-                    self.otab.stratum = SaveLoad.strataLoad(f)
-                except NotImplementedError:
-                    self.otab.stratum = OptStrata()
+                qclayers, stratum = SaveLoad.loadBoth(f)
+                if stratum is None:
+                    stratum = OptStrata(3.0)
         except Exception:
             QMessageBox.warning(self, "ErwinJr2 - Warning",
                                 "Could not load the *.json file.\n" +
                                 traceback.format_exc())
             return
-        self.qtab.reload()
-        self.otab.reload()
+        self._setTabs(qclayers, stratum)
         self.filename = fname
         self.addRecentFile(fname)
         self.dirty = False

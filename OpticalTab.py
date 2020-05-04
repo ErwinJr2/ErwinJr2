@@ -5,6 +5,7 @@ of 1D waveguiding
 
 from functools import partial
 import numpy as np
+from numpy import log, pi
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
                              QLabel, QComboBox, QGroupBox, QDoubleSpinBox,
@@ -13,7 +14,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
                              QTextEdit, QMessageBox)
 from OptStrata import OptStrata, rIdx, Alloy, Dopable
 from EJcanvas import EJcanvas
-from EJcanvas import config as canvasConfig
+# from EJcanvas import config as canvasConfig
 from customQTClass import mtrlComboBox
 from versionAndName import ejError
 mtrlList = list(rIdx.keys()) + list(Alloy.keys())
@@ -28,7 +29,10 @@ class OpticalTab(QWidget):
     --- GUI widget ---
     1st column (settingBox):
         wlBox
-        mtrlBox
+        mtrlsBox
+        rIdxRealBox rIdxImagBox
+        periodBox   repeatBox
+        fieldBox    gainCoefBox
         ridgeBox
 
     2nd column (strataBox):
@@ -50,8 +54,11 @@ class OpticalTab(QWidget):
         self.ridgeLength = 3.0
         self.ridgeLoss = 0.0
         self.Lps = {}
-        self.facet1 = facetList[0]
-        self.facet2 = facetList[0]
+        self.facet = [facetList[0], facetList[0]]
+        self.beta = None
+        self.select = None
+        self.redActive = False
+
         opticalLayout = QHBoxLayout()
         opticalLayout.setSpacing(0)
         opticalLayout.addLayout(self._settingBox(350))
@@ -64,14 +71,11 @@ class OpticalTab(QWidget):
         self.modeAxis.set_frame_on(False)
         self.modeAxis.get_yaxis().set_visible(False)
         # self.modeAxis = self.ridxAxis
-        # self.modeAxis.set_ylabel("TM Mode $E_y$ (a.u.)", color='C0', 
+        # self.modeAxis.set_ylabel("TM Mode $E_y$ (a.u.)", color='C0',
         #                          fontsize=canvasConfig["fontsize"])
         # self.modeAxis.tick_params(axis='y', labelcolor='C0')
         figureBox.addWidget(self.optCanvas)
         opticalLayout.addLayout(figureBox)
-
-        self.beta = None
-        self.select = None
 
         self.setLayout(opticalLayout)
         self.dirty.connect(self.update_xs)
@@ -95,55 +99,51 @@ class OpticalTab(QWidget):
         mtrlGroupBox = QGroupBox("Custom Material")
         mtrlGroupBox.setMaximumWidth(width)
         mtrlLayout = QGridLayout()
-        mtrlLayout.addWidget(QLabel('<center><b>material Name</b></center>'),
+        mtrlLayout.addWidget(QLabel('<center>Material Name</center>'),
                              0, 0, 1, 2)
         self.mtrlsBox = QComboBox()
         self.mtrlsBox.addItems(self.stratum.cstmIndx.keys())
-        self.mtrlsBox.currentIndexChanged[str].connect(self.set_MtrlBox)
+        self.mtrlsBox.currentIndexChanged[int].connect(self.updateMtrl)
         mtrlLayout.addWidget(self.mtrlsBox, 1, 0, 1, 2)
         mtrlLayout.addWidget(QLabel(
-            '<center><b>RI n<sub>eff</sub></b></center>'), 2, 0)
+            '<center>index n<sub>eff</sub></center>'), 2, 0)
         self.rIdxRealBox = QDoubleSpinBox()
         mtrlLayout.addWidget(self.rIdxRealBox, 3, 0)
-        mtrlLayout.addWidget(QLabel('<center><b>gain/loss k</b></center>'),
+        mtrlLayout.addWidget(QLabel('<center>passive loss k</center>'),
                              2, 1)
         self.rIdxImagBox = QDoubleSpinBox()
         mtrlLayout.addWidget(self.rIdxImagBox, 3, 1)
-        mtrlLayout.addWidget(QLabel('<center><b>Period Length</b></center>'),
+        mtrlLayout.addWidget(QLabel('<center>Period Length</center>'),
                              4, 0)
         self.periodBox = QDoubleSpinBox()
         self.periodBox.setSuffix(" Å")
         self.periodBox.setMaximum(9999.99)
         self.repeatBox = QSpinBox()
-        self.repeatBox.setValue(1)
-        if self.stratum.cstmIndx:
-            self.mtrlsBox.setCurrentIndex(0)
-            mtrl = self.mtrlsBox.currentText()
-            mtrlIdx = self.stratum.cstmIndx[mtrl]
-            self.rIdxRealBox.setValue(mtrlIdx.real)
-            self.rIdxImagBox.setValue(mtrlIdx.imag)
-            if (mtrl in self.stratum.cstmPrd and
-                    self.stratum.cstmPrd[mtrl][0] > 0):
-                self.periodBox.setValue(self.stratum.cstmPrd[mtrl][0])
-                self.repeatBox.setValue(self.stratum.cstmPrd[mtrl][1])
-            else:
-                self.periodBox.setValue(0.0)
-                self.repeatBox.setValue(0)
-                self.repeatBox.setEnabled(False)
-        else:
-            self.rIdxRealBox.setValue(1.0)
-            self.rIdxRealBox.setEnabled(False)
-            self.rIdxImagBox.setValue(0.0)
-            self.rIdxImagBox.setEnabled(False)
-            self.periodBox.setValue(0.0)
-            self.periodBox.setEnabled(False)
+        mtrlLayout.addWidget(self.periodBox, 5, 0)
+        mtrlLayout.addWidget(QLabel('<center>Periods</center>'), 4, 1)
+        mtrlLayout.addWidget(self.repeatBox, 5, 1)
+        mtrlLayout.addWidget(QLabel('<center>Active property</center>'),
+                             6, 0, 1, 2)
+        mtrlLayout.addWidget(QLabel('<center>Bias Field</center>'), 7, 0)
+        self.fieldBox = QDoubleSpinBox()
+        self.fieldBox.setSuffix(' kV/cm')
+        self.fieldBox.setEnabled(False)
+        self.fieldBox.setDecimals(1)
+        self.fieldBox.setMaximum(500)
+        mtrlLayout.addWidget(self.fieldBox, 8, 0)
+        mtrlLayout.addWidget(QLabel('<center>Gain Coef.</center>'), 7, 1)
+        self.gainCoeffBox = QDoubleSpinBox()
+        self.gainCoeffBox.setSuffix(' cm/kA')
+        self.gainCoeffBox.setEnabled(False)
+        self.gainCoeffBox.setDecimals(1)
+        mtrlLayout.addWidget(self.gainCoeffBox, 8, 1)
+        # TODO
+        self.updateMtrl()
         self.rIdxRealBox.valueChanged[float].connect(self.input_rIdx)
         self.rIdxImagBox.valueChanged[float].connect(self.input_alpha)
         self.periodBox.valueChanged[float].connect(self.input_period)
         self.repeatBox.valueChanged[int].connect(self.input_repeats)
-        mtrlLayout.addWidget(self.periodBox, 5, 0)
-        mtrlLayout.addWidget(QLabel('<center><b>Periods</b></center>'), 4, 1)
-        mtrlLayout.addWidget(self.repeatBox, 5, 1)
+        self.gainCoeffBox.valueChanged[float].connect(self.input_gain)
         mtrlLayout.setHorizontalSpacing(1)
         mtrlLayout.setVerticalSpacing(3)
         mtrlGroupBox.setLayout(mtrlLayout)
@@ -152,39 +152,30 @@ class OpticalTab(QWidget):
         ridgeBox = QGroupBox("Ridge Geometry")
         ridgeBox.setMaximumWidth(width)
         ridgeLayout = QGridLayout()
-        ridgeLayout.addWidget(QLabel("<center><b>Fecet1</b></center>"), 0, 0)
-        self.facetBox1 = QComboBox()
-        self.facetBox1.addItems(facetList)
-        self.facetBox1.setCurrentText(self.facet1)
-        self.facetBox1.currentIndexChanged[int].connect(self.input_facet1)
-        ridgeLayout.addWidget(self.facetBox1, 1, 0)
-        ridgeLayout.addWidget(QLabel("<center><b>Reflectivity</b></center>"),
-                              2, 0, 1, 2)
-        self.refBox1 = QDoubleSpinBox()
-        self.refBox1.setDecimals(1)
-        self.refBox1.setRange(0.0, 100.0)
-        self.refBox1.setSuffix(" %")
-        self.refBox1.setEnabled(False)
-        self.refBox1.setValue(0.0)
-        self.refBox1.valueChanged[float].connect(self.input_ref1)
-        ridgeLayout.addWidget(self.refBox1, 3, 0)
+        self.facetBox = [None]*2
+        self.refBox = [None]*2
+        for n in (0, 1):
+            ridgeLayout.addWidget(QLabel(
+                "<center>Fecet%d</center>" % (n+1)), 0, n)
+            self.facetBox[n] = QComboBox()
+            self.facetBox[n].addItems(facetList)
+            self.facetBox[n].setCurrentText(self.facet[n])
+            ridgeLayout.addWidget(self.facetBox[n], 1, n)
+            self.refBox[n] = QDoubleSpinBox()
+            self.refBox[n].setDecimals(1)
+            self.refBox[n].setRange(0.0, 100.0)
+            self.refBox[n].setSuffix(" %")
+            self.refBox[n].setEnabled(self.facet[n] == 'custom')
+            self.refBox[n].setValue(self.facetRefct(n))
+            ridgeLayout.addWidget(self.refBox[n], 3, n)
+            self.facetBox[n].currentIndexChanged[int].connect(
+                partial(self.input_facet, n))
+            self.refBox[n].valueChanged[float].connect(partial(
+                self.input_ref, n))
+        ridgeLayout.addWidget(QLabel(
+            "<center>Reflectivity</center>"), 2, 0, 1, 2)
 
-        ridgeLayout.addWidget(QLabel("<center><b>Fecet2</b></center>"), 0, 1)
-        self.facetBox2 = QComboBox()
-        self.facetBox2.addItems(facetList)
-        self.facetBox2.setCurrentText(self.facet2)
-        self.facetBox2.currentIndexChanged[int].connect(self.input_facet2)
-        ridgeLayout.addWidget(self.facetBox2, 1, 1)
-        self.refBox2 = QDoubleSpinBox()
-        self.refBox2.setDecimals(1)
-        self.refBox2.setRange(0.0, 100.0)
-        self.refBox2.setSuffix(" %")
-        self.refBox2.setEnabled(False)
-        self.refBox2.setValue(0.0)
-        self.refBox2.valueChanged[float].connect(self.input_ref2)
-        ridgeLayout.addWidget(self.refBox2, 3, 1)
-
-        ridgeLayout.addWidget(QLabel("<center><b>Ridge Length</b></center>"),
+        ridgeLayout.addWidget(QLabel("<center>Ridge Length</center>"),
                               4, 0)
         self.ridgeLengthBox = QDoubleSpinBox()
         self.ridgeLengthBox.setDecimals(1)
@@ -194,9 +185,9 @@ class OpticalTab(QWidget):
         self.ridgeLengthBox.setSuffix(" mm")
         self.ridgeLengthBox.valueChanged[float].connect(self.input_ridgeL)
         ridgeLayout.addWidget(self.ridgeLengthBox, 5, 0)
-        ridgeLayout.addWidget(QLabel("<center><b>Mirror Loss: </b></center>"),
+        ridgeLayout.addWidget(QLabel("<center>Mirror Loss: </center>"),
                               4, 1)
-        self.mirrorLoss = QLabel("<center>0.0 %</center>")
+        self.mirrorLoss = QLabel("<center>0.0 cm<sup>-1</sup></center>")
         ridgeLayout.addWidget(self.mirrorLoss, 5, 1)
         ridgeLayout.setHorizontalSpacing(1)
         ridgeLayout.setVerticalSpacing(3)
@@ -235,11 +226,12 @@ class OpticalTab(QWidget):
         strataBox.addWidget(self.solveButton, 2, 0)
         strataBox.addWidget(self.optimizeButton, 2, 1)
         strataBox.addWidget(QLabel("Performance"), 3, 0, 1, 2)
-        self.resultBox = QTextEdit()
-        self.resultBox.setMinimumWidth(width)
-        self.resultBox.setMaximumWidth(width)
-        self.resultBox.setMinimumHeight(120)
-        strataBox.addWidget(self.resultBox, 4, 0, 1, 2)
+        self.infoBox = QTextEdit()
+        self.infoBox.setReadOnly(True)
+        self.infoBox.setMinimumWidth(width)
+        self.infoBox.setMaximumWidth(width)
+        self.infoBox.setMinimumHeight(120)
+        strataBox.addWidget(self.infoBox, 4, 0, 1, 2)
 
         strataBox.setRowStretch(5, 0)
         return strataBox
@@ -247,12 +239,6 @@ class OpticalTab(QWidget):
     def input_wl(self, wl):
         self.stratum.setWl(wl)
         self.dirty.emit()
-
-    def set_MtrlBox(self, mtrl):
-        if mtrl not in self.stratum.cstmIndx:
-            self.stratum.cstmIndx[mtrl] = 1.0
-        self.rIdxRealBox.setValue(self.stratum.cstmIndx[mtrl].real)
-        self.rIdxImagBox.setValue(self.stratum.cstmIndx[mtrl].imag)
 
     def input_rIdx(self, value):
         self.stratum.cstmIndx[self.mtrlsBox.currentText()] = value
@@ -265,7 +251,7 @@ class OpticalTab(QWidget):
         if mtrl not in self.stratum.cstmPrd:
             self.stratum.cstmPrd[mtrl] = [value, 1]
         else:
-            self.stratum.cstmPrd[self.mtrlsBox.currentText()][0] = value
+            self.stratum.cstmPrd[mtrl][0] = value
         if value == 0:
             self.repeatBox.setEnabled(False)
         else:
@@ -275,10 +261,23 @@ class OpticalTab(QWidget):
     def input_repeats(self, value):
         mtrl = self.mtrlsBox.currentText()
         if mtrl not in self.stratum.cstmPrd:
-            self.stratum.cstmPrd[mtrl] = [0, value]
+            self.stratum.cstmPrd[mtrl] = [1, value]
         else:
-            self.stratum.cstmPrd[self.mtrlsBox.currentText()][1] = value
+            self.stratum.cstmPrd[mtrl][1] = value
         self.update_customLength()
+
+    def input_gain(self, value):
+        mtrl = self.mtrlsBox.currentText()
+        self.stratum.cstmGain[mtrl] = value
+
+    def setupActive(self, wl, EField, gaincoeff, Lp):
+        """Interface to get parameters from quantum tab"""
+        self.wlBox.setValue(wl)
+        # set up active core
+        self.mtrlsBox.setCurrentText("Active Core")
+        self.fieldBox.setValue(EField)
+        self.periodBox.setValue(Lp)
+        self.gainCoeffBox.setValue(gaincoeff)
 
     def update_customLength(self):
         length = self.periodBox.value() * self.repeatBox.value() / 1E4  # to um
@@ -287,26 +286,44 @@ class OpticalTab(QWidget):
                 self.stratum.Ls[n] = length
         self.dirty.emit()
 
-    def input_facet1(self, idx):
-        self.facet1 = facetList[idx]
-        self.updateLoss()
+    def input_facet(self, n, idx):
+        """SLOT as partial(self.input_facet, n) connected to
+        facetBox[n].currentIndexChanged(int)"""
+        self.facet[n] = facetList[idx]
+        self.refBox[n].setValue(self.facetRefct(n)*100)
+        self.refBox[n].setEnabled(self.facet[n] == 'custom')
+        self.update_Loss()
 
-    def input_facet2(self, idx):
-        self.facet2 = facetList[idx]
-        self.updateLoss()
+    def input_ref(self, n, ref):
+        """SLOT as partial(self.input_facet, n) connected to
+        facetBox[n].currentIndexChanged(int)"""
+        self.update_Loss()
 
-    def input_ref1(self, ref):
-        pass
-
-    def input_ref2(self, ref):
-        pass
+    def facetRefct(self, n):
+        """Return the reflectivity of facet n"""
+        if self.facet[n] == 'cleaved':
+            if self.beta is None:
+                return -1
+            R = abs((self.beta.real - 1)/(self.beta.real + 1))**2
+            self.refBox[n].setValue(100 * R)
+            return R
+        if self.facet[n] == 'perfect AR':
+            return 1E-9
+        if self.facet[n] == 'perfect HR':
+            return 1
+        if self.facet[n] == 'custom':
+            return self.refBox[n].value()/100
 
     def input_ridgeL(self, value):
         self.ridgeLength = value
-        self.updateLoss()
+        self.update_Loss()
 
-    def updateLoss(self):
-        pass
+    def update_Loss(self):
+        # print(self.facetRefct(0), self.facetRefct(1))
+        perRunLoss = self.facetRefct(1) * self.facetRefct(0)
+        self.alpham = -log(perRunLoss)/(2*self.ridgeLength/10)  # to cm-1
+        self.mirrorLoss.setText(
+            "<center>%.1f cm<sup>-1</sup></center>" % self.alpham)
 
     def strataTable_select(self):
         row = self.strataTable.currentRow()
@@ -323,14 +340,22 @@ class OpticalTab(QWidget):
         if column in (1, 2, 3):
             try:
                 value = float(item.text())
+                if value < 0:
+                    raise ValueError
             except ValueError:
                 # invalid input
-                QMessageBox.warning(self, ejError,
-                                    "This value should be a number")
+                QMessageBox.warning(self, ejError, "This value should be "
+                                    "a non-negative number")
                 self.strataTable_refresh()
                 return
             if column == 1:
                 # molefrac
+                if value > 1:
+                    QMessageBox.warning(
+                        self, ejError, "Mole Fraction must be between 0 and 1")
+                    self.strataTable.setItem(row, column, QTableWidgetItem(
+                        "%.2f" % self.stratum.moleFracs[row]))
+                    return
                 self.stratum.moleFracs[row] = value
             if column == 2:
                 # width
@@ -399,7 +424,7 @@ class OpticalTab(QWidget):
 
             # Thickness
             if q == 0 or q == len(self.stratum.materials)-1:
-                thickness = QTableWidgetItem('1.0' if q==0 else '2.0')
+                thickness = QTableWidgetItem('1.0' if q == 0 else '2.0')
                 thickness.setFlags(Qt.ItemIsSelectable)
             else:
                 thickness = QTableWidgetItem("%.2f" % self.stratum.Ls[q])
@@ -429,6 +454,33 @@ class OpticalTab(QWidget):
         self.strataTable.resizeColumnsToContents()
         self.strataTable.blockSignals(False)
 
+    def updateMtrl(self, idx=0):
+        """SLOT connect to mtrlsBox.currentIndexChanged[int]"""
+        if self.stratum.cstmIndx:
+            self.mtrlsBox.setCurrentIndex(idx)
+            mtrl = self.mtrlsBox.currentText()
+            mtrlIdx = self.stratum.cstmIndx[mtrl]
+            self.rIdxRealBox.setValue(mtrlIdx.real)
+            self.rIdxImagBox.setValue(mtrlIdx.imag)
+            if (mtrl in self.stratum.cstmPrd and
+                    self.stratum.cstmPrd[mtrl][0] > 0):
+                self.periodBox.setValue(self.stratum.cstmPrd[mtrl][0])
+                self.repeatBox.setValue(self.stratum.cstmPrd[mtrl][1])
+            else:
+                self.periodBox.setValue(0.0)
+                self.repeatBox.setValue(0)
+                self.repeatBox.setEnabled(False)
+            if mtrl in self.stratum.cstmGain:
+                self.gainCoeffBox.setValue(self.stratum.cstmGain[mtrl])
+        else:
+            self.rIdxRealBox.setValue(1.0)
+            self.rIdxRealBox.setEnabled(False)
+            self.rIdxImagBox.setValue(0.0)
+            self.rIdxImagBox.setEnabled(False)
+            self.periodBox.setValue(0.0)
+            self.periodBox.setEnabled(False)
+            return
+
     def strataTable_mtrlChanged(self, row, selection):
         """SLOT as partial(self.strataTable_mtrlChanged, q) connected to
         mtrlName.currentTextChanged(int)"""
@@ -440,24 +492,56 @@ class OpticalTab(QWidget):
         self.beta = None
         self.stratum.updateIndices()
         self.strataTable_refresh()
-        self.xs = np.linspace(-1, sum(self.stratum.Ls[1:]), 1000)
+        self.xs = np.linspace(-1, sum(self.stratum.Ls[1:]), 5000)
 
     def solve(self):
+        """SLOT connected to self.solveButton.clicked"""
         try:
             self.beta = self.stratum.boundModeTM()
         except (TimeoutError, ValueError):
             QMessageBox.warning(self, ejError, "Failed to solve for modes")
             return
         self.Ey, _, _ = self.stratum.populateMode(self.beta, self.xs)
+        # TODO
+        nx = self.stratum.populateIndices(self.xs).real
+        self.confinement = 0
+        for ar in self.stratum.populateMtrl(self.xs):
+            self.confinement += np.trapz(
+                (nx*np.abs(self.Ey)**2)[ar], self.xs[ar])
+        self.confinement = self.beta.real * self.confinement / np.trapz(
+            (nx * np.abs(self.Ey))**2, self.xs)
+        self.alphaw = 4*pi/(self.stratum.wl/1E4) * self.beta.imag  # cm^-1
         self.update_canvas()
-        self.resultBox.setText("β = %.3f+%.3gi" % (
-            self.beta.real, self.beta.imag))
+        self.update_Loss()
+        self.update_info()
         return self.Ey
+
+    def update_info(self):
+        """Update information in the info box"""
+        info = ""
+        if self.beta is not None:
+            info += "Effective refractive index:\n"
+            info += "  β = %.3f + (%.3g)i\n" % (self.beta.real, self.beta.imag)
+            info += "Waveguide loss:\n"
+            info += "  α<sub>w</sub> = %.3f cm<sup>-1</sup>\n" % self.alphaw
+            info += "Confinement factor:\n"
+            info += "  Γ = %.1f%%\n" % (self.confinement * 100)
+            try:
+                self.jth = (self.alpham + self.alphaw)/(
+                    self.stratum.cstmGain["Active Core"] * self.confinement)
+                info += "Threshold current:\n"
+                info += "  J<sub>th</sub> = %.1f kA/cm<sup>-2</sup>" % self.jth
+            except (AttributeError, ZeroDivisionError, KeyError):
+                info += "\nUse the quantum tab to define Active region"
+        self.infoBox.setHtml(info.replace("\n", "<br>"))
 
     def update_canvas(self):
         self.optCanvas.clear()
         nx = self.stratum.populateIndices(self.xs).real
         self.ridxAxis.plot(self.xs, nx, 'k', lw=1)
+        if self.redActive:
+            for ar in self.stratum.populateIndices(self.xs):
+                self.ridxAxis.plot(self.xs[ar], nx[ar], 'r', lw=2)
         # plot select strata
         if self.select is not None:
             if self.select == 0:
@@ -475,6 +559,8 @@ class OpticalTab(QWidget):
         self.optCanvas.draw()
 
     def optimizeStrata(self):
-        pass
+        # TODO
+        QMessageBox.warning(self, ejError,
+                            "Optimization is not yet implemented")
 
 # vim: ts=4 sw=4 sts=4 expandtab
