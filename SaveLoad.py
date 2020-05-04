@@ -4,6 +4,7 @@ This file defines functions to save and load JSON files from ErwinJr
 
 from QCLayers import QCLayers
 from OptStrata import OptStrata
+from collections import defaultdict
 import json
 
 
@@ -92,19 +93,24 @@ def parseQcl(ldict):
 def parseStrata(ldict):
     if ldict["FileType"] != "ErwinJr2 Data File":
         raise TypeError("Wrong file type")
-    if int(ldict["Version"]) >= 200403:
+    if int(ldict["Version"]) >= 200504:
         ldict = ldict["Waveguide"]
         cstidx = {}
+        cstprd = {}
+        cstgain = {}
         for item in ldict["custom"]:
-            cstidx[item] = complex(ldict["custom"][item])
+            cstidx[item] = complex(ldict["custom"][item]["index"])
+            if "period" in ldict["custom"][item]:
+                cstprd[item] = ldict["custom"][item]["period"]
+            if "gain" in ldict["custom"][item]:
+                cstgain[item] = ldict["custom"][item]["gain"]
         o = OptStrata(ldict["wavelength"],
                       ldict["materials"],
                       ldict["moleFracs"],
                       ldict["dopings"],
                       ldict["width"],
                       ldict["mobilities"],
-                      cstidx,
-                      ldict["custom Period"])
+                      cstidx, cstprd, cstgain)
     else:
         raise NotImplementedError("Version %s not supported" %
                                   ldict["Version"])
@@ -137,7 +143,7 @@ JSONTemplateOld = """{
 
 JSONTemplate = """{
     "FileType": "ErwinJr2 Data File",
-    "Version": "200403",
+    "Version": "200504",
     "Description": %s,
     "Substrate": %s,
     "EField": %s,
@@ -163,8 +169,7 @@ JSONTemplate = """{
         "dopings": %s,
         "width": %s,
         "mobilities": %s,
-        "custom": %s,
-        "custom Period": %s
+        "custom": %s
     }
 }"""
 
@@ -210,9 +215,13 @@ def EJSaveJSON(fhandle, qclayers, optstratum):
                         "QCLayers not valid type")
     o = qclayers
     s = optstratum
-    cstidx = {}
+    cstmtrl = defaultdict(dict)
     for item in s.cstmIndx:
-        cstidx[item] = str(s.cstmIndx[item])
+        cstmtrl[item]["index"] = str(s.cstmIndx[item])
+        if item in s.cstmPrd:
+            cstmtrl[item]["period"] = s.cstmPrd[item]
+        if item in s.cstmGain:
+            cstmtrl[item]["gain"] = s.cstmGain[item]
     parameters = [json.dumps(s) for s in (o.description, o.substrate,
                                           o.EField, o.xres, o.Eres, o.Solver,
                                           o.Temperature, o.repeats,
@@ -220,8 +229,9 @@ def EJSaveJSON(fhandle, qclayers, optstratum):
                                           o.layerMtrls, o.layerWidths,
                                           o.layerDopings, o.layerARs,
                                           s.wl, s.materials, s.moleFracs,
-                                          s.dopings, list(s.Ls), s.mobilities,
-                                          cstidx, s.cstmPrd)]
+                                          s.dopings, list(s.Ls), s.mobilities)]
+    parameters.append(json.dumps(cstmtrl))
+    # parameters.append(json.dumps(cstmtrl, indent=4).replace('\n', '\n'+' '*8))
     fhandle.write(JSONTemplate % tuple(parameters))
 
 # vim: ts=4 sw=4 sts=4 expandtab

@@ -1,6 +1,6 @@
 {
     "FileType": "ErwinJr2 Data File",
-    "Version": "200403",
+    "Version": "200504",
     "Description": "dx.doi.org/10.1038/nphoton.2009.262",
     "Substrate": "InP",
     "EField": 102.0,
@@ -24,9 +24,8 @@
         "materials": ["Air", "Au", "SiNx", "InxGa1-xAs", "InxGa1-xAs", "Al1-xInxAs", "Al1-xInxAs", "InxGa1-xAs", "Active Core", "InxGa1-xAs", "InP"],
         "moleFracs": [0.0, 0.0, 0.35, 0.53, 0.53, 0.52, 0.52, 0.53, 0.53, 0.53, 0.0],
         "dopings": [0.0, 0.0, 0.0, 1200.0, 90.0, 2.0, 3.0, 0.5, 0.5, 0.5, 0.0],
-        "width": [1.0, 0.45, 0.4, 0.01, 0.5, 0.5, 0.6, 0.2, 2.04, 0.2, 2.0],
+        "width": [1.0, 0.45, 0.4, 0.01, 0.5, 0.5, 0.6, 0.2, 1.384, 0.2, 2.0],
         "mobilities": [null, null, null, null, null, null, null, null, null, null, null],
-        "custom": {"Active Core": "(3.286+0j)"},
-        "custom Period": {"Active Core": [510.0, 40]}
+        "custom": {"Active Core": {"index": "(3.286+0j)", "period": [346.0, 40], "gain": 53.4}}
     }
 }

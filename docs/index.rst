@@ -26,6 +26,7 @@ See `Github <https://github.com/PrincetonUniversity/ErwinJr2/>`_ for the source 
    manual/gui.rst
    manual/cli.rst
    manual/physics
+   manual/saving
    ack.rst
 
 .. toctree::
