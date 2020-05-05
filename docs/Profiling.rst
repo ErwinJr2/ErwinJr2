@@ -1,6 +1,8 @@
 Profiling
 =========
 
+> This page is very out-of-date and has some inconsistencies with current versions
+
 The following block of code is profiled by :py:mod:`cProfile`:
 
 .. literalinclude:: ../tool/profQCLayers.py
@@ -8,9 +10,9 @@ The following block of code is profiled by :py:mod:`cProfile`:
 
 
 
-where *16um.json* is the following file:
+where *PQLiu.json* is the following file:
 
-.. literalinclude:: ../example/16um.json
+.. literalinclude:: ../example/PQLiu.json
    :language: json
 
 

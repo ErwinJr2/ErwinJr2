@@ -10,7 +10,7 @@ if __name__ == "__main__":
     cp = cProfile.Profile()
     
     cp.enable()
-    with open("../example/16um.json") as f:
+    with open("../example/PQLiu.json") as f:
         qcl = SaveLoad.qclLoad(f)
 
     qcl.layerSelected = 3
