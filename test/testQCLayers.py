@@ -1,13 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 from context import *
 import SaveLoad
 import numpy as np
-import matplotlib.pyplot as plt
 import unittest
 
+
 def plot_band(axes, qcLayers):
-    """ Plot potential (quantum barriers and wells) and other band parameters 
+    """ Plot potential (quantum barriers and wells) and other band parameters
     of the layer scturecture on axes, assuming already populated"""
     # for xv, conf in ((qcLayers.xVL, 'g--'),
     #                  (qcLayers.xVX, 'm-.'), 
@@ -22,9 +22,9 @@ def plot_band(axes, qcLayers):
 
     axes.plot(qcLayers.xPoints, qcLayers.xlayerSelected, 'b', linewidth=1)
 
-    if hasattr(qcLayers, 'eigenEs'): 
-        for n in range(qcLayers.eigenEs.size): 
-            axes.plot(qcLayers.xPoints, 
+    if hasattr(qcLayers, 'eigenEs'):
+        for n in range(qcLayers.eigenEs.size):
+            axes.plot(qcLayers.xPoints,
                       10*qcLayers.psis[n, :]**2 + qcLayers.eigenEs[n])
 
 
@@ -41,9 +41,9 @@ class TestQCLayers(unittest.TestCase):
         # plot_band(axes, qcl)
         # plt.show()
 
-        np.testing.assert_equal(qcl.eigenEs.shape, (36,),
+        np.testing.assert_equal(qcl.eigenEs.shape, (38,),
                                 'solve_whole eigenEs calculation wrong')
-        np.testing.assert_equal(qcl.psis.shape, (36, 1038),
+        np.testing.assert_equal(qcl.psis.shape, (38, 1038),
                                 'solve_whole psis calculation wrong')
 
     def test_solve_basis(self):
@@ -52,15 +52,16 @@ class TestQCLayers(unittest.TestCase):
 
         qcl.layerSelected = 3
         qcl.NonParabolic = False
+        qcl.basisARonly = True
         qcl.populate_x()
         qcl.solve_basis()
         # axes = plt.axes()
         # plot_band(axes, qcl)
         # plt.show()
 
-        np.testing.assert_equal(qcl.eigenEs.shape, (18,),
+        np.testing.assert_equal(qcl.eigenEs.shape, (15,),
                                 'solve_basis eigenEs calculation wrong')
-        np.testing.assert_equal(qcl.psis.shape, (18, 1038),
+        np.testing.assert_equal(qcl.psis.shape, (15, 1038),
                                 'solve_basis psis calculation wrong')
 
 if __name__ == "__main__":

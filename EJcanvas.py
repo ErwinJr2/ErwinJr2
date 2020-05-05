@@ -1,11 +1,11 @@
-#!/usr/bin/env python
-# -*- coding:utf-8 -*-
+"""
+This file defines class for plotting figures in ErwinJr
+"""
 
 import numpy as np
 import os
 
 import matplotlib
-matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg as
                                                 FigureCanvas)
 from matplotlib.backends.backend_qt5 import cursord
@@ -17,30 +17,34 @@ from PyQt5.QtCore import QObject, Signal
 from PyQt5.QtWidgets import (QSizePolicy, QMessageBox, QInputDialog,
                              QFileDialog)
 
-import sys, json
+import sys
+import json
 from warnings import warn
+matplotlib.use('Qt5Agg')
 config = {
-    "PlotMargin": {'l': 0.9, 'r': 0.12, 'b': 0.6, 't': 0.09}, 
+    "PlotMargin": {'l': 0.9, 'r': 0.12, 'b': 0.6, 't': 0.09},
     "fontsize": 12,
-    "wfscale": 0.3, 
-    "modescale": 5,
+    "wfscale": 0.2,
+    "modescale": 3,
     "wf_almost_zero": 3e-4,
 }
-if sys.platform == 'win32': 
+if sys.platform == 'win32':
     config["PlotMargin"] = {'l': 0.9, 'r': 0.12, 'b': 0.55, 't': 0.09}
 elif sys.platform == 'darwin':
     config["PlotMargin"] = {'l': 0.90, 'r': 0.12, 'b': 0.55, 't': 0.09}
+
 
 def LoadConfig(fname="plotconfig.json"):
     try:
         with open(fname, 'r') as f:
             userConfig = json.load(f)
-    except:
+    except FileNotFoundError:
         userConfig = {}
-        warn("Cannot load plot config file %s. Use default config."%fname, 
+        warn("Cannot load plot config file %s. Use default config." % fname,
              UserWarning)
     for k in userConfig:
         config[k] = userConfig[k]
+
 
 class EJcanvas(FigureCanvas):
     """EJcanvas is designed for ErwinJr as a canvas for energy band and
@@ -52,7 +56,7 @@ class EJcanvas(FigureCanvas):
         self.setParent(parent)
         self.setMinimumWidth(200)
         self.setMinimumHeight(200)
-        self.setSizePolicy(QSizePolicy.MinimumExpanding, 
+        self.setSizePolicy(QSizePolicy.MinimumExpanding,
                            QSizePolicy.MinimumExpanding)
         self.updateGeometry()
         self.axes = self.figure.add_subplot(111)
@@ -60,14 +64,15 @@ class EJcanvas(FigureCanvas):
         self.ylabel = ylabel
 
     def set_axes(self, fsize=config["fontsize"]):
-        self.axes.autoscale(enable=True, axis='x', tight=True)
-        self.axes.autoscale(enable=True, axis='y', tight=False)
+        self.axes.tick_params(axis='both', which='major', labelsize=fsize)
         self.axes.spines['top'].set_color('none')
         self.axes.spines['right'].set_color('none')
         self.axes.spines['bottom'].set_position(('outward', 5))
         self.axes.set_xlabel(self.xlabel, fontsize=fsize)
         self.axes.spines['left'].set_position(('outward', 5))
         self.axes.set_ylabel(self.ylabel, fontsize=fsize)
+        self.axes.autoscale(enable=True, axis='x', tight=True)
+        self.axes.autoscale(enable=True, axis='y', tight=True)
 
     def test(self):
         """A test function, plotting sin(x)"""
@@ -100,6 +105,7 @@ class EJplotControl(NavigationToolbar2, QObject):
         self._actions = {}
         self._custom_active = {}
         self._custom_cursor = {}
+        self.zoomed = False
 
         NavigationToolbar2.__init__(self, canvas)
 
@@ -150,15 +156,15 @@ class EJplotControl(NavigationToolbar2, QObject):
             raise TypeError("%s not supported." % callback)
 
     def set_custom(self, name, button, callback, cursor=cursors.HAND):
-            """cusomized callback action,
-            s.t. this class manages the button's check status
-            and its interaction with canvas.
-            Note that callback is called when clicke on canvas"""
-            self._custom_active[name] = callback
-            self._actions[name] = button
-            self._custom_cursor[name] = cursor
-            button.setCheckable(True)
-            # TODO Can this function become a decorator?
+        """cusomized callback action,
+        s.t. this class manages the button's check status
+        and its interaction with canvas.
+        Note that callback is called when clicke on canvas"""
+        self._custom_active[name] = callback
+        self._actions[name] = button
+        self._custom_cursor[name] = cursor
+        button.setCheckable(True)
+        # TODO Can this function become a decorator?
 
     def edit_parameters(self):
         allaxes = self.canvas.figure.get_axes()
@@ -199,7 +205,12 @@ class EJplotControl(NavigationToolbar2, QObject):
 
     def zoom(self, *args):
         super(EJplotControl, self).zoom(*args)
+        self.zoomed = True
         self._update_buttons_checked()
+
+    def home(self, *args):
+        super(EJplotControl, self).home(*args)
+        self.zoomed = False
 
     def custom(self, mode):
         if self._active == mode:
@@ -217,7 +228,7 @@ class EJplotControl(NavigationToolbar2, QObject):
 
         if self._active:
             #  self._idPress = self.canvas.mpl_connect('button_press_event',
-                                                    #  self.press[mode])
+            #                                          self.press[mode])
             self._idRelease = self.canvas.mpl_connect(
                 'button_release_event', self._custom_active[mode])
             self.mode = mode

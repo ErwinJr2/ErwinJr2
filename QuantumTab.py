@@ -1,20 +1,25 @@
-#!/usr/bin/env python
-# -*- coding:utf-8 -*-
+"""
+This file defines the quantum tab of ErwinJr, for simulating electron spectrum
+and scattering
+"""
 
 # TODO:
 # In plot controls, add "show one period"
 # save and load pickle for qclayers
 # Reverse layers
-# Bug: when delete all layers
 # export excel file for growth sheet
+# Debugging plot
+# Inverse rotate
+# last change
+# History
 
 import sys
 import traceback
 import numpy as np
-from numpy import pi, sqrt
+from numpy import sqrt
 from functools import partial, wraps
 
-from QCLayers import QCLayers, qcMaterial, h, c0, e0
+from QCLayers import QCLayers, qcMaterial, h, c0, e0, EUnit
 from EJcanvas import EJcanvas, EJplotControl
 from EJcanvas import config as plotconfig
 
@@ -29,13 +34,14 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLabel, QComboBox,
 from customQTClass import mtrlComboBox
 
 from Material import AParm
-ejError = "ErwinJr2 - Error"
-ejWarning = "ErwinJr2 - Warning"
+from versionAndName import ejError, ejWarning
+from darkDetect import isdark
+
 
 class QuantumTab(QWidget):
     """The Quantum Tab of ErwinJr. This is designed to be a GUI wrapper of
     the class QCLayers
-    Member viable (! label public interface):
+    Member variable (! label public interface):
         !qclayers: A class to describe the physics of QC layers
         mtrlList: for Material column in the layerTable
         colors: colors for different wavefunctions
@@ -50,8 +56,9 @@ class QuantumTab(QWidget):
         pairSelected: Boolean flag for if a pair of states is selected
         --- plot flags ---
         solveType: 'basis' or 'whole', decide different kinds of solving
-        !plotVX, !plotVL, !plotLH, !plotSO: show X point of conduction band 
+        !plotVX, !plotVL, !plotLH, !plotSO: show X point of conduction band
                                             (L point, LH band, SO band)
+        !showPbound: show E(x) bond for periodic solver
 
         --- GUI widget ---
         1st column (settingBox):
@@ -61,12 +68,14 @@ class QuantumTab(QWidget):
             inputxResBox
             inputEresBox
             inputRepeatsBox
+            inputWlBox
             inputARInjectorCheck
             inputInjectorARCheck
             LpFirstSpinbox          LpLastSpinbox
 
         2nd column (layerBox):
             insertLayerAboveButton  deleteLayerButton
+            optimizeLayerButton     globalOptimizeButton
             layerTable
 
         3rd column (solveBox):
@@ -97,6 +106,7 @@ class QuantumTab(QWidget):
         """
     dirty = pyqtSignal()
     calculating = pyqtSignal(bool)
+    toOptics = pyqtSignal(QCLayers)
 
     def __init__(self, qclayers=None, parent=None):
         super(QuantumTab, self).__init__(parent)
@@ -111,10 +121,13 @@ class QuantumTab(QWidget):
                        (0.078, 0.078, 0.078), (0.431, 0.803, 0.870),
                        (0.223, 0.321, 0.643))
         # colors for different materials in tables
-        self.mtrlcolors = tuple([QColor(*rgb) for rgb in (
-            (255, 255, 255), (230, 230, 240), (230, 240, 230), 
-            (240, 230, 230), (230, 240, 240), (240, 230, 240), 
-            (240, 240, 230), (230, 230, 230))])
+        mtrlcolors_RGB = ((255, 255, 255), (230, 230, 240), (230, 240, 230),
+                          (240, 230, 230), (230, 240, 240), (240, 230, 240),
+                          (240, 240, 230), (230, 230, 230))
+        self.mtrlcolors = tuple([QColor(*rgb) for rgb in mtrlcolors_RGB])
+        if isdark:
+            self.mtrlcolors = tuple([QColor(*(2*(255-c) for c in rgb))
+                                     for rgb in mtrlcolors_RGB])
 
         self.updating = False
         self.solveType = None
@@ -122,6 +135,7 @@ class QuantumTab(QWidget):
         self.plotVL = False
         self.plotLH = False
         self.plotSO = False
+        self.showPbound = False
 
         self.stateHolder = []
         self.pairSelected = False
@@ -137,21 +151,22 @@ class QuantumTab(QWidget):
             layerBoxWidth = 230
             solveBoxWidth = 170
         elif sys.platform.startswith('darwin'):
-            settingBoxWidth = 90
+            settingBoxWidth = 160
             layerBoxWidth = 250
-            solveBoxWidth = 150
+            solveBoxWidth = 180
         elif sys.platform.startswith('linux'):
             settingBoxWidth = 130
             layerBoxWidth = 275
             solveBoxWidth = 210
         else:
-            QMessageBox.warning(self, ejWarning, 
+            QMessageBox.warning(self, ejWarning,
                                 'Platform %s not tested.' % sys.platform)
             settingBoxWidth = 150
             layerBoxWidth = 400
             solveBoxWidth = 190
 
         quantumLayout = QHBoxLayout()
+        quantumLayout.setSpacing(1)
         settingBox = self._generateSettingBox(settingBoxWidth)
         layerBox = self._generateLayerBox(layerBoxWidth)
         figureBox, plotControlGrid = self._generateFigureBox()
@@ -173,20 +188,16 @@ class QuantumTab(QWidget):
         settingBox = QVBoxLayout()
 
         # set up description box
+        settingBox.addWidget(QLabel("<center><b>Description</b></center>"))
         self.descBox = QTextEdit('')
         self.descBox.setReadOnly(False)
-        self.descBox.setMinimumHeight(40)
-        self.descBox.setMaximumHeight(100)
-        self.descBox.setMaximumWidth(width)
-        self.descBox.setMinimumWidth(width)
+        self.descBox.setMinimumHeight(50)
+        self.descBox.setMaximumHeight(80)
+        self.descBox.setFixedWidth(width)
         self.descBox.setSizePolicy(QSizePolicy(
-            QSizePolicy.Fixed, QSizePolicy.Preferred))
+            QSizePolicy.Fixed, QSizePolicy.Expanding))
         self.descBox.textChanged.connect(self.input_description)
-        descLayout = QVBoxLayout()
-        descLayout.addWidget(self.descBox)
-        descLayoutGroupBox = QGroupBox("Description")
-        descLayoutGroupBox.setLayout(descLayout)
-        settingBox.addWidget(descLayoutGroupBox)
+        settingBox.addWidget(self.descBox)
 
         settingBox.addWidget(QLabel(
             "<center><b>Substrate</b></center>"))
@@ -232,6 +243,16 @@ class QuantumTab(QWidget):
         self.inputRepeatsBox.valueChanged[int].connect(self.input_repeats)
         settingBox.addWidget(self.inputRepeatsBox)
 
+        settingBox.addWidget(QLabel(
+            '<center><b>Wavelength</b></center>'))
+        self.inputWlBox = QDoubleSpinBox()
+        self.inputWlBox.setDecimals(1)
+        self.inputWlBox.setRange(1.5, 40)
+        self.inputWlBox.setSingleStep(1)
+        self.inputWlBox.setSuffix(' μm')
+        self.inputWlBox.valueChanged[float].connect(self.input_wl)
+        settingBox.addWidget(self.inputWlBox)
+
         # Basis solver devider setting
         basisGroupBox = QGroupBox("Basis Divisions")
         self.inputARInjectorCheck = QCheckBox("AR->Injector")
@@ -248,6 +269,7 @@ class QuantumTab(QWidget):
 
         # Period information groupbox
         LpLayoutGroupBox = QGroupBox("Period Info")
+        LpLayoutGroupBox.setFixedWidth(width)
         self.LpFirstSpinbox = QSpinBox()
         self.LpFirstSpinbox.setValue(1)
         self.LpFirstSpinbox.setRange(1, 1)
@@ -259,16 +281,15 @@ class QuantumTab(QWidget):
         self.LpStringBox.setReadOnly(True)
         self.LpStringBox.setSizePolicy(
             QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred))
-        self.LpStringBox.setMinimumHeight(80)
-        self.LpStringBox.setMaximumHeight(120)
-        self.LpStringBox.setMaximumWidth(width)
-        self.LpStringBox.setMinimumWidth(width)
+        self.LpStringBox.setMinimumHeight(30)
+        # self.LpStringBox.setMaximumHeight(120)
         LpLayout = QGridLayout()
         LpLayout.addWidget(QLabel('<b>first</b>'), 0, 0)
         LpLayout.addWidget(QLabel('<b>last</b>'), 0, 1)
         LpLayout.addWidget(self.LpFirstSpinbox, 1, 0)
         LpLayout.addWidget(self.LpLastSpinbox, 1, 1)
         LpLayout.addWidget(self.LpStringBox, 2, 0, 1, 2)
+        LpLayout.setSpacing(1)
         LpLayoutGroupBox.setLayout(LpLayout)
         settingBox.addWidget(LpLayoutGroupBox)
 
@@ -279,36 +300,44 @@ class QuantumTab(QWidget):
     def _generateLayerBox(self, width):
         """ Return a Qt Layout object containning all layer parameters """
         layerBox = QGridLayout()
+        layerBox.setSpacing(5)
         self.insertLayerAboveButton = QPushButton("Insert Layer")
         self.insertLayerAboveButton.clicked.connect(self.insert_layerAbove)
         layerBox.addWidget(self.insertLayerAboveButton, 0, 0)
         self.deleteLayerButton = QPushButton("Delete Layer")
         self.deleteLayerButton.clicked.connect(self.delete_layer)
         layerBox.addWidget(self.deleteLayerButton, 0, 1)
+        self.optimizeLayerButton = QPushButton("Optimize Layer")
+        self.optimizeLayerButton.clicked.connect(self.optimizeLayer)
+        self.globalOptimizeButton = QPushButton("Global Optimize")
+        self.globalOptimizeButton.clicked.connect(self.globalOptimize)
+        layerBox.addWidget(self.optimizeLayerButton, 1, 0)
+        layerBox.addWidget(self.globalOptimizeButton, 1, 1)
 
         # set up layerTable
         self.layerTable = QTableWidget()
         self.layerTable.setSelectionBehavior(QTableWidget.SelectRows)
         self.layerTable.setSelectionMode(QTableWidget.SingleSelection)
-        self.layerTable.setMaximumWidth(width)
-        self.layerTable.setMinimumWidth(width)
+        self.layerTable.setFixedWidth(width)
         self.layerTable.setSizePolicy(
             QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding))
         self.layerTable.itemChanged.connect(self.layerTable_itemChanged)
         self.layerTable.itemSelectionChanged.connect(
             self.layerTable_itemSelectionChanged)
-        layerBox.addWidget(self.layerTable, 1, 0, 1, 2)
+        layerBox.addWidget(self.layerTable, 2, 0, 1, 2)
 
         return layerBox
         # _generateLayerBox end
 
     def _generateFigureBox(self):
         """Return:
-            A Qt Layout containning a canvas for plotting; 
+            A Qt Layout containning a canvas for plotting;
             A QGiridLayout containning plot control;"""
         self.quantumCanvas = EJcanvas(xlabel='Position (Å)',
                                       ylabel='Energy (eV)', parent=self)
         self.plotControl = EJplotControl(self.quantumCanvas, self)
+        self.quantumCanvas.setSizePolicy(QSizePolicy.Expanding,
+                                         QSizePolicy.Expanding)
         figureBox = QVBoxLayout()
         figureBox.addWidget(self.quantumCanvas)
 
@@ -330,6 +359,7 @@ class QuantumTab(QWidget):
         plotControlGrid.addWidget(self.zoomOutButton, 1, 1, 1, 1)
         plotControlGrid.addWidget(self.panButton, 2, 0, 1, 1)
         plotControlGrid.addWidget(self.clearWFsButton, 2, 1, 1, 1)
+        plotControlGrid.setSpacing(5)
 
         return figureBox, plotControlGrid
         # _generateFigureBox end
@@ -353,6 +383,7 @@ class QuantumTab(QWidget):
         self.mtrlTable.setSelectionMode(QTableWidget.SingleSelection)
         self.mtrlTable.setMaximumWidth(width)
         self.mtrlTable.setMinimumWidth(width)
+        self.mtrlTable.setMinimumHeight(100)
         self.mtrlTable.setSizePolicy(
             QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Minimum))
         self.mtrlTable.itemChanged.connect(self.mtrlTable_itemChanged)
@@ -372,6 +403,7 @@ class QuantumTab(QWidget):
         mtrlGrid.addWidget(self.offsetLabel, 2, 0, 1, 2)
         mtrlGrid.addWidget(self.netStrainLabel, 3, 0, 1, 2)
         mtrlGrid.addWidget(self.LOPhononLabel, 4, 0, 1, 2)
+        mtrlGrid.setSpacing(5)
         mtrlGroupBox = QGroupBox("Materials")
         mtrlGroupBox.setLayout(mtrlGrid)
         solveBox.addWidget(mtrlGroupBox)
@@ -392,18 +424,28 @@ class QuantumTab(QWidget):
         self.FoMButton.clicked.connect(self.updateFoM)
         self.filterButton = QPushButton("Filter")
         self.filterButton.clicked.connect(self.filter)
+        self.toOpticsButton = QPushButton("->Optics")
+        self.toOpticsButton.setEnabled(False)
+        # signal is processed in ErwinJr main window
         self.flted = False
         self.stateParmText = QTextEdit('')
         self.stateParmText.setReadOnly(True)
         self.stateParmText.setMaximumWidth(width)
         self.stateParmText.setMinimumWidth(width)
+        self.stateParmText.setMinimumHeight(120)
         self.stateParmText.setSizePolicy(QSizePolicy(
-            QSizePolicy.Fixed, QSizePolicy.Fixed))
+            QSizePolicy.Fixed, QSizePolicy.Expanding))
+        self.stateParmText.textChanged.connect(
+            lambda: self.toOpticsButton.setEnabled(False))
         calculateControlGrid = QGridLayout()
         calculateControlGrid.addWidget(self.pairSelectButton, 0, 0, 1, 2)
         calculateControlGrid.addWidget(self.FoMButton, 1, 0, 1, 1)
-        calculateControlGrid.addWidget(self.filterButton, 1, 1, 1, 1)
+        # TODO: filter button place?
+        # calculateControlGrid.addWidget(self.filterButton, 1, 1, 1, 1)
+        calculateControlGrid.addWidget(self.toOpticsButton, 1, 1, 1, 1)
         calculateControlGrid.addWidget(self.stateParmText, 2, 0, 1, 2)
+        calculateControlGrid.setSpacing(5)
+        # TODO: voltage efficiency, hbar omega / field * Lp
         calculateControlGroupBox = QGroupBox("Calculate")
         calculateControlGroupBox.setLayout(calculateControlGrid)
         solveBox.addWidget(calculateControlGroupBox)
@@ -432,12 +474,12 @@ class QuantumTab(QWidget):
             name = AParm[mtrl]['name']
             name = name.replace("1-x", str(1-self.qclayers.moleFracs[n]))
             name = name.replace("x", str(self.qclayers.moleFracs[n]))
-            name = "#%d "%(n+1)# + name
+            name = "#%d " % (n+1)  # + name
             self.mtrlList.append(name)
 
-#===========================================================================
+# ===========================================================================
 # SettingBox Controls
-#===========================================================================
+# ===========================================================================
     def update_settingBox(self):
         self.updating = True
         self.descBox.setText(self.qclayers.description)
@@ -449,7 +491,7 @@ class QuantumTab(QWidget):
         self.updating = False
 
     def settingslot(fn):
-        """ A decorator to ask slots to skip reaction when doing massive 
+        """ A decorator to ask slots to skip reaction when doing massive
         updating (when self.updating is True)"""
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
@@ -469,7 +511,7 @@ class QuantumTab(QWidget):
         else:
             QMessageBox.information(
                 self, ejError,
-                '%s substrates have not yet been implemented.'%substrateType)
+                '%s substrates have not yet been implemented.' % substrateType)
             self.inputSubstrateBox.setCurrentIndex(
                 self.inputSubstrateBox.findText(self.qclayers.substrate))
             return
@@ -520,6 +562,11 @@ class QuantumTab(QWidget):
         self.dirty.emit()
         self.update_quantumCanvas()
 
+    @pyqtSlot(float)
+    @settingslot
+    def input_wl(self, wl):
+        self.wl = wl
+
     @pyqtSlot()
     def input_basis(self):
         """SLOT connected to self.inputARInjectorCheck.stateChanged(int) and
@@ -551,13 +598,13 @@ class QuantumTab(QWidget):
         SLOT connected to LpFirstSpinbox/LpLastSpinBox.valueChanged(int)
         """
         LpFirst = self.LpFirstSpinbox.value() - 1
-        LpLast = self.LpLastSpinbox.value() 
+        LpLast = self.LpLastSpinbox.value()
         # +1 because range is not inclusive of last value
         # total length of the layers (1 period)
         Lp = sum(self.qclayers.layerWidths[LpFirst:LpLast])
         Lp_string = "Lp: %.1f \u212B<br>" % Lp
         # average doping of the layers
-        ns = sum(self.qclayers.layerDopings[n] 
+        ns = sum(self.qclayers.layerDopings[n]
                  * self.qclayers.layerWidths[n]
                  for n in range(LpFirst, LpLast))
         if Lp == 0:
@@ -565,12 +612,14 @@ class QuantumTab(QWidget):
                           "cm<sup>-3</sup><br>")
         else:
             nD = ns / Lp
-            Lp_string += ("n<sub>D</sub>: %6.3f\u00D710<sup>17</sup>"
+            Lp_string += ("N<sub>D</sub>: %6.3f\u00D710<sup>17</sup>"
                           "cm<sup>-3</sup><br>") % nD
         # 2D carrier density in 1E11cm-2
         ns = ns * 1e-2
-        Lp_string += ("n<sub>s</sub>: %6.3f\u00D710<sup>11</sup>"
-                      "cm<sup>-2</sup") % ns
+        Lp_string += ("N<sub>s</sub>: %6.3f\u00D710<sup>11</sup>"
+                      "cm<sup>-2</sup><br>") % ns
+        Lp_string += ("n<sub>eff</sub>: %.2f" % self.qclayers.effective_ridx(
+            self.inputWlBox.value()))
         self.LpStringBox.setText(Lp_string)
 
     @pyqtSlot()
@@ -587,9 +636,9 @@ class QuantumTab(QWidget):
         self.dirty.emit()
         self.update_quantumCanvas()
 
-#===========================================================================
+# ===========================================================================
 # Layer Table Control
-#===========================================================================
+# ===========================================================================
     def layerTable_refresh(self):
         """Refresh layer table, called every time after data update"""
         # Block itemChanged SIGNAL while refreshing
@@ -598,16 +647,16 @@ class QuantumTab(QWidget):
         self.layerTable.setColumnCount(5)
         # An extra blanck line for adding new layers
         self.layerTable.setRowCount(len(self.qclayers.layerWidths) + 1)
-        vertLabels = [str(n) for n in range(len(self.qclayers.layerWidths))]
+        vertLabels = [str(n+1) for n in range(len(self.qclayers.layerWidths))]
         self.layerTable.setHorizontalHeaderLabels(
             ('Width', 'ML', 'Mtrl', 'AR', 'Doping'))
         self.layerTable.setVerticalHeaderLabels(vertLabels)
 
-        gray2 = QColor(230, 230, 230)  # for unchangable background
+        # gray2 = QColor(230, 230, 230)  # for unchangable background
 
         for q, layerWidths in enumerate(self.qclayers.layerWidths):
             color = self.mtrlcolors[
-                self.qclayers.layerMtrls[q]%len(self.mtrlcolors)]
+                self.qclayers.layerMtrls[q] % len(self.mtrlcolors)]
             # Width Setup
             width = QTableWidgetItem("%5.1f" % layerWidths)
             width.setTextAlignment(Qt.AlignCenter)
@@ -615,8 +664,11 @@ class QuantumTab(QWidget):
             self.layerTable.setItem(q, 0, width)
 
             # "ML" number of monolayer Setup
+            # TODO: monolayer <-> thickness should not include
+            # temperature/strain correction
             mlThickness = self.qclayers.mtrlAlloys[
-                self.qclayers.layerMtrls[q]].a_perp
+                self.qclayers.layerMtrls[q]].a_perp / 2
+            # a_perp has two layer of atoms (one III and one V)
             numML = QTableWidgetItem("%5.1f" % (layerWidths / mlThickness))
             numML.setTextAlignment(Qt.AlignCenter)
             numML.setBackground(color)
@@ -654,16 +706,16 @@ class QuantumTab(QWidget):
         """SLOT connected to self.insertLayerAboveButton.clicked()"""
         row = self.layerTable.currentRow()
         N = len(self.qclayers.materials)
-        if row >= len(self.qclayers.layerWidths) or row < 0: 
+        if row >= len(self.qclayers.layerWidths) or row < 0:
             # Add new lines in the last layer
             row = len(self.qclayers.layerWidths)
             AR = self.qclayers.layerARs[row-1] and self.qclayers.layerARs[0]
             doping = self.qclayers.layerDopings[row-1]
-            mtrlIdx = (self.qclayers.layerMtrls[row-1] + 1)%N
+            mtrlIdx = (self.qclayers.layerMtrls[row-1] + 1) % N
         else:
             AR = self.qclayers.layerARs[row] and self.qclayers.layerARs[row-1]
             doping = self.qclayers.layerDopings[row]
-            mtrlIdx = (self.qclayers.layerMtrls[row-1] - 1)%N
+            mtrlIdx = (self.qclayers.layerMtrls[row-1] - 1) % N
 
         self.qclayers.add_layer(row, 0.0, mtrlIdx, AR, doping)
         self.update_Lp_limits()
@@ -684,13 +736,51 @@ class QuantumTab(QWidget):
             self.qclayers.layerWidths[0] = 0.0
             return
 
+        self.clear_WFs()
         self.qclayers.del_layer(row)
+        self.qclayers.populate_x()
         self.update_Lp_limits()
         self.update_Lp_box()
         self.layerTable_refresh()
         self.layerTable.selectRow(row)
         # Trigger itemSelectionChanged SIGNAL and thus update_quantumCanvas
         self.dirty.emit()
+
+    @pyqtSlot()
+    def optimizeLayer(self):
+        """SLOT connected to self.optimizeLayerButton.clicked()"""
+        n = self.layerTable.currentRow()
+        if not hasattr(self.qclayers, "eigenEs"):
+            QMessageBox.warning(self, ejWarning, "Solve the model first.")
+            return
+        if n < 0 or n > len(self.qclayers.layerWidths):
+            QMessageBox.warning(self, ejError,
+                                "Select the layer to optimize.")
+            return
+        try:
+            Ei = self.qclayers.eigenEs[self.stateHolder[0]]
+            Ej = self.qclayers.eigenEs[self.stateHolder[1]]
+            if Ei > Ej:
+                upper = self.stateHolder[0]
+                lower = self.stateHolder[1]
+            else:
+                upper = self.stateHolder[1]
+                lower = self.stateHolder[0]
+        except IndexError:
+            QMessageBox.warning(self, ejError,
+                                "Select state pair to optimize.")
+            return
+        # TODO
+        self.qclayers.optimizeLayer(n, upper, lower, self.wl)
+        self.layerTable_refresh()
+        self.layerTable.setCurrentCell(n, 0)
+
+    @pyqtSlot()
+    def globalOptimize(self):
+        """SLOT connect to self.globalOptimizeButton.clicked()"""
+        # TODO
+        QMessageBox.warning(self, ejError,
+                            "This feature has not yet implemented.")
 
     @pyqtSlot(QTableWidgetItem)
     def layerTable_itemChanged(self, item):
@@ -702,7 +792,7 @@ class QuantumTab(QWidget):
             raise ValueError("Bad layer width input row number")
         column = item.column()
         if column in (0, 1, 4):
-            try: 
+            try:
                 value = float(item.text())
             except ValueError:
                 # invalid input
@@ -714,14 +804,14 @@ class QuantumTab(QWidget):
             if column == 0:  # column == 0 for Widths column
                 new_width = value
             else:  # column == 1 for "ML" number of monolayers
-                new_width = value * self.qclayers.mtrlAlloys[ 
-                    self.qclayers.layerMtrls[row]].a_perp
+                new_width = value * self.qclayers.mtrlAlloys[
+                    self.qclayers.layerMtrls[row]].a_perp/2
 
             if row == len(self.qclayers.layerWidths):
                 # add row at end of list
                 AR = self.qclayers.layerARs[row-1]
                 doping = self.qclayers.layerDopings[row-1]
-                mtrlIndx = (self.qclayers.layerMtrls[row-1] + 1)%mtrlN
+                mtrlIndx = (self.qclayers.layerMtrls[row-1] + 1) % mtrlN
                 self.qclayers.add_layer(row, new_width, mtrlIndx, AR, doping)
                 row += 1  # used so that last (blank) row is again selected
                 self.update_Lp_limits()
@@ -731,7 +821,7 @@ class QuantumTab(QWidget):
                 self.update_Lp_box()
 
         elif column == 2:
-            # column == 2 for item change in mtrl column, should be 
+            # column == 2 for item change in mtrl column, should be
             # controled by layerTable_materialChanged
             raise Exception("Should not be here")
 
@@ -747,12 +837,12 @@ class QuantumTab(QWidget):
             doping = value
             if row == len(self.qclayers.layerWidths):
                 AR = self.qclayers.layerARs[row-1]
-                mtrlIndx = (self.qclayers.layerMtrls[row-1] + 1)%mtrlN
+                mtrlIndx = (self.qclayers.layerMtrls[row-1] + 1) % mtrlN
                 self.qclayers.add_layer(row, 0.0, mtrlIndx, AR, doping)
                 row += 1  # used so that last (blank) row is again selected
                 self.update_Lp_limits()
                 self.update_Lp_box()
-            else: 
+            else:
                 self.qclayers.layerDopings[row] = doping
 
         else:
@@ -760,7 +850,7 @@ class QuantumTab(QWidget):
 
         if hasattr(self.qclayers, 'eigenEs'):
             delattr(self.qclayers, "eigenEs")
-        self.layerTable_refresh() 
+        self.layerTable_refresh()
         self.layerTable.setCurrentCell(row, column)
         self.update_quantumCanvas()
         self.dirty.emit()
@@ -794,6 +884,11 @@ class QuantumTab(QWidget):
         self.dirty.emit()
 
     @pyqtSlot()
+    def ARonly(self):
+        self.qclayers.basisARonly = not self.qclayers.basisARonly
+        self.clear_WFs()
+
+    @pyqtSlot()
     def copy_structure(self):
         clipboard = QApplication.clipboard()
         string = ''
@@ -801,9 +896,9 @@ class QuantumTab(QWidget):
             string += '%.1f\n' % width
         clipboard.setText(string)
 
-#=========================================================================
+# =========================================================================
 # mtrlTable Control
-#=========================================================================
+# =========================================================================
     def mtrlTable_refresh(self):
         """Set up material table, both format and consistency with qclayers"""
         self.mtrlTable.blockSignals(True)
@@ -816,15 +911,15 @@ class QuantumTab(QWidget):
 
         possibleMtrl = tuple([AParm[m]['name'] for m in
                               qcMaterial[self.qclayers.substrate]])
-        for n, mtrl in enumerate(self.qclayers.materials): 
-            color = self.mtrlcolors[n%len(self.mtrlcolors)]
+        for n, mtrl in enumerate(self.qclayers.materials):
+            color = self.mtrlcolors[n % len(self.mtrlcolors)]
             name = QTableWidgetItem(str(n+1))
             name.setTextAlignment(Qt.AlignCenter)
             name.setBackground(color)
             name.setFlags(Qt.NoItemFlags)
             self.mtrlTable.setItem(n, 0, name)
 
-            # Choose from available materials, according to substrate 
+            # Choose from available materials, according to substrate
             #  mtrlItem = QComboBox()
             mtrlItem = mtrlComboBox()
             mtrlItem.addItems(possibleMtrl)
@@ -844,16 +939,15 @@ class QuantumTab(QWidget):
         self.update_mtrl_info()
         self.delMtrlButton.setEnabled(False)
         self.mtrlTable.blockSignals(False)
-            
+
     def mtrlTable_itemSelectionChanged(self):
         """SLOT connected to mtrlTable.itemSelectionChanged()"""
         self.delMtrlButton.setEnabled(len(self.qclayers.materials) > 2)
 
-
     def mtrlTable_mtrlChanged(self, row, selection):
         """SLOT as partial(self.mtrlTable_mrtlChanged, q)) connected to
         mtrlItem.currentIndexChanged(int) """
-        #not decorated by pyqt because it's not a real slot but a meta-slot
+        # not decorated by pyqt because it's not a real slot but a meta-slot
         self.qclayers.set_mtrl(row, qcMaterial[
             self.qclayers.substrate][selection])
         self.update_mtrl_info()
@@ -866,7 +960,7 @@ class QuantumTab(QWidget):
         Update material definition after user input"""
         column = item.column()
         row = item.row()
-        if column == 0: 
+        if column == 0:
             # change "#" or name column, TODO
             return
         elif column == 1:
@@ -891,7 +985,7 @@ class QuantumTab(QWidget):
             raise ValueError
 
     @pyqtSlot()
-    def add_mtrl(self): 
+    def add_mtrl(self):
         """SLOT connected to self.addMtrlButton.clicked()"""
         self.qclayers.add_mtrl()
         self._update_mtrlList()
@@ -899,7 +993,7 @@ class QuantumTab(QWidget):
         self.layerTable_refresh()
 
     @pyqtSlot()
-    def del_mtrl(self): 
+    def del_mtrl(self):
         """SLOT connected to self.delMtrlButton.clicked()"""
         self.qclayers.del_mtrl(self.mtrlTable.currentRow())
         self._update_mtrlList()
@@ -910,21 +1004,26 @@ class QuantumTab(QWidget):
         """Update labels below mtrlTable"""
         # TODO: why averaging?
         self.offsetLabel.setText(
-            '<center>ΔE<sub>c</sub>: <b>%6.0f meV </b></center>' % (
-            self.qclayers.offset() * 1000))
+            '<center>ΔE<sub>c</sub>: <b>%6.0f meV </b></center>' %
+            (self.qclayers.offset() * 1000))
         self.netStrainLabel.setText(
-            "<center>Net Strain: <b>%6.3f%%</b></center>" % 
+            "<center>Net Strain: <b>%6.3f%%</b></center>" %
             self.qclayers.netStrain())
         self.LOPhononLabel.setText(
-            "<center>E<sub>LO</sub>: <b>%4.1f meV</b></center>" % 
-            self.qclayers.avghwLO())
+            "<center>E<sub>LO</sub>: <b>%4.1f meV</b></center>" %
+            (1000*self.qclayers.avghwLO()))
 
-#=========================================================================
+# =========================================================================
 # Quantum Tab Plotting and Plot Control
-#=========================================================================
+# =========================================================================
     def update_quantumCanvas(self):
         """Update the canvas to show band diagram, and if self.quantum has
         eigen states infomation (.hasattr("eigenEs")), draw wavefuntions"""
+        if self.plotControl.zoomed:
+            xmin, xmax = self.quantumCanvas.axes.get_xlim()
+            ymin, ymax = self.quantumCanvas.axes.get_ylim()
+        else:
+            xmin = xmax = ymin = ymax = None
         self.qclayers.populate_x()
         self.quantumCanvas.clear()
         self.quantumCanvas.axes.plot(self.qclayers.xPoints,
@@ -943,14 +1042,14 @@ class QuantumTab(QWidget):
 
         # highlight selected layer & make AR layers bold
         self.quantumCanvas.axes.plot(
-            self.qclayers.xPoints, 
-            self.qclayers.xLayerAR(), 
+            self.qclayers.xPoints,
+            self.qclayers.xLayerAR(),
             'k', linewidth=1.5)
-        if self.qclayers.layerSelected != None: 
-            #layerSelected == 0 is meaningful so explictely None
+        if self.qclayers.layerSelected is not None:
+            # layerSelected == 0 is meaningful so explictely None
             self.quantumCanvas.axes.plot(
                 self.qclayers.xPoints,
-                self.qclayers.xLayerSelected(), 
+                self.qclayers.xLayerSelected(),
                 'b', linewidth=1.5 if self.qclayers.layerARs[
                     self.qclayers.layerSelected] else 1)
 
@@ -962,7 +1061,7 @@ class QuantumTab(QWidget):
                 self.wfs = self.qclayers.psis * plotconfig["wfscale"]
             # filter almost zero part
             for n in range(self.qclayers.eigenEs.size):
-                wf = self.wfs[n,:]
+                wf = self.wfs[n, :]
                 nonzero, = np.where(abs(wf) > plotconfig["wf_almost_zero"])
                 if nonzero.size:
                     first, last = nonzero[[0, -1]]
@@ -988,7 +1087,16 @@ class QuantumTab(QWidget):
                     self.qclayers.xPoints,
                     self.wfs[n, :] + self.qclayers.eigenEs[n],
                     'k', linewidth=2)
+            if self.qclayers.periodic and self.showPbound:
+                field = -self.qclayers.xPoints * self.qclayers.EField * EUnit
+                for E in (self.qclayers.Emin, self.qclayers.Emax):
+                    self.quantumCanvas.axes.plot(
+                        self.qclayers.xPoints, E + field,
+                        'k--', linewidth=0.5)
 
+        if xmin is not None:
+            self.quantumCanvas.axes.set_xlim(xmin, xmax)
+            self.quantumCanvas.axes.set_ylim(ymin, ymax)
         self.quantumCanvas.draw()
 
     @pyqtSlot(bool)
@@ -1024,7 +1132,6 @@ class QuantumTab(QWidget):
         self.pairSelectButton.setEnabled(False)
         self.update_quantumCanvas()
 
-
 # ===========================================================================
 # Export Functions
 # ===========================================================================
@@ -1049,7 +1156,6 @@ class QuantumTab(QWidget):
                 np.column_stack([self.qclayers.xPoints, xyPsiPsiEig]),
                 delimiter=',')
 
-
 # ===========================================================================
 # View Band Items
 # ===========================================================================
@@ -1059,31 +1165,23 @@ class QuantumTab(QWidget):
         self.update_quantumCanvas()
 
     def view_VXBand(self):
-        if self.plotVX:
-            self.plotVX = False
-        else:
-            self.plotVX = True
+        self.plotVX = not self.plotVX
         self.update_quantumCanvas()
 
     def view_VLBand(self):
-        if self.plotVL:
-            self.plotVL = False
-        else:
-            self.plotVL = True
+        self.plotVL = not self.plotVL
         self.update_quantumCanvas()
 
     def view_LHBand(self):
-        if self.plotLH:
-            self.plotLH = False
-        else:
-            self.plotLH = True
+        self.plotLH = not self.plotLH
         self.update_quantumCanvas()
 
     def view_SOBand(self):
-        if self.plotSO:
-            self.plotSO = False
-        else:
-            self.plotSO = True
+        self.plotSO = not self.plotSO
+        self.update_quantumCanvas()
+
+    def view_PBound(self):
+        self.showPbound = not self.showPbound
         self.update_quantumCanvas()
 
     def set_plotwf(self):
@@ -1094,7 +1192,7 @@ class QuantumTab(QWidget):
         if self.fillplot:
             self.fillplot = False
         else:
-            self.fillplot=0.3
+            self.fillplot = 0.3
         self.update_quantumCanvas()
 
 
@@ -1103,7 +1201,7 @@ class QuantumTab(QWidget):
 # ===========================================================================
     @pyqtSlot(bool)
     def calcRepaint(self, is_doing):
-        """SLOT connect to self.calculating, 
+        """SLOT connect to self.calculating,
         UI repaint for doing calculating """
         for button in (self.solveWholeButton, self.solveBasisButton,
                        self.pairSelectButton):
@@ -1132,6 +1230,7 @@ class QuantumTab(QWidget):
         self.calculating.emit(False)
 
     def filter(self):
+        # TODO
         if self.flted:
             self.solve_whole()
             self.flted = False
@@ -1190,6 +1289,9 @@ class QuantumTab(QWidget):
             r = np.nanmin(sqrt(((xData - x) / xScale)**2 +
                                ((yData - y) / yScale)**2), axis=0)
             ss = np.nanargmin(r)
+            if len(self.stateHolder) == 1 and self.stateHolder[0] == ss:
+                r[ss] = np.nan
+                ss = np.nanargmin(r)
             self.stateHolder.append(ss)
             #  self.curveWF[ss].set_color('black')
             #  self.curveWF[ss].set_linewidth(2)
@@ -1221,10 +1323,10 @@ class QuantumTab(QWidget):
             upper = self.stateHolder[1]
             lower = self.stateHolder[0]
 
-        self.eDiff = 1000 * (Ei - Ej) # from eV to meV
-        self.wavelength = h * c0 / (e0 * np.abs(Ei - Ej)) * 1e6 #um
+        self.eDiff = 1000 * (Ei - Ej)  # from eV to meV
+        self.wavelength = h * c0 / (e0 * np.abs(Ei - Ej)) * 1e6  # um
 
-        if self.solveType is 'basis':
+        if self.solveType == 'basis':
             couplingEnergy = self.qclayers.coupleBroadening(upper, lower)
             self.transitionBroadening = self.qclayers.ifrBroadening(
                 upper, lower)
@@ -1245,14 +1347,15 @@ class QuantumTab(QWidget):
                     self.opticalDipole,
                     self.tauUpperLower)
 
-        elif self.solveType is 'whole':
+        elif self.solveType == 'whole':
             self.opticalDipole = self.qclayers.dipole(upper, lower)
             self.tauUpperLower = 1 / self.qclayers.loTransition(
                 upper, lower)
             self.transitionBroadening = 0.1 * self.eDiff  # TODO
             self.pairString = (
                 "selected: %d, %d<br>"
-                "energy diff: <b>%6.1f meV</b> (%6.1f \u00B5m)<br>"
+                "energy diff:<br>&nbsp;&nbsp;"
+                "<b>%6.1f meV</b> (%6.1f \u00B5m)<br>"
                 "dipole: %6.1f \u212B<br>" "LO scattering: %6.3g ps<br>"
             ) % (self.stateHolder[0], self.stateHolder[1], self.eDiff,
                  self.wavelength, self.opticalDipole, self.tauUpperLower)
@@ -1279,18 +1382,19 @@ class QuantumTab(QWidget):
         tauUpper = self.qclayers.loLifeTime(upper)
         tauLower = self.qclayers.loLifeTime(lower)
         FoM = self.qclayers.calc_FoM(upper, lower)
+        gaincoeff = self.qclayers.gainCoefficient(upper, lower)
         # tauUpperLower is the inverse of transition rate (lifetime)
-        self.alphaISB = self.qclayers.alphaISB(upper, lower)
 
         self.FoMString = (
             "<i>\u03C4<sub>upper</sub></i> : %6.3f ps<br>"
-            "<i>\u03C4<sub>lower</sub></i> : %6.3f ps"
-            "<br>FoM: <b>%6.0f ps \u212B<sup>2</sup></b>"
-            "<br><i>\u03B1<sub>ISB</sub></i> : %.3f cm<sup>2</sup>") % (
-                tauUpper, tauLower, FoM, self.alphaISB)
+            "<i>\u03C4<sub>lower</sub></i> : %6.3f ps<br>"
+            "FoM: <b>%6.0f ps \u212B<sup>2</sup></b><br>"
+            "Gain coefficient:<br>&nbsp;&nbsp; %.2f cm/kA"
+            ) % (tauUpper, tauLower, FoM, gaincoeff)
         self.stateParmText.setText(self.pairString + self.FoMString)
 
         self.calculating.emit(False)
         self.FoMButton.setEnabled(True)
+        self.toOpticsButton.setEnabled(True)
 
 # vim: ts=4 sw=4 sts=4 expandtab
