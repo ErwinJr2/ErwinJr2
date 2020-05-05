@@ -20,13 +20,13 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'ErwinJr2'
-copyright = '2018, Gmachl Group, Princeton'
+copyright = '2020, Gmachl Group, Princeton'
 author = 'Ming Lyu, Yaofeng (Desmond) Zhong, Xiaowen Chen'
 
 # The short X.Y version
-version = '0.1'
+version = '1.0'
 # The full version, including alpha/beta/rc tags
-release = '0.1'
+release = '1.0 alpha'
 
 
 # -- General configuration ---------------------------------------------------
@@ -50,9 +50,9 @@ extensions = [
     'sphinxcontrib.bibtex',
     'breathe',
 ]
-breathe_projects = { "OneDQuantum": "../OneDQuantum/docs/xml/"}
+breathe_projects = {"OneDQuantum": "../OneDQuantum/docs/xml/"}
 breathe_default_project = "OneDQuantum"
-breathe_domain_by_extension = { "h" : "c" , "c" : "c"}
+breathe_domain_by_extension = {"h": "c", "c": "c"}
 autosummary_generate = True
 napoleon_use_rtype = False
 
