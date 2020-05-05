@@ -19,7 +19,7 @@ from PyQt5.QtCore import (QSettings, QFile, QUrl,
 from PyQt5.QtGui import QIcon, QKeySequence, QDesktopServices
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTabWidget,
                              QAction, QMessageBox, QFileDialog,
-                             QInputDialog, QSplashScreen)
+                             QInputDialog)
 
 from QuantumTab import QuantumTab
 from OpticalTab import OpticalTab
@@ -73,7 +73,7 @@ class MainWindow(QMainWindow):
 
         self.mainTabWidget = QTabWidget()
         self._setTabs(qclayers, stratum)
-        self.mainTabWidget.setCurrentIndex(1)
+        # self.mainTabWidget.setCurrentIndex(1)
 
         self.setCentralWidget(self.mainTabWidget)
         self.create_menu()
