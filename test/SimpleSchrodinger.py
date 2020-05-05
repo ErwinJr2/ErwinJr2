@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 from context import *
-from OneDQuantum import *
+from OneDQuantum import OneDSchrodinger, cSimpleSolve1D, cSimpleFillPsi
 import numpy as np
 import unittest
 from scipy.constants import hbar, e, m_e, pi
+from scipy.special import airy, ai_zeros
 
 ANG = 1E-10
 # test precision
 wf_dec = 3
-E_dec  = 6
+E_dec = 6
 
 
 class TestSimpleSchrodinger(unittest.TestCase):
@@ -24,14 +25,14 @@ class TestSimpleSchrodinger(unittest.TestCase):
         psis = cSimpleFillPsi(step, EigenEs, V, mass)
 
         # Theoretical result
-        an = np.arange(1,5)
+        an = np.arange(1, 5)
         EigenEs_th = hbar**2/(2*m_e*mass)*an**2*pi**2/(xmax*ANG)**2/e
         psis_th = np.sqrt(2/xmax) * np.sin(np.outer(an, x) * pi / xmax)
 
-        np.testing.assert_array_almost_equal(EigenEs[:len(an)], EigenEs_th, 
-                                             decimal=E_dec, verbose=True)
-        np.testing.assert_array_almost_equal(psis[:len(an),:], psis_th,
-                                             decimal=wf_dec, verbose=True)
+        np.testing.assert_array_almost_equal(
+            EigenEs[:len(an)], EigenEs_th, decimal=E_dec, verbose=True)
+        np.testing.assert_array_almost_equal(
+            psis[:len(an), :], psis_th, decimal=wf_dec, verbose=True)
 
     def test_trangle_well(self):
         F = 2e-4
@@ -46,7 +47,6 @@ class TestSimpleSchrodinger(unittest.TestCase):
 
         # Theoretical result
         nmax = 8
-        from scipy.special import airy, ai_zeros
         an = ai_zeros(nmax)[0]
         EigenEs_th = -(hbar**2*F**2/(2*m_e*mass*e*ANG**2))**(1/3)*an
         psis_th = np.array([airy((2*mass*m_e*e*ANG**2*F/hbar**2)**(1/3)
@@ -57,6 +57,7 @@ class TestSimpleSchrodinger(unittest.TestCase):
                                              decimal=E_dec, verbose=True)
         np.testing.assert_array_almost_equal(psis[:nmax, ::-1], psis_th,
                                              decimal=wf_dec, verbose=True)
+
 
 if __name__ == "__main__":
     import sys
