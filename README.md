@@ -12,6 +12,42 @@ This is a extendable Python/C program for 1D quantum problem and Quantum Cascade
 
 `OneDQuantum` is A C lib for 1D quantum problem, with python interface. 
 
+
+Installation
+---------------
+The software is based on Python3, and dependent packages are listed in 
+`requirements.txt`: 
+`doxygen` and `OpenMP` are optional. For Windows users Visual Studio as compiler
+is also supported. 
+
+The software requires some compilation to be installed. 
+To compile, run the Python script `install.py`. 
+
+### Windows ###
+Anaconda with `numpy`, `scipy` and `matplotlib` is recommended. 
+To get best performance, using Visual Studio as compiler is recommended: 
+go to the directory of ErwinJr2, run the following command in Anaconda Prompt
+
+```
+pip install -r requirements.txt
+python install.py msbuild=[PATH to MSBuild.exe]
+```
+where `[PATH to MSBuild.exe]` will be Visual Studio version dependent, 
+for example `'C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe'`
+
+### Linux and MacOS ###
+```
+pip3 install -r requirements.txt
+python install.py
+```
+For MacOS specifically, to enable multi-processing with `OpenMP`, `gcc` is 
+required. By default `gcc` in MacOS command line is actually `clang`, and to 
+call real `gcc` we need to specify the version number, so 
+the second command needs to be 
+```
+CC=gcc-9 python install.py
+```
+
 ## TODO list
 - [X] OpenMP support
 - [X] Material parameters

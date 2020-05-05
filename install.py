@@ -4,6 +4,7 @@
 # TODO: add dependence check
 
 import os, sys, subprocess
+from subprocess import CalledProcessError
 
 
 def build_clib(path, MSBuild=None):
