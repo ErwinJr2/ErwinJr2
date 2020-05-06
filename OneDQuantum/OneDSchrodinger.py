@@ -13,7 +13,7 @@ __all__ = ['cSimpleSolve1D', 'cSimpleFillPsi',
 _doubleArray = np.ctypeslib.ndpointer(
     dtype=np.float64, ndim=1, flags="C_CONTIGUOUS")
 _intArray = np.ctypeslib.ndpointer(
-    dtype=np.int64, ndim=1, flags="C_CONTIGUOUS")
+    dtype=np.int32, ndim=1, flags="C_CONTIGUOUS")
 
 
 def bindOpenMP(on=True):
@@ -98,8 +98,8 @@ def cSimpleFillPsi(step, EigenEs, V, m, xmin=0, xmax=None):
     psis = np.empty(EigenEs.size*(xmax-xmin))
     _clib.FillPsi(c_double(step), xmax-xmin, EigenEs, EigenEs.size,
                   V[xmin:xmax], m[xmin:xmax], psis,
-                  np.zeros(xmax-xmin, dtype=np.int64),
-                  (xmax-xmin)*np.ones(xmax-xmin, dtype=np.int64),
+                  np.zeros(xmax-xmin, dtype=np.int32),
+                  (xmax-xmin)*np.ones(xmax-xmin, dtype=np.int32),
                   None)
     return psis.reshape((EigenEs.size, xmax-xmin))
 
@@ -126,14 +126,14 @@ def cBandFillPsi(step, EigenEs, V, band, xmin=0, xmax=None,
     psis = np.empty(EigenEs.size*(xmax-xmin))
     if field is not None:
         starts = np.floor((Elower - EigenEs)/(field*step*1E-5)
-                          ).astype(np.int64)
+                          ).astype(np.int32)
         starts[starts < xmin] = xmin
         ends = np.ceil((Eupper - EigenEs)/(field*step*1E-5)
-                       ).astype(np.int64)
+                       ).astype(np.int32)
         ends[ends > xmax] = xmax
     else:
-        starts = np.zeros(xmax-xmin, dtype=np.int64)
-        ends = (xmax-xmin)*np.ones(xmax-xmin, dtype=np.int64)
+        starts = np.zeros(xmax-xmin, dtype=np.int32)
+        ends = (xmax-xmin)*np.ones(xmax-xmin, dtype=np.int32)
     _clib.FillPsi(c_double(step), xmax-xmin, EigenEs, EigenEs.size,
                   V[xmin:xmax], np.empty(0), psis,
                   starts, ends, band.c)

@@ -408,7 +408,7 @@ numpyint Solve1DBonded(double step, numpyint N,
     int length;
     /* convert kV/cm to eV/pixal */
     field *= ANG*step*1E5;
-    length = ceil((Eupper - Elower)/field);
+    length = (int) ceil((Eupper - Elower)/field);
 #ifdef _DEBUG
     if(mat != NULL) {
         assert(N == mat->N);
@@ -440,7 +440,7 @@ numpyint Solve1DBonded(double step, numpyint N,
 #endif
         for(i=0; i < EN; i++) {
             double E = Es[i];
-            int start = floor((Elower - E)/field);
+            int start = (int) floor((Elower - E)/field);
             if(start < 0)
                 start = 0;
             if(mat != NULL) { 
@@ -471,7 +471,7 @@ numpyint Solve1DBonded(double step, numpyint N,
                 E0 = findZero(E2, yend[i], E1, yend[i-1]);
 #ifndef SIMPLE
                 int count=0; 
-                int start = floor((Elower - E0)/field);
+                int start = (int) floor((Elower - E0)/field);
                 if(start < 0)
                     start = 0;
                 if(mat != NULL) { 
@@ -503,7 +503,7 @@ numpyint Solve1DBonded(double step, numpyint N,
                     if(mat != NULL) { 
                         UpdateBand(mat, E0, V, mband);
                     }
-                    start = floor((Elower - E0)/field);
+                    start = (int) floor((Elower - E0)/field);
                     if(start < 0)
                         start = 0;
                     y0 = ode(step, start+length<=N ? length : N-start,
@@ -654,7 +654,7 @@ __declspec(dllexport)
  *                       EigenEs[n] > EigenEs[m] (mod Eshift)
  */
 void LOMatrix(double step, numpyint N, const double *EigenEs, numpyint EN, 
-        double *psis, const double *masses, double Eshift, int xShift,
+        double *psis, const double *masses, double Eshift, numpyint xShift,
         double *loMatrix){
     /*TODO*/
 }
