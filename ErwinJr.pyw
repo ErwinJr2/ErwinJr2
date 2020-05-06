@@ -98,7 +98,7 @@ class MainWindow(QMainWindow):
         # ==========================
         self.otab = OpticalTab(stratum)
         self.otab.dirty.connect(self.thingsChanged)
-        self.mainTabWidget.addTab(self.otab, 'Optical')
+        self.mainTabWidget.addTab(self.otab, 'Optics')
         self.qtab.toOpticsButton.clicked.connect(self.q2o)
         self.otab.fieldBox.setValue(qclayers.EField)
 
@@ -426,10 +426,14 @@ class MainWindow(QMainWindow):
 # Help Menu Items
 # ===========================================================================
     def on_about(self):
-        msg = """ ErwinJr2 0.x Authors and Contributors
+        msg = """ErwinJr2 1.0 Authors
+
+        * Ming Lyu
+            minglyu@princeton.edu
+
+        ErwinJr2 0.x Authors and Contributors
 
          * Ming Lyu
-            minglyu@princeton.edu
          * Yaofeng (Desmond) Zhong
          * Xiaowen Chen
 

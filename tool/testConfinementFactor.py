@@ -9,7 +9,7 @@ from OptStrata import MaxwellLayer
 def firstGaAs():
     wl = 9.4
     hs = [0.7,  1.0,  1.55, 1.4,  1.4,  0.6]
-    ns = np.array([1.0, 0.32, 2.8+5j, 3.27, 3.21, 3.27, 2.80, 2.68])
+    ns = np.array([1.0, 3.23, 2.87, 3.23, 3.21, 3.23, 2.87, 2.68])
     stratum = MaxwellLayer(wl, ns, hs)
     beta = stratum.boundModeTM(max(ns.real))
     xs = np.linspace(-1, sum(hs)+1, 10000)

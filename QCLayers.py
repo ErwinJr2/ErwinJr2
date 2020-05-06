@@ -25,64 +25,63 @@ qcMaterial = {
 
 
 class QCLayers(object):
-    """
-    Class for Quantum Cascade Layers
+    r"""Class for Quantum Cascade Layers
 
-    Parameters
-    ----------
-    substrate : str
-        The substrate material for the device, which determines the well and
-        barrier material
+Parameters
+----------
+substrate : str
+    The substrate material for the device, which determines the well and
+    barrier material
 
-        =========    ==================================   ==================================
-        substrate             well                        barrier
-        =========    ==================================   ==================================
-        InP          In :math:`_x` Ga :math:`_{1-x}` As   Al :math:`_{1-x}` In :math:`_x` As
-        GaAs         Al :math:`_x` Ga :math:`_{1-x}` As   Al :math:`_x` Ga :math:`_{1-x}` As
-        GaSb         InAs :math:`_y` Sb :math:`_{1-y}`    Al :math:`_x` Ga :math:`_{1-x}` Sb
-        =========    ==================================   ==================================
+    ========= ================================ ================================
+    substrate              well                         barrier
+    ========= ================================ ================================
+    InP       In\ :sub:`x`\ Ga\ :sub:`1-x`\ As Al\ :sub:`1-x`\ In\ :sub:`x`\ As
+    GaAs      Al\ :sub:`x`\ Ga\ :sub:`1-x`\ As Al\ :sub:`x`\ Ga\ :sub:`1-x`\ As
+    GaSb      InAs\ :sub:`y`\ Sb\ :sub:`1-y`   Al\ :sub:`x`\ Ga\ :sub:`1-x`\ Sb
+    ========= ================================ ================================
 
-    materials : list of str, len = 2
-        Name of alloys
-    moleFrac : list of float
-        mole fraction for each possible layer material,
-        in format [well, barrier]*4
-    xres : float
-        Position resolution, in armstrong
-    Eres : float
-        External (static) electrical field, in kV/cm = 1e5 V/m
+materials : list of str, len = 2
+    Name of alloys
+moleFrac : list of float
+    mole fraction for each possible layer material,
+    in format [well, barrier]*4
+xres : float
+    Position resolution, in armstrong
+Eres : float
+    External (static) electrical field, in kV/cm = 1e5 V/m
 
-    layerWidths : list of float, len = No. of layers
-        Width of each layer, in mm
-    layerMtrls : list of int, len = No. of layers
-        Label of materials, depending on substrate
-    layerDopings : list of float, len = No. of layers
-        Doping per volumn in unit 1e17 cm-3
-    layerARs : list of bool, len = No. of layers
-        Binaries indicating if the layer is active(True) or not(False),
-        only affects basis solver
+layerWidths : list of float, len = No. of layers
+    Width of each layer, in mm
+layerMtrls : list of int, len = No. of layers
+    Label of materials, depending on substrate
+layerDopings : list of float, len = No. of layers
+    Doping per volumn in unit 1e17 cm-3
+layerARs : list of bool, len = No. of layers
+    Binaries indicating if the layer is active(True) or not(False),
+    only affects basis solver
 
-    EField : float
-        External (static) electrical field, in kV/cm = 1e5 V/m
-    repeats : int
-        Number of repeat times for the given structure
-    T : float
-        Temperature of the device, affecting material property
-    Solver : str
-        Name of solver
-    description : str
-        Description of the data
+EField : float
+    External (static) electrical field, in kV/cm = 1e5 V/m
+repeats : int
+    Number of repeat times for the given structure
+T : float
+    Temperature of the device, affecting material property
+Solver : str
+    Name of solver
+description : str
+    Description of the data
 
 
-    Other Parameters
-    --------------------
-    NonParabolic : bool
-        A flag to decide whether to use a constant effective mass, assuming
-        perfect parabolic dispersion or an energy dependent effective mass
-        to correct non-parabolic dispersion relation of electrons.
-    layerSelected : int
-        a label indicating which layer is selected in GUI, with default None
-        indicating no layer is selected
+Other Parameters
+--------------------
+NonParabolic : bool
+    A flag to decide whether to use a constant effective mass, assuming
+    perfect parabolic dispersion or an energy dependent effective mass
+    to correct non-parabolic dispersion relation of electrons.
+layerSelected : int
+    a label indicating which layer is selected in GUI, with default None
+    indicating no layer is selected
     """
     def __init__(self, substrate="InP", materials=["InGaAs", "AlInAs"],
                  moleFracs=[0.53, 0.52], xres=0.5, Eres=0.5,
@@ -641,7 +640,7 @@ class QCLayers(object):
                           (1 - m.moleFrac) * rIdx[m.B.name](wl))
                          for m in self.mtrlAlloys]
         self.layerRIdx = np.array([self.mtrlRIdx[n] for n in self.layerMtrls])
-        return np.average(1/self.layerRIdx**2, 
+        return np.average(1/self.layerRIdx**2,
                           weights=self.layerWidths)**(-1/2)
 
     def coupleBroadening(self, upper, lower):

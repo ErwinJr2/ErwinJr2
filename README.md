@@ -72,11 +72,12 @@ pip install -r docs/requirements.txt
 - [X] Finite temperature Fermi-Dirac distribution
 - [X] QCLayer class
 - [X] Save/Load using json
-- [ ] setup.py update
+- [X] install.py update
 - [ ] Test case improve
 - [X] Documents
 - [X] Profile
-- [X] ?Travis CI automatic testing
+- [X] Travis CI automatic testing
+- [ ] Formatting doc strings of GUI widgets for sphinx
 - [ ] ?coveralls.io
 - [ ] ?codacy
 - [ ] ?CFFI or SWIG

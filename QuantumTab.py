@@ -38,6 +38,18 @@ from versionAndName import ejError, ejWarning
 from darkDetect import isdark
 
 
+def settingslot(fn):
+    """ A decorator to ask slots to skip reaction when doing massive
+    updating (when self.updating is True)"""
+    @wraps(fn)
+    def wrapper(self, *args, **kwargs):
+        if self.updating:
+            return
+        else:
+            return fn(self, *args, **kwargs)
+    return wrapper
+
+
 class QuantumTab(QWidget):
     """The Quantum Tab of ErwinJr. This is designed to be a GUI wrapper of
     the class QCLayers
@@ -495,17 +507,6 @@ class QuantumTab(QWidget):
         self.inputEresBox.setValue(self.qclayers.Eres)
         self.inputRepeatsBox.setValue(self.qclayers.repeats)
         self.updating = False
-
-    def settingslot(fn):
-        """ A decorator to ask slots to skip reaction when doing massive
-        updating (when self.updating is True)"""
-        @wraps(fn)
-        def wrapper(self, *args, **kwargs):
-            if self.updating:
-                return
-            else:
-                return fn(self, *args, **kwargs)
-        return wrapper
 
     @pyqtSlot('QString')
     @settingslot
