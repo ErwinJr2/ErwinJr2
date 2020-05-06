@@ -10,7 +10,10 @@ dev:
 
 This is a extendable Python/C program for 1D quantum problem and Quantum Cascade Laser simulation. 
 
-`OneDQuantum` is A C lib for 1D quantum problem, with python interface. 
+`OneDQuantum` is a C lib for 1D quantum problem, with python interface. 
+
+In the following a simple installation guide is included. A more comprehensive 
+documents can be found [here](https://erwinjr2.readthedocs.io/)
 
 
 Installation
@@ -43,9 +46,19 @@ python install.py
 For MacOS specifically, to enable multi-processing with `OpenMP`, `gcc` is 
 required. By default `gcc` in MacOS command line is actually `clang`, and to 
 call real `gcc` we need to specify the version number, so 
-the second command needs to be 
+the second command needs to be, 
 ```
 CC=gcc-9 python install.py
+```
+or to modify the `OneDQuantum/Makefile` to include the `OpenMP` 
+library for `clang`. 
+
+### Build local documentation ###
+During the installation you will be asked if you want to build local 
+documentation. It's optional but if you choose yes, dependencies for building 
+`sphinx` documentation is required. 
+```
+pip install -r docs/requirements.txt
 ```
 
 ## TODO list
