@@ -471,7 +471,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                           copyright.strip())
 
     def on_tutorial(self):
-        QDesktopServices.openUrl(QUrl("./docs/_build/html/index.html"))
+        path = "docs/_build/html/index.html"
+        if os.path.exists(path):
+            QDesktopServices.openUrl(QUrl("file://" + os.path.abspath(path)))
+        else:
+            QDesktopServices.openUrl(QUrl("https://erwinjr2.readthedocs.io/"))
 
 
 def main(filename=None):
