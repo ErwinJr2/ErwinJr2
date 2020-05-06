@@ -65,14 +65,14 @@ class OpticalTab(QWidget):
         self.setBackgroundRole(QPalette.Window)
 
         if sys.platform.startswith('win'):
-            settingBoxWidth = 350
-            strataBoxWidth = 375
+            settingBoxWidth = 200
+            strataBoxWidth = 350
         elif sys.platform.startswith('darwin'):
             settingBoxWidth = 350
             strataBoxWidth = 370
         elif sys.platform.startswith('linux'):
             settingBoxWidth = 350
-            strataBoxWidth = 375
+            strataBoxWidth = 350
         else:
             settingBoxWidth = 350
             strataBoxWidth = 375
