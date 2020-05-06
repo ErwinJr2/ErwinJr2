@@ -12,10 +12,8 @@
 #define ANG 1E-10  /**< \f$ 10^{-10} \f$ m */
 /* Angstrom in meter: all unit for length is Angstrom in the program */
 
+typedef int32_t numpyint;
 #ifdef _WINDLL
 #define M_PI 3.14159265358979323846
-typedef int32_t numpyint;
-#else
-typedef int64_t numpyint;
 #endif
 #endif /* ifndef __SCIENCE */
