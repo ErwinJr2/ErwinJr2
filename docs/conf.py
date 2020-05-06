@@ -14,6 +14,13 @@
 #
 import os
 import sys
+import subprocess
+
+# generate doxygen files
+read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
+if read_the_docs_build:
+    subprocess.call('cd ../OneDQuantum/docs; doxygen', shell=True)
+
 sys.path.insert(0, os.path.abspath('..'))
 
 

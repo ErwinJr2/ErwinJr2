@@ -30,7 +30,7 @@ go to the directory of ErwinJr2, run the following command in Anaconda Prompt
 
 ```
 pip install -r requirements.txt
-python install.py msbuild=[PATH to MSBuild.exe]
+python install.py --msbuild=[PATH to MSBuild.exe]
 ```
 where `[PATH to MSBuild.exe]` will be Visual Studio version dependent, 
 for example `'C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe'`
