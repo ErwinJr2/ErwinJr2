@@ -4,9 +4,11 @@ of 1D waveguiding
 """
 
 from functools import partial
+import sys
 import numpy as np
 from numpy import log, pi
 from PyQt5.QtCore import pyqtSignal, Qt
+from PyQt5.QtGui import QPalette
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
                              QLabel, QComboBox, QGroupBox, QDoubleSpinBox,
                              QSpinBox,
@@ -59,10 +61,26 @@ class OpticalTab(QWidget):
         self.select = None
         self.redActive = False
 
+        self.setAutoFillBackground(True)
+        self.setBackgroundRole(QPalette.Window)
+
+        if sys.platform.startswith('win'):
+            settingBoxWidth = 350
+            strataBoxWidth = 375
+        elif sys.platform.startswith('darwin'):
+            settingBoxWidth = 350
+            strataBoxWidth = 370
+        elif sys.platform.startswith('linux'):
+            settingBoxWidth = 350
+            strataBoxWidth = 375
+        else:
+            settingBoxWidth = 350
+            strataBoxWidth = 375
+
         opticalLayout = QHBoxLayout()
         opticalLayout.setSpacing(0)
-        opticalLayout.addLayout(self._settingBox(350))
-        opticalLayout.addLayout(self._strataBox(375))
+        opticalLayout.addLayout(self._settingBox(settingBoxWidth))
+        opticalLayout.addLayout(self._strataBox(strataBoxWidth))
         figureBox = QVBoxLayout()
         self.optCanvas = EJcanvas(xlabel='Position $x$ (μm)',
                                   ylabel='Refractive index $n$')
