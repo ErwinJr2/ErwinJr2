@@ -56,7 +56,8 @@ library for `clang`.
 ### Build local documentation ###
 During the installation you will be asked if you want to build local 
 documentation. It's optional but if you choose yes, dependencies for building 
-`sphinx` documentation is required. 
+`sphinx` documentation is required: run the following command before
+`install.py` script.
 ```
 pip install -r docs/requirements.txt
 ```
