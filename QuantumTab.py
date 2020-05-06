@@ -147,7 +147,7 @@ class QuantumTab(QWidget):
 
         # Platform dependent settings, eg. layerout size settings
         if sys.platform.startswith('win'):
-            settingBoxWidth = 130
+            settingBoxWidth = 150
             layerBoxWidth = 230
             solveBoxWidth = 170
         elif sys.platform.startswith('darwin'):
@@ -202,6 +202,7 @@ class QuantumTab(QWidget):
         settingBox.addWidget(QLabel(
             "<center><b>Substrate</b></center>"))
         self.inputSubstrateBox = QComboBox()
+        self.inputSubstrateBox.setMaximumWidth(width)
         self.inputSubstrateBox.addItems(qcMaterial.keys())
         self.inputSubstrateBox.currentIndexChanged[str].connect(
             self.input_substrate)
@@ -210,6 +211,7 @@ class QuantumTab(QWidget):
         settingBox.addWidget(QLabel(
             '<center><b><i>E<sub>field</sub></i></b></center>'))
         self.inputEFieldBox = QDoubleSpinBox()
+        self.inputEFieldBox.setMaximumWidth(width)
         self.inputEFieldBox.setDecimals(1)
         self.inputEFieldBox.setSuffix(' kV/cm')
         self.inputEFieldBox.setRange(-250.0, 250.0)
@@ -219,6 +221,7 @@ class QuantumTab(QWidget):
         settingBox.addWidget(QLabel(
             '<center><b>Position<br>Resolution</b></center>'))
         self.inputxResBox = QDoubleSpinBox()
+        self.inputxResBox.setMaximumWidth(width)
         self.inputxResBox.setDecimals(2)
         self.inputxResBox.setRange(0.01, 1.0)
         self.inputxResBox.setSingleStep(0.1)
@@ -229,6 +232,7 @@ class QuantumTab(QWidget):
         settingBox.addWidget(QLabel(
             '<center><b>Energy<br>Resolution</b></center>'))
         self.inputEresBox = QDoubleSpinBox()
+        self.inputEresBox.setMaximumWidth(width)
         self.inputEresBox.setDecimals(2)
         self.inputEresBox.setRange(0.0, 10.0)
         self.inputEresBox.setSingleStep(0.1)
@@ -239,6 +243,7 @@ class QuantumTab(QWidget):
         settingBox.addWidget(QLabel(
             '<center><b>Repeats</b></center>'))
         self.inputRepeatsBox = QSpinBox()
+        self.inputRepeatsBox.setMaximumWidth(width)
         self.inputRepeatsBox.setRange(1, 5)
         self.inputRepeatsBox.valueChanged[int].connect(self.input_repeats)
         settingBox.addWidget(self.inputRepeatsBox)
@@ -246,6 +251,7 @@ class QuantumTab(QWidget):
         settingBox.addWidget(QLabel(
             '<center><b>Wavelength</b></center>'))
         self.inputWlBox = QDoubleSpinBox()
+        self.inputWlBox.setMaximumWidth(width)
         self.inputWlBox.setDecimals(1)
         self.inputWlBox.setRange(1.5, 40)
         self.inputWlBox.setSingleStep(1)
