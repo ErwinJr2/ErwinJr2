@@ -50,6 +50,9 @@ xres : float
     Position resolution, in armstrong
 Eres : float
     External (static) electrical field, in kV/cm = 1e5 V/m
+wl : float
+    The wavelength for the design, in unit um, for book keeping and 
+    optimization, but doesn't go into quantum solver
 
 layerWidths : list of float, len = No. of layers
     Width of each layer, in mm
@@ -690,9 +693,10 @@ layerSelected : int
         return self.gaincoef
 
     # Optimization
-    def optimizeLayer(self, n, upper, lower, wl):
+    def optimizeLayer(self, n, upper, lower):
         """Optmize FoM*lorenzian for n-th layer thickness"""
         # TODO: this part need to be improved!!!
+        wl = self.wl
         resonancew = self.deltaE/hbar
         FoMnow = self.calc_FoM(upper, lower)/(self.tauUpperLower**2 +
                                               (resonancew-wl)**2)

@@ -38,6 +38,7 @@ from versionAndName import ejError, ejWarning
 from darkDetect import isdark
 
 
+# TODO: this may not be necessary by better designer
 def settingslot(fn):
     """ A decorator to ask slots to skip reaction when doing massive
     updating (when self.updating is True)"""
@@ -505,6 +506,7 @@ class QuantumTab(QWidget):
         self.inputEFieldBox.setValue(self.qclayers.EField)
         self.inputxResBox.setValue(self.qclayers.xres)
         self.inputEresBox.setValue(self.qclayers.Eres)
+        self.inputWlBox.setValue(self.qclayers.wl)
         self.inputRepeatsBox.setValue(self.qclayers.repeats)
         self.updating = False
 
@@ -572,7 +574,7 @@ class QuantumTab(QWidget):
     @pyqtSlot(float)
     @settingslot
     def input_wl(self, wl):
-        self.wl = wl
+        self.qclayers.wl = wl
 
     @pyqtSlot()
     def input_basis(self):
@@ -778,7 +780,7 @@ class QuantumTab(QWidget):
                                 "Select state pair to optimize.")
             return
         # TODO
-        self.qclayers.optimizeLayer(n, upper, lower, self.wl)
+        self.qclayers.optimizeLayer(n, upper, lower)
         self.layerTable_refresh()
         self.layerTable.setCurrentCell(n, 0)
 
