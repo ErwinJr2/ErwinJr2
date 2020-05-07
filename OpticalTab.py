@@ -196,13 +196,18 @@ class OpticalTab(QWidget):
             self.refBox[n].setDecimals(1)
             self.refBox[n].setRange(0.0, 100.0)
             self.refBox[n].setSuffix(" %")
-            self.refBox[n].setEnabled(self.facet[n] == 'custom')
             self.refBox[n].setValue(self.facetRefct(n))
             ridgeLayout.addWidget(self.refBox[n], 3, n)
             self.facetBox[n].currentIndexChanged[int].connect(
                 partial(self.input_facet, n))
             self.refBox[n].valueChanged[float].connect(
                 partial(self.input_ref, n))
+            if self.facet[n] == "custom":
+                self.refBox[n].setEnabled(True)
+                self.refBox[n].blockSignals(False)
+            else:
+                self.refBox[n].setEnabled(False)
+                self.refBox[n].blockSignals(True)
         ridgeLayout.addWidget(QLabel(
             "<center>Reflectivity</center>"), 2, 0, 1, 2)
 
@@ -368,13 +373,20 @@ class OpticalTab(QWidget):
         facetBox[n].currentIndexChanged(int)"""
         self.facet[n] = facetList[idx]
         self.refBox[n].setValue(self.facetRefct(n)*100)
-        self.refBox[n].setEnabled(self.facet[n] == 'custom')
+        if self.facet[n] == "custom":
+            self.refBox[n].setEnabled(True)
+            self.refBox[n].blockSignals(False)
+        else:
+            self.refBox[n].setEnabled(False)
+            self.refBox[n].blockSignals(True)
         self.update_Loss()
+        self.dirty.emit()
 
     def input_ref(self, n, ref):
         """SLOT as partial(self.input_facet, n) connected to
         facetBox[n].currentIndexChanged(int)"""
         self.update_Loss()
+        self.dirty.emit()
 
     def facetRefct(self, n):
         """Return the reflectivity of facet n"""
@@ -390,22 +402,24 @@ class OpticalTab(QWidget):
             return 1
         if self.facet[n] == 'custom':
             return self.refBox[n].value()/100
+        else:
+            raise ValueError("Wrong facet %s" % self.facet[n])
 
     @pyqtSlot(float)
     def input_ridgeL(self, value):
         """SLOT connected to ridgeLengthBox.valueChanged[float]"""
         self.ridgeLength = value
         self.update_Loss()
+        self.dirty.emit()
 
     def update_Loss(self):
         """Update the mirror loss, should be called whenever the facet
         settings are changed"""
-        # print(self.facetRefct(0), self.facetRefct(1))
+        print(self.facetRefct(0), self.facetRefct(1))
         perRunLoss = self.facetRefct(1) * self.facetRefct(0)
         self.alpham = -log(perRunLoss)/(2*self.ridgeLength/10)  # to cm-1
         self.mirrorLoss.setText(
             "<center>%.1f cm<sup>-1</sup></center>" % self.alpham)
-        self.dirty.emit()
 
     @pyqtSlot()
     def strataTable_select(self):
@@ -591,11 +605,13 @@ class OpticalTab(QWidget):
             info += "  β = %.3f + (%.3g)i\n" % (self.beta.real, self.beta.imag)
             info += "Waveguide loss:\n"
             info += "  α<sub>w</sub> = %.3f cm<sup>-1</sup>\n" % self.alphaw
-            info += "Confinement factor:\n"
+            info += "Confinement factor: "
             info += "  Γ = %.1f%%\n" % (self.confinement * 100)
+            info += "Threshold gain:\n"
+            gth = (self.alpham + self.alphaw)/self.confinement
+            info += " g<sub>th</sub> = %.1f cm<sup>-1</sup>\n" % gth
             try:
-                self.jth = (self.alpham + self.alphaw)/(
-                    self.stratum.cstmGain["Active Core"] * self.confinement)
+                self.jth = gth / self.stratum.cstmGain["Active Core"]
                 info += "Threshold current:\n"
                 info += "  J<sub>th</sub> = %.1f kA/cm<sup>-2</sup>" % self.jth
             except (AttributeError, ZeroDivisionError, KeyError):

@@ -65,8 +65,10 @@ class MaxwellLayer(object):
     ----------
     wl : float
         Wavelength in vacuum to guide in the stratum
+
     indices : list(complex)
         refractive indicies of the layers
+
     Ls : list(float)
         Thickness of  stratum, same unit as wl. The first and last elements
         are for top and substrate and is not used for calculation
@@ -203,6 +205,7 @@ class MaxwellLayer(object):
         ----------
         beta : complex
             The effective refractive index traveling along z
+
         xs : np.ndarray
             The position coordinate to calculate field on
 
@@ -210,8 +213,10 @@ class MaxwellLayer(object):
         -------
         np.ndarray:
             E field perpendicular to layers and propagation
+
         np.ndarray:
             H field parallel to layers and perpendicular to propagation
+
         np.ndarray:
             E field in propagation
         """
@@ -299,26 +304,33 @@ class OptStrata(MaxwellLayer):
     ----------
     wl : float
         Wavelength in vacuum to guide in the stratum
+
     materials : list(str)
         Name of the material for each strata, with materials[0] being the top
         (usually air) and materials[-1] the substrate.
+
     moleFracs : list(float)
         Mole fractions for each material. The number should be between 0 and 1.
         For strata that the parameter is not applicable, the number doesn't
         influence the result.
+
     dopings : list(float)
         The doping level in unit 1E17 cm^-3 for the material.
         For strata that the parameter is not applicable, the number doesn't
         influence the result.
+
     Ls : list(float)
         Thickness of  stratum, same unit as wl. The first and last elements
         are for top and substrate and is not used for calculation
+
     mobilities : None or list(float)
         Mobility influence the relaxation rate for plasmon resonance.
         When it's None, it is assumed to have 1E13 s^1 relaxation.
+
     cstmIdx : dict
         A dictionary of customized material, with key the name and value
         the complex refractive index
+
     cstmPrd : dict
         A dictionary of customized material, with key the name and value a
         list of two elements, 0-th being the period length (float in unit
@@ -326,6 +338,7 @@ class OptStrata(MaxwellLayer):
         If the 0-th value is 0 or not key not exists, it's not a peirodic
         structure. The variable is only for book keeping and is
         not used to validate Ls within the class
+
     cstmGain : dict
         A dictionary of customized material, with key the name and value
         the gain coefficient. The variable is only for book keeping and is
@@ -348,15 +361,6 @@ class OptStrata(MaxwellLayer):
         self.cstmPrd = cstmPrd
         self.cstmGain = cstmGain
 
-        self.plasmonUnit = 8.9698E-5 * self.wl**2
-        # 8.9698e-05 = mu_0*1E23*e**2*(1E-6)**2/(electron_mass*4*pi**2)
-        # omega_P = plasmonUnit * doping / me / (1 + 1j gamma/omega)
-        # doping in unit 1E17 cm^-3,
-        # electron effective mass me in unit free electron mass
-        self.gammaUnit = 5.3088E-3
-        # 5.3088E-3 = 1E7/(2*pi*c)
-        # gammaUnit * gamma_c (unit 1E13 s-1) * wl (unit um) = gamma_c/omega
-
     def __str__(self):
         return "\n".join(("wavelength: %f" % self.wl,
                           "materials: %s" % str(self.materials),
@@ -368,7 +372,6 @@ class OptStrata(MaxwellLayer):
 
     def setWl(self, wl):
         self.wl = wl
-        self.plasmonUnit = 8.9698E-5 * self.wl**2
 
     def insert(self, row, material=None, moleFrac=None, doping=None,
                L=None, mobility=None):
@@ -395,8 +398,9 @@ class OptStrata(MaxwellLayer):
         self.Ls = np.delete(self.Ls, row)
 
     def indexOf(self, n):
-        """Return the refractive of the strata indexed with row
-        (top air and bottom substrate included)"""
+        """Return the refractive of the strata indexed with n (top air and
+        bottom substrate included). The result is a combination of linear
+        interpolation of mole fraction and plasmonic loss by Drude model"""
         mtrl = self.materials[n]
         if mtrl in self.cstmIndx:
             return self.cstmIndx[mtrl]
@@ -407,6 +411,15 @@ class OptStrata(MaxwellLayer):
                 + (1 - self.moleFracs[n]) * rIdx[Alloy[mtrl][1]](self.wl))
         else:
             layerRIdx = rIdx[mtrl](self.wl)
+
+        plasmonUnit = 8.9698E-5 * self.wl**2
+        # 8.9698e-05 = mu_0*1E23*e**2*(1E-6)**2/(electron_mass*4*pi**2)
+        # omega_P = plasmonUnit * doping / me / (1 + 1j gamma/omega)
+        # doping in unit 1E17 cm^-3,
+        # electron effective mass me in unit free electron mass
+        gammaUnit = 5.3088E-3
+        # 5.3088E-3 = 1E7/(2*pi*c)
+        # gammaUnit * gamma_c (unit 1E13 s-1) * wl (unit um) = gamma_c/omega
         if mtrl in Dopable:
             if mtrl in Alloy:
                 me = (EffectiveMass[Alloy[mtrl][0]] * self.moleFracs[n] +
@@ -417,8 +430,8 @@ class OptStrata(MaxwellLayer):
                    1.7588E11/(me * self.mobilities[n] * 1E-4))
             # 1.7588E11 = electron charge / free electron mass
             layerRIdx = sqrt(layerRIdx**2 - (
-                self.plasmonUnit * self.dopings[n]/me
-                / (1 + 1j*self.gammaUnit * nue)))
+                plasmonUnit * self.dopings[n]/me
+                / (1 + 1j*gammaUnit * self.wl * nue)))
         return layerRIdx
 
     def updateIndices(self):
