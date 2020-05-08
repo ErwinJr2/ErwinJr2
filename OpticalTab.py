@@ -576,7 +576,19 @@ class OpticalTab(QWidget):
 
     @pyqtSlot()
     def solve(self):
-        """SLOT connected to self.solveButton.clicked"""
+        """SLOT connected to self.solveButton.clicked
+
+        Yield
+        -----
+        Ey : np.ndarray(complex)
+            The field to plot, normalized to max(abs(Ey)) = 1
+
+        confinement : float
+            The confinement factor in unit 1 (percentage 100*confinement)
+
+        alphaw : float
+            The waveguide loss in unit cm-1
+        """
         try:
             self.beta = self.stratum.boundModeTM()
         except (TimeoutError, ValueError):
@@ -584,13 +596,8 @@ class OpticalTab(QWidget):
             return
         self.Ey, _, _ = self.stratum.populateMode(self.beta, self.xs)
         # TODO
-        nx = self.stratum.populateIndices(self.xs).real
-        self.confinement = 0
-        for ar in self.stratum.populateMtrl(self.xs):
-            self.confinement += np.trapz(
-                (nx*np.abs(self.Ey)**2)[ar], self.xs[ar])
-        self.confinement = self.beta.real * self.confinement / np.trapz(
-            (nx * np.abs(self.Ey))**2, self.xs)
+        self.confinement = self.stratum.confinement(
+            self.beta, self.xs, self.Ey)
         self.alphaw = 4*pi/(self.stratum.wl/1E4) * self.beta.imag  # cm^-1
         self.update_canvas()
         self.update_Loss()

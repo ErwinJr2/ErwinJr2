@@ -73,7 +73,7 @@ class MaxwellLayer(object):
         Thickness of  stratum, same unit as wl. The first and last elements
         are for top and substrate and is not used for calculation
     """
-    def __init__(self, wl, indices=[1.0, 1.0], Ls=[1.0, 1.0]):
+    def __init__(self, wl, Ls=[1.0, 1.0], indices=[1.0, 1.0]):
         self.wl = wl
         self.index0 = indices[0]
         self.indexs = indices[-1]
@@ -100,7 +100,7 @@ class MaxwellLayer(object):
         np.ndarray
             A 2*2 matrix, the transfer matrix from substrate to top
         """
-        alpha = np.sqrt((1+0j)*self.indices**2 - beta**2)
+        alpha = self._alpha(beta)
         k = 2 * pi / self.wl
         phi = alpha * k * self.Ls[1:-1]
         ms = np.moveaxis(np.array([
@@ -188,10 +188,15 @@ class MaxwellLayer(object):
             betaDiff = residule / fp
             beta = beta - betaDiff
             residule = self.chiMTM(beta)
-            if t > 500:
+            if t > 100:
                 raise TimeoutError("Doesn't converge")
                 break
         return beta
+
+    def _alpha(self, beta):
+        """return alpha = np.sqrt((1+0j)*self.indices**2 - beta**2)
+        for isotropic material"""
+        return np.sqrt((1+0j)*self.indices**2 - beta**2)
 
     def populateMode(self, beta, xs):
         """Generate TM modes (field) on position array xs
@@ -238,7 +243,7 @@ class MaxwellLayer(object):
 
         # middle stratum
         lsum = np.cumsum(self.Ls[:-1]) - self.Ls[0]
-        alpha = np.sqrt((1+0j)*self.indices**2 - beta**2)
+        alpha = self._alpha(beta)
         # [[cos(phi), 1j*sin(phi)*alpha/indices**2],
         #  [1j*sinc(phi/pi)*indices**2*k * Ls, cos(phi)]]
         for n in range(len(lsum)-1):
@@ -266,10 +271,10 @@ class MaxwellLayer(object):
         Ey[xs >= lsum[-1]] = -beta*Hx[xs >= lsum[-1]]/self.indexs**2
 
         scale = Ey[np.argmax(np.abs(Ey))]
-        Hx = Hx/scale
-        Ey = Ey/scale
-        Ez = Ez/scale
-        return Ey, Hx, Ez
+        self.Hx = Hx/scale
+        self.Ey = Ey/scale
+        self.Ez = Ez/scale
+        return self.Ey, self.Hx, self.Ez
 
     def populateIndices(self, xs):
         """Generate indices position array xs
@@ -294,6 +299,72 @@ class MaxwellLayer(object):
         n[xs < 0] = self.index0
         n[xs >= lsum[-1]] = self.indexs
         return n
+
+    def confinementy(self, beta, ars, xs=None, Ey=None):
+        """Return the confinement factor corresponds to mode with effective
+        refractive index beta. Assuming active only couple to E_y filed.
+        The active region is defined in `ars`. If xs and Ey is None, they will
+        be generated.
+
+        Parameters
+        ----------
+        beta : complex
+            The refractive index of the mode to calculate
+
+        ars : list(np.ndarray(bool))
+            The list of active region for confinement factor
+
+        xs : np.ndarray
+            The array for positions: controls the accuracy of the numerical
+            integral for confinement facotr calculation
+
+        Ey : np.ndarray(complex)
+            The field to integral on
+        """
+        if xs is None:
+            xs = np.linspace(-3, sum(self.Ls[1:]), 5000)
+        if Ey is None:
+            Ey, _, _ = self.populateMode(beta, xs)
+        self.confinement = 0
+        nx = self.populateIndices(xs).real
+        for ar in ars:
+            self.confinement += np.trapz(
+                nx[ar] * np.abs(self.Ey[ar])**2, xs[ar])
+        self.confinement = beta.real * self.confinement / np.trapz(
+            (nx * np.abs(Ey))**2, xs)
+        return self.confinement
+
+
+class MaxwellLayer_anisotropic(MaxwellLayer):
+    """class for anisotropic maxwell layers, cannot deal with anisoptropy for
+    top air and bottom substrate."""
+    def __init__(self, wl, Ls=[1.0, 1.0], indexz=[1.0, 1.0], indexy=None):
+        super(MaxwellLayer_anisotropic, self).__init__(wl, Ls, indexz)
+        if indexy is None:
+            self.indexy = np.copy(self.indices)
+        else:
+            self.indexy = np.array(indexy, dtype=np.complex128)
+
+    def _alpha(self, beta):
+        return self.indices/self.indexy*np.sqrt(
+                    (1+0j)*self.indexy**2 - beta**2)
+
+    def populateIndices(self, xs):
+        lsum = np.cumsum(self.Ls[:-1]) - self.Ls[0]
+        if len(self.indices) > 0:
+            n = np.piecewise(xs+0j, [(xs >= lsum[i]) & (xs < lsum[i+1])
+                                     for i in range(len(lsum)-1)],
+                             self.indices)
+            ny = np.piecewise(xs+0j, [(xs >= lsum[i]) & (xs < lsum[i+1])
+                                      for i in range(len(lsum)-1)],
+                              self.indexy)
+        else:
+            n = np.empty(xs.shape, dtype=np.complex128)
+        n[xs < 0] = self.index0
+        n[xs >= lsum[-1]] = self.indexs
+        ny[xs < 0] = self.index0
+        ny[xs >= lsum[-1]] = self.indexs
+        return n, ny
 
 
 class OptStrata(MaxwellLayer):
@@ -441,8 +512,10 @@ class OptStrata(MaxwellLayer):
         -----
         indices : list(complex)
             complex refractive index of the stratum
+
         index0 : complex
             Refractive index of the top (before Ls[0]) strata
+
         indexs : complex
             refractive index of the substrate (after Ls[-1])
         """
@@ -454,12 +527,14 @@ class OptStrata(MaxwellLayer):
 
     def populateMtrl(self, xs, mtrlList=None):
         """Populate a boolean array for index slicing on xs for material
-        in the mtrlList
+        in the mtrlList. If mtrlList is None, the active region is labelled by
+        anyting start with "Active".
 
         Parameters
         ----------
         mtrlList : list(str) or tuple(str)
             name of materials to be labeled
+
         xs : np.ndarray
             The position coordinate to label material
 
@@ -474,9 +549,30 @@ class OptStrata(MaxwellLayer):
         lsum[0] = -np.inf
         lsum[-1] = np.inf
         for i in range(len(self.materials)):
-            if (self.materials[i] in mtrlList if mtrlList else
+            if (self.materials[i] in mtrlList if mtrlList is not None else
                     self.materials[i].startswith('Active')):
-                res.append((xs > lsum[i]) & (xs < lsum[i+1]))
+                res.append((xs >= lsum[i]) & (xs <= lsum[i+1]))
         return res
+
+    def confinement(self, beta, xs=None, Ey=None):
+        """Return the confinement factor corresponds to mode with effective
+        refractive index beta. If xs and Ey is None, they will be generated.
+        The active region is labelled by anyting start with "Active".
+
+        Parameters
+        ----------
+        beta : complex
+            The refractive index of the mode to calculate
+
+        xs : np.ndarray
+            The array for positions: controls the accuracy of the numerical
+            integral for confinement facotr calculation
+
+        Ey : np.ndarray(complex)
+            The field to integral on
+        """
+        return super(OptStrata, self).confinementy(
+            beta, self.populateMtrl(xs), xs, Ey)
+
 
 # vim: ts=4 sw=4 sts=4 expandtab
