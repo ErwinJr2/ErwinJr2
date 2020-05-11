@@ -487,7 +487,7 @@ def main(filename=None):
     app.setOrganizationName("ErwinJr")
     app.setOrganizationDomain("princetonuniversity.github.io/ErwinJr2")
     app.setApplicationName("ErwinJr2")
-    app.setWindowIcon(QIcon('images/EJpng48x48.png'))
+    app.setWindowIcon(QIcon('images/EJpng256.png'))
 
     form = MainWindow(fileName)
     form.show()
