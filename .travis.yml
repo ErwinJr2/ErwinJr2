@@ -14,7 +14,7 @@ addons:
             - graphviz
 install:
     - pip install numpy scipy matplotlib sphinx sphinx_rtd_theme sphinxcontrib-bibtex breathe
-    - python install.py --docs
+    - python install.py --docs --noshortcut
 script:
     - pytest -v test/SimpleSchrodinger.py
     - python test/SimpleSchrodinger.py MP
