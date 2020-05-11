@@ -10,7 +10,10 @@ dev:
 
 This is a extendable Python/C program for 1D quantum problem and Quantum Cascade Laser simulation. 
 
-`OneDQuantum` is A C lib for 1D quantum problem, with python interface. 
+`OneDQuantum` is a C lib for 1D quantum problem, with python interface. 
+
+In the following a simple installation guide is included. A more comprehensive 
+documents can be found [here](https://erwinjr2.readthedocs.io/)
 
 
 Installation
@@ -30,7 +33,7 @@ go to the directory of ErwinJr2, run the following command in Anaconda Prompt
 
 ```
 pip install -r requirements.txt
-python install.py msbuild=[PATH to MSBuild.exe]
+python install.py --msbuild=[PATH to MSBuild.exe]
 ```
 where `[PATH to MSBuild.exe]` will be Visual Studio version dependent, 
 for example `'C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe'`
@@ -43,9 +46,20 @@ python install.py
 For MacOS specifically, to enable multi-processing with `OpenMP`, `gcc` is 
 required. By default `gcc` in MacOS command line is actually `clang`, and to 
 call real `gcc` we need to specify the version number, so 
-the second command needs to be 
+the second command needs to be, 
 ```
 CC=gcc-9 python install.py
+```
+or to modify the `OneDQuantum/Makefile` to include the `OpenMP` 
+library for `clang`. 
+
+### Build local documentation ###
+During the installation you will be asked if you want to build local 
+documentation. It's optional but if you choose yes, dependencies for building 
+`sphinx` documentation is required: run the following command before
+`install.py` script.
+```
+pip install -r docs/requirements.txt
 ```
 
 ## TODO list
@@ -58,11 +72,12 @@ CC=gcc-9 python install.py
 - [X] Finite temperature Fermi-Dirac distribution
 - [X] QCLayer class
 - [X] Save/Load using json
-- [ ] setup.py update
+- [X] install.py update
 - [ ] Test case improve
 - [X] Documents
 - [X] Profile
-- [X] ?Travis CI automatic testing
+- [X] Travis CI automatic testing
+- [ ] Formatting doc strings of GUI widgets for sphinx
 - [ ] ?coveralls.io
 - [ ] ?codacy
 - [ ] ?CFFI or SWIG

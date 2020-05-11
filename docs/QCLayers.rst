@@ -1,7 +1,7 @@
 QCLayers module
 ===============
 
-This module contains QCLayers class.
+This module contains `QCLayers` class.
 
 QCLayers.QCLayers class
 -----------------------

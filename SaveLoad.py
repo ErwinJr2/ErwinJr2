@@ -84,6 +84,7 @@ def parseQcl(ldict):
                      ldict["Temperature"],
                      ldict["Solver"],
                      ldict["Description"])
+        o.wl = ldict["Wavelength"] if "Wavelength" in ldict else 1.5
     else:
         raise NotImplementedError("Version %s not supported" %
                                   ldict["Version"])
@@ -145,6 +146,7 @@ JSONTemplate = """{
     "FileType": "ErwinJr2 Data File",
     "Version": "200504",
     "Description": %s,
+    "Wavelength": %s,
     "Substrate": %s,
     "EField": %s,
     "x resolution": %s,
@@ -222,7 +224,7 @@ def EJSaveJSON(fhandle, qclayers, optstratum):
             cstmtrl[item]["period"] = s.cstmPrd[item]
         if item in s.cstmGain:
             cstmtrl[item]["gain"] = s.cstmGain[item]
-    parameters = [json.dumps(s) for s in (o.description, o.substrate,
+    parameters = [json.dumps(s) for s in (o.description, o.wl, o.substrate,
                                           o.EField, o.xres, o.Eres, o.Solver,
                                           o.Temperature, o.repeats,
                                           o.materials, o.moleFracs,
@@ -231,7 +233,7 @@ def EJSaveJSON(fhandle, qclayers, optstratum):
                                           s.wl, s.materials, s.moleFracs,
                                           s.dopings, list(s.Ls), s.mobilities)]
     parameters.append(json.dumps(cstmtrl))
-    # parameters.append(json.dumps(cstmtrl, indent=4).replace('\n', '\n'+' '*8))
+    # parameters.append(json.dumps(cstmtrl, indent=4).replace('\n','\n'+' '*8))
     fhandle.write(JSONTemplate % tuple(parameters))
 
 # vim: ts=4 sw=4 sts=4 expandtab

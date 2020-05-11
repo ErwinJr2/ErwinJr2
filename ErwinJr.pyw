@@ -98,7 +98,7 @@ class MainWindow(QMainWindow):
         # ==========================
         self.otab = OpticalTab(stratum)
         self.otab.dirty.connect(self.thingsChanged)
-        self.mainTabWidget.addTab(self.otab, 'Optical')
+        self.mainTabWidget.addTab(self.otab, 'Optics')
         self.qtab.toOpticsButton.clicked.connect(self.q2o)
         self.otab.fieldBox.setValue(qclayers.EField)
 
@@ -426,10 +426,14 @@ class MainWindow(QMainWindow):
 # Help Menu Items
 # ===========================================================================
     def on_about(self):
-        msg = """ ErwinJr2 0.x Authors and Contributors
+        msg = """ErwinJr2 1.0 Authors
+
+        * Ming Lyu
+            minglyu@princeton.edu
+
+        ErwinJr2 0.x Authors and Contributors
 
          * Ming Lyu
-            minglyu@princeton.edu
          * Yaofeng (Desmond) Zhong
          * Xiaowen Chen
 
@@ -471,7 +475,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                           copyright.strip())
 
     def on_tutorial(self):
-        QDesktopServices.openUrl(QUrl("./docs/_build/html/index.html"))
+        path = "docs/_build/html/index.html"
+        if os.path.exists(path):
+            QDesktopServices.openUrl(QUrl("file://" + os.path.abspath(path)))
+        else:
+            QDesktopServices.openUrl(QUrl("https://erwinjr2.readthedocs.io/"))
 
 
 def main(filename=None):
@@ -479,7 +487,7 @@ def main(filename=None):
     app.setOrganizationName("ErwinJr")
     app.setOrganizationDomain("princetonuniversity.github.io/ErwinJr2")
     app.setApplicationName("ErwinJr2")
-    app.setWindowIcon(QIcon('images/EJpng48x48.png'))
+    app.setWindowIcon(QIcon('images/EJpng256.png'))
 
     form = MainWindow(fileName)
     form.show()

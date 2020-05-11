@@ -2,13 +2,15 @@
 # -*- coding:utf-8 -*-
 import context
 import numpy as np
+from numpy import pi
 import matplotlib.pyplot as plt
 from OptStrata import OptStrata
 
 
 def firstGaAs():
+    wl = 9.4
     stratum = OptStrata(
-        9.4,
+        wl,
         ['Air', 'GaAs', 'AlGaAs', 'GaAs', 'Active', 'GaAs', 'AlGaAs', 'GaAs'],
         [0, 0, 0.9, 0, 0, 0, 0.9, 0], [0, 0, 0, 0, 0, 0, 0, 0],
         [0.7, 1.0, 1.55, 1.4, 1.4, 0.6])
@@ -20,6 +22,7 @@ def firstGaAs():
     print(stratum.index0, stratum.indices, stratum.indexs)
     beta = stratum.boundModeTM()
     print(beta)
+    print(4*pi/(wl*1E-4)*beta.imag)
 
     xs = np.linspace(-2, 10, 10000)
     n = stratum.populateIndices(xs)

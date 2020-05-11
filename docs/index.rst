@@ -11,7 +11,7 @@ super lattices. It is specifically optimized for Quantum Cascade Laser (QCL) sim
 but coded in a way that's easy to use for general problems about static state in finite
 and periodic quantum wells. 
 
-See `Github <https://github.com/PrincetonUniversity/ErwinJr2/>`_ for the source code. 
+See `Github <https://github.com/CareF/ErwinJr2/>`_ for the source code. 
 
 .. figure:: figures/mainwindow.png
 
@@ -26,7 +26,6 @@ See `Github <https://github.com/PrincetonUniversity/ErwinJr2/>`_ for the source 
    manual/gui.rst
    manual/cli.rst
    manual/physics
-   manual/saving
    ack.rst
 
 .. toctree::
@@ -37,6 +36,7 @@ See `Github <https://github.com/PrincetonUniversity/ErwinJr2/>`_ for the source 
    other
    Profiling
    QCLayers
+   OptStrata
    Material
    SaveLoad
    OneDQuantum
