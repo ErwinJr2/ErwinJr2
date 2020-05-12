@@ -7,10 +7,15 @@ import os
 import sys
 import subprocess
 from subprocess import CalledProcessError
+if sys.platform.startswith('win'):
+    try:
+        import winshell
+    except ModuleNotFoundError:
+        print("winshell not installed. Cannot create shortcut!")
 
 
 def build_clib(path, MSBuild=None):
-    if not MSBuild:
+    if MSBuild is None:
         make_cmd = ['make']
         makemp_cmd = ['make', 'MP']
     else:
@@ -27,12 +32,12 @@ def build_clib(path, MSBuild=None):
         print("openMP not supported")
 
 
-def build_doc(path, MSBuild=None):
-    if MSBuild is None:
-        make_cmd = ['make', 'html']
-    else:
+def build_doc(path):
+    if sys.platform.startswith('win'):
         print("MS building for documents is not now available")
         return
+    else:
+        make_cmd = ['make', 'html']
     #  os.chdir(os.path.join(path, 'OneDQuantum/docs'))
     os.chdir(os.path.join(path, 'docs'))
     print("Building Documents")
@@ -43,6 +48,7 @@ def build_doc(path, MSBuild=None):
 
 
 def create_shortcut(path):
+    os.chdir(path)
     if sys.platform.startswith('darwin'):
         shortcut_path = os.path.join(os.environ["HOME"],
                                      "Desktop", "ErwinJr2.app", "Contents")
@@ -60,6 +66,22 @@ def create_shortcut(path):
         with open(shellfile, 'w') as f:
             f.write(shellcode)
         subprocess.call(['chmod', '+x', shellfile])
+    if sys.platform.startswith('win'):
+        shortcut_path = os.path.join(os.path.expanduser('~'),
+                                     'Desktop', 'ErwinJr2.lnk')
+        batcode = """@SET "PATH=%s\"\n""" % os.environ['PATH']
+        batcode += "@echo off\n"
+        batcode += "cd %~dp0\n"
+        batcode += "start pythonw ErwinJr.pyw %1\n"
+        batfile = "ErwinJr2.bat"
+        with open(batfile, 'w') as f:
+            f.write(batcode)
+        with winshell.shortcut(shortcut_path) as link:
+            link.path = os.path.join(path, batfile)
+            link.description = "Shortcut to ErwinJr2"
+            link.icon_location = (os.path.join(path, 'images', 'EJico.ico'), 0)
+            link.working_directory = path
+            link.show_cmd = 'min'
     else:
         raise NotImplementedError("Operating system not supported.")
 
@@ -82,14 +104,14 @@ if __name__ == "__main__":
             shortcut = False
         else:
             print("Unknown option %s" % opt)
-    build_clib(path, MSBuild)
+    # build_clib(path, MSBuild)
     if docs is None:
         key = None
         while key not in ('y', 'n', ''):
             key = input("Build the documentation locally? Y/[N] ").lower()
         docs = (key == 'y')
     if docs:
-        build_doc(path, MSBuild)
+        build_doc(path)
     if shortcut is None:
         key = None
         while key not in ('y', 'n', ''):

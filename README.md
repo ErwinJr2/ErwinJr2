@@ -27,16 +27,22 @@ The software requires some compilation to be installed.
 To compile, run the Python script `install.py`. 
 
 ### Windows ###
-Anaconda with `numpy`, `scipy` and `matplotlib` is recommended. 
-To get best performance, using Visual Studio as compiler is recommended: 
-go to the directory of ErwinJr2, run the following command in Anaconda Prompt
+Anaconda with `numpy`, `scipy` and `matplotlib` is the recommended Python 
+distribution. To create shortcut on windows, `winshell` is also necessary. 
+Compiling with Visual Studio and gcc are both supported. Visual Studio project 
+file and standard `Makefile` are both provided. 
+To install, start Anaconda Prompt and 
+go to the directory of ErwinJr2, run the following command:
 
 ```
 pip install -r requirements.txt
+pip install winshell
 python install.py --msbuild=[PATH to MSBuild.exe]
 ```
-where `[PATH to MSBuild.exe]` will be Visual Studio version dependent, 
-for example `'C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe'`
+where `--msbuild=[PATH to MSBuild.exe]` is when using Visual Studio to compile 
+the C code, `[PATH to MSBuild.exe]` will be Visual Studio version dependent, 
+for example `'C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe'`. 
+For gcc user it's not necessary. 
 
 ### Linux and MacOS ###
 ```
@@ -81,3 +87,4 @@ pip install -r docs/requirements.txt
 - [ ] ?coveralls.io
 - [ ] ?codacy
 - [ ] ?CFFI or SWIG
+- [ ] Provide binary
