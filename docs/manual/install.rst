@@ -24,9 +24,14 @@ Install under Windows
 -----------------------
 
 To install under Windows, Python is required, as well as a C compiler. 
-For Python environment, |anaconda|_ is recommended; for C compiler, both 
+For Python environment, |anaconda|_ is recommended; for C compiler, 
 |vs|_ is supported. Using GNU gcc and make is sometimes tricky on Windows, 
 but let me know if you have a neat solution. 
+
+If you don't have a C compiler, you may try the binary release_, and extract
+the dll files in the zip file to `OneDQuantum/`
+
+.. _release: https://github.com/CareF/ErwinJr2/releases
 
 For |vs|_ project file is provided as ``OneDQuantum/OneDQuantum.sln``. 
 Automatic script in ``install.py`` requires ``msbuild=<path to MSBuild>`` 
