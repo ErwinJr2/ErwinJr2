@@ -2,7 +2,8 @@
 This file defines the QCLayer class for simulating QC structure
 """
 import numpy as np
-from numpy import sqrt
+from numpy import sqrt, exp
+from numpy import fft
 from scipy.constants import (e as e0, epsilon_0 as eps0, h as h,
                              hbar as hbar, electron_mass as m0, c as c0)
 import scipy.linalg as slg
@@ -10,6 +11,7 @@ import OneDQuantum as onedq
 import Material
 from OptStrata import rIdx
 import copy
+
 # onedq.OneDSchrodinger.bindOpenMP(rk4=True)
 
 EUnit = 1e-5    # E field unit from kV/cm to V/Angtrom
@@ -51,7 +53,7 @@ xres : float
 Eres : float
     External (static) electrical field, in kV/cm = 1e5 V/m
 wl : float
-    The wavelength for the design, in unit um, for book keeping and 
+    The wavelength for the design, in unit um, for book keeping and
     optimization, but doesn't go into quantum solver
 
 layerWidths : list of float, len = No. of layers
@@ -555,15 +557,23 @@ layerSelected : int
             mass = m0 * sqrt(np.sum(self.xMc * psi_i**2 * self.xres)
                              * np.sum(self.xMc * psi_j**2 * self.xres))
             kl = sqrt(2 * mass / hbar**2 * (Ei-Ej-hwLO) * e0)
-            #  dIij = np.empty(self.xPoints.size)
-            #  for n in range(self.xPoints.size):
-            #      x1 = self.xPoints[n]
-            #      x2 = self.xPoints
-            #      dIij[n] = np.sum(psi_i * psi_j * exp(-kl*abs(x1 - x2)*1e-10)
-            #                       * psi_i[n] * psi_j[n] * self.xres**2)
-            #  Iij = np.sum(dIij)
-            Iij = onedq.OneDSchrodinger.cLOphononScatter(self.xres, kl,
-                                                         psi_i, psi_j)
+            # to imporve this by adding the knowledge of zero's of psi
+            convpsi = fft.irfft(
+                np.abs(fft.rfft(psi_i*psi_j, 2*len(psi_i)))**2)[:len(psi_i)]
+            Iij = 2*self.xres**2*np.trapz(
+                exp(-kl*self.xPoints*1E-10)*convpsi)
+            # Python implementation
+            # dIij = np.empty(self.xPoints.size)
+            # for n in range(self.xPoints.size):
+            #     x1 = self.xPoints[n]
+            #     x2 = self.xPoints
+            #     dIij[n] = np.sum(psi_i * psi_j * exp(-kl*abs(x1 - x2)*1e-10)
+            #                      * psi_i[n] * psi_j[n] * self.xres**2)
+            # Iij = np.sum(dIij)
+            # C implementation
+            # Iij = onedq.OneDSchrodinger.cLOphononScatter(self.xres, kl,
+            #                                              psi_i, psi_j)
+            # print(upper, lower, Iij, Iijfft)
             epsInf = np.array([a.parm["epsInf"] for a in self.mtrlAlloys])
             epss = np.array([a.parm["epss"] for a in self.mtrlAlloys])
             epsrho = 1 / (1/epsInf - 1/epss)
@@ -577,7 +587,6 @@ layerSelected : int
     def loLifeTime(self, state):
         """ Return the life time due to LO phonon scattering of the
         given state(label)"""
-        # TODO: try fft convolution
         return 1/sum(self.loTransition(state, q) for q in range(state))
         #  Ei = self.eigenEs[state]
         #  psi_i = self.psis[state]
