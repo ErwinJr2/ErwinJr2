@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
     with open("../example/PQLiu.json") as f:
-         q, s = SaveLoad.loadBoth(f)
+        q, s = SaveLoad.loadBoth(f)
 
     s.updateIndices()
     # betas = np.linspace(2, 3.5, 1000)

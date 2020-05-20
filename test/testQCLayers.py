@@ -10,8 +10,8 @@ def plot_band(axes, qcLayers):
     """ Plot potential (quantum barriers and wells) and other band parameters
     of the layer scturecture on axes, assuming already populated"""
     # for xv, conf in ((qcLayers.xVL, 'g--'),
-    #                  (qcLayers.xVX, 'm-.'), 
-    #                  (qcLayers.xVLH, 'k'), 
+    #                  (qcLayers.xVX, 'm-.'),
+    #                  (qcLayers.xVLH, 'k'),
     #                  (qcLayers.xVSO, 'r--')):
     #     axes.plot(qcLayers.xPoints, xv, conf, linewidth=1)
 
@@ -63,6 +63,7 @@ class TestQCLayers(unittest.TestCase):
                                 'solve_basis eigenEs calculation wrong')
         np.testing.assert_equal(qcl.psis.shape, (15, 1038),
                                 'solve_basis psis calculation wrong')
+
 
 if __name__ == "__main__":
     unittest.main()

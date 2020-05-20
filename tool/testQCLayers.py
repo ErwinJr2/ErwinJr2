@@ -5,12 +5,13 @@ import SaveLoad
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def plot_band(axes, qcLayers):
-    """ Plot potential (quantum barriers and wells) and other band parameters 
+    """ Plot potential (quantum barriers and wells) and other band parameters
     of the layer scturecture on axes, assuming already populated"""
     # for xv, conf in ((qcLayers.xVL, 'g--'),
-    #                  (qcLayers.xVX, 'm-.'), 
-    #                  (qcLayers.xVLH, 'k'), 
+    #                  (qcLayers.xVX, 'm-.'),
+    #                  (qcLayers.xVLH, 'k'),
     #                  (qcLayers.xVSO, 'r--')):
     #     axes.plot(qcLayers.xPoints, xv, conf, linewidth=1)
 
@@ -21,19 +22,21 @@ def plot_band(axes, qcLayers):
 
     axes.plot(qcLayers.xPoints, qcLayers.xlayerSelected, 'b', linewidth=1)
 
-    if hasattr(qcLayers, 'eigenEs'): 
-       for n in range(qcLayers.eigenEs.size): 
-           axes.plot(qcLayers.xPoints, 
-                     qcLayers.psis[n, :] + qcLayers.eigenEs[n])
+    if hasattr(qcLayers, 'eigenEs'):
+        for n in range(qcLayers.eigenEs.size):
+            axes.plot(qcLayers.xPoints,
+                      qcLayers.psis[n, :] + qcLayers.eigenEs[n])
+
 
 if __name__ == "__main__":
     with open("../example/PQLiu.json") as f:
-         qcl = SaveLoad.qclLoad(f)
+        qcl = SaveLoad.qclLoad(f)
 
     qcl.layerSelected = 3
     qcl.NonParabolic = False
     qcl.populate_x()
     qcl.solve_whole()
-    axes = plt.axes()
-    plot_band(axes, qcl)
+    qcl.loTransition(5, 19)
+    # axes = plt.axes()
+    # plot_band(axes, qcl)
     plt.show()

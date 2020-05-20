@@ -16,7 +16,7 @@ def firstGaAs():
         [0.7, 1.0, 1.55, 1.4, 1.4, 0.6])
     stratum.cstmIndx['Active'] = 3.21
     stratum.updateIndices()
-    print("No doping", stratum.index0, stratum.indices, stratum.indexs)
+    # print("No doping", stratum.index0, stratum.indices, stratum.indexs)
     stratum.dopings = [0, 90, 6, 0.4, 0, 0.4, 6, 30]
     stratum.updateIndices()
     print(stratum.index0, stratum.indices, stratum.indexs)
@@ -35,27 +35,37 @@ def firstGaAs():
 
 
 def firstPlasmon():
-    hs = np.array([25*(31+24)/1000, 0.7])
+    wl = 11.5
+    hs = np.array([0.1, 25*(31+24)/1000, 0.7])
     stratum = OptStrata(
-        11.5, ['Pt', 'Active', 'InGaAs', 'InP'],
-        [0, 0, 0.53, 0], [0, 0, 0.6, 2], hs)
+        wl, ['Air', 'Pt', 'Active', 'InGaAs', 'InP'],
+        [0, 0, 0, 0.53, 0], [0, 0, 0, 0.6, 2], hs)
     stratum.cstmIndx['Pt'] = 3.85+49.2j
     stratum.cstmIndx['Active'] = 3.38
     stratum.updateIndices()
+    # print(stratum.indices[1])
+    stratum.indices[2] += 0.1
+    # stratum.indexs += 0.2
     print(stratum.index0, stratum.indices, stratum.indexs)
     beta = stratum.boundModeTM()
     print(beta)
+    print(4*pi/(wl*1E-4)*beta.imag)
 
-    xs = np.linspace(-2, 6, 1000)
+    xs = np.linspace(-0.5, 6, 1000)
     n = stratum.populateIndices(xs)
     Ey, Hx, Ez = stratum.populateMode(beta, xs)
-    plt.plot(xs, n.real)
-    plt.plot(xs, abs(Ey)**2)
+    print(stratum.confinement(beta, xs, Ey)*100)
+    plt.plot(xs, n.real, label="n")
+    plt.plot(xs, n.imag, label="k")
+    plt.plot(xs, abs(Ey)**2, label="Field")
+    # plt.plot(xs, np.angle(Ey), label="Phase")
+    plt.ylim(-1, 4)
+    plt.legend()
     plt.show()
 
 
 if __name__ == '__main__':
-    # firstPlasmon()
+    firstPlasmon()
     firstGaAs()
 
 # vim: ts=4 sw=4 sts=4 expandtab
