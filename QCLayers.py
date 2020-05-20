@@ -94,6 +94,7 @@ layerSelected : int
                  layerARs=[True], EField=0, repeats=3, T=300.0, Solver="ODE",
                  description=""):
         self.substrate = substrate
+        self.crystalType = Material.MParm[substrate]["Crystal"]
         self.materials = materials
         self.moleFracs = moleFracs
         self.xres = xres
@@ -181,6 +182,7 @@ layerSelected : int
     def set_substrate(self, subs):
         if subs in qcMaterial:
             self.substrate = subs
+            self.crystalType = Material.MParm[subs]["Crystal"]
             matlN = len(self.materials)
             self.materials = (qcMaterial[subs]*matlN)[0:matlN]
             self.update_strain()
@@ -341,7 +343,7 @@ layerSelected : int
         # Es = np.linspace(np.min(self.xVc)+Emin, np.max(self.xVc), 1024)
         Es = np.arange(np.min(self.xVc), np.max(self.xVc), self.Eres/1E3)
         if self.periodic:
-            band = onedq.Band("ZincBlende", self.xEg, self.xF, self.xEp,
+            band = onedq.Band(self.crystalType, self.xEg, self.xF, self.xEp,
                               self.xESO)
             offset = self.offset()
             self.Emin = (min(m.parm['EcG'] for m in self.mtrlAlloys)
@@ -359,7 +361,7 @@ layerSelected : int
             self.psis, self.eigenEs = self.shiftPeriod(
                                           (-1, 0, 1, 2), psis, eigenEs)
         elif self.NonParabolic:
-            band = onedq.Band("ZincBlende", self.xEg, self.xF, self.xEp,
+            band = onedq.Band(self.crystalType, self.xEg, self.xF, self.xEp,
                               self.xESO)
             self.eigenEs = onedq.cBandSolve1D(self.xres, Es, self.xVc, band)
             self.psis = onedq.cBandFillPsi(self.xres, self.eigenEs,
