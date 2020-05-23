@@ -646,6 +646,7 @@ double LOtotal(double step, numpyint N, const double *kls,
         #endif
         for(n=0; n<Nj; n++) {
             const double *psi_j = psi_js + N*n + starti;
+            const double powerUnit = -kls[n]*step*ANG;
             for(j=0; j<endi; j++) {
                 psiij[j] = psi_i[j] * psi_j[j];
             }
@@ -656,23 +657,30 @@ double LOtotal(double step, numpyint N, const double *kls,
                 #ifdef _DEBUG
                 printf("FFT failed!\n");
                 #endif
+                #ifdef __MP
+                Iij = -1E40;
+                #pragma omp cancel for
+                #else
                 return -1.0;
+                #endif
             }
             psiij[0] = sq(psiij[0]);
-            for(i=1; i<endi; i++) {
-                psiij[2*i-1] = sq(psiij[2*i]) + sq(psiij[2*i-1]);
-                psiij[2*i] = 0;
+            for(j=1; j<endi; j++) {
+                psiij[2*j-1] = sq(psiij[2*j]) + sq(psiij[2*j-1]);
+                psiij[2*j] = 0;
             }
-            psiij[2*end-1] = sq(psiij[2*endi-1]);
+            psiij[2*endi-1] = sq(psiij[2*endi-1]);
             rfft_backward(p, psiij, 0.5/endi);
             Iij += psiij[0]/2;
-            for(i=1; i<end; i++) {
-                Iij += psiij[i]*exp(powerUnit*i);
+            for(j=1; j<endi; j++) {
+                Iij += psiij[j]*exp(powerUnit*j);
             }
         }
-    }
-    destroy_rfft_plan(p);
     free(psiij);
+    }
+    if(Iij < 0)
+        return -1;
+    destroy_rfft_plan(p);
     return 2*Iij * sq(step);
 }
 
