@@ -24,10 +24,10 @@ endif
 all: 1DSchrodinger.$(EXT) 1DThermal.$(EXT) 1DMaxwell.$(EXT)
 MP:  1DSchrodinger_MP.$(EXT)
 
-1DSchrodinger_MP.$(EXT) : 1DSchrodinger_MP.o band.o
+1DSchrodinger_MP.$(EXT) : 1DSchrodinger_MP.o band.o pocketfft.o
 	$(CC) -shared -fPIC -fopenmp $^ -o $@ -lm
 
-1DSchrodinger.$(EXT) : 1DSchrodinger.o band.o
+1DSchrodinger.$(EXT) : 1DSchrodinger.o band.o pocketfft.o
 	$(CC) -shared -fPIC $^ -o $@ -lm
 
 %.$(EXT) : %.o
@@ -38,6 +38,9 @@ MP:  1DSchrodinger_MP.$(EXT)
 
 1DSchrodinger_MP.o : 1DSchrodinger.c science.h band.h
 	$(CC) $(CFLAGS) -fopenmp -D __MP -c $< -o $@
+
+pocketfft.o : pocketfft/pocketfft.c pocketfft/pocketfft.h
+	$(CC) $(CFLAGS) -c $< -o $@
 
 %.o : %.c science.h 
 	$(CC) $(CFLAGS) -c $< -o $@

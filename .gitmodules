@@ -1,0 +1,3 @@
+[submodule "OneDQuantum/pocketfft"]
+	path = OneDQuantum/pocketfft
+	url = https://gitlab.mpcdf.mpg.de/mtr/pocketfft.git

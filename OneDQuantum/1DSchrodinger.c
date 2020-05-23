@@ -17,6 +17,7 @@
 #endif 
 #include "science.h"
 #include "band.h"
+#include "pocketfft/pocketfft.h"
 
 #define Y_EPS 0.1 /**< Starting point for ode solver. Default value = 0.1 */
 
@@ -558,7 +559,8 @@ double LOphononScatter(double step, numpyint N, double kl,
     double Iij = 0;
     int i;
     double powerUnit = -kl*step*ANG;
-    int cutoff = 1+abs(-(int)(20/powerUnit));
+    double *psiij;
+    rfft_plan p;
     int start, end;
     for(start = 0; start < N && 
             (fabs(psi_i[start]) < MINPSI || fabs(psi_j[start]) < MINPSI);
@@ -566,22 +568,39 @@ double LOphononScatter(double step, numpyint N, double kl,
     for(end = N-1; end >= start  &&
             (fabs(psi_i[end]) < MINPSI || fabs(psi_j[end]) < MINPSI);
             end--);
-#ifdef __MP
-#pragma omp parallel for reduction(+:Iij)
-#endif
-    for(i=start; i<=end; i++) {
-        int j;
-        int startj = i-cutoff>start ? i-cutoff : start;
-        int endj   = i+cutoff<end   ? i+cutoff : end;
-#ifdef __MP
-/* #pragma omp simd reduction(+: Iij) */
-#endif
-        for(j=startj; j<=endj; j++) {
-            Iij += psi_i[i] * psi_j[i] * exp(powerUnit*abs(i-j)) * 
-                psi_i[j] * psi_j[j];
-        }
+    if(start == end)
+        return 0.0;
+    end += 1;
+    /* end - start is at least 1 */ 
+    psiij = (double *)malloc(sizeof(double)*(end-start)*2);
+    p = make_rfft_plan((end-start)*2);
+    for(i=start; i<end; i++) {
+        psiij[i-start] = psi_i[i] * psi_j[i];
     }
-    return Iij * sq(step);
+    for(i=0; i<end-start; i++) {
+        psiij[end+i-start] = 0;
+    }
+    end = (end - start);
+    if(rfft_forward(p, psiij, 1.0) != 0) {
+        #ifdef _DEBUG
+        printf("FFT failed!\n");
+        #endif
+        return -1.0;
+    }
+    psiij[0] = sq(psiij[0]);
+    for(i=1; i<end; i++) {
+        psiij[2*i-1] = sq(psiij[2*i]) + sq(psiij[2*i-1]);
+        psiij[2*i] = 0;
+    }
+    psiij[2*end-1] = sq(psiij[2*end-1]);
+    rfft_backward(p, psiij, 0.5/end);
+    Iij += psiij[0]/2;
+    for(i=1; i<end; i++) {
+        Iij += psiij[i]*exp(powerUnit*i);
+    }
+    destroy_rfft_plan(p);
+    free(psiij);
+    return 2*Iij * sq(step);
 }
 
 
@@ -608,30 +627,53 @@ double LOtotal(double step, numpyint N, const double *kls,
     double Iij = 0;
     int j,n;
     int starti, endi;
+    double *psiij;
+    rfft_plan p;
     for(starti = 0; starti < N && fabs(psi_i[starti]) < MINPSI; starti++);
     for(endi = N-1; endi >= starti && fabs(psi_i[endi]) < MINPSI; endi--);
+    if(starti == endi)
+        return 0.0;
+    endi = endi - starti + 1;
+    psi_i += starti;
+    p = make_rfft_plan(endi*2);
 #ifdef __MP
-#pragma omp parallel for reduction(+:Iij)
+#pragma omp parallel
 #endif
-    for(n=0; n<Nj; n++) {
-        const double *psi_j = psi_js + N*n;
-        double powerUnit = -kls[n]*step*ANG;
-        int cutoff = 1+abs(-(int)(20/powerUnit));
-        int start, end;
-        for(start=starti; start<N && fabs(psi_j[start])<MINPSI;  start++);
-        for(end=endi;     end>=start && fabs(psi_j[end])<MINPSI; end--);
-        for(j=start; j<=end; j++) {
-            int i;
-            int startc = j-cutoff>start ? j-cutoff : start;
-            int endc   = j+cutoff<end   ? j+cutoff : end;
-            double Iisum = 0;
-            for(i=startc; i<=endc; i++) {
-                Iisum += psi_i[i] * psi_j[i] * exp(powerUnit*abs(i-j));
+    {
+        psiij = (double *)malloc(sizeof(double) * endi * 2);
+        #ifdef __MP
+        #pragma omp for reduction(+:Iij)
+        #endif
+        for(n=0; n<Nj; n++) {
+            const double *psi_j = psi_js + N*n + starti;
+            for(j=0; j<endi; j++) {
+                psiij[j] = psi_i[j] * psi_j[j];
             }
-            Iij += Iisum * fjs[n] * psi_i[j] * psi_j[j];
+            for(j=0; j<endi; j++) {
+                psiij[endi+j] = 0;
+            }
+            if(rfft_forward(p, psiij, 1.0) != 0) {
+                #ifdef _DEBUG
+                printf("FFT failed!\n");
+                #endif
+                return -1.0;
+            }
+            psiij[0] = sq(psiij[0]);
+            for(i=1; i<endi; i++) {
+                psiij[2*i-1] = sq(psiij[2*i]) + sq(psiij[2*i-1]);
+                psiij[2*i] = 0;
+            }
+            psiij[2*end-1] = sq(psiij[2*endi-1]);
+            rfft_backward(p, psiij, 0.5/endi);
+            Iij += psiij[0]/2;
+            for(i=1; i<end; i++) {
+                Iij += psiij[i]*exp(powerUnit*i);
+            }
         }
     }
-    return Iij * sq(step);
+    destroy_rfft_plan(p);
+    free(psiij);
+    return 2*Iij * sq(step);
 }
 
 

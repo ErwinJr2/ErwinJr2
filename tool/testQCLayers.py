@@ -37,6 +37,7 @@ if __name__ == "__main__":
     qcl.populate_x()
     qcl.solve_whole()
     qcl.loTransition(5, 19)
+    qcl.loTransition(4, 18)
     # axes = plt.axes()
     # plot_band(axes, qcl)
     plt.show()
