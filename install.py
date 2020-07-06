@@ -104,7 +104,7 @@ if __name__ == "__main__":
             shortcut = False
         else:
             print("Unknown option %s" % opt)
-    # build_clib(path, MSBuild)
+    build_clib(path, MSBuild)
     if docs is None:
         key = None
         while key not in ('y', 'n', ''):
