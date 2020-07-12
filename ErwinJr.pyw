@@ -16,10 +16,10 @@ import SaveLoad
 
 from PyQt5.QtCore import (QSettings, QFile, QUrl,
                           QFileInfo, QVariant)
-from PyQt5.QtGui import QIcon, QKeySequence, QDesktopServices
+from PyQt5.QtGui import QIcon, QKeySequence, QDesktopServices, QPixmap
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTabWidget,
                              QAction, QMessageBox, QFileDialog,
-                             QInputDialog)
+                             QInputDialog, QSplashScreen)
 
 from QuantumTab import QuantumTab
 from OpticalTab import OpticalTab
@@ -489,8 +489,15 @@ def main(filename=None):
     app.setApplicationName("ErwinJr2")
     app.setWindowIcon(QIcon('images/EJpng256.png'))
 
+    # Create and display the splash screen
+    splash_pix = QPixmap('images/splash.png')
+    splash = QSplashScreen(splash_pix)
+    splash.setMask(splash_pix.mask())
+    splash.show()
+
     form = MainWindow(fileName)
     form.show()
+    splash.finish(form)
     app.exec_()
 
 
