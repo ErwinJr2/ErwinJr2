@@ -24,27 +24,30 @@ endif
 all: 1DSchrodinger.$(EXT) 1DThermal.$(EXT) 1DMaxwell.$(EXT)
 MP:  1DSchrodinger_MP.$(EXT)
 
-1DSchrodinger_MP.$(EXT) : 1DSchrodinger_MP.o band.o pocketfft.o
+1DSchrodinger_MP.$(EXT) : 1DSchrodinger_MP.o band.o fftautocorr.o
 	$(CC) -shared -fPIC -fopenmp $^ -o $@ -lm
 
-1DSchrodinger.$(EXT) : 1DSchrodinger.o band.o pocketfft.o
+1DSchrodinger.$(EXT) : 1DSchrodinger.o band.o fftautocorr.o
 	$(CC) -shared -fPIC $^ -o $@ -lm
 
 %.$(EXT) : %.o
 	$(CC) -shared -fPIC $^ -o $@ -lm
 
-1DSchrodinger.o : 1DSchrodinger.c science.h band.h
+1DSchrodinger.o : 1DSchrodinger.c science.h band.h fftautocorr/fftautocorr.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-1DSchrodinger_MP.o : 1DSchrodinger.c science.h band.h
+1DSchrodinger_MP.o : 1DSchrodinger.c science.h band.h fftautocorr/fftautocorr.h
 	$(CC) $(CFLAGS) -fopenmp -D __MP -c $< -o $@
 
-pocketfft.o : pocketfft/pocketfft.c pocketfft/pocketfft.h
+fftautocorr.o : fftautocorr/fftautocorr.c fftautocorr/fftautocorr.h fftautocorr/factortable.h
 	$(CC) $(CFLAGS) -c $< -o $@
+
+fftautocorr/% : 
+	git submodule update --init
 
 %.o : %.c science.h 
 	$(CC) $(CFLAGS) -c $< -o $@
 
 .PHONY : clean
 clean :
-	@$(RM) {1DSchrodinger,1DThermal,1DMaxwell,1DSchrodinger_MP}.{so,o,dll,dylib} band.o
+	@$(RM) {1DSchrodinger,1DThermal,1DMaxwell,1DSchrodinger_MP}.{so,o,dll,dylib} band.o fftautocorr.o
