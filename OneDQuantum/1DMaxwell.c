@@ -1,8 +1,8 @@
 /**
  *
- * \file
+ * @file
  *
- * \brief Compute 1D Coulomb field using Maxwell's equations.
+ * @brief Compute 1D Coulomb field using Maxwell's equations.
  *
  */
 
@@ -35,13 +35,13 @@ __declspec(dllexport)
  * Return the displacement at the \f$ x_0 + step \times N \f$, 
  * and put the field (in \f$ V \f$) in *Vc.
  *
- * \param[in] step stepsize (unit = Angstrom)
- * \param[in] N number of steps
- * \param[in] *eDensity electron density 
+ * @param[in] step stepsize (unit = Angstrom)
+ * @param[in] N number of steps
+ * @param[in] *eDensity electron density 
  *                      (unit = # of elementary charge / Angstrom^-3)
- * \param[in] *eps relative dielectric constant
+ * @param[in] *eps relative dielectric constant
  *                 (unit = epsilon_0)
- * \param[out] *Vc (output) Coulomb field (unit = Volt)
+ * @param[out] *Vc (output) Coulomb field (unit = Volt)
  */
 double CoulombField(double step, numpyint N, 
         const double *eDensity, const double *eps,

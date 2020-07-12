@@ -1,5 +1,5 @@
 /**
- * \file
+ * @file
  *
  * Zincblende and Wurtzite structure band, compatible
  * with structure BAND.
@@ -12,12 +12,12 @@
 extern "C" {
 #endif
 
-/** \cond IMPL
+/** @cond IMPL
  * implemtation of functions in header files should be excluded in doxygen */
 numpyint UpdateBand(Band *band, double E, const double *xVc, double *m) {
     return band->update(band, E, xVc, m);
 }
-/** \endcond */
+/** @endcond */
 
 /**
  * structure for Zinc-blende band
@@ -46,7 +46,7 @@ numpyint ZBupdateM(Band *mat, double Eq, const double *xVc, double *m) {
     return zbmat->N;
 }
 
-/** \cond IMPL
+/** @cond IMPL
  * implemtation of functions in header files should be excluded in doxygen */
 Band *ZBband_new(numpyint N, const double *xEg, const double *xF,
         const double *xEp, const double *xESO) {
@@ -64,7 +64,7 @@ void ZBband_free(Band *zbband) {
     free( (ZBBand *) zbband );
     return;
 }
-/** \endcond */
+/** @endcond */
 
 #ifdef _DEBUG
 #include <stdio.h>
@@ -89,7 +89,7 @@ void ZBband_check(const Band *band, numpyint N, const double *xEg,
 }
 #endif
 
-/** \brief struct for Wurtzite band */
+/** @brief struct for Wurtzite band */
 typedef struct WZBand {
     UpdateFunc updateM;   /**< Update effective mass */
     numpyint N;           /**< Number of finite x positions */
@@ -98,7 +98,7 @@ typedef struct WZBand {
     const double *xESO;   /**< Spin-orbit splitting */
 }WZBand;
 
-/** \brief  Update effective mass of a Wurtzite band semiconductor. Output N */
+/** @brief  Update effective mass of a Wurtzite band semiconductor. Output N */
 numpyint WZupdateM(Band *mat, double Eq, const double *xVc, double *m) {
     WZBand *wzmat = (WZBand *) mat;
     int q;
@@ -113,7 +113,7 @@ numpyint WZupdateM(Band *mat, double Eq, const double *xVc, double *m) {
     return wzmat->N;
 }
 
-/** \cond IMPL 
+/** @cond IMPL 
  * implemtation of functions in header files should be excluded in doxygen */
 Band *WZband_new(numpyint N, const double *xEg,
         const double *xEp, const double *xESO) {
@@ -130,7 +130,7 @@ void WZband_free(Band *wzband) {
     free( (WZBand *) wzband );
     return;
 }
-/** \endcond */
+/** @endcond */
 
 #ifdef _DEBUG
 #include <stdio.h>

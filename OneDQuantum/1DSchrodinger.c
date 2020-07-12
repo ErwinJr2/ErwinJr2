@@ -1,7 +1,7 @@
 /**
- * \file
+ * @file
  * 
- * \brief Solve 1D Schrodinger equation.
+ * @brief Solve 1D Schrodinger equation.
  *
  *
  */
@@ -34,15 +34,15 @@ extern "C" {
  * ends at \f$ x_0 + N \times step \f$.
  * No normalization imposed.
  *
- * \param[in] step \f$ \Delta x \f$, stepsize
- * \param[in] N number of steps
- * \param[in] y0 value of y at \f$ x_0 \f$
- * \param[in] y1 value of y at \f$ x_0 + step \f$
- * \param[in] E energy, unit eV
- * \param[in] *V V[n] is the potential at \f$ x = x_0 + n \times step \f$
- * \param[in] *m m[n] is the effective mass at \f$ x = x_0 + n \times step \f$. 
+ * @param[in] step \f$ \Delta x \f$, stepsize
+ * @param[in] N number of steps
+ * @param[in] y0 value of y at \f$ x_0 \f$
+ * @param[in] y1 value of y at \f$ x_0 + step \f$
+ * @param[in] E energy, unit eV
+ * @param[in] *V V[n] is the potential at \f$ x = x_0 + n \times step \f$
+ * @param[in] *m m[n] is the effective mass at \f$ x = x_0 + n \times step \f$. 
  *               m is in unit m0 (free electron mass)
- * \param[out] *y (output) value of y at \f$ x = x_0 + n \times step \f$.
+ * @param[out] *y (output) value of y at \f$ x = x_0 + n \times step \f$.
  */
 #ifndef MACOS
 inline 
@@ -138,20 +138,20 @@ __declspec(dllexport)
  * \f$ \psi + i N \times sizeof(double) \f$ is the wavefunction with Energy EigenEs[i] 
  * The result is normalized to 1 (so psi is unit sqrt(Angstrom^-1)
  * 
- * \param[in] step step size
- * \param[in] N number of steps
- * \param[in] *EigenEs list of eigen energies
- * \param[in] EN number of eigen energies we consider
- * \param[in] *V V[n] is the potential at \f$ x = x_0 + n \times step \f$
- * \param[in] *m m[n] is the effective mass at \f$ x = x_0 + n \times step \f$, 
+ * @param[in] step step size
+ * @param[in] N number of steps
+ * @param[in] *EigenEs list of eigen energies
+ * @param[in] EN number of eigen energies we consider
+ * @param[in] *V V[n] is the potential at \f$ x = x_0 + n \times step \f$
+ * @param[in] *m m[n] is the effective mass at \f$ x = x_0 + n \times step \f$, 
  *                in unit \f$ m_0 \f$ (free electron mass), used only when 
  *                mat=Null
- * \param[in] *starts
- * \param[in] *ends wavefuntion limited to psi[starts[i]:ends[i]]
- * \param[in] *mat is a pointer to band structure, for updating
+ * @param[in] *starts
+ * @param[in] *ends wavefuntion limited to psi[starts[i]:ends[i]]
+ * @param[in] *mat is a pointer to band structure, for updating
  *                effective mass according to energy. When it's NULL it means
  *                using constant mass without non-parabolic effective mass. 
- * \param[out] *psis (output) 
+ * @param[out] *psis (output) 
  *                   \f$ \psi + i N \times sizeof(double) \f$ is the 
  *                   wavefunction with energy EigenEs[i].
  */
@@ -247,14 +247,14 @@ __declspec(dllexport)
  *
  * Es should be in small to large order.
  *
- * \param[in] step step size
- * \param[in] N number of steps
- * \param[in] *Es initial search range of eigen energy
- * \param[in] EN number of eigen energy to find
- * \param[in] *V potential 
- * \param[in] *m effective mass
- * \param[in] *mat is a pointer to band structure
- * \param[out] *EigenE (output) eigen energy
+ * @param[in] step step size
+ * @param[in] N number of steps
+ * @param[in] *Es initial search range of eigen energy
+ * @param[in] EN number of eigen energy to find
+ * @param[in] *V potential 
+ * @param[in] *m effective mass
+ * @param[in] *mat is a pointer to band structure
+ * @param[out] *EigenE (output) eigen energy
  *
  */
 numpyint Solve1D(double step, numpyint N, 
@@ -385,19 +385,19 @@ __declspec(dllexport)
 /**
  * Bonded version of Solve1D()
  *
- * \param[in] step step size
- * \param[in] N number of steps: as a limit
- * \param[in] Elower: starting point of ode solver, Elower - x*field
+ * @param[in] step step size
+ * @param[in] N number of steps: as a limit
+ * @param[in] Elower: starting point of ode solver, Elower - x*field
  *                    should be smaller than V, and solve start with
- * \param[in] Eupper: ending point of ode solver, Eupper - x*field
+ * @param[in] Eupper: ending point of ode solver, Eupper - x*field
  *                    should be larger than V, and solve start with
- * \param[in] field: field in unit kV/cm, for determing energy shift
- * \param[in] *Es initial search range of eigen energy 
- * \param[in] EN number of eigen energy to find
- * \param[in] *V potential 
- * \param[in] *m effective mass
- * \param[in] *mat is a pointer to band structure
- * \param[out] *EigenE (output) eigen energy
+ * @param[in] field: field in unit kV/cm, for determing energy shift
+ * @param[in] *Es initial search range of eigen energy 
+ * @param[in] EN number of eigen energy to find
+ * @param[in] *V potential 
+ * @param[in] *m effective mass
+ * @param[in] *mat is a pointer to band structure
+ * @param[out] *EigenE (output) eigen energy
  *
  */
 numpyint Solve1DBonded(double step, numpyint N, 
@@ -546,12 +546,12 @@ __declspec(dllexport)
 /**
  * Calculate the LO phonon scattering rate
  *
- * \param[in] step step size
- * \param[in] N number of steps
- * \param[in] kl wavevector of LO phonon
- * \param[in] *psi_i \f$\psi_i\f$ wavefunction i
- * \param[in] *psi_j \f$\psi_j\f$ wavefunction j
- * \return    \f$I_{ij} = \int\mathrm dx\mathrm dy\, \psi_i(x)\psi_j(x)
+ * @param[in] step step size
+ * @param[in] N number of steps
+ * @param[in] kl wavevector of LO phonon
+ * @param[in] *psi_i \f$\psi_i\f$ wavefunction i
+ * @param[in] *psi_j \f$\psi_j\f$ wavefunction j
+ * @return    \f$I_{ij} = \int\mathrm dx\mathrm dy\, \psi_i(x)\psi_j(x)
  *             \exp\left[-k_l|x-y|\right]\psi_i(y)\psi_j(y) \f$
  */
 double LOphononScatter(double step, numpyint N, double kl,
@@ -610,14 +610,14 @@ __declspec(dllexport)
 /**
  * Calculate sum LO phonon scattering rate from psi_i to all psi_j's
  *
- * \param[in] step step size
- * \param[in] N number of steps
- * \param[in] *kls wavevector of LO phonon between psi_i to psi_j's
- * \param[in] *psi_i \f$\psi_i\f$ wavefunction i
- * \param[in] *psi_js psi_j = psi_js[n*N] \f$\psi_j\f$ wavefunction j
- * \param[in] *factor_js the factor \f$f_j\f$ before \f$I_{ij}\f$ before sum
- * \param[in] Nj number of psi_j
- * \return    \f$\sum_j f_j I_{ij} = 
+ * @param[in] step step size
+ * @param[in] N number of steps
+ * @param[in] *kls wavevector of LO phonon between psi_i to psi_j's
+ * @param[in] *psi_i \f$\psi_i\f$ wavefunction i
+ * @param[in] *psi_js psi_j = psi_js[n*N] \f$\psi_j\f$ wavefunction j
+ * @param[in] *fjs the factor \f$f_j\f$ before \f$I_{ij}\f$ before sum
+ * @param[in] Nj number of psi_j
+ * @return    \f$\sum_j f_j I_{ij} = 
  *             \sum_j f_j \int\mathrm dx\mathrm dy\, \psi_i(x)\psi_j(x)
  *             \exp\left[-k_l|x-y|\right]\psi_i(y)\psi_j(y) \f$
  */
@@ -690,16 +690,16 @@ __declspec(dllexport)
 #endif 
 /**
  *
- * \param[in] step step size
- * \param[in] N number of steps
- * \param[in] *EigenEs list of eigen energies
- * \param[in] EN number of eigen energies we consider
- * \param[in] *psis psis[n*N:(n+1)*N] is the wavefunction for EigenEs[n]
- * \param[in] *masses masses[n] is the x-y effective mass for psis[n]
- * \param[in] Eshift the energy shift (period*field) between periods
+ * @param[in] step step size
+ * @param[in] N number of steps
+ * @param[in] *EigenEs list of eigen energies
+ * @param[in] EN number of eigen energies we consider
+ * @param[in] *psis psis[n*N:(n+1)*N] is the wavefunction for EigenEs[n]
+ * @param[in] *masses masses[n] is the x-y effective mass for psis[n]
+ * @param[in] Eshift the energy shift (period*field) between periods
  *                   should >= max(EigenEs) - min(EigenEs)
- * \param[in] xShift position translation in pixal between periods
- * \param[out] *loMatrix gamma[n,m] == loMatrix[EN*n+m] is the LO transition
+ * @param[in] xShift position translation in pixal between periods
+ * @param[out] *loMatrix gamma[n,m] == loMatrix[EN*n+m] is the LO transition
  *                       rate between psis[n] and psis[m], 
  *                       EigenEs[n] > EigenEs[m] (mod Eshift)
  */

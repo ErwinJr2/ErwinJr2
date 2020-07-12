@@ -1,6 +1,6 @@
 /**
  *
- * \file
+ * @file
  *
  * Compute thermodynamic statistics given eigen energy and wavefunctions
  * for one-dimensional quantum systems.
@@ -40,14 +40,14 @@ __declspec(dllexport)
  *
  * Assumes Fermi-Dirac distribution at zero temperature.
  *
- * \param[in] EF Fermi energy
- * \param[in] *EigenEs Eigen energy
- * \param[in] EN number of eigen energies provided
- * \param[in] *m effective mass
- * \param[in] *psis wavefunctions for the given eigen energies
- * \param[in] N number of steps
- * \param[in] step step size
- * \param[in] *eDensity (output) electron density (unit Angstrom^-3)
+ * @param[in] EF Fermi energy
+ * @param[in] *EigenEs Eigen energy
+ * @param[in] EN number of eigen energies provided
+ * @param[in] *m effective mass
+ * @param[in] *psis wavefunctions for the given eigen energies
+ * @param[in] N number of steps
+ * @param[in] step step size
+ * @param[in] *eDensity (output) electron density (unit Angstrom^-3)
  */
 double FermiDirac0(double EF, const double *EigenEs, numpyint EN, 
         const double *m, const double* psis, numpyint N, double step, 
@@ -97,14 +97,14 @@ __declspec(dllexport)
  *
  * Assumes Fermi-Dirac distribution at zero temperature.
  *
- * \param[in] sheet sheet density (unit Angstrom^-2)
- * \param[in] *EigenEs Eigen energy
- * \param[in] EN number of eigen energies provided
- * \param[in] *m effective mass
- * \param[in] *psis wavefunctions for the given eigen energies
- * \param[in] N number of steps
- * \param[in] step step size
- * \param[in] *eDensity (output) electron density (unit Angstrom^-3)
+ * @param[in] sheet sheet density (unit Angstrom^-2)
+ * @param[in] *EigenEs Eigen energy
+ * @param[in] EN number of eigen energies provided
+ * @param[in] *m effective mass
+ * @param[in] *psis wavefunctions for the given eigen energies
+ * @param[in] N number of steps
+ * @param[in] step step size
+ * @param[in] *eDensity (output) electron density (unit Angstrom^-3)
  */
 double FermiDirac0N(double sheet, const double *EigenEs, numpyint EN, 
         const double *m, const double* psis, numpyint N, double step, 
@@ -158,15 +158,15 @@ double FermiDirac0N(double sheet, const double *EigenEs, numpyint EN,
  *
  * Assumes Fermi-Dirac distribution at finite temperature
  *
- * \param[in] T temperature
- * \param[in] EF Fermi energy
- * \param[in] *EigenEs Eigen energy
- * \param[in] EN number of eigen energies provided
- * \param[in] *m effective mass
- * \param[in] *psis wavefunctions for the given eigen energies
- * \param[in] N number of steps
- * \param[in] step step size
- * \param[in] *eDensity (output) electron density (unit Angstrom^-3)
+ * @param[in] T temperature
+ * @param[in] EF Fermi energy
+ * @param[in] *EigenEs Eigen energy
+ * @param[in] EN number of eigen energies provided
+ * @param[in] *m effective mass
+ * @param[in] *psis wavefunctions for the given eigen energies
+ * @param[in] N number of steps
+ * @param[in] step step size
+ * @param[in] *eDensity (output) electron density (unit Angstrom^-3)
  *
  */
 double FermiDirac(double T, double EF, const double *EigenEs, numpyint EN,
@@ -255,15 +255,15 @@ __declspec(dllexport)
  *
  * Assumes Fermi-Dirac distribution at finite temperature.
  *
- * \param[in] T temperature.
- * \param[in] sheet sheet density (unit Angstrom^-2)
- * \param[in] *EigenEs Eigen energy
- * \param[in] EN number of eigen energies provided
- * \param[in] *m effective mass
- * \param[in] *psis wavefunctions for the given eigen energies
- * \param[in] N number of steps
- * \param[in] step step size
- * \param[in] *eDensity (output) electron density (unit Angstrom^-3)
+ * @param[in] T temperature.
+ * @param[in] sheet sheet density (unit Angstrom^-2)
+ * @param[in] *EigenEs Eigen energy
+ * @param[in] EN number of eigen energies provided
+ * @param[in] *m effective mass
+ * @param[in] *psis wavefunctions for the given eigen energies
+ * @param[in] N number of steps
+ * @param[in] step step size
+ * @param[in] *eDensity (output) electron density (unit Angstrom^-3)
  */
 double FermiDiracN(double T, double sheet, const double *EigenEs, numpyint EN, 
             const double *m, const double* psis, numpyint N, double step, 
