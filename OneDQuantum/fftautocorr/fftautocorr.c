@@ -23,6 +23,12 @@
 #define WARN_UNUSED_RESULT
 #endif
 
+#ifdef _WINDOWS
+/* Make compatible with visual studio's limited support for C99 */
+#define restrict __restrict
+#define M_PI 3.14159265358979323846
+#endif
+
 /* sin/cos related */
 
 /* We avoid using cos here to decrease float truncation error. */
@@ -173,7 +179,7 @@ typedef struct autocorr_plan_i {
     int memlen;            /**< the length for the FFT algorithm, 
                             *   >= 2*autocorr_plan_i#datalen */
     int nfct;              /**< number of seperation factors */
-    int datalen;          /**< the logical length, length of the original
+    size_t datalen;        /**< the logical length, length of the original
                             *   array for autocorrelation */
     double *mem;           /**< the memory pool for fct[i].tw */
     fft_fctdata fct[NFCT]; /**< the factors for each FFT seperation */
@@ -542,9 +548,9 @@ static int rfftp_forward(autocorr_plan plan, double c[],
     int k1;
 
     for(k1 = 0; k1 < nf; ++k1) {
-        int k=nf-k1-1;
-        int ip=plan->fct[k].fct;
-        int ido=n / l1;
+        int k = nf-k1-1;
+        int ip = plan->fct[k].fct;
+        int ido = n / l1;
         l1 /= ip;
         switch(ip) {
             case 4:
@@ -694,7 +700,7 @@ static int rfftp_factorize (autocorr_plan plan) {
  * @return Number of double float twiddle factors for the plan
  */
 static size_t rfftp_twsize(autocorr_plan plan) {
-    size_t twsize=0, l1=1;
+    int twsize = 0, l1 = 1;
     for(int k = 0; k < plan->nfct - 1; ++k) {
         int ip = plan->fct[k].fct, ido = plan->memlen / (l1*ip);
         twsize += (ip - 1) * (ido - 1);

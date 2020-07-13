@@ -37,11 +37,11 @@ def print_as_c_header(filename, array):
 #define {filename}
 #include <stdlib.h>
 
-static size_t find_factor(int n) {{
-    const static size_t factortable[] = {{
+static int find_factor(size_t n) {{
+    const static int factortable[] = {{
         {numbers}
     }};
-    size_t lo=0, hi=sizeof(factortable)/sizeof(factortable[0]), mid;
+    int lo=0, hi=sizeof(factortable)/sizeof(factortable[0]), mid;
     while(lo < hi) {{
         mid = (lo + hi) / 2;
         if(factortable[mid] < n)
