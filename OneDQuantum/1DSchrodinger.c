@@ -623,6 +623,7 @@ double LOtotal(double step, numpyint N, const double *kls,
     psi_i += starti;
     plan = make_autocorr_plan(endi);
 #ifdef __MP
+    int failed = 0;
 #pragma omp parallel
 #endif
     {
@@ -631,7 +632,11 @@ double LOtotal(double step, numpyint N, const double *kls,
         #ifdef __MP
         #pragma omp for reduction(+:Iij)
         #endif
-        for(n=0; n<Nj; n++) {
+        for(n = 0; n < Nj; n++) {
+            #ifdef __MP
+            if(failed)
+                break;
+            #endif
             const double *psi_j = psi_js + N*n + starti;
             const double powerUnit = -kls[n]*step*ANG;
             for(j=0; j<endi; j++) {
@@ -642,8 +647,8 @@ double LOtotal(double step, numpyint N, const double *kls,
                 printf("FFT failed!\n");
                 #endif
                 #ifdef __MP
-                Iij = -1E40;
-                #pragma omp cancel for
+                failed = 1;
+                break;
                 #else
                 return -1.0;
                 #endif
@@ -656,8 +661,10 @@ double LOtotal(double step, numpyint N, const double *kls,
     free(psiij);
     free(mempool);
     }
-    if(Iij < 0)
+#ifdef __MP
+    if (failed)
         return -1;
+#endif
     destroy_autocorr_plan(plan);
     return 2*Iij * sq(step);
 }
