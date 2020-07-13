@@ -634,8 +634,10 @@ double LOtotal(double step, numpyint N, const double *kls,
         #endif
         for(n = 0; n < Nj; n++) {
             #ifdef __MP
+            #ifdef _WINDLL
             if(failed)
                 break;
+            #endif
             #endif
             const double *psi_j = psi_js + N*n + starti;
             const double powerUnit = -kls[n]*step*ANG;
@@ -648,7 +650,11 @@ double LOtotal(double step, numpyint N, const double *kls,
                 #endif
                 #ifdef __MP
                 failed = 1;
+                #ifdef _WINDLL
                 break;
+                #else
+                #pragma omp cancel for
+                #endif
                 #else
                 return -1.0;
                 #endif
