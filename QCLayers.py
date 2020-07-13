@@ -2,8 +2,7 @@
 This file defines the QCLayer class for simulating QC structure
 """
 import numpy as np
-from numpy import sqrt, exp
-from numpy import fft
+from numpy import sqrt
 from scipy.constants import (e as e0, epsilon_0 as eps0, h as h,
                              hbar as hbar, electron_mass as m0, c as c0)
 import scipy.linalg as slg
