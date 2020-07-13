@@ -1,0 +1,24 @@
+language: C
+sudo: false
+addons:
+    apt:
+        packages:
+            - gcc
+            - fftw3
+            - fftw3-dev
+            - doxygen
+            - doxygen-doc 
+            - doxygen-latex
+            - doxygen-gui
+            - graphviz
+install:
+    - cd ${TRAVIS_BUILD_DIR}
+    - make
+    - doxygen -g
+compiler:
+    - clang
+    - gcc
+script:
+    - cd ${TRAVIS_BUILD_DIR}
+    - make test
+    - doxygen

@@ -42,9 +42,6 @@ MP:  1DSchrodinger_MP.$(EXT)
 fftautocorr.o : fftautocorr/fftautocorr.c fftautocorr/fftautocorr.h fftautocorr/factortable.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-fftautocorr/% : 
-	git submodule update --init
-
 %.o : %.c science.h 
 	$(CC) $(CFLAGS) -c $< -o $@
 
