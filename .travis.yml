@@ -1,8 +1,8 @@
 language: python
 python:
-  - '3.8'
-  - '3.7'
   - '3.6'
+  - '3.7'
+  - '3.8'
 sudo: false
 addons:
     apt:
@@ -25,6 +25,16 @@ script:
 jobs:
   include:
   # other OSs are only tested for compiling and MP
+  - name: MacOS default without MP
+    os: osx
+    osx_image: xcode11.5
+    language: shell       # 'language: python' is an error on Travis CI macOS
+    before_install:
+      - brew install doxygen
+    env: 
+      - OMP_NUM_THREADS=4 
+    script:
+      - python3 test/SimpleSchrodinger.py
   - name: MacOS with GCC
     os: osx
     osx_image: xcode11.5
@@ -33,6 +43,16 @@ jobs:
       - brew install doxygen llvm
     env: 
       - CC=gcc-9 OMP_NUM_THREADS=4 
+    script:
+      - python3 test/SimpleSchrodinger.py MP
+  - name: MacOS with Clang
+    os: osx
+    osx_image: xcode11.5
+    language: shell       # 'language: python' is an error on Travis CI macOS
+    before_install:
+      - brew install doxygen llvm
+    env: 
+      - CC=/usr/local/opt/llvm/bin/clang OMP_NUM_THREADS=4 
     script:
       - python3 test/SimpleSchrodinger.py MP
 
