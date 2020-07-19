@@ -1,9 +1,9 @@
 language: python
 python:
-    - "3.6"
+  - '3.8'
+  - '3.7'
+  - '3.6'
 sudo: false
-env:
-    - OMP_NUM_THREADS=4 
 addons:
     apt:
         packages:
@@ -12,12 +12,27 @@ addons:
             - doxygen-latex
             - doxygen-gui
             - graphviz
+env:
+    - OMP_NUM_THREADS=4 
 install:
-    - pip install numpy scipy matplotlib sphinx sphinx_rtd_theme sphinxcontrib-bibtex breathe
-    - python install.py --docs --noshortcut
+    - pip3 install numpy scipy matplotlib sphinx sphinx_rtd_theme sphinxcontrib-bibtex breathe pytest
+    - python3 install.py --docs --noshortcut
 script:
     - pytest -v test/SimpleSchrodinger.py
-    - python test/SimpleSchrodinger.py MP
+    - python3 test/SimpleSchrodinger.py MP
     - pytest -v test/testMaterial.py
     - pytest -v test/testQCLayers.py
-    - cd docs; make html
+jobs:
+  include:
+  # other OSs are only tested for compiling and MP
+  - name: MacOS with GCC
+    os: osx
+    osx_image: xcode11.5
+    language: shell       # 'language: python' is an error on Travis CI macOS
+    before_install:
+      - brew install doxygen llvm
+    env: 
+      - CC=gcc-9 OMP_NUM_THREADS=4 
+    script:
+      - python3 test/SimpleSchrodinger.py MP
+
