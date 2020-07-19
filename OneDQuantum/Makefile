@@ -4,19 +4,19 @@ CFLAGS += -Ofast -Wall -fPIC #-D _DEBUG
 OMPFLAGS = -fopenmp
 
 ifeq ($(OS),Windows_NT)
-    CFLAGS += -D WIN32
-    EXT := dll
+	CFLAGS += -D WIN32
+	EXT := dll
 else 
-    UNAME_S := $(shell uname -s)
-    ifeq ($(UNAME_S),Darwin)
-        CFLAGS += -D MACOS
-        EXT := dylib
-        OMPFLAGS += -I/usr/local/opt/llvm/includ 
-        LDFLAGS += -L/usr/local/opt/llvm/lib
-    else
-        # Assuming linux
-        EXT := so
-    endif
+	UNAME_S := $(shell uname -s)
+	ifeq ($(UNAME_S),Darwin)
+		CFLAGS += -D MACOS
+		EXT := dylib
+		OMPFLAGS += -I/usr/local/opt/llvm/includ
+		LDFLAGS += -L/usr/local/opt/llvm/lib
+	else
+		# Assuming linux
+		EXT := so
+	endif
 endif
 
 .PHONY : all
@@ -51,3 +51,4 @@ fftautocorr.o : fftautocorr/fftautocorr.c fftautocorr/fftautocorr.h fftautocorr/
 .PHONY : clean
 clean :
 	@$(RM) {1DSchrodinger,1DThermal,1DMaxwell,1DSchrodinger_MP}.{so,o,dll,dylib} band.o fftautocorr.o
+
