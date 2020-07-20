@@ -5,23 +5,24 @@ python:
   - '3.8'
 sudo: false
 addons:
-    apt:
-        packages:
-            - doxygen
-            - doxygen-doc 
-            - doxygen-latex
-            - doxygen-gui
-            - graphviz
+  apt:
+    packages:
+      - doxygen
+      - doxygen-doc 
+      - doxygen-latex
+      - doxygen-gui
+      - graphviz
 env:
-    - OMP_NUM_THREADS=4 
+  - OMP_NUM_THREADS=4 
 install:
-    - pip3 install numpy scipy matplotlib sphinx sphinx_rtd_theme sphinxcontrib-bibtex breathe pytest
-    - python3 install.py --docs --noshortcut
+  - pip3 install --upgrade pip
+  - pip3 install numpy scipy matplotlib sphinx sphinx_rtd_theme sphinxcontrib-bibtex breathe pytest
+  - python3 install.py --docs --noshortcut
 script:
-    - pytest -v test/SimpleSchrodinger.py
-    - python3 test/SimpleSchrodinger.py MP
-    - pytest -v test/testMaterial.py
-    - pytest -v test/testQCLayers.py
+  - pytest -v test/SimpleSchrodinger.py
+  - python3 test/SimpleSchrodinger.py MP
+  - pytest -v test/testMaterial.py
+  - pytest -v test/testQCLayers.py
 jobs:
   include:
   # other OSs are only tested for compiling and MP
