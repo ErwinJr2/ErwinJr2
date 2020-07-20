@@ -57,7 +57,7 @@ jobs:
     script:
       - python3 test/SimpleSchrodinger.py MP
   - name: Windows
-    # currently only building is tested
+    # currently only building is tested, TODO
     os: windows
     language: shell
     before_install:
@@ -71,6 +71,7 @@ jobs:
       - pip3 install winshell
     script:
       - export PATH=$MSBUILD_PATH:$PATH
+      - echo $PATH
       - python install.py --msbuild=msbuild.exe --nodocs --noshortcut
       = ls OneDQuantum
       # - python test/SimpleSchrodinger.py MP
