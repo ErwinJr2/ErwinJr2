@@ -1,5 +1,5 @@
-Installation Guide for OneDQ
-=============================
+Installation Guide for ErwinJr2
+===============================
 
 Tge software is available as source code in Github: 
 https://github.com/CareF/ErwinJr2 .

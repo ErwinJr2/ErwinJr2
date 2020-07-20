@@ -1,7 +1,7 @@
 Version Control and Automatic Testing
 ======================================
 We use ``git`` as the version control tool, and the git repository is hosted on 
-`github <https://github.com/PrincetonUniversity/OneDQ/>`_.
+`github <https://github.com/CareF/ErwinJr2/>`_.
 
 ``master`` branch is meant to be a stable branch. 
 The development happens in ``dev`` branch.

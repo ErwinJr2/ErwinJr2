@@ -1,7 +1,7 @@
 Introduction
 ===============
 
-OneDQ is a cross-platform software with a combination of: 
+ErwinJr2 is a cross-platform software with a combination of: 
 
 1. a C library for solving 1D quantum problem and the related thermal and electrical problems;
 2. a Python interface for the C library;
