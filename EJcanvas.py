@@ -162,34 +162,46 @@ class EJplotControl(NavigationToolbar2, QObject):
         button.setCheckable(True)
         # TODO Can this function become a decorator?
 
+    def _get_mode_name(self):
+        # This is a work around for backward compatiblity due to 
+        # https://github.com/matplotlib/matplotlib/pull/17135
+        if self._custom_mode:
+            return self._custom_mode
+        try:
+            name = self.mode.name
+        except AttributeError:
+            name = self._active
+        return name
+
     def _update_buttons_checked(self):
         # sync button checkstates to match active mode
         if 'pan' in self._actions:
-            self._actions['pan'].setChecked(self.mode.name == 'PAN')
+            self._actions['pan'].setChecked(self._get_mode_name() == 'PAN')
         if 'zoom' in self._actions:
-            self._actions['zoom'].setChecked(self.mode.name == 'ZOOM')
+            self._actions['zoom'].setChecked(self._get_mode_name() == 'ZOOM')
         for mode in self._custom_active:
-            self._actions[mode].setChecked(self._custom_mode == mode)
+            self._actions[mode].setChecked(self._get_mode_name() == mode)
 
     def _reset_mode(self):
         # This is a work around for self.mode value type being private.
-        if self.mode.name == 'PAN':
+        name = self._get_mode_name()
+        if name == 'PAN':
             self.pan()
             return
-        if self.mode.name == 'ZOOM':
+        if name == 'ZOOM':
             self.zoom()
             return
 
     def pan(self, *args):
         # override
         super(EJplotControl, self).pan(*args)
-        self._custom_mode = None
+        self._reset_custom()
         self._update_buttons_checked()
 
     def zoom(self, *args):
         # override
         super(EJplotControl, self).zoom(*args)
-        self._custom_mode = None
+        self._reset_custom()
         self.zoomed = True
         self._update_buttons_checked()
 
@@ -198,17 +210,22 @@ class EJplotControl(NavigationToolbar2, QObject):
         super(EJplotControl, self).home(*args)
         self.zoomed = False
 
+    def _reset_custom(self):
+        self._custom_mode = None
+        if self._custom_callBack != None:
+            self.canvas.mpl_disconnect(self._custom_callBack)
+            self._custom_callBack = None
+
     def trigger_custom(self, mode):
         self._reset_mode()
         if self._custom_mode != mode:
+            self._reset_custom()
             self._custom_mode = mode
             self._custom_callBack = self.canvas.mpl_connect(
                 'button_release_event', self._custom_active[mode])
             self.canvas.widgetlock(self)
         else:
-            self._custom_mode = None
-            assert(self._custom_callBack != None)
-            self.canvas.mpl_disconnect(self._custom_callBack)
+            self._reset_custom()
             self.canvas.widgetlock.release(self)
 
         for a in self.canvas.figure.get_axes():
