@@ -437,7 +437,7 @@ class QuantumTab(QWidget):
         self.pairSelectButton.setEnabled(False)
         self.plotControl.set_custom('pairselect', self.pairSelectButton,
                                     self.state_pick)
-        self.pairSelectButton.clicked.connect(self.pairSelectMode)
+        self.pairSelectButton.clicked[bool].connect(self.pairSelectMode)
         self.FoMButton = QPushButton("FoM")
         self.FoMButton.setEnabled(False)
         self.FoMButton.clicked.connect(self.updateFoM)
@@ -1110,7 +1110,10 @@ class QuantumTab(QWidget):
 
     @pyqtSlot(bool)
     def layerSelectMode(self, checked):
-        self.plotControl.custom('layerselect')
+        """ SLOT connected to layerSelectButton.clicked[bool]
+        to enable layerSelect mode in the canvas.
+        """
+        self.plotControl.trigger_custom('layerselect')
         if not checked:
             # clear selection
             self.qclayers.layerSelected = None
@@ -1119,7 +1122,10 @@ class QuantumTab(QWidget):
 
     @pyqtSlot(bool)
     def pairSelectMode(self, checked):
-        self.plotControl.custom('pairselect')
+        """ SLOT connected to pairSelectButton.clicked[bool]
+        to enable pairSelect mode in the canvas.
+        """
+        self.plotControl.trigger_custom('pairselect')
         if not checked:
             self.pairSelected = False
             self.stateHolder = []

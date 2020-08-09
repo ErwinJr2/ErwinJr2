@@ -8,7 +8,7 @@ import os
 import matplotlib
 from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg as
                                                 FigureCanvas)
-from matplotlib.backends.backend_qt5 import cursord
+from matplotlib.backends.backend_qt5 import cursord, NavigationToolbar2QT
 from matplotlib.backend_bases import (NavigationToolbar2, cursors)
 import matplotlib.backends.qt_editor.figureoptions as figureoptions
 from matplotlib.figure import Figure
@@ -95,39 +95,30 @@ class EJcanvas(FigureCanvas):
 
 
 class EJplotControl(NavigationToolbar2, QObject):
-    """This class is mostly copied from matplotlib.backend_qt5, excpet for no
-    longer necessary for any GUI"""
+    """This class is an implementation of NavigationToolbar2 for controlling 
+    the canvas of ErwinJr plotting. The class is mainly inspired by 
+    `NavigationToolbar2QT` in backend_qt5.py
+    Critical APIs are: 
+    - set_action to set necessary actions that are part of `toolitems` of the 
+      controller.
+    - set_custom to set customized actions, basically 'layerselect' and 
+      `pairselect` for quantum wells/barriers and quantum states selection.
+    - trigger_custom to trigger custom actions
+    """
     message = Signal(str)
 
     def __init__(self, canvas, parent):
+        # Not QToolBar to not draw any toolbar icons.
         QObject.__init__(self, parent)
-        self.canvas = canvas
+        NavigationToolbar2.__init__(self, canvas)
         self._actions = {}
         self._custom_active = {}
         self._custom_cursor = {}
         self.zoomed = False
 
-        NavigationToolbar2.__init__(self, canvas)
-
     def _init_toolbar(self):
+        # override for backward compatibility.
         pass
-        # for text, tooltip_text, image_file, callback in self.toolitems:
-        #     if text is None:
-        #         self.addSeparator()
-        #     else:
-        #         a = self.addAction(self._icon(image_file + '.png'),
-        #                            text, getattr(self, callback))
-        #         self._actions[callback] = a
-        #         if callback in ['zoom', 'pan']:
-        #             a.setCheckable(True)
-        #         if tooltip_text is not None:
-        #             a.setToolTip(tooltip_text)
-        #         if text == 'Subplots':
-        #             a = self.addAction(self._icon("qt4_editor_options.png"),
-        #                                'Customize', self.edit_parameters)
-        #             a.setToolTip('Edit axis, curve and image parameters')
-
-        #  self.buttons = {}
 
     def set_action(self, callback, button):
         """According to matplotlib.backend_bases, supported actions are:
@@ -136,9 +127,12 @@ class EJplotControl(NavigationToolbar2, QObject):
             ('Back', 'Back to  previous view', 'back', 'back'),
             ('Forward', 'Forward to next view', 'forward', 'forward'),
             (None, None, None, None),
-            ('Pan', 'Pan axes with left mouse, zoom with right', 'move',
-                'pan'),
-            ('Zoom', 'Zoom to rectangle', 'zoom_to_rect', 'zoom'),
+            ('Pan',
+            'Left button pans, Right button zooms\n'
+            'x/y fixes axis, CTRL fixes aspect',
+            'move', 'pan'),
+            ('Zoom', 'Zoom to rectangle\nx/y fixes axis, CTRL fixes aspect',
+            'zoom_to_rect', 'zoom'),
             ('Subplots', 'Configure subplots', 'subplots',
                 'configure_subplots'),
             (None, None, None, None),
@@ -163,111 +157,79 @@ class EJplotControl(NavigationToolbar2, QObject):
         self._custom_active[name] = callback
         self._actions[name] = button
         self._custom_cursor[name] = cursor
+        self._custom_mode = None
+        self._custom_callBack = None
         button.setCheckable(True)
         # TODO Can this function become a decorator?
 
-    def edit_parameters(self):
-        allaxes = self.canvas.figure.get_axes()
-        if not allaxes:
-            QMessageBox.warning(
-                self.parent(), "Error", "There are no axes to edit.")
-            return
-        elif len(allaxes) == 1:
-            axes, = allaxes
-        else:
-            titles = []
-            for axes in allaxes:
-                name = (axes.get_title() or
-                        " - ".join(filter(None, [axes.get_xlabel(),
-                                                 axes.get_ylabel()])) or
-                        "<anonymous {} (id: {:#x})>".format(
-                            type(axes).__name__, id(axes)))
-                titles.append(name)
-            item, ok = QInputDialog.getItem(
-                self.parent(), 'Customize', 'Select axes:', titles, 0, False)
-            if ok:
-                axes = allaxes[titles.index(item)]
-            else:
-                return
-
-        figureoptions.figure_edit(axes, self)
-
     def _update_buttons_checked(self):
         # sync button checkstates to match active mode
-        self._actions['pan'].setChecked(self._active == 'PAN')
-        self._actions['zoom'].setChecked(self._active == 'ZOOM')
+        if 'pan' in self._actions:
+            self._actions['pan'].setChecked(self.mode.name == 'PAN')
+        if 'zoom' in self._actions:
+            self._actions['zoom'].setChecked(self.mode.name == 'ZOOM')
         for mode in self._custom_active:
-            self._actions[mode].setChecked(self._active == mode)
+            self._actions[mode].setChecked(self._custom_mode == mode)
+
+    def _reset_mode(self):
+        # This is a work around for self.mode value type being private.
+        if self.mode.name == 'PAN':
+            self.pan()
+            return
+        if self.mode.name == 'ZOOM':
+            self.zoom()
+            return
 
     def pan(self, *args):
+        # override
         super(EJplotControl, self).pan(*args)
+        self._custom_mode = None
         self._update_buttons_checked()
 
     def zoom(self, *args):
+        # override
         super(EJplotControl, self).zoom(*args)
+        self._custom_mode = None
         self.zoomed = True
         self._update_buttons_checked()
 
     def home(self, *args):
+        # override
         super(EJplotControl, self).home(*args)
         self.zoomed = False
 
-    def custom(self, mode):
-        if self._active == mode:
-            self._active = None
-        else:
-            self._active = mode
-
-        if self._idPress is not None:
-            self._idPress = self.canvas.mpl_disconnect(self._idPress)
-            self.mode = ''
-
-        if self._idRelease is not None:
-            self._idRelease = self.canvas.mpl_disconnect(self._idRelease)
-            self.mode = ''
-
-        if self._active:
-            #  self._idPress = self.canvas.mpl_connect('button_press_event',
-            #                                          self.press[mode])
-            self._idRelease = self.canvas.mpl_connect(
+    def trigger_custom(self, mode):
+        self._reset_mode()
+        if self._custom_mode != mode:
+            self._custom_mode = mode
+            self._custom_callBack = self.canvas.mpl_connect(
                 'button_release_event', self._custom_active[mode])
-            self.mode = mode
             self.canvas.widgetlock(self)
         else:
+            self._custom_mode = None
+            assert(self._custom_callBack != None)
+            self.canvas.mpl_disconnect(self._custom_callBack)
             self.canvas.widgetlock.release(self)
 
         for a in self.canvas.figure.get_axes():
             a.set_navigate_mode(None)
 
-        self.set_message(self.mode)
         self._update_buttons_checked()
 
-    def set_message(self, s):
-        self.message.emit(s)
-
-    def _set_cursor(self, event):
-        # override backend_bases.NavigationToolbar2._set_cursor
-        if not event.inaxes or not self._active:
-            if self._lastCursor != cursors.POINTER:
-                self.set_cursor(cursors.POINTER)
-                self._lastCursor = cursors.POINTER
-        else:
-            if (self._active == 'ZOOM' and
-                    self._lastCursor != cursors.SELECT_REGION):
-                self.set_cursor(cursors.SELECT_REGION)
-                self._lastCursor = cursors.SELECT_REGION
-            elif (self._active == 'PAN' and
-                  self._lastCursor != cursors.MOVE):
-                self.set_cursor(cursors.MOVE)
-                self._lastCursor = cursors.MOVE
-            elif (self._active in self._custom_active and
-                    self._lastCursor != self._custom_cursor[self._active]):
-                self.set_cursor(self._custom_cursor[self._active])
+    def _update_cursor(self, event):
+        # override backend_bases.NavigationToolbar2._update_cursor
+        if (event.inaxes and self._custom_mode and
+            self._lastCursor != self._custom_cursor[self._custom_mode]):
+            self.set_cursor(self._custom_cursor[self._custom_mode])
+            return 
+        super(EJplotControl, self)._update_cursor(event)
 
     def set_cursor(self, cursor):
+        # implement
         self.canvas.setCursor(cursord[cursor])
 
     def draw_rubberband(self, event, x0, y0, x1, y1):
+        # implement
         height = self.canvas.figure.bbox.height
         y1 = height - y1
         y0 = height - y0
@@ -275,15 +237,15 @@ class EJplotControl(NavigationToolbar2, QObject):
         self.canvas.drawRectangle(rect)
 
     def remove_rubberband(self):
+        # implement
         self.canvas.drawRectangle(None)
 
     def save_figure(self, caption="Choose a filename to save to",
                     filename=None, default_filetype=None):
+        # This method is override to support customized filename.
         filetypes = self.canvas.get_supported_filetypes_grouped()
         sorted_filetypes = sorted(filetypes.items())
-        #  if not default_filetype in self.canvas.get_supported_filetypes():
-        if not default_filetype:
-            default_filetype = self.canvas.get_default_filetype()
+        default_filetype = self.canvas.get_default_filetype()
 
         if not filename:
             startpath = os.path.expanduser(
