@@ -1,14 +1,15 @@
 language: python
 python:
     - "3.6"
-sudo: false
+os: linux
+dist: xenial
 env:
-    - OMP_NUM_THREADS=4 
+    - OMP_NUM_THREADS=4
 addons:
     apt:
         packages:
             - doxygen
-            - doxygen-doc 
+            - doxygen-doc
             - doxygen-latex
             - doxygen-gui
             - graphviz
