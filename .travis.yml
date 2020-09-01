@@ -1,19 +1,20 @@
 language: python
+os: linux
+dist: xenial
 python:
   - '3.6'
   - '3.7'
   - '3.8'
-sudo: false
+env:
+  - OMP_NUM_THREADS=4
 addons:
   apt:
     packages:
       - doxygen
-      - doxygen-doc 
+      - doxygen-doc
       - doxygen-latex
       - doxygen-gui
       - graphviz
-env:
-  - OMP_NUM_THREADS=4 
 install:
   - pip3 install --upgrade pip
   - pip3 install numpy scipy matplotlib sphinx sphinx_rtd_theme sphinxcontrib-bibtex breathe pytest
@@ -32,8 +33,8 @@ jobs:
     language: shell       # 'language: python' is an error on Travis CI macOS
     before_install:
       - brew install doxygen
-    env: 
-      - OMP_NUM_THREADS=4 
+    env:
+      - OMP_NUM_THREADS=4
     script:
       - python3 test/SimpleSchrodinger.py
   - name: MacOS with GCC
@@ -42,8 +43,8 @@ jobs:
     language: shell       # 'language: python' is an error on Travis CI macOS
     before_install:
       - brew install doxygen llvm
-    env: 
-      - CC=gcc-9 OMP_NUM_THREADS=4 
+    env:
+      - CC=gcc-9 OMP_NUM_THREADS=4
     script:
       - python3 test/SimpleSchrodinger.py MP
   - name: MacOS with Clang
@@ -52,8 +53,8 @@ jobs:
     language: shell       # 'language: python' is an error on Travis CI macOS
     before_install:
       - brew install doxygen llvm
-    env: 
-      - CC=/usr/local/opt/llvm/bin/clang OMP_NUM_THREADS=4 
+    env:
+      - CC=/usr/local/opt/llvm/bin/clang OMP_NUM_THREADS=4
     script:
       - python3 test/SimpleSchrodinger.py MP
   - name: Windows
@@ -63,7 +64,7 @@ jobs:
     before_install:
       - choco install python --version 3.8.0
       - python -m pip install --upgrade pip
-    env: 
+    env:
       - PATH=/c/Python38:/c/Python38/Scripts:$PATH MSBUILD_PATH="/C/Program Files (x86)/Microsoft Visual Studio/2017/BuildTools/MSBuild/15.0/Bin"
     install:
       - pip3 install --upgrade pip
@@ -73,6 +74,6 @@ jobs:
       - export PATH=$MSBUILD_PATH:$PATH
       - echo $PATH
       - python install.py --msbuild=msbuild.exe --nodocs --noshortcut
-      = ls OneDQuantum
+      - ls OneDQuantum
       # - python test/SimpleSchrodinger.py MP
 

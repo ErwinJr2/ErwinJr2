@@ -2,6 +2,7 @@
 # -*- coding:utf-8 -*-
 
 # TODO: add dependence check
+import argparse
 
 import os
 import sys
@@ -9,9 +10,11 @@ import subprocess
 from subprocess import CalledProcessError
 if sys.platform.startswith('win'):
     try:
-        import winshell
+        import winshell  # ignore: unresolved-import
     except ModuleNotFoundError:
         print("winshell not installed. Cannot create shortcut!")
+
+verbose = False
 
 
 def build_clib(path, MSBuild=None):
@@ -22,10 +25,13 @@ def build_clib(path, MSBuild=None):
         make_cmd = [MSBuild, 'OneDQuantum.sln', '/p:Configuration=Release']
         makemp_cmd = [MSBuild, '1DSchrodinger.vcxproj',
                       '/p:Configuration=MP_Release']
-        print(make_cmd)
+        # print('running cummand: ')
+        # print(' '.join(make_cmd))
     os.chdir(os.path.join(path, 'OneDQuantum'))
     print("Building C Lib")
-    subprocess.check_call(make_cmd)
+    result = subprocess.run(make_cmd, check=True)
+    print(result.stdout)
+    print(result.stderr)
     try:
         subprocess.check_call(makemp_cmd)
     except CalledProcessError:
@@ -87,39 +93,44 @@ def create_shortcut(path):
 
 
 if __name__ == "__main__":
-    MSBuild = None
-    path = os.path.dirname(os.path.abspath(__file__))
-    docs = None
-    shortcut = None
-    for opt in sys.argv[1:]:
-        if opt.lower().startswith("--msbuild="):
-            MSBuild = opt[10:]
-        elif opt.lower().startswith("--nodoc"):
-            docs = False
-        elif opt.lower().startswith("--doc"):
-            docs = True
-        elif opt.lower().startswith("--shortcut"):
-            shortcut = True
-        elif opt.lower().startswith("--noshortcut"):
-            shortcut = False
-        else:
-            print("Unknown option %s" % opt)
-    build_clib(path, MSBuild)
-    if docs is None:
+    parser = argparse.ArgumentParser(description='Install ErwinJr2.')
+    parser.add_argument('--msbuild',
+                        help='Microsoft Visual Studio MSBuild directory. Use '
+                        'Visual Studio compiler by providing this argument.',
+                        type=str, nargs=1, default=None)
+    parser.add_argument('--docs', help='Generate local documents.',
+                        action='store_true', default=argparse.SUPPRESS)
+    parser.add_argument('--nodocs', help='Do not generate local documents.',
+                        dest='docs', action='store_false',
+                        default=argparse.SUPPRESS)
+    parser.add_argument('--shortcut', help='Generate shortcuts on desktop.',
+                        action='store_true', default=argparse.SUPPRESS)
+    parser.add_argument('--noshortcut',
+                        help='Do not generate shortcuts on desktop.',
+                        dest='shortcut', action='store_false',
+                        default=argparse.SUPPRESS)
+    parser.add_argument('--verbose', '-v', action='count', default=0)
+
+    args = parser.parse_args()
+    verbose = args.verbose > 0
+
+    currentPath = os.path.dirname(os.path.abspath(__file__))
+    build_clib(currentPath, args.msbuild)
+    if not hasattr(args, 'docs'):
         key = None
         while key not in ('y', 'n', ''):
             key = input("Build the documentation locally? Y/[N] ").lower()
-        docs = (key == 'y')
-    if docs:
-        build_doc(path)
-    if shortcut is None:
+        args.docs = (key == 'y')
+    if args.docs:
+        build_doc(currentPath)
+    if not hasattr(args, 'shortcut'):
         key = None
         while key not in ('y', 'n', ''):
             key = input("Create shortcut on Desktop? [Y]/N ").lower()
-        shortcut = not (key == 'n')
-    if shortcut:
+        args.shortcut = not (key == 'n')
+    if args.shortcut:
         try:
-            create_shortcut(path)
+            create_shortcut(currentPath)
         except (NotImplementedError, CalledProcessError):
             print("Creat shortcut failed.")
 
