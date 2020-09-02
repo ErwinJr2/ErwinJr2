@@ -60,7 +60,7 @@ jobs:
   - name: Windows
     # currently only building is tested, TODO
     os: windows
-    language: shell
+    language: cpp
     before_install:
       - choco install python --version 3.8.0
       - python -m pip install --upgrade pip
@@ -69,11 +69,17 @@ jobs:
     install:
       - pip3 install --upgrade pip
       - pip3 install numpy scipy matplotlib sphinx sphinx_rtd_theme sphinxcontrib-bibtex breathe pytest
+      - pip3 install wheel
       - pip3 install winshell
     script:
       - export PATH=$MSBUILD_PATH:$PATH
       - echo $PATH
-      - python install.py --msbuild=msbuild.exe --nodocs --noshortcut
+      - cd OneDQuantum
+      - msbuild.exe OneDQuantum.sln //p:Configuration=Release
+      - msbuild.exe OneDQuantum.sln //p:Configuration=MP_Release
+      - cd ..
+      # - python install.py --msbuild=msbuild.exe --nodocs --noshortcut
       - ls OneDQuantum
-      # - python test/SimpleSchrodinger.py MP
+      - python test/SimpleSchrodinger.py
+      - python test/SimpleSchrodinger.py MP
 

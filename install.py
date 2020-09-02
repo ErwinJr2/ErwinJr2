@@ -29,9 +29,7 @@ def build_clib(path, MSBuild=None):
         # print(' '.join(make_cmd))
     os.chdir(os.path.join(path, 'OneDQuantum'))
     print("Building C Lib")
-    result = subprocess.run(make_cmd, check=True)
-    print(result.stdout)
-    print(result.stderr)
+    subprocess.check_call(make_cmd)
     try:
         subprocess.check_call(makemp_cmd)
     except CalledProcessError:
