@@ -880,6 +880,7 @@ class QuantumTab(QWidget):
         materialWidget.currentIndexChanged(int) """
         self.qclayers.layerMtrls[row] = selection
         self.layerTable.selectRow(row)
+        self.layerTable_refresh()
         # Trigger itemSelectionChanged SIGNAL and thus update_quantumCanvas
         self.dirty.emit()
 
