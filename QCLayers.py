@@ -91,7 +91,7 @@ layerSelected : int
                  moleFracs=[0.53, 0.52], xres=0.5, Eres=0.5,
                  layerWidths=[0.0], layerMtrls=[0], layerDopings=[0.0],
                  layerARs=[True], EField=0, repeats=3, T=300.0, Solver="ODE",
-                 description=""):
+                 description="", wl=3.0):
         self.substrate = substrate
         self.crystalType = Material.MParm[substrate]["Crystal"]
         self.materials = materials
@@ -107,6 +107,7 @@ layerSelected : int
         self.Temperature = T
         self.Solver = Solver
         self.description = description
+        self.wl = 3.0
         self.NonParabolic = True
         self.periodic = False
         self.solveMatrix = False

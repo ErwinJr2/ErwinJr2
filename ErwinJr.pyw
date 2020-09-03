@@ -400,12 +400,20 @@ class MainWindow(QMainWindow):
 # Export Functions
 # ===========================================================================
     def exportBandDiagram(self):
-        self.qtab.export_quantumCanvas(self.filename.split('.')[0])
+        if self.filename is None:
+            filename = 'new_qcl'
+        else:
+            filename = self.filename.split('.')[0]
+        self.qtab.export_quantumCanvas(filename)
 
     def export_band_diagram_data(self):
+        if self.filename is None:
+            filename = 'new_qcl'
+        else:
+            filename = self.filename.split('.')[0]
         fname, flt = QFileDialog.getSaveFileName(
             self, "ErwinJr2 - Export Band Structure Data",
-            self.filename.split('.')[0],
+            filename,
             "Comma-Separated Value file (*.csv)")
         if fname:
             # if user doesn't click cancel

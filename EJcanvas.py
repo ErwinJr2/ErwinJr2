@@ -95,13 +95,13 @@ class EJcanvas(FigureCanvas):
 
 
 class EJplotControl(NavigationToolbar2, QObject):
-    """This class is an implementation of NavigationToolbar2 for controlling 
-    the canvas of ErwinJr plotting. The class is mainly inspired by 
+    """This class is an implementation of NavigationToolbar2 for controlling
+    the canvas of ErwinJr plotting. The class is mainly inspired by
     `NavigationToolbar2QT` in backend_qt5.py
-    Critical APIs are: 
-    - set_action to set necessary actions that are part of `toolitems` of the 
+    Critical APIs are:
+    - set_action to set necessary actions that are part of `toolitems` of the
       controller.
-    - set_custom to set customized actions, basically 'layerselect' and 
+    - set_custom to set customized actions, basically 'layerselect' and
       `pairselect` for quantum wells/barriers and quantum states selection.
     - trigger_custom to trigger custom actions
     """
@@ -163,7 +163,7 @@ class EJplotControl(NavigationToolbar2, QObject):
         # TODO Can this function become a decorator?
 
     def _get_mode_name(self):
-        # This is a work around for backward compatiblity due to 
+        # This is a work around for backward compatiblity due to
         # https://github.com/matplotlib/matplotlib/pull/17135
         if self._custom_mode:
             return self._custom_mode
@@ -238,7 +238,7 @@ class EJplotControl(NavigationToolbar2, QObject):
         if (event.inaxes and self._custom_mode and
             self._lastCursor != self._custom_cursor[self._custom_mode]):
             self.set_cursor(self._custom_cursor[self._custom_mode])
-            return 
+            return
         super(EJplotControl, self)._update_cursor(event)
 
     def set_cursor(self, cursor):
@@ -262,7 +262,8 @@ class EJplotControl(NavigationToolbar2, QObject):
         # This method is override to support customized filename.
         filetypes = self.canvas.get_supported_filetypes_grouped()
         sorted_filetypes = sorted(filetypes.items())
-        default_filetype = self.canvas.get_default_filetype()
+        if default_filetype is None:
+            default_filetype = self.canvas.get_default_filetype()
 
         if not filename:
             startpath = os.path.expanduser(
