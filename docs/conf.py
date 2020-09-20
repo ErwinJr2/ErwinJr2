@@ -31,9 +31,9 @@ copyright = '2020, Gmachl Group, Princeton'
 author = 'Ming Lyu, Yaofeng (Desmond) Zhong, Xiaowen Chen'
 
 # The short X.Y version
-version = '1.0'
+version = '1.1'
 # The full version, including alpha/beta/rc tags
-release = '1.0 alpha'
+release = '1.1 alpha'
 
 
 # -- General configuration ---------------------------------------------------
@@ -206,7 +206,7 @@ epub_exclude_files = ['search.html']
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/', None), 
+    'python': ('https://docs.python.org/', None),
     'numpy': ('https://docs.scipy.org/doc/numpy', None),
     'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
     'matplotlib': ('https://matplotlib.org', None),
