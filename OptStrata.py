@@ -554,7 +554,7 @@ class OptStrata(MaxwellLayer):
                 res.append((xs >= lsum[i]) & (xs <= lsum[i+1]))
         return res
 
-    def confinement(self, beta, xs=None, Ey=None):
+    def confinementy(self, beta, xs=None, Ey=None):
         """Return the confinement factor corresponds to mode with effective
         refractive index beta. If xs and Ey is None, they will be generated.
         The active region is labelled by anyting start with "Active".

@@ -148,6 +148,9 @@ layerSelected : int
         self.materials.append(mtrl if mtrl else
                               qcMaterial[self.substrate][0])
         self.moleFracs.append(moleFrac if moleFrac else 0.0)
+        self.mtrlAlloys.append(Material.Alloy(
+            self.materials[-1], self.moleFracs[-1], self.Temperature))
+        self.mtrlAlloys[-1].set_strain(self.a_parallel)
 
     def del_mtrl(self, n):
         """Delete materials labeled n. All layers of this material will
