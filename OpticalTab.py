@@ -432,7 +432,7 @@ class OpticalTab(QWidget):
             self.stratTable.clearSelection()
         self.update_canvas()
 
-    @pyqtSlot()
+    @pyqtSlot(QTableWidgetItem)
     def strataTable_item(self, item):
         """SLOT connected to strataTable.itemChanged"""
         row = item.row()
