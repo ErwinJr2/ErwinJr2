@@ -108,7 +108,6 @@ class OpticalTab(QWidget):
         self.setLayout(opticalLayout)
         self.dirty.connect(self.update_xs)
         self.update_xs()
-        self.update_canvas()
 
     def _settingBox(self, width):
         """Return a Qt Layout object containning all setting widgets"""
@@ -415,7 +414,7 @@ class OpticalTab(QWidget):
     def update_Loss(self):
         """Update the mirror loss, should be called whenever the facet
         settings are changed"""
-        print(self.facetRefct(0), self.facetRefct(1))
+        # print(self.facetRefct(0), self.facetRefct(1))
         perRunLoss = self.facetRefct(1) * self.facetRefct(0)
         self.alpham = -log(perRunLoss)/(2*self.ridgeLength/10)  # to cm-1
         self.mirrorLoss.setText(
@@ -573,6 +572,7 @@ class OpticalTab(QWidget):
         self.stratum.updateIndices()
         self.strataTable_refresh()
         self.xs = np.linspace(-1, sum(self.stratum.Ls[1:]), 5000)
+        self.update_canvas()
 
     @pyqtSlot()
     def solve(self):
@@ -596,7 +596,7 @@ class OpticalTab(QWidget):
             return
         self.Ey, _, _ = self.stratum.populateMode(self.beta, self.xs)
         # TODO
-        self.confinement = self.stratum.confinement(
+        self.confinement = self.stratum.confinementy(
             self.beta, self.xs, self.Ey)
         self.alphaw = 4*pi/(self.stratum.wl/1E4) * self.beta.imag  # cm^-1
         self.update_canvas()
@@ -627,7 +627,8 @@ class OpticalTab(QWidget):
 
     def update_canvas(self):
         """Update figure in optCanvas"""
-        self.optCanvas.clear()
+        self.ridxAxis.clear()
+        self.modeAxis.clear()
         nx = self.stratum.populateIndices(self.xs).real
         self.ridxAxis.plot(self.xs, nx, 'k', lw=1)
         if self.redActive:
