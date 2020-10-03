@@ -654,6 +654,8 @@ layerSelected : int
 
     def effective_ridx(self, wl):
         """Return the effective refractive index for TM mode"""
+        if sum(self.layerWidths) == 0:
+            return 1.0
         self.mtrlRIdx = [(m.moleFrac * rIdx[m.A.name](wl) +
                           (1 - m.moleFrac) * rIdx[m.B.name](wl))
                          for m in self.mtrlAlloys]
