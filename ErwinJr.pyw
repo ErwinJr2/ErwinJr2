@@ -52,6 +52,7 @@ class MainWindow(QMainWindow):
             fname = self.qsettings.value("LastFile", None)
         self.dirty = True
         qclayers = None
+        stratum = None
         rf = self.qsettings.value("RecentFiles")
         self.recentFiles = rf if rf else []
         if fname and QFile.exists(fname):
