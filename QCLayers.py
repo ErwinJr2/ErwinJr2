@@ -110,6 +110,7 @@ layerSelected : int
         self.wl = 3.0
         self.NonParabolic = True
         self.periodic = False
+        # self.periodic = True
         self.solveMatrix = False
         self.layerSelected = None
 

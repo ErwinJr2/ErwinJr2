@@ -77,7 +77,6 @@ class MainWindow(QMainWindow):
         # self.mainTabWidget.setCurrentIndex(1)
 
         self.setCentralWidget(self.mainTabWidget)
-        self.create_menu()
 
         if self.qsettings.value("MainWindow/Geometry"):
             self.restoreGeometry(self.qsettings.value("MainWindow/Geometry"))
@@ -102,6 +101,7 @@ class MainWindow(QMainWindow):
         self.mainTabWidget.addTab(self.otab, 'Optics')
         self.qtab.toOpticsButton.clicked.connect(self.q2o)
         self.otab.fieldBox.setValue(self.qtab.qclayers.EField)
+        self.create_menu()
 
     def q2o(self):
         # print(self.qtab.qclayers.wl,
