@@ -101,7 +101,7 @@ class MainWindow(QMainWindow):
         self.otab.dirty.connect(self.thingsChanged)
         self.mainTabWidget.addTab(self.otab, 'Optics')
         self.qtab.toOpticsButton.clicked.connect(self.q2o)
-        self.otab.fieldBox.setValue(qclayers.EField)
+        self.otab.fieldBox.setValue(self.qtab.qclayers.EField)
 
     def q2o(self):
         # print(self.qtab.qclayers.wl,
