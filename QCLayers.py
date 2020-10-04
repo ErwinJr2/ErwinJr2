@@ -597,7 +597,8 @@ layerSelected : int
         Ei = self.eigenEs[state]
         psi_i = self.psis[state]
         hwLO = self.avghwLO()
-        # return 1/sum(self.loTransition(state, q) for q in range(state) if self.eigenEs[q] <= Ei - hwLO)
+        # return 1/sum(self.loTransition(state, q) for q in range(stat
+        #                if self.eigenEs[q] <= Ei - hwLO)
         idxs = self.eigenEs <= Ei - hwLO
         psi_js = self.psis[idxs]
         Ejs = self.eigenEs[idxs]
