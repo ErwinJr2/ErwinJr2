@@ -4,19 +4,21 @@ import numpy as np
 # from scipy.optimize import newton, minimize
 from ctypes import c_double, c_int
 import os
+import typing
+from .typeDefs import doubleArray
 path = os.path.dirname(__file__)
 
 _clib = np.ctypeslib.load_library('1DMaxwell', path)
-_doubleArray = np.ctypeslib.ndpointer(
-    dtype=np.float64, ndim=1, flags="C_CONTIGUOUS")
 __all__ = ['cCoulombField', 'cCoulombField0']
 
-_clib.CoulombField.argtypes = [c_double, c_int, _doubleArray, _doubleArray,
-                               _doubleArray]
+_clib.CoulombField.argtypes = [c_double, c_int, doubleArray, doubleArray,
+                               doubleArray]
 _clib.CoulombField.restype = c_double
 
 
-def cCoulombField(step, eDensity, eps, xmin=0, xmax=None):
+def cCoulombField(step: float, eDensity: np.ndarray, eps: np.ndarray,
+                  xmin: int = 0, xmax: typing.Optional[int] = None
+                  ) -> np.ndarray:
     """from e density to coulomb field, assuming 0 field on the left"""
     if not xmax:
         xmax = eDensity.size
@@ -28,12 +30,14 @@ def cCoulombField(step, eDensity, eps, xmin=0, xmax=None):
     return Vc
 
 
-_clib.CoulombField0.argtypes = [c_double, c_int, _doubleArray, _doubleArray,
-                                _doubleArray]
+_clib.CoulombField0.argtypes = [c_double, c_int, doubleArray, doubleArray,
+                                doubleArray]
 _clib.CoulombField0.restype = c_double
 
 
-def cCoulombField0(step, eDensity, eps, xmin=0, xmax=None):
+def cCoulombField0(step: float, eDensity: np.ndarray, eps: np.ndarray,
+                   xmin: int = 0, xmax: typing.Optional[int] = None
+                   ) -> np.ndarray:
     """from e density to Coulomb field, assuming no external field"""
     if not xmax:
         xmax = eDensity.size

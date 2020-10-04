@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 import numpy as np
-from ctypes import c_int, c_double, POINTER
+from ctypes import c_int, c_double, POINTER, CDLL
+import typing
 from . import band as _bd
+from .typeDefs import doubleArray, intArray, floatOrArray
 import os
 path = os.path.dirname(__file__)
 __all__ = ['cSimpleSolve1D', 'cSimpleFillPsi',
@@ -10,13 +12,8 @@ __all__ = ['cSimpleSolve1D', 'cSimpleFillPsi',
            'cLOphononScatter', 'cLOtotal',
            'cBandSolve1DBonded']
 
-_doubleArray = np.ctypeslib.ndpointer(
-    dtype=np.float64, ndim=1, flags="C_CONTIGUOUS")
-_intArray = np.ctypeslib.ndpointer(
-    dtype=np.int32, ndim=1, flags="C_CONTIGUOUS")
 
-
-def bindOpenMP(on=True):
+def bindOpenMP(on: bool = True) -> typing.Tuple[CDLL, typing.Type[object]]:
     """
     set OpenMP. Default = True
     """
@@ -34,32 +31,33 @@ def bindOpenMP(on=True):
     #                            _doubleArray]
     #  _clib.Numerov.restype = c_double
 
-    _clib.Solve1D.argtypes = [c_double, c_int, _doubleArray, c_int,
-                              _doubleArray, _doubleArray,
-                              POINTER(cBand), _doubleArray]
+    _clib.Solve1D.argtypes = [c_double, c_int, doubleArray, c_int,
+                              doubleArray, doubleArray,
+                              POINTER(cBand), doubleArray]
     _clib.Solve1D.restype = c_int
 
     _clib.Solve1DBonded.argtypes = [c_double, c_int, c_double, c_double,
-                                    c_double, _doubleArray, c_int,
-                                    _doubleArray, _doubleArray,
-                                    POINTER(cBand), _doubleArray]
+                                    c_double, doubleArray, c_int,
+                                    doubleArray, doubleArray,
+                                    POINTER(cBand), doubleArray]
     _clib.Solve1DBonded.restype = c_int
 
-    _clib.FillPsi.argtypes = [c_double, c_int, _doubleArray, c_int,
-                              _doubleArray, _doubleArray, _doubleArray,
-                              _intArray, _intArray, POINTER(cBand)]
+    _clib.FillPsi.argtypes = [c_double, c_int, doubleArray, c_int,
+                              doubleArray, doubleArray, doubleArray,
+                              intArray, intArray, POINTER(cBand)]
     _clib.FillPsi.restype = None
 
     _clib.LOphononScatter.argtypes = [c_double, c_int, c_double,
-                                      _doubleArray, _doubleArray]
+                                      doubleArray, doubleArray]
     _clib.LOphononScatter.restype = c_double
 
-    _clib.LOtotal.argtypes = [c_double, c_int, _doubleArray, _doubleArray,
-                              _doubleArray, _doubleArray, c_int]
+    _clib.LOtotal.argtypes = [c_double, c_int, doubleArray, doubleArray,
+                              doubleArray, doubleArray, c_int]
     _clib.LOtotal.restype = c_double
+    return _clib, Band
 
 
-bindOpenMP(False)
+_clib, Band = bindOpenMP(False)
 
 #  def cNumerov(step, y0, y1, E, V, m, xmin=0, xmax=None):
 #      if not xmax:
@@ -73,7 +71,9 @@ bindOpenMP(False)
 #      return yend
 
 
-def cSimpleSolve1D(step, Es, V, m, xmin=0, xmax=None):
+def cSimpleSolve1D(step: float, Es: np.ndarray, V: np.ndarray, m: floatOrArray,
+                   xmin: int = 0, xmax: typing.Optional[int] = None
+                   ) -> np.ndarray:
     """
     Find eigen energies. Assume mass as given.
     """
@@ -87,7 +87,9 @@ def cSimpleSolve1D(step, Es, V, m, xmin=0, xmax=None):
     return EigenE[:EigenEN]
 
 
-def cSimpleFillPsi(step, EigenEs, V, m, xmin=0, xmax=None):
+def cSimpleFillPsi(step: float, EigenEs: np.ndarray, V: np.ndarray,
+                   m: floatOrArray, xmin: int = 0,
+                   xmax: typing.Optional[int] = None) -> np.ndarray:
     """
     Find wave functions. Assume mass as given.
     """
@@ -104,22 +106,29 @@ def cSimpleFillPsi(step, EigenEs, V, m, xmin=0, xmax=None):
     return psis.reshape((EigenEs.size, xmax-xmin))
 
 
-def cBandSolve1D(step, Es, V, band, xmin=0, xmax=None):
+def cBandSolve1D(step: float, Es: np.ndarray, V: np.ndarray, band: Band,
+                 xmin: int = 0, xmax: typing.Optional[int] = None
+                 ) -> np.ndarray:
     """
     Find eigen energies using band mass.
     """
     if not xmax:
         xmax = V.size
     EigenE = np.empty(Es.size)
-    EigenEN = _clib.Solve1D(c_double(step), xmax-xmin, Es, Es.size, 
+    EigenEN = _clib.Solve1D(c_double(step), xmax-xmin, Es, Es.size,
                             V[xmin:xmax], np.empty(0), band.c, EigenE)
     return EigenE[:EigenEN]
 
 
-def cBandFillPsi(step, EigenEs, V, band, xmin=0, xmax=None,
-                 Elower=None, Eupper=None, field=None):
+def cBandFillPsi(step: float, EigenEs: np.ndarray, V: np.ndarray, band: Band,
+                 xmin: int = 0, xmax: typing.Optional[int] = None,
+                 Elower: typing.Optional[float] = None,
+                 Eupper: typing.Optional[float] = None,
+                 field: typing.Optional[float] = None) -> np.ndarray:
     """
-    Find wave functions using band mass.
+    Find wave functions using band mass. `field`, `Elower` and `Eupper` is used
+    only for bound the energy range of the wave functions: outside the bound
+    the wavefunction is promised to be zero.
     """
     if not xmax:
         xmax = V.size
@@ -140,8 +149,10 @@ def cBandFillPsi(step, EigenEs, V, band, xmin=0, xmax=None,
     return psis.reshape((EigenEs.size, xmax-xmin))
 
 
-def cBandSolve1DBonded(step, Es, Elower, Eupper, field,
-                       V, band, xmin=0, xmax=None):
+def cBandSolve1DBonded(step: float, Es: np.ndarray, Elower: float,
+                       Eupper: float, field: float, V: np.ndarray, band: Band,
+                       xmin: int = 0, xmax: typing.Optional[int] = None
+                       ) -> np.ndarray:
     """
     Find eigen energies using band mass.
     bonded by [Elower-field*x, Eupper-field*x]
@@ -149,25 +160,35 @@ def cBandSolve1DBonded(step, Es, Elower, Eupper, field,
     if not xmax:
         xmax = V.size
     EigenE = np.empty(Es.size)
-    EigenEN = _clib.Solve1DBonded(c_double(step), xmax-xmin, Elower, Eupper,
-                                  field, Es, Es.size, V[xmin:xmax],
+    EigenEN = _clib.Solve1DBonded(c_double(step), xmax-xmin, c_double(Elower),
+                                  c_double(Eupper), c_double(field),
+                                  Es, Es.size, V[xmin:xmax],
                                   np.empty(0), band.c, EigenE)
     return EigenE[:EigenEN]
 
 
-def cLOphononScatter(step, kl, psi_i, psi_j, xmin=0, xmax=None):
+def cLOphononScatter(step: float, kl: float, psi_i: np.ndarray,
+                     psi_j: np.ndarray, xmin: int = 0,
+                     xmax: typing.Optional[int] = None) -> float:
     if not xmax:
         xmax = psi_i.size
-    return _clib.LOphononScatter(c_double(step), xmax-xmin, kl,
+    return _clib.LOphononScatter(c_double(step), xmax-xmin, c_double(kl),
                                  psi_i, psi_j)
 
 
-def cLOtotal(step, kls, psi_i, psi_js, fjs):
+def cLOtotal(step: float, kls: np.ndarray, psi_i: np.ndarray,
+             psi_js: np.ndarray, fjs: np.ndarray):
     return _clib.LOtotal(c_double(step), len(psi_i), kls, psi_i,
                          psi_js.flatten(), fjs, len(psi_js))
 
 
+def isMP() -> bool:
+    return _clib.isMP() == 1
+
+
 if __name__ == "__main__":
     print(_clib.invAlpha())
+    if isMP():
+        print("Woo! OpenMP is loaded!")
 
 # vim: ts=4 sw=4 sts=4 expandtab

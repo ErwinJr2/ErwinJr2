@@ -3,43 +3,42 @@
 import numpy as np
 from ctypes import c_int, c_double
 import os
+import typing
+from .typeDefs import floatOrArray, doubleArray, doubleMatrix
 path = os.path.dirname(__file__)
 _clib = np.ctypeslib.load_library('1DThermal', path)
-_doubleArray = np.ctypeslib.ndpointer(
-    dtype=np.float64, ndim=1, flags="C_CONTIGUOUS")
-_doubleMatrix = np.ctypeslib.ndpointer(dtype=np.float64,
-                                       ndim=2, flags="C_CONTIGUOUS")
 __all__ = ['cFermiDirac0', 'cFermiDirac0N',
            'cFermiDirac', 'cFermiDiracN',
            'cBoltzmann', 'cBoltzmannN']
 
-_clib.FermiDirac0.argtypes = [c_double, _doubleArray, c_int,
-                              _doubleArray, _doubleMatrix, c_int, c_double,
-                              _doubleArray]
+_clib.FermiDirac0.argtypes = [c_double, doubleArray, c_int,
+                              doubleArray, doubleMatrix, c_int, c_double,
+                              doubleArray]
 _clib.FermiDirac0.restype = c_double
-_clib.FermiDirac0N.argtypes = [c_double, _doubleArray, c_int,
-                               _doubleArray, _doubleMatrix, c_int, c_double,
-                               _doubleArray]
+_clib.FermiDirac0N.argtypes = [c_double, doubleArray, c_int,
+                               doubleArray, doubleMatrix, c_int, c_double,
+                               doubleArray]
 _clib.FermiDirac0N.restype = c_double
-_clib.FermiDirac.argtypes = [c_double, c_double, _doubleArray, c_int,
-                             _doubleArray, _doubleMatrix, c_int, c_double,
-                             _doubleArray]
+_clib.FermiDirac.argtypes = [c_double, c_double, doubleArray, c_int,
+                             doubleArray, doubleMatrix, c_int, c_double,
+                             doubleArray]
 _clib.FermiDirac.restype = c_double
-_clib.FermiDiracN.argtypes = [c_double, c_double, _doubleArray, c_int,
-                              _doubleArray, _doubleMatrix, c_int, c_double,
-                              _doubleArray]
+_clib.FermiDiracN.argtypes = [c_double, c_double, doubleArray, c_int,
+                              doubleArray, doubleMatrix, c_int, c_double,
+                              doubleArray]
 _clib.FermiDiracN.restype = c_double
-_clib.Boltzmann.argtypes = [c_double, c_double, _doubleArray, c_int,
-                            _doubleArray, _doubleMatrix,
-                            c_int, c_double, _doubleArray]
+_clib.Boltzmann.argtypes = [c_double, c_double, doubleArray, c_int,
+                            doubleArray, doubleMatrix,
+                            c_int, c_double, doubleArray]
 _clib.Boltzmann.restype = c_double
-_clib.BoltzmannN.argtypes = [c_double, c_double, _doubleArray, c_int,
-                             _doubleArray, _doubleMatrix, c_int,
-                             c_double, _doubleArray]
+_clib.BoltzmannN.argtypes = [c_double, c_double, doubleArray, c_int,
+                             doubleArray, doubleMatrix, c_int,
+                             c_double, doubleArray]
 _clib.BoltzmannN.restype = c_double
 
 
-def cFermiDirac0(EF, EigenEs, m, psis, step):
+def cFermiDirac0(EF: float, EigenEs: np.ndarray, m: floatOrArray,
+                 psis: np.ndarray, step: float) -> np.ndarray:
     """0T Fermi-Dirac: Fermi energy to sheet density"""
     if not isinstance(m, np.ndarray):
         m = m*np.ones(psis.shape[1])
@@ -49,7 +48,9 @@ def cFermiDirac0(EF, EigenEs, m, psis, step):
     return eDensity
 
 
-def cFermiDirac0N(sheet, EigenEs, m, psis, step):
+def cFermiDirac0N(sheet: float, EigenEs: np.ndarray, m: floatOrArray,
+                  psis: np.ndarray, step: float
+                  ) -> typing.Tuple[np.ndarray, float]:
     """0T Fermi-Dirac: sheet density to eDensity, EF"""
     if not isinstance(m, np.ndarray):
         m = m*np.ones(psis.shape[1])
@@ -59,7 +60,8 @@ def cFermiDirac0N(sheet, EigenEs, m, psis, step):
     return eDensity, EF
 
 
-def cFermiDirac(T, EF, EigenEs, m, psis, step):
+def cFermiDirac(T: float, EF: float, EigenEs: np.ndarray, m: floatOrArray,
+                psis: np.ndarray, step: float) -> np.ndarray:
     """Finite temperature Fermi-Dirac: Fermi energy to electron density"""
     if not isinstance(m, np.ndarray):
         m = m*np.ones(psis.shape[1])
@@ -69,7 +71,9 @@ def cFermiDirac(T, EF, EigenEs, m, psis, step):
     return eDensity
 
 
-def cFermiDiracN(T, sheet, EigenEs, m, psis, step):
+def cFermiDiracN(T: float, sheet: float, EigenEs: np.ndarray, m: floatOrArray,
+                 psis: np.ndarray, step: float
+                 ) -> typing.Union[np.ndarray, float]:
     """Finite-temperature Fermi-Dirac: sheet density to electron density, EF"""
     if not isinstance(m, np.ndarray):
         m = m*np.ones(psis.shape[1])
@@ -79,7 +83,8 @@ def cFermiDiracN(T, sheet, EigenEs, m, psis, step):
     return eDensity, EF
 
 
-def cBoltzmann(T, EF, EigenEs, m, psis, step):
+def cBoltzmann(T: float, EF: float, EigenEs: np.ndarray, m: floatOrArray,
+               psis: np.ndarray, step: float) -> np.ndarray:
     """Maxwell-Boltzmann: Fermi energy to electron density"""
     if not isinstance(m, np.ndarray):
         m = m*np.ones(psis.shape[1])
@@ -90,7 +95,9 @@ def cBoltzmann(T, EF, EigenEs, m, psis, step):
     return eDensity
 
 
-def cBoltzmannN(T, sheet, EigenEs, m, psis, step):
+def cBoltzmannN(T: float, sheet: float, EigenEs: np.ndarray, m: floatOrArray,
+                psis: np.ndarray, step: float
+                ) -> typing.Union[np.ndarray, float]:
     """Maxwell-Boltzmann: sheet density to Fermi energy"""
     if not isinstance(m, np.ndarray):
         m = m*np.ones(psis.shape[1])

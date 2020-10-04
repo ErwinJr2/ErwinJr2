@@ -4,12 +4,12 @@ from . import OneDSchrodinger, OneDThermal, OneDMaxwell
 from .OneDSchrodinger import *
 from .OneDThermal import *
 from .OneDMaxwell import *
-__all__ = (OneDSchrodinger.__all__ 
-           + OneDThermal.__all__ 
-           + OneDMaxwell.__all__  
+__all__ = (OneDSchrodinger.__all__
+           + OneDThermal.__all__
+           + OneDMaxwell.__all__
            + ['OneDSchrodinger', 'OneDThermal', 'OneDMaxwell'])
 
-try: 
+try:
     OneDSchrodinger.bindOpenMP(True)
 except OSError:
     OneDSchrodinger.bindOpenMP(False)
