@@ -6,9 +6,10 @@ from QCLayers import QCLayers
 from OptStrata import OptStrata
 from collections import defaultdict
 import json
+import typing
 
 
-def qclLoad(fhandle):
+def qclLoad(fhandle: typing.TextIO) -> QCLayers:
     """
     Load QCLayers from a json file
 
@@ -33,7 +34,7 @@ def qclLoad(fhandle):
     return parseQcl(ldict)
 
 
-def loadBoth(fhandle):
+def loadBoth(fhandle: typing.TextIO) -> typing.Union[QCLayers, OptStrata]:
     """
     Load QCLayers and OptStrata from a json file
 
@@ -66,7 +67,7 @@ def loadBoth(fhandle):
     return qcl, stratum
 
 
-def parseQcl(ldict):
+def parseQcl(ldict: typing.Dict[str, typing.Any]) -> QCLayers:
     if ldict["FileType"] != "ErwinJr2 Data File":
         raise TypeError("Wrong file type")
     if int(ldict["Version"]) >= 181107:
@@ -91,7 +92,7 @@ def parseQcl(ldict):
     return o
 
 
-def parseStrata(ldict):
+def parseStrata(ldict: typing.Dict[str, typing.Any]) -> OptStrata:
     if ldict["FileType"] != "ErwinJr2 Data File":
         raise TypeError("Wrong file type")
     if int(ldict["Version"]) >= 200504:
@@ -176,7 +177,7 @@ JSONTemplate = """{
 }"""
 
 
-def qclSaveJSON(fhandle, qclayers):
+def qclSaveJSON(fhandle: typing.TextIO, qclayers: QCLayers):
     """
     Save QCLayers as a json file
 
@@ -200,7 +201,8 @@ def qclSaveJSON(fhandle, qclayers):
     fhandle.write(JSONTemplateOld % tuple(parameters))
 
 
-def EJSaveJSON(fhandle, qclayers, optstratum):
+def EJSaveJSON(fhandle: typing.TextIO, qclayers: QCLayers,
+               optstratum: OptStrata):
     """Save QCLayers and OptStratum as a json file
 
     Parameters
@@ -212,9 +214,10 @@ def EJSaveJSON(fhandle, qclayers, optstratum):
     optstratum : OptStrata.OptStratum
         The OptStratum class to be saced
     """
-    if not isinstance(qclayers, QCLayers):
+    if not (isinstance(qclayers, QCLayers)
+            and isinstance(optstratum, OptStrata)):
         raise TypeError("qclSave: Nothing to save.."
-                        "QCLayers not valid type")
+                        "QCLayers or OptStratum not valid type")
     o = qclayers
     s = optstratum
     cstmtrl = defaultdict(dict)
