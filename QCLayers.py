@@ -593,26 +593,27 @@ layerSelected : int
     def loLifeTime(self, state):
         """ Return the life time due to LO phonon scattering of the
         given state(label)"""
-        return 1/sum(self.loTransition(state, q) for q in range(state))
-        #  Ei = self.eigenEs[state]
-        #  psi_i = self.psis[state]
-        #  hwLO = self.avghwLO()
-        #  idxs = self.eigenEs <= Ei - hwLO
-        #  psi_js = self.psis[idxs]
-        #  Ejs = self.eigenEs[idxs]
-        #  masses = m0 * sqrt(np.sum(self.xMc*psi_i**2*self.xres) *
-        #                     np.sum(self.xMc*psi_js**2*self.xres, axis=1))
-        #  kls = sqrt(2 * masses / hbar**2 * (Ei - Ejs - hwLO) * e0)
-        #  epsInf = np.array([a.parm["epsInf"] for a in self.mtrlAlloys])
-        #  epss = np.array([a.parm["epss"] for a in self.mtrlAlloys])
-        #  epsrho = 1 / (1/epsInf - 1/epss)
-        #  epsrho = (np.sum(epsrho[self.layerMtrls] * self.layerWidths)
-        #            / sum(self.layerWidths))
-        #  fjs = (masses * e0**2 * hwLO * e0 / hbar
-        #             / (4 * hbar**2 * epsrho * eps0 * kls))
-        #  Iijtotal = onedq.OneDSchrodinger.cLOtotal(
-        #      self.xres, kls, psi_i, psi_js, fjs)
-        #  return 1e12 / Iijtotal if Iijtotal > 0 else 1E20
+        # return 1/sum(self.loTransition(state, q) for q in range(state))
+        Ei = self.eigenEs[state]
+        psi_i = self.psis[state]
+        hwLO = self.avghwLO()
+        # return 1/sum(self.loTransition(state, q) for q in range(state) if self.eigenEs[q] <= Ei - hwLO)
+        idxs = self.eigenEs <= Ei - hwLO
+        psi_js = self.psis[idxs]
+        Ejs = self.eigenEs[idxs]
+        masses = m0 * sqrt(np.sum(self.xMc*psi_i**2*self.xres) *
+                           np.sum(self.xMc*psi_js**2*self.xres, axis=1))
+        kls = sqrt(2 * masses / hbar**2 * (Ei - Ejs - hwLO) * e0)
+        epsInf = np.array([a.parm["epsInf"] for a in self.mtrlAlloys])
+        epss = np.array([a.parm["epss"] for a in self.mtrlAlloys])
+        epsrho = 1 / (1/epsInf - 1/epss)
+        epsrho = (np.sum(epsrho[self.layerMtrls] * self.layerWidths)
+                  / sum(self.layerWidths))
+        fjs = (masses * e0**2 * hwLO * e0 / hbar
+               / (4 * hbar**2 * epsrho * eps0 * kls))
+        Iijtotal = onedq.OneDSchrodinger.cLOtotal(
+            self.xres, kls, psi_i, psi_js, fjs)
+        return 1e12 / Iijtotal if Iijtotal > 0 else 1E20
 
     def dephasing(self, upper, lower):
         """Calculate the broadening gamma of transition between upper ->
