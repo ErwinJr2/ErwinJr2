@@ -580,6 +580,7 @@ double LOphononScatter(double step, numpyint N, double kl,
         #ifdef _DEBUG
         printf("FFT failed!\n");
         #endif
+        free(psiij);
         return -1.0;
     }
     Iij += psiij[0] / 2;
@@ -610,9 +611,8 @@ __declspec(dllexport)
  */
 double LOtotal(double step, numpyint N, const double *kls,
         const double *psi_i, const double *psi_js, const double *fjs,
-        int Nj) {
+        numpyint Nj) {
     double Iij = 0;
-    int j,n;
     int starti, endi;
     autocorr_plan plan;
     for(starti = 0; starti < N && fabs(psi_i[starti]) < MINPSI; starti++);
@@ -627,8 +627,9 @@ double LOtotal(double step, numpyint N, const double *kls,
 #pragma omp parallel
 #endif
     {
-        double *psiij = (double *)malloc(sizeof(double) * endi * 2);
-        double *mempool = (double *) malloc(sizeof(double) * mem_len(plan));
+        double *psiij = (double *)malloc(sizeof(double) * mem_len(plan));
+        double *mempool = (double *)malloc(sizeof(double) * mem_len(plan));
+        int i,n;
         #ifdef __MP
         #pragma omp for reduction(+:Iij)
         #endif
@@ -641,8 +642,11 @@ double LOtotal(double step, numpyint N, const double *kls,
             #endif
             const double *psi_j = psi_js + N*n + starti;
             const double powerUnit = -kls[n]*step*ANG;
-            for(j=0; j<endi; j++) {
-                psiij[j] = psi_i[j] * psi_j[j];
+            for(i = 0; i < endi; i++) {
+                psiij[i] = psi_i[i] * psi_j[i];
+            }
+            for(; i < mem_len(plan); i++) {
+                psiij[i] = 0.0;
             }
             if(autocorr_mem(plan, psiij, mempool) != 0) {
                 #ifdef _DEBUG
@@ -656,22 +660,25 @@ double LOtotal(double step, numpyint N, const double *kls,
                 #pragma omp cancel for
                 #endif
                 #else
+                free(psiij);
+                free(mempool);
+                destroy_autocorr_plan(plan);
                 return -1.0;
                 #endif
             }
-            Iij += psiij[0]/2;
-            for(j=1; j<endi; j++) {
-                Iij += psiij[j]*exp(powerUnit*j);
+            Iij += fjs[n] * psiij[0]/2;
+            for(i = 1; i < endi; i++) {
+                Iij += fjs[n] * psiij[i] * exp(powerUnit*i);
             }
         }
-    free(psiij);
-    free(mempool);
+        free(psiij);
+        free(mempool);
     }
+    destroy_autocorr_plan(plan);
 #ifdef __MP
     if (failed)
         return -1;
 #endif
-    destroy_autocorr_plan(plan);
     return 2*Iij * sq(step);
 }
 
