@@ -1,5 +1,5 @@
 #ifndef __SCIENCE
-#define __SCIENCE 
+#define __SCIENCE
 #include <stdint.h>
 #define sq(X) ((X)*(X)) /**< \f$ X^2 \f$ */
 

@@ -29,18 +29,18 @@ typedef struct ZBBAND {
     const double *xF;      /**< Kane parameter  */
     const double *xEp;     /**< Matrix element */
     const double *xESO;    /**< Spin-orbit splitting */
-}ZBBand; 
+}ZBBand;
 
 /** Update effective mass of a Zincblende band semiconductor */
 numpyint ZBupdateM(Band *mat, double Eq, const double *xVc, double *m) {
     ZBBand *zbmat = (ZBBand *) mat;
-    int q; 
+    int q;
     for(q=0; q<zbmat->N; q++) {
         double E = Eq - xVc[q];
         if(E < -zbmat->xEg[q]/2)
             E = -zbmat->xEg[q]/2; /* Avoid singularity */
-        m[q] = 1 / (1 + 2*zbmat->xF[q] + zbmat->xEp[q]/3 * ( 
-                    2 / (E + zbmat->xEg[q]) + 
+        m[q] = 1 / (1 + 2*zbmat->xF[q] + zbmat->xEp[q]/3 * (
+                    2 / (E + zbmat->xEg[q]) +
                     1 / (E + zbmat->xEg[q] + zbmat->xESO[q])) );
     }
     return zbmat->N;
@@ -52,12 +52,12 @@ Band *ZBband_new(numpyint N, const double *xEg, const double *xF,
         const double *xEp, const double *xESO) {
     ZBBand *zbband = (ZBBand *) malloc( sizeof(ZBBand) );
     zbband->updateM = ZBupdateM;
-    zbband->N = N; 
-    zbband->xEg = xEg; 
-    zbband->xF = xF; 
-    zbband->xEp = xEp; 
+    zbband->N = N;
+    zbband->xEg = xEg;
+    zbband->xF = xF;
+    zbband->xEp = xEp;
     zbband->xESO = xESO;
-    return (Band *) zbband; 
+    return (Band *) zbband;
 }
 
 void ZBband_free(Band *zbband) {
@@ -68,7 +68,7 @@ void ZBband_free(Band *zbband) {
 
 #ifdef _DEBUG
 #include <stdio.h>
-void ZBband_check(const Band *band, numpyint N, const double *xEg, 
+void ZBband_check(const Band *band, numpyint N, const double *xEg,
         const double *xF, const double *xEp, const double *xESO) {
     printf("Checking ZBband\n");
     const ZBBand *zbband = (const ZBBand *) band;
@@ -76,7 +76,7 @@ void ZBband_check(const Band *band, numpyint N, const double *xEg,
         printf("ZBupdateM checkfail\n");
     if(zbband->N != N)
         printf("N checkfail\n");
-    if(zbband->xEg != xEg) 
+    if(zbband->xEg != xEg)
         printf("xEg checkfail\n");
     if(zbband->xF != xF)
         printf("xF checkfail\n");
@@ -113,12 +113,12 @@ numpyint WZupdateM(Band *mat, double Eq, const double *xVc, double *m) {
     return wzmat->N;
 }
 
-/** @cond IMPL 
+/** @cond IMPL
  * implemtation of functions in header files should be excluded in doxygen */
 Band *WZband_new(numpyint N, const double *xEg,
         const double *xEp, const double *xESO) {
     WZBand *wzband = (WZBand *) malloc( sizeof(WZBand) );
-    wzband->updateM = WZupdateM; 
+    wzband->updateM = WZupdateM;
     wzband->N = N;
     wzband->xEg = xEg;
     wzband->xEp = xEp;
