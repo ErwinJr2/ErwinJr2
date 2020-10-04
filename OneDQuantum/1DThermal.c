@@ -14,7 +14,7 @@
 #include <math.h>
 #ifdef __MP /*openmp support*/
 #include <omp.h>
-#endif 
+#endif
 #include "science.h"
 /* TODO:
  * Real Fermi Distribution result
@@ -30,8 +30,8 @@ extern "C" {
 
 #ifdef _WINDLL
 __declspec(dllexport)
-#endif 
- 
+#endif
+
 /**
  *
  * Given Fermi energy EF, this function
@@ -49,8 +49,8 @@ __declspec(dllexport)
  * @param[in] step step size
  * @param[in] *eDensity (output) electron density (unit Angstrom^-3)
  */
-double FermiDirac0(double EF, const double *EigenEs, numpyint EN, 
-        const double *m, const double* psis, numpyint N, double step, 
+double FermiDirac0(double EF, const double *EigenEs, numpyint EN,
+        const double *m, const double* psis, numpyint N, double step,
         double *eDensity) {
         int i;
            double sheetDensity = 0;
@@ -62,7 +62,7 @@ double FermiDirac0(double EF, const double *EigenEs, numpyint EN,
         int j;
         /* double nbar = 1/(exp(beta * (EigenEs[i]-EF)) + 1); */
         const double* psi = psis + i*N;
-        double invM = 0;  
+        double invM = 0;
         /* Density of states effective mass should be the Harmonic mean of
          * effective mass */
         double DoS2D;
@@ -72,7 +72,7 @@ double FermiDirac0(double EF, const double *EigenEs, numpyint EN,
             invM += sq(psi[j])/m[j];
         }
         invM *= step;
-        DoS2D = m0/(M_PI*sq(hbar)*invM)*sq(ANG)*e0; 
+        DoS2D = m0/(M_PI*sq(hbar)*invM)*sq(ANG)*e0;
         /* DoS2D_2D = m/(pi*\hbar^2), spin included, Unit Angstrom^-2eV^-1 */
         for(j=0; j<N; j++) {
                 eDensity[j] += sq(psi[j])*DoS2D*(EF-EigenEs[i]);
@@ -88,10 +88,10 @@ double FermiDirac0(double EF, const double *EigenEs, numpyint EN,
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif
- 
+
 /**
  *
- * Given sheet density (unit Angstrom^-2), 
+ * Given sheet density (unit Angstrom^-2),
  * outputs electron density in eDensity (unit Angstrom^-3)
  * and returns Fermi energy EF.
  *
@@ -106,8 +106,8 @@ __declspec(dllexport)
  * @param[in] step step size
  * @param[in] *eDensity (output) electron density (unit Angstrom^-3)
  */
-double FermiDirac0N(double sheet, const double *EigenEs, numpyint EN, 
-        const double *m, const double* psis, numpyint N, double step, 
+double FermiDirac0N(double sheet, const double *EigenEs, numpyint EN,
+        const double *m, const double* psis, numpyint N, double step,
         double* eDensity) {
            int i;
     double sheetDensity = 0;
@@ -118,7 +118,7 @@ double FermiDirac0N(double sheet, const double *EigenEs, numpyint EN,
     for(i=0; i<EN; i++) {
         int j;
         const double* psi = psis + i*N;
-        double invM = 0;  
+        double invM = 0;
         /* Density of states effective mass should be the Harmonic mean of
          * effective mass */
         double Emax;
@@ -126,13 +126,13 @@ double FermiDirac0N(double sheet, const double *EigenEs, numpyint EN,
             invM += sq(psi[j])/m[j];
         }
         invM *= step;
-        DoS2Dsum += m0/(M_PI*sq(hbar)*invM)*sq(ANG)*e0; 
+        DoS2Dsum += m0/(M_PI*sq(hbar)*invM)*sq(ANG)*e0;
         /* DoS2D_2D = m/(pi*\hbar^2), spin included, Unit Angstrom^-2eV^-1 */
-#ifdef _DEBUG 
-        printf("Energy at %e, Dossum=%e, m* = %e\n", 
+#ifdef _DEBUG
+        printf("Energy at %e, Dossum=%e, m* = %e\n",
                 EigenEs[i], DoS2Dsum, 1/invM);
 #endif
-        Emax = (sheet - sheetDensity)/(DoS2Dsum); 
+        Emax = (sheet - sheetDensity)/(DoS2Dsum);
         if(i == EN-1 || EigenEs[i] + Emax <= EigenEs[i+1]) {
             for(j=0; j<N; j++) {
                 eDensity[j] += sq(psi[j])*DoS2Dsum*Emax;
@@ -187,7 +187,7 @@ double FermiDirac(double T, double EF, const double *EigenEs, numpyint EN,
     } // dirty way to get around log(1+exp)
       const double* psi = psis + i*N;
       double invM = 0;
-      /* Density of states effective mass should be the Harmonic mean of      
+      /* Density of states effective mass should be the Harmonic mean of
        * effective mass */
       double DoS2D;
       for(j=0; j<N; j++) {
@@ -209,13 +209,13 @@ double FermiDirac(double T, double EF, const double *EigenEs, numpyint EN,
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif
-/** 
+/**
  * Output the derivative of sheet density against Fermi energy at finite temperature,
- * using Fermi-Dirac distribution. 
+ * using Fermi-Dirac distribution.
  * This derivative is used to solve Fermi energy given sheet density.
  *
  */
-double DFermiDirac(double T, double EF, const double *EigenEs, numpyint EN, 
+double DFermiDirac(double T, double EF, const double *EigenEs, numpyint EN,
            const double *m, const double* psis, numpyint N, double step) {
     int i;
     double dSheetDensity = 0.0;
@@ -226,7 +226,7 @@ double DFermiDirac(double T, double EF, const double *EigenEs, numpyint EN,
     for(i=0; i<1; i++) {
       int j;
       double dnbarIntegral = 1.0 - exp(beta*(EigenEs[i]-EF))/(1.0+exp(beta*(EigenEs[i]-EF)));
-      // if isinf(nbarIntegral) nbarIntegral = 0.0; // dirty way to get around log(1+exp) 
+      // if isinf(nbarIntegral) nbarIntegral = 0.0; // dirty way to get around log(1+exp)
       const double* psi = psis + i*N;
       double invM = 0;
       /* Density of states effective mass should be the Harmonic mean of
@@ -248,7 +248,7 @@ double DFermiDirac(double T, double EF, const double *EigenEs, numpyint EN,
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif
-/** 
+/**
  * Given temperature and sheet density (unit Angstrom^-2),
  * outputs electron density in eDensity (unit Angstrom^-3)
  * and returns Fermi energy using Newton's method.
@@ -265,8 +265,8 @@ __declspec(dllexport)
  * @param[in] step step size
  * @param[in] *eDensity (output) electron density (unit Angstrom^-3)
  */
-double FermiDiracN(double T, double sheet, const double *EigenEs, numpyint EN, 
-            const double *m, const double* psis, numpyint N, double step, 
+double FermiDiracN(double T, double sheet, const double *EigenEs, numpyint EN,
+            const double *m, const double* psis, numpyint N, double step,
             double* eDensity) {
     int i;
     /* double sheetDensity; */
@@ -278,15 +278,15 @@ double FermiDiracN(double T, double sheet, const double *EigenEs, numpyint EN,
     double EF0 = (EF_min + EF_max)/2.0;
     FermiDirac(T, EF_max, EigenEs, EN, m, psis, N, step, eDensity);
     FermiDirac(T, EF_min, EigenEs, EN, m, psis, N, step, eDensity);
-    double dsheet = FermiDirac(T, EF0, EigenEs, EN, m, 
+    double dsheet = FermiDirac(T, EF0, EigenEs, EN, m,
             psis, N, step, eDensity)-sheet;
     /** Use Newton's method to find EF */
     int count=0; double EF;
     EF = EF0;
     while (count < 20 && fabs(dsheet) > NEWTON_T) {
-        dsheet = FermiDirac(T, EF0, EigenEs, EN, m, psis, 
+        dsheet = FermiDirac(T, EF0, EigenEs, EN, m, psis,
                 N, step, eDensity) - sheet;
-        EF = EF0 - dsheet / DFermiDirac(T, EF0, EigenEs, EN, 
+        EF = EF0 - dsheet / DFermiDirac(T, EF0, EigenEs, EN,
                 m, psis, N, step);
         EF0 = EF;
         count++;
@@ -298,7 +298,7 @@ double FermiDiracN(double T, double sheet, const double *EigenEs, numpyint EN,
 
 #ifdef _WINDLL
 __declspec(dllexport)
-#endif 
+#endif
 
 /**
  *
@@ -313,9 +313,9 @@ __declspec(dllexport)
  *
  * Note: assumes zero filling when \f$ (E_i - E_F) > MAXKT \times k_B T \f$
  * Default value for MAXKT = 50
- * 
+ *
  */
-double Boltzmann(double T, double EF, const double *EigenEs, numpyint EN, 
+double Boltzmann(double T, double EF, const double *EigenEs, numpyint EN,
         const double *m, const double* psis, numpyint N, double step,
         double* eDensity) {
     const double MAXKT = 50;
@@ -333,7 +333,7 @@ double Boltzmann(double T, double EF, const double *EigenEs, numpyint EN,
     for(i=0; i<1; i++) {
         int j;
         const double* psi = psis + i*N;
-        double invM = 0;  
+        double invM = 0;
         /* Density of states effective mass should be the Harmonic mean of
          * effective mass */
         double DoS2D;
@@ -344,13 +344,13 @@ double Boltzmann(double T, double EF, const double *EigenEs, numpyint EN,
             invM += sq(psi[j])/m[j];
         }
         invM *= step;
-        DoS2D = m0/(M_PI*sq(hbar)*invM)*sq(ANG)*e0; 
+        DoS2D = m0/(M_PI*sq(hbar)*invM)*sq(ANG)*e0;
         /* DoS2D_2D = m/(pi*\hbar^2), spin included, Unit Angstrom^-2eV^-1 */
         for(j=0; j<N; j++) {
             eDensity[j] += sq(psi[j])*DoS2D*kt*exp(-DeltaE/kt);
             /* sheetDensity += eDensity[j]*step; --> X */
         }
-        sheetDensity += DoS2D*kt*exp(-DeltaE/kt); 
+        sheetDensity += DoS2D*kt*exp(-DeltaE/kt);
         /* psi is normalized.. It's equivlent with X */
     }
     return sheetDensity;
@@ -359,7 +359,7 @@ double Boltzmann(double T, double EF, const double *EigenEs, numpyint EN,
 
 #ifdef _WINDLL
 __declspec(dllexport)
-#endif 
+#endif
 
 /**
  *
@@ -367,15 +367,15 @@ __declspec(dllexport)
  * output electron density in eDensity (unit Angstrom^-3)
  * and return EF (unit eV).
  *
- * Assumes Maxwell-Boltzmann distribution. 
- * 
+ * Assumes Maxwell-Boltzmann distribution.
+ *
  * Parameters are the same as in FermiDiracN.
  *
  */
-double BoltzmannN(double T, double sheet, const double *EigenEs, numpyint EN, 
+double BoltzmannN(double T, double sheet, const double *EigenEs, numpyint EN,
         const double *m, const double* psis, numpyint N, double step,
         double* eDensity) {
-    double sheet0 = Boltzmann(T, 0, EigenEs, EN, m, psis, N, step, eDensity); 
+    double sheet0 = Boltzmann(T, 0, EigenEs, EN, m, psis, N, step, eDensity);
     double EF = kb * T * log(sheet / sheet0);
 #ifdef _DEBUG
     printf("Sheet density = %e at EF = 0, so EF = %e\n", sheet0, EF);
@@ -390,7 +390,7 @@ double BoltzmannN(double T, double sheet, const double *EigenEs, numpyint EN,
 
 #ifdef _WINDLL
 __declspec(dllexport)
-#endif 
+#endif
 /**
  * Checkpoint for python-C interface. Output = 42.
  */
