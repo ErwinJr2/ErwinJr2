@@ -809,25 +809,38 @@ class QuantumTab(QWidget):
                                     "This value should be a number")
                 self.layerTable_refresh()
                 return
-        if column in (0, 1):
-            if column == 0:  # column == 0 for Widths column
-                new_width = value
-            else:  # column == 1 for "ML" number of monolayers
-                new_width = value * self.qclayers.mtrlAlloys[
-                    self.qclayers.layerMtrls[row]].a_perp/2
+            if column in (0, 1):
+                if column == 0:  # column == 0 for Widths column
+                    new_width = value
+                else:  # column == 1 for "ML" number of monolayers
+                    new_width = value * self.qclayers.mtrlAlloys[
+                        self.qclayers.layerMtrls[row]].a_perp/2
 
-            if row == len(self.qclayers.layerWidths):
-                # add row at end of list
-                AR = self.qclayers.layerARs[row-1]
-                doping = self.qclayers.layerDopings[row-1]
-                mtrlIndx = (self.qclayers.layerMtrls[row-1] + 1) % mtrlN
-                self.qclayers.add_layer(row, new_width, mtrlIndx, AR, doping)
-                row += 1  # used so that last (blank) row is again selected
-                self.update_Lp_limits()
-                self.update_Lp_box()
-            else:  # change Width of selected row in-place
-                self.qclayers.layerWidths[row] = new_width
-                self.update_Lp_box()
+                if row == len(self.qclayers.layerWidths):
+                    # add row at end of list
+                    AR = self.qclayers.layerARs[row-1]
+                    doping = self.qclayers.layerDopings[row-1]
+                    mtrlIndx = (self.qclayers.layerMtrls[row-1] + 1) % mtrlN
+                    self.qclayers.add_layer(row, new_width, mtrlIndx, AR,
+                                            doping)
+                    row += 1  # used so that last (blank) row is again selected
+                    self.update_Lp_limits()
+                    self.update_Lp_box()
+                else:  # change Width of selected row in-place
+                    self.qclayers.layerWidths[row] = new_width
+                    self.update_Lp_box()
+            else:
+                # column == 4 for item change in Doping column
+                doping = value
+                if row == len(self.qclayers.layerWidths):
+                    AR = self.qclayers.layerARs[row-1]
+                    mtrlIndx = (self.qclayers.layerMtrls[row-1] + 1) % mtrlN
+                    self.qclayers.add_layer(row, 0.0, mtrlIndx, AR, doping)
+                    row += 1  # used so that last (blank) row is again selected
+                    self.update_Lp_limits()
+                    self.update_Lp_box()
+                else:
+                    self.qclayers.layerDopings[row] = doping
 
         elif column == 2:
             # column == 2 for item change in mtrl column, should be
@@ -840,19 +853,6 @@ class QuantumTab(QWidget):
                 # don't do anything if row is last row
                 return
             self.qclayers.layerARs[row] = (item.checkState() == Qt.Checked)
-
-        elif column == 4:
-            # column == 4 for item change in Doping column
-            doping = value
-            if row == len(self.qclayers.layerWidths):
-                AR = self.qclayers.layerARs[row-1]
-                mtrlIndx = (self.qclayers.layerMtrls[row-1] + 1) % mtrlN
-                self.qclayers.add_layer(row, 0.0, mtrlIndx, AR, doping)
-                row += 1  # used so that last (blank) row is again selected
-                self.update_Lp_limits()
-                self.update_Lp_box()
-            else:
-                self.qclayers.layerDopings[row] = doping
 
         else:
             raise Exception("Should not be here")
@@ -1211,7 +1211,6 @@ class QuantumTab(QWidget):
             self.fillplot = 0.3
         self.update_quantumCanvas()
 
-
 # ===========================================================================
 # Calculations
 # ===========================================================================
@@ -1295,6 +1294,8 @@ class QuantumTab(QWidget):
                             (self.qclayers.psis.shape[0], 1)).T
             if self.plotType in ("mode", "wf"):
                 yData = self.qclayers.eigenEs + self.wfs.T
+            else:
+                yData = self.qclayers.eigenEs
 
             width, height = self.quantumCanvas.axes.bbox.size
             xmin, xmax = self.quantumCanvas.axes.get_xlim()
