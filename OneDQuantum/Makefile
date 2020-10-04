@@ -6,7 +6,7 @@ OMPFLAGS = -fopenmp
 ifeq ($(OS),Windows_NT)
 	CFLAGS += -D WIN32
 	EXT := dll
-else 
+else
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Darwin)
 		CFLAGS += -D MACOS
@@ -21,7 +21,7 @@ endif
 
 .PHONY : all
 .DEFAULT : all
-.SECONDARY : 
+.SECONDARY :
 
 
 all: 1DSchrodinger.$(EXT) 1DThermal.$(EXT) 1DMaxwell.$(EXT)
@@ -45,7 +45,7 @@ MP:  1DSchrodinger_MP.$(EXT)
 fftautocorr.o : fftautocorr/fftautocorr.c fftautocorr/fftautocorr.h fftautocorr/factortable.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-%.o : %.c science.h 
+%.o : %.c science.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 .PHONY : clean
