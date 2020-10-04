@@ -7,6 +7,8 @@ import numpy as np
 from numpy import sqrt, exp, pi, sin, cos, sinc
 from rFittings import AlGaAsIndex, SiNxIndex, SiO2Index
 from collections import defaultdict
+import typing
+from typing import List
 # from OneDQuantum.OneDMaxwell import *
 
 # refractive indices
@@ -73,15 +75,22 @@ class MaxwellLayer(object):
         Thickness of  stratum, same unit as wl. The first and last elements
         are for top and substrate and is not used for calculation
     """
-    def __init__(self, wl, Ls=[1.0, 1.0], indices=[1.0, 1.0]):
+    wl: float
+    index0: complex
+    indexs: complex
+    indices: np.ndarray
+    Ls: List[complex]
+
+    def __init__(self, wl: float, Ls: List = [1.0, 1.0],
+                 allIndex: List = [1.0, 1.0]):
         self.wl = wl
-        self.index0 = indices[0]
-        self.indexs = indices[-1]
-        self.indices = np.array(indices[1:-1], dtype=np.complex128)
-        self.Ls = (np.array(Ls) if len(Ls) == len(indices)
+        self.index0 = allIndex[0]
+        self.indexs = allIndex[-1]
+        self.indices = np.array(allIndex[1:-1], dtype=np.complex128)
+        self.Ls = (np.array(Ls) if len(Ls) == len(allIndex)
                    else np.array([1.0] + list(Ls) + [2.0]))
 
-    def transferTM(self, beta):
+    def transferTM(self, beta: complex) -> np.ndarray:
         """Tranfer matrix for TM wave
 
         Calculate the transfer matrix for TM wave with frequency
@@ -110,7 +119,7 @@ class MaxwellLayer(object):
         # np.sinc (x) is defined as sin(pi*x)/(pi*x)
         return np.linalg.multi_dot(ms)
 
-    def chiMTM(self, beta):
+    def chiMTM(self, beta: complex) -> complex:
         """Modal-dispersion function for TM wave
 
         Calculate the with modal-dispersion function for TM wave with frequency
@@ -139,7 +148,7 @@ class MaxwellLayer(object):
         m = self.transferTM(beta)
         return m[0, 0]*gammas+m[0, 1]+(m[1, 0]*gammas+m[1, 1])*gamma0
 
-    def boundModeTM(self, beta=None):
+    def boundModeTM(self, beta: typing.Optional[complex] = None) -> complex:
         """Solve for TM bounded mode near beta
 
         Solve for TM bounded mode near beta (as first guess in root finding)
@@ -193,12 +202,13 @@ class MaxwellLayer(object):
                 break
         return beta
 
-    def _alpha(self, beta):
+    def _alpha(self, beta: complex) -> np.ndarray:
         """return alpha = np.sqrt((1+0j)*self.indices**2 - beta**2)
         for isotropic material"""
         return np.sqrt((1+0j)*self.indices**2 - beta**2)
 
-    def populateMode(self, beta, xs):
+    def populateMode(self, beta: complex, xs: np.ndarray
+                     ) -> typing.Union[np.ndarray, np.ndarray, np.ndarray]:
         """Generate TM modes (field) on position array xs
 
         Generate TM modes (field) on position array xs, assuming beta is a
@@ -276,7 +286,7 @@ class MaxwellLayer(object):
         self.Ez = Ez/scale
         return self.Ey, self.Hx, self.Ez
 
-    def populateIndices(self, xs):
+    def populateIndices(self, xs: np.ndarray) -> np.ndarray:
         """Generate indices position array xs
 
         Parameters
@@ -300,7 +310,9 @@ class MaxwellLayer(object):
         n[xs >= lsum[-1]] = self.indexs
         return n
 
-    def confinementy(self, beta, ars, xs=None, Ey=None):
+    def confinementy(self, beta: complex, ars: List[np.ndarray],
+                     xs: typing.Optional[np.ndarray] = None,
+                     Ey: typing.Optional[np.ndarray] = None) -> float:
         """Return the confinement factor corresponds to mode with effective
         refractive index beta. Assuming active only couple to E_y filed.
         The active region is defined in `ars`. If xs and Ey is None, they will
@@ -320,19 +332,24 @@ class MaxwellLayer(object):
 
         Ey : np.ndarray(complex)
             The field to integral on
+
+        Returns
+        -------
+        float:
+            The confinement factor of the structure
         """
         if xs is None:
             xs = np.linspace(-3, sum(self.Ls[1:]), 5000)
         if Ey is None:
             Ey, _, _ = self.populateMode(beta, xs)
-        self.confinement = 0
+        confinement = 0
         nx = self.populateIndices(xs).real
         for ar in ars:
-            self.confinement += np.trapz(
+            confinement += np.trapz(
                 nx[ar] * np.abs(self.Ey[ar])**2, xs[ar])
-        self.confinement = beta.real * self.confinement / np.trapz(
+        confinement = beta.real * confinement / np.trapz(
             (nx * np.abs(Ey))**2, xs)
-        return self.confinement
+        return confinement
 
 
 class MaxwellLayer_anisotropic(MaxwellLayer):
@@ -360,6 +377,7 @@ class MaxwellLayer_anisotropic(MaxwellLayer):
                               self.indexy)
         else:
             n = np.empty(xs.shape, dtype=np.complex128)
+            ny = np.empty(xs.shape, dtype=np.complex128)
         n[xs < 0] = self.index0
         n[xs >= lsum[-1]] = self.indexs
         ny[xs < 0] = self.index0
