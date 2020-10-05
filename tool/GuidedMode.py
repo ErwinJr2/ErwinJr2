@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-import context
+import context   # type: ignore # noqa: F401
 import numpy as np
 from numpy import pi
 import matplotlib.pyplot as plt

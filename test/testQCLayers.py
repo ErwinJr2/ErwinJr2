@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-from context import *
+from context import *  # type: ignore # noqa: F401, F403
 import SaveLoad
 import numpy as np
 import unittest

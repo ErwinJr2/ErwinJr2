@@ -3,7 +3,7 @@
 from context import *
 from OneDQuantum import *
 from pylab import *
-from scipy.constants import hbar, e, m_e, pi 
+from scipy.constants import hbar, e, m_e, pi
 EgG = {'AlAs': 3.099, 'GaAs': 1.519}
 VBO = {'AlAs': -1.33, 'GaAs': -0.80}
 F   = {'AlAs': -0.46, 'GaAs': -1.94}
@@ -33,7 +33,7 @@ def qwells(layers):
     print(EigenEs)
     plot(xx, xVc)
     psis = cBandFillPsi(step, EigenEs, xVc, band)
-    for n in range(EigenEs.size): 
+    for n in range(EigenEs.size):
         plot(xx, EigenEs[n] + psis[n, :]/np.max(psis[n,:])*0.02)
     #  plot(xx, xm)
     #  plot(xx, np.ctypeslib.as_array(band.contents.m, (band.contents.N,)))

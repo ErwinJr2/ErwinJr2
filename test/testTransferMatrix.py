@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-import context
+import context  # type: ignore # noqa: F401
 from OptStrata import MaxwellLayer, MaxwellLayer_anisotropic
 import numpy as np
 import unittest

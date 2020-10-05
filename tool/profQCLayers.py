@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-from context import *
+from context import *  # type: ignore # noqa: F401, F403
 import SaveLoad
 import cProfile
 import pstats
@@ -8,7 +8,7 @@ import io
 
 if __name__ == "__main__":
     cp = cProfile.Profile()
-    
+
     cp.enable()
     with open("../example/PQLiu.json") as f:
         qcl = SaveLoad.qclLoad(f)

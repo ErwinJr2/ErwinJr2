@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-from context import *
-from OneDQuantum import *
+from context import *  # type: ignore # noqa: F401, F403
+from OneDQuantum import (cFermiDirac0, cFermiDirac, cFermiDiracN, cBoltzmannN,
+                         cFermiDirac0N, cSimpleFillPsi, cBoltzmann,
+                         cSimpleSolve1D)
 import numpy as np
 import unittest
 
@@ -48,7 +50,7 @@ class TestUniformPsis(unittest.TestCase):
     def testUniformHighT(self):
         T = 300
         eDensityFD, EF_FD = cFermiDiracN(T, self.sheet, self.EigenEs,
-                                     self.mass, self.psis, self.step)
+                                         self.mass, self.psis, self.step)
         eDensityB, EF_B = cBoltzmannN(T, self.sheet, self.EigenEs,
                                       self.mass, self.psis, self.step)
         self.assertAlmostEqual(self.step * np.sum(eDensityFD),
@@ -111,7 +113,7 @@ class TestTriangleWellThermal(unittest.TestCase):
     # (at high T, density of states = Boltzmann)
     def testTriangleWellHighT(self):
         T = 10
-        eDensityFD, EF_FD = cFermiDiracN(T, self.sheet, self.EigenEs, 
+        eDensityFD, EF_FD = cFermiDiracN(T, self.sheet, self.EigenEs,
                                          self.mass, self.psis, self.step)
         eDensityB, EF_B = cBoltzmannN(T, self.sheet, self.EigenEs,
                                       self.mass, self.psis, self.step)

@@ -8,14 +8,13 @@ import os
 import matplotlib
 from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg as
                                                 FigureCanvas)
-from matplotlib.backends.backend_qt5 import cursord, NavigationToolbar2QT
+from matplotlib.backends.backend_qt5 import cursord  # , NavigationToolbar2QT
 from matplotlib.backend_bases import (NavigationToolbar2, cursors)
-import matplotlib.backends.qt_editor.figureoptions as figureoptions
+# import matplotlib.backends.qt_editor.figureoptions as figureoptions
 from matplotlib.figure import Figure
 
 from PyQt5.QtCore import QObject, Signal
-from PyQt5.QtWidgets import (QSizePolicy, QMessageBox, QInputDialog,
-                             QFileDialog)
+from PyQt5.QtWidgets import QSizePolicy, QMessageBox, QFileDialog
 
 import sys
 import json
@@ -212,7 +211,7 @@ class EJplotControl(NavigationToolbar2, QObject):
 
     def _reset_custom(self):
         self._custom_mode = None
-        if self._custom_callBack != None:
+        if self._custom_callBack is not None:
             self.canvas.mpl_disconnect(self._custom_callBack)
             self._custom_callBack = None
 
@@ -236,7 +235,7 @@ class EJplotControl(NavigationToolbar2, QObject):
     def _update_cursor(self, event):
         # override backend_bases.NavigationToolbar2._update_cursor
         if (event.inaxes and self._custom_mode and
-            self._lastCursor != self._custom_cursor[self._custom_mode]):
+                self._lastCursor != self._custom_cursor[self._custom_mode]):
             self.set_cursor(self._custom_cursor[self._custom_mode])
             return
         super(EJplotControl, self)._update_cursor(event)

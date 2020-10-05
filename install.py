@@ -10,7 +10,7 @@ import subprocess
 from subprocess import CalledProcessError
 if sys.platform.startswith('win'):
     try:
-        import winshell  # ignore: unresolved-import
+        import winshell  # type: ignore # ignore: unresolved-import
     except ModuleNotFoundError:
         print("winshell not installed. Cannot create shortcut!")
 
