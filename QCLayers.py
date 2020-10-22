@@ -536,6 +536,8 @@ layerSelected : int
         # TODO: eff mass for non-parabolic
         avgpsi_i = (psi_i[:-1] + psi_i[1:])/2
         avgxMc = (self.xMc[:-1] + self.xMc[1:])/2
+        # d_z 1/m + 1/m d_z = [d_z 1/m d_z, z] ~ [P^2, z] ~ [H, z],
+        # where d_z means spatial derivative d/d z, P is momentum
         self.z = np.sum(avgpsi_i * np.diff(psi_j/self.xMc)
                         + 1/avgxMc * (avgpsi_i * np.diff(psi_j)))
         self.z *= hbar**2 / (2 * (Ei - Ej) * e0 * m0) / (1E-10)**2  # Angtrom
