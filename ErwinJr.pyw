@@ -147,6 +147,7 @@ class MainWindow(QMainWindow):
         return action
 
     def create_menu(self):
+        self.menuBar().clear()
         # file menu
         self.file_menu = self.menuBar().addMenu("&File")
         newFileAction = self.create_action(
@@ -174,6 +175,7 @@ class MainWindow(QMainWindow):
             newFileAction, openFileAction, saveFileAction, saveAsFileAction,
             None, exportBandCSVAction, exportQuantumCanvasAction, None,
             quit_action)
+        self.add_actions(self.file_menu, self.fileMenuActions)
         self.file_menu.aboutToShow.connect(self.updateFileMenu)
 
         # edit menu
