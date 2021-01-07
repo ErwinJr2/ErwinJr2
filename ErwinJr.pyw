@@ -108,8 +108,10 @@ class MainWindow(QMainWindow):
         #       self.qtab.qclayers.EField,
         #       self.qtab.qclayers.gaincoef,
         #       sum(self.qtab.qclayers.layerWidths))
-        self.otab.setupActive(self.qtab.qclayers.wl, self.qtab.qclayers.EField,
+        wl = self.qtab.qclayers.wl
+        self.otab.setupActive(wl, self.qtab.qclayers.EField,
                               self.qtab.qclayers.gaincoef,
+                              self.qtab.qclayers.effective_ridx(wl),
                               sum(self.qtab.qclayers.layerWidths))
         self.mainTabWidget.setCurrentIndex(1)
 

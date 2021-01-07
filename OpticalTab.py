@@ -351,11 +351,22 @@ class OpticalTab(QWidget):
         mtrl = self.mtrlsBox.currentText()
         self.stratum.cstmGain[mtrl] = value
 
-    def setupActive(self, wl, EField, gaincoeff, Lp):
+    def setupActive(self, wl, EField, gaincoeff, rIdx, Lp):
         """Interface to get parameters from quantum tab"""
         self.wlBox.setValue(wl)
+        mtrl = 'Active Core'
+        # self.stratum.wl = wl
+        self.stratum.cstmIndx[mtrl] = rIdx
+        if 'Active Core' in self.stratum.cstmPrd:
+            self.stratum.cstmPrd[mtrl][0] = Lp
+        else:
+            self.stratum.cstmPrd[mtrl] = [Lp, 1]
+        self.stratum.cstmGain[mtrl] = gaincoeff
+
         # set up active core
-        self.mtrlsBox.setCurrentText("Active Core")
+        if self.mtrlsBox.findText(mtrl) == -1:
+            self.mtrlsBox.addItem(mtrl)
+        self.mtrlsBox.setCurrentText(mtrl)
         self.fieldBox.setValue(EField)
         self.periodBox.setValue(Lp)
         self.gainCoeffBox.setValue(gaincoeff)
