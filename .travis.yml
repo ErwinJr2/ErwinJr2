@@ -3,8 +3,8 @@ os: linux
 dist: xenial
 python:
   - '3.6'
-  - '3.7'
   - '3.8'
+  - '3.9'
 env:
   - OMP_NUM_THREADS=4
 addons:
@@ -44,7 +44,7 @@ jobs:
     before_install:
       - brew install doxygen llvm
     env:
-      - CC=gcc-9 OMP_NUM_THREADS=4
+      - CC=gcc-10 OMP_NUM_THREADS=4
     script:
       - python3 test/SimpleSchrodinger.py MP
   - name: MacOS with Clang
