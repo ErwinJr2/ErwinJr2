@@ -149,6 +149,7 @@ class QuantumTab(QWidget):
         self.plotLH = False
         self.plotSO = False
         self.showPbound = False
+        self.layerSelected = None
 
         self.stateHolder = []
         self.pairSelected = False
@@ -869,9 +870,9 @@ class QuantumTab(QWidget):
         """SLOT connected to layerTable.itemSelectionChanged()"""
         row = self.layerTable.currentRow()
         if row < len(self.qclayers.layerWidths):
-            self.qclayers.layerSelected = row
+            self.layerSelected = row
         else:
-            self.qclayers.layerSelected = None
+            self.layerSelected = None
             self.layerTable.clearSelection()
         self.update_quantumCanvas()
 
@@ -1044,24 +1045,26 @@ class QuantumTab(QWidget):
         for bandFlag, xv, conf in (
                 (self.plotVL, self.qclayers.xVL, 'g--'),
                 (self.plotVX, self.qclayers.xVX, 'm-.'),
-                (self.plotLH, self.qclayers.xVLH, 'k'),
+                (self.plotLH, self.qclayers.xVLH, 'k--'),
                 (self.plotSO, self.qclayers.xVSO, 'r--')):
             if bandFlag:
                 self.quantumCanvas.axes.plot(self.qclayers.xPoints, xv,
                                              conf, linewidth=1)
 
         # highlight selected layer & make AR layers bold
+        ARVc = np.ma.masked_where(~self.qclayers.xARs, self.qclayers.xVc)
         self.quantumCanvas.axes.plot(
-            self.qclayers.xPoints,
-            self.qclayers.xLayerAR(),
+            self.qclayers.xPoints, ARVc,
             'k', linewidth=1.5)
-        if self.qclayers.layerSelected is not None:
+        if self.layerSelected is not None:
             # layerSelected == 0 is meaningful so explictely None
+            selectedVc = np.ma.masked_where(
+                self.qclayers.xLayerMask(self.layerSelected),
+                self.qclayers.xVc)
             self.quantumCanvas.axes.plot(
-                self.qclayers.xPoints,
-                self.qclayers.xLayerSelected(),
+                self.qclayers.xPoints, selectedVc,
                 'b', linewidth=1.5 if self.qclayers.layerARs[
-                    self.qclayers.layerSelected] else 1)
+                    self.layerSelected] else 1)
 
         if hasattr(self.qclayers, 'eigenEs'):
             self.curveWF = []
@@ -1070,7 +1073,7 @@ class QuantumTab(QWidget):
             elif self.plotType == "wf":
                 self.wfs = self.qclayers.psis * plotconfig["wfscale"]
             # filter almost zero part
-            for n in range(self.qclayers.eigenEs.size):
+            for n in range(len(self.qclayers.eigenEs)):
                 wf = self.wfs[n, :]
                 nonzero, = np.where(abs(wf) > plotconfig["wf_almost_zero"])
                 if nonzero.size:
@@ -1080,6 +1083,7 @@ class QuantumTab(QWidget):
                                     self.qclayers.eigenEs[n])
                     wf[last+(add[0] if len(add) else 0): -1] = np.NAN
             for n in range(len(self.qclayers.eigenEs)):
+                # plot states
                 curve, = self.quantumCanvas.axes.plot(
                     self.qclayers.xPoints,
                     self.wfs[n, :] + self.qclayers.eigenEs[n],
@@ -1093,6 +1097,7 @@ class QuantumTab(QWidget):
                         alpha=self.fillplot)
                 self.curveWF.append(curve)
             for n in self.stateHolder:
+                # plot selected states
                 curve, = self.quantumCanvas.axes.plot(
                     self.qclayers.xPoints,
                     self.wfs[n, :] + self.qclayers.eigenEs[n],
@@ -1117,7 +1122,7 @@ class QuantumTab(QWidget):
         self.plotControl.trigger_custom('layerselect')
         if not checked:
             # clear selection
-            self.qclayers.layerSelected = None
+            self.layerSelected = None
             self.layerTable.clearSelection()
             self.update_quantumCanvas()
 
