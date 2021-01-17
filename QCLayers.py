@@ -84,8 +84,12 @@ class SchrodingerLayer(object):
     basisInjectorAR: bool
     basisARonly: bool
 
-    def __init__(self, xres=0.5, Eres=0.5, layerWidths=[0.0], layerARs=[True],
-                 layerVc=[0.0], layerMc=[1.0], EField=0, repeats=3):
+    def __init__(self, xres: float = 0.5, Eres: float = 0.5,
+                 layerWidths: List[float] = [0.0],
+                 layerARs: List[bool] = [True],
+                 layerVc: List[float] = [0.0],
+                 layerMc: List[float] = [1.0],
+                 EField: float = 0.0, repeats: int = 3):
         self.xres = xres
         self.Eres = Eres
         self.layerWidths = layerWidths
@@ -102,12 +106,12 @@ class SchrodingerLayer(object):
         self.basisARInjector = True
         self.basisInjectorAR = True
 
-    def layerVc(self, n: int):
-        """The conduction band offset at n-th layer"""
+    def layerVc(self, n: int) -> float:
+        """The conduction band offset at n-th layer in eV"""
         return self._layerVc[n]
 
-    def layerMc(self, n: int):
-        """The conduction band effective mass at n-th layer"""
+    def layerMc(self, n: int) -> float:
+        """The conduction band effective mass at n-th layer, in m0"""
         return self._layerMc[n]
 
     def populate_x(self):
@@ -152,16 +156,17 @@ class SchrodingerLayer(object):
         ExtField = self.xPoints * self.EField * EUnit
         self.xVc -= ExtField
 
-    def xLayerMask(self, layerNum):
-        """Return the mask for the given layer number.
+    def xLayerMask(self, n: int) -> np.ndarray:
+        """Return the mask for the given layer number `n`.
         A left and right extra point is included for plotting purposes."""
-        xSlt = (self.xLayerNums == layerNum)
+        xSlt = (self.xLayerNums == int)
         xSlt = (xSlt | np.roll(xSlt, 1) | np.roll(xSlt, -1))
         return ~xSlt
 
-    def shiftPeriod(self, ns, psis0, eigenEs0, xPoints=None):
-        """Shift wave functions n (in ns) period(s) and return correlated
-        wave functions and EigenEs. psis0 corresponds to xPoints[0:]"""
+    def shiftPeriod(self, ns: List[int], psis0: np.ndarray,
+                    eigenEs0: np.ndarray, xPoints: np.ndarray = None):
+        """Shift all wave functions in `psis0` for `n` (in ns) period(s) and
+        return correlated wave functions and EigenEs. """
         if xPoints is None:
             xPoints = self.xPoints
         period = sum(self.layerWidths)
@@ -181,7 +186,7 @@ class SchrodingerLayer(object):
     def populate_material(self):
         raise NotImplementedError('Material property is not implemented')
 
-    def solve_whole(self):
+    def solve_whole(self) -> np.ndarray:
         if self.solver == 'ODE':
             self.solve_whole_ode()
         elif self.solver == 'matrix':
@@ -193,7 +198,7 @@ class SchrodingerLayer(object):
                          for _ in range(len(self.eigenEs))]
         return self.eigenEs
 
-    def solve_whole_ode(self):
+    def solve_whole_ode(self) -> np.ndarray:
         """
         solve eigen modes for the whole structure
 
@@ -212,7 +217,7 @@ class SchrodingerLayer(object):
                                              self.xVc, self.xMc)
         return self.eigenEs
 
-    def solve_whole_matrix(self):
+    def solve_whole_matrix(self) -> np.ndarray:
         """
         solve eigen modes for the whole structure with matrix eigen-solver
 
@@ -251,7 +256,7 @@ class SchrodingerLayer(object):
         self.psis = self.psis.T
         return self.eigenEs
 
-    def solve_basis(self):
+    def solve_basis(self) -> np.ndarray:
         """
         solve basis for the QC device, with each basis being the eigen mode of
         a separate part of the layer structure
@@ -305,7 +310,7 @@ class SchrodingerLayer(object):
             self.psis = np.concatenate((self.psis, psis))
         return self.eigenEs
 
-    def reset_for_basis(self, start, end):
+    def reset_for_basis(self, start: int, end: int):
         """Reset the parameters for only solving the layers of [start:end].
         This is a helper method for solve_basis"""
         self.repeats = 1
@@ -314,7 +319,7 @@ class SchrodingerLayer(object):
         self._layerVc = self._layerVc[start:end]
         self._layerMc = self._layerMc[start:end]
 
-    def dipole(self, upper, lower):
+    def dipole(self, upper: int, lower: int) -> float:
         """Return Electrical dipole between upper and lower states,
         update self.dipole. Should be called for any other related physics
         quantities."""
