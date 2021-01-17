@@ -6,6 +6,8 @@ This module contains `QCLayers` class.
 QCLayers.QCLayers class
 -----------------------
 .. currentmodule:: QCLayers
+.. autoclass:: SchrodingerLayer
+   :members:
 .. autoclass:: QCLayers
    :members:
 

@@ -62,6 +62,7 @@ breathe_default_project = "OneDQuantum"
 breathe_domain_by_extension = {"h": "c", "c": "c"}
 autosummary_generate = True
 napoleon_use_rtype = False
+bibtex_bibfiles = ['manual/quantum_refs.bib', 'manual/optic_refs.bib']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -206,7 +207,7 @@ epub_exclude_files = ['search.html']
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/', None), 
+    'python': ('https://docs.python.org/', None),
     'numpy': ('https://docs.scipy.org/doc/numpy', None),
     'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
     'matplotlib': ('https://matplotlib.org', None),
