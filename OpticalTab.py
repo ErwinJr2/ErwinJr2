@@ -33,6 +33,11 @@ class OpticalTab(QWidget):
             dirty: Show if there's any new changes to qclayers that need to
                    be saved
 
+        plotImag: bool, whether to plot the imaginary part of the refractive
+            index
+
+        redActive: bool, whether to plot the active part red
+
         --- GUI widget ---
         1st column (settingBox):
             wlBox
@@ -70,6 +75,7 @@ class OpticalTab(QWidget):
         self.beta = None
         self.select = None
         self.redActive = False
+        self.plotImag = True
 
         self.setAutoFillBackground(True)
         self.setBackgroundRole(QPalette.Window)
@@ -146,6 +152,7 @@ class OpticalTab(QWidget):
         self.periodBox.setSuffix(" Å")
         self.periodBox.setMaximum(19999.99)
         self.repeatBox = QSpinBox()
+        self.repeatBox.setMaximum(999)
         mtrlLayout.addWidget(self.periodBox, 5, 0)
         mtrlLayout.addWidget(QLabel('<center>Periods</center>'), 4, 1)
         mtrlLayout.addWidget(self.repeatBox, 5, 1)
@@ -370,6 +377,7 @@ class OpticalTab(QWidget):
         self.fieldBox.setValue(EField)
         self.periodBox.setValue(Lp)
         self.gainCoeffBox.setValue(gaincoeff)
+        self.update_customLength()
 
     def update_customLength(self):
         length = self.periodBox.value() * self.repeatBox.value() / 1E4  # to um
@@ -538,7 +546,8 @@ class OpticalTab(QWidget):
 
             # Thickness
             if q == 0 or q == len(self.stratum.materials)-1:
-                thickness = QTableWidgetItem('1.0' if q == 0 else '2.0')
+                # TODO: To check the best default width for substrate and air
+                thickness = QTableWidgetItem('1.0' if q == 0 else '3.0')
                 thickness.setFlags(Qt.ItemIsSelectable)
             else:
                 thickness = QTableWidgetItem("%.2f" % self.stratum.Ls[q])
@@ -561,7 +570,7 @@ class OpticalTab(QWidget):
                 ridx = self.stratum.indexs
             else:
                 ridx = self.stratum.indices[q-1]
-            ridx = QTableWidgetItem("%.2f + %.2fi" % (ridx.real, ridx.imag))
+            ridx = QTableWidgetItem("%.3f + %.3fi" % (ridx.real, ridx.imag))
             ridx.setFlags(Qt.ItemIsSelectable)
             self.strataTable.setItem(q, 4, ridx)
 
@@ -570,8 +579,10 @@ class OpticalTab(QWidget):
 
     def strataTable_mtrlChanged(self, row, selection):
         """SLOT as partial(self.strataTable_mtrlChanged, q) connected to
-        mtrlName.currentTextChanged(int)"""
+        mtrlName.currentTextChanged(str)"""
         self.stratum.materials[row] = selection
+        if selection == 'Active Core':
+            self.update_customLength()
         self.strataTable.selectRow(row)
         self.dirty.emit()
 
@@ -640,11 +651,19 @@ class OpticalTab(QWidget):
         """Update figure in optCanvas"""
         self.ridxAxis.clear()
         self.modeAxis.clear()
-        nx = self.stratum.populateIndices(self.xs).real
-        self.ridxAxis.plot(self.xs, nx, 'k', lw=1)
+        nx = self.stratum.populateIndices(self.xs)
+        self.ridxAxis.plot(self.xs, nx.real, 'k', lw=1)
+        self.ridxAxis.set_xlabel('Position (μm)')
+        self.ridxAxis.set_ylabel('Mode Intensity (a.u.) or Refractive Index')
         if self.redActive:
             for ar in self.stratum.populateIndices(self.xs):
-                self.ridxAxis.plot(self.xs[ar], nx[ar], 'r', lw=2)
+                self.ridxAxis.plot(self.xs[ar], nx.real[ar], 'r', lw=2)
+        if np.max(nx.real) > 5:
+            self.ridxAxis.set_ylim(top=5)
+        if self.plotImag:
+            self.ridxAxis.plot(self.xs, nx.imag, 'orange', lw=1)
+            if np.max(nx.imag) > 5:
+                self.ridxAxis.set_ylim(top=5)
         # plot select strata
         if self.select is not None:
             if self.select == 0:
@@ -655,7 +674,7 @@ class OpticalTab(QWidget):
                 lsum = sum(self.stratum.Ls[1:self.select])
                 idx = (self.xs >= lsum) & (
                     self.xs < lsum+self.stratum.Ls[self.select])
-            self.ridxAxis.plot(self.xs[idx], nx[idx], 'b', lw=1.5)
+            self.ridxAxis.plot(self.xs[idx], nx.real[idx], 'b', lw=1.5)
         if self.beta is not None:
             self.modeAxis.plot(self.xs, np.abs(self.Ey)**2, color='C0')
         # self.optCanvas.figure.tight_layout()

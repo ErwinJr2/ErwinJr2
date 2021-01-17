@@ -9,7 +9,6 @@ from rFittings import AlGaAsIndex, SiNxIndex, SiO2Index
 from collections import defaultdict
 import typing
 from typing import List
-# from OneDQuantum.OneDMaxwell import *
 
 # refractive indices
 rIdx = {
@@ -61,7 +60,10 @@ Dopable = set(['GaAs', 'InAs', 'AlAs', 'InP'] + list(Alloy.keys()))
 
 class MaxwellLayer(object):
     """Class for layer structure for Maxwell solver using transfer matrix
-    method
+    method.
+
+    This is used as the base class of :class:`.OptStrata` for separation of
+    material property and the solver.
 
     Parameters
     ----------
@@ -69,7 +71,15 @@ class MaxwellLayer(object):
         Wavelength in vacuum to guide in the stratum
 
     indices : list(complex)
-        refractive indicies of the layers
+        The Refractive indices of the layers except for the top and the
+        substrate. The substrate and the top layer is not part of the list
+        because they decides the boundary condition for the solver.
+
+    index0 : complex
+        The refractive index for the top layer
+
+    indexs : complex
+        The refractive index for the substrate layer
 
     Ls : list(float)
         Thickness of  stratum, same unit as wl. The first and last elements
@@ -81,7 +91,7 @@ class MaxwellLayer(object):
     indices: np.ndarray
     Ls: List[complex]
 
-    def __init__(self, wl: float, Ls: List = [1.0, 1.0],
+    def __init__(self, wl: float, Ls: List = [1.0, 3.0],
                  allIndex: List = [1.0, 1.0]):
         self.wl = wl
         self.index0 = allIndex[0]
@@ -91,7 +101,7 @@ class MaxwellLayer(object):
                    else np.array([1.0] + list(Ls) + [2.0]))
 
     def transferTM(self, beta: complex) -> np.ndarray:
-        """Tranfer matrix for TM wave
+        """Transfer matrix for TM wave
 
         Calculate the transfer matrix for TM wave with frequency
         :math:`\\omega = c/\\text{wl}` on the stratum structure described
@@ -153,7 +163,7 @@ class MaxwellLayer(object):
 
         Solve for TM bounded mode near beta (as first guess in root finding)
         with frequency :math:`\\omega = c/\\text{wl}` on the stratum structure
-        discribed with the thickness and index list;
+        described with the thickness and index list;
         top/substrate defined by index0 and indexs.
         wl and Ls should be same unit
 
@@ -175,7 +185,12 @@ class MaxwellLayer(object):
 
         """
         if beta is None:
-            beta = max(self.indices.real, default=1.5*self.indexs)
+            if len(self.indices) == 0:
+                beta = 1.5*self.indexs
+            else:
+                beta = max(self.indices.real)
+                beta = min(beta, 2.0*np.average(self.indices.real,
+                           weights=self.Ls[1:-1]))
         # # Minimization algo. for complex function zero searching
         # beta0 = newton(lambda beta:
         #                chiMTM(beta, wl, Ls, indices, index0, indexs).imag,
@@ -197,7 +212,7 @@ class MaxwellLayer(object):
             betaDiff = residule / fp
             beta = beta - betaDiff
             residule = self.chiMTM(beta)
-            if t > 100:
+            if t > 200:
                 raise TimeoutError("Doesn't converge")
                 break
         return beta
@@ -328,7 +343,7 @@ class MaxwellLayer(object):
 
         xs : np.ndarray
             The array for positions: controls the accuracy of the numerical
-            integral for confinement facotr calculation
+            integral for confinement factor calculation
 
         Ey : np.ndarray(complex)
             The field to integral on
@@ -353,7 +368,7 @@ class MaxwellLayer(object):
 
 
 class MaxwellLayer_anisotropic(MaxwellLayer):
-    """class for anisotropic maxwell layers, cannot deal with anisoptropy for
+    """class for anisotropic Maxwell layers, cannot deal with anisotropy for
     top air and bottom substrate."""
     def __init__(self, wl, Ls=[1.0, 1.0], indexz=[1.0, 1.0], indexy=None):
         super(MaxwellLayer_anisotropic, self).__init__(wl, Ls, indexz)
@@ -423,8 +438,8 @@ class OptStrata(MaxwellLayer):
     cstmPrd : dict
         A dictionary of customized material, with key the name and value a
         list of two elements, 0-th being the period length (float in unit
-        Angstrom) and 1-st (int) being the nubmer of periods.
-        If the 0-th value is 0 or not key not exists, it's not a peirodic
+        Angstrom) and 1-st (int) being the number of periods.
+        If the 0-th value is 0 or not key not exists, it's not a periodic
         structure. The variable is only for book keeping and is
         not used to validate Ls within the class
 
@@ -467,7 +482,7 @@ class OptStrata(MaxwellLayer):
         """Insert a strata indexed with row (top air and bottom substrate
         included) with parameters listed"""
         if row <= 0 or row >= len(self.materials):
-            raise IndexError("Cannot inser strata beyond top and substrate.")
+            raise IndexError("Cannot insert strata beyond top and substrate.")
         self.materials.insert(row, material if material else
                               self.materials[row-1])
         self.moleFracs.insert(row, moleFrac if moleFrac is not None else
@@ -546,7 +561,7 @@ class OptStrata(MaxwellLayer):
     def populateMtrl(self, xs, mtrlList=None):
         """Populate a boolean array for index slicing on xs for material
         in the mtrlList. If mtrlList is None, the active region is labelled by
-        anyting start with "Active".
+        anything start with "Active".
 
         Parameters
         ----------
@@ -575,7 +590,7 @@ class OptStrata(MaxwellLayer):
     def confinementy(self, beta, xs=None, Ey=None):
         """Return the confinement factor corresponds to mode with effective
         refractive index beta. If xs and Ey is None, they will be generated.
-        The active region is labelled by anyting start with "Active".
+        The active region is labelled by anything start with "Active".
 
         Parameters
         ----------
@@ -584,7 +599,7 @@ class OptStrata(MaxwellLayer):
 
         xs : np.ndarray
             The array for positions: controls the accuracy of the numerical
-            integral for confinement facotr calculation
+            integral for confinement factor calculation
 
         Ey : np.ndarray(complex)
             The field to integral on
