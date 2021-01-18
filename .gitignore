@@ -33,6 +33,7 @@ OneDQuantum/docs/xml/
 OneDQuantum/docs/latex/
 example/*
 !example/PQLiu*
+ErwinJr2.bat
 
 .DS_Store
 .vscode/*
