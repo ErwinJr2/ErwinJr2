@@ -32,9 +32,9 @@ copyright = '2020, Gmachl Group, Princeton'
 author = 'Ming Lyu, Yaofeng (Desmond) Zhong, Xiaowen Chen'
 
 # The short X.Y version
-version = '1.0'
+version = '1.1'
 # The full version, including alpha/beta/rc tags
-release = '1.0 alpha'
+release = '1.1 alpha'
 
 
 # -- General configuration ---------------------------------------------------
