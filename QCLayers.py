@@ -253,7 +253,8 @@ class SchrodingerLayer(object):
 
     def solve_whole_matrix(self) -> np.ndarray:
         """
-        solve eigen modes for the whole structure with matrix eigen-solver
+        Solve eigen modes for the whole structure with matrix eigen-solver.
+        This is an experimental feature.
 
         Yield
         -----
@@ -280,15 +281,19 @@ class SchrodingerLayer(object):
 
         # unit eV/step^2
         unit = hbar**2/(2*e0*m0*(1E-10*self.xres)**2)
-        # diagonal and sub-diagonal of Hamiltonian
-        self.Hdiag = unit*(1/self.xMcplus + 1/self.xMcminus) + self.xVc
-        self.Hsubd = -unit / self.xMcplus[:-1]
-        self.eigenEs, self.psis = slg.eigh_tridiagonal(
-            self.Hdiag, self.Hsubd, select='v',
-            select_range=(np.min(self.xVc), np.max(self.xVc)))
-        self.psis /= sqrt(self.xres)
-        self.psis = self.psis.T
-        return self.eigenEs
+        if self.crystalType == 'simple':
+            # diagonal and sub-diagonal of Hamiltonian
+            self.Hdiag = unit*(1/self.xMcplus + 1/self.xMcminus) + self.xVc
+            self.Hsubd = -unit / self.xMcplus[:-1]
+            self.eigenEs, self.psis = slg.eigh_tridiagonal(
+                self.Hdiag, self.Hsubd, select='v',
+                select_range=(np.min(self.xVc), np.max(self.xVc)))
+            self.psis /= sqrt(self.xres)
+            self.psis = self.psis.T
+            return self.eigenEs
+        else:
+            raise NotImplementedError('Matrix solver is not implemented '
+                                      'for {}'.format(self.crystalType))
 
     def solve_basis(self) -> np.ndarray:
         """
