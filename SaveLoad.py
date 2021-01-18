@@ -193,7 +193,7 @@ def qclSaveJSON(fhandle: typing.TextIO, qclayers: QCLayers):
                         "QCLayers not valid type")
     o = qclayers
     parameters = [json.dumps(s) for s in (o.description, o.substrate,
-                                          o.EField, o.xres, o.Eres, o.Solver,
+                                          o.EField, o.xres, o.Eres, o.solver,
                                           o.Temperature, o.repeats,
                                           o.materials, o.moleFracs,
                                           o.layerMtrls, o.layerWidths,
@@ -228,7 +228,7 @@ def EJSaveJSON(fhandle: typing.TextIO, qclayers: QCLayers,
         if item in s.cstmGain:
             cstmtrl[item]["gain"] = s.cstmGain[item]
     parameters = [json.dumps(s) for s in (o.description, o.wl, o.substrate,
-                                          o.EField, o.xres, o.Eres, o.Solver,
+                                          o.EField, o.xres, o.Eres, o.solver,
                                           o.Temperature, o.repeats,
                                           o.materials, o.moleFracs,
                                           o.layerMtrls, o.layerWidths,

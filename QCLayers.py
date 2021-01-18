@@ -106,6 +106,10 @@ class SchrodingerLayer(object):
         self.basisARInjector = True
         self.basisInjectorAR = True
 
+        # This is an experimental feature for periodic solver
+        self.periodic = False
+        # self.periodic = True
+
     def layerVc(self, n: int) -> float:
         """The conduction band offset at n-th layer in eV"""
         return self._layerVc[n]
@@ -184,6 +188,7 @@ class SchrodingerLayer(object):
         return psis, eigenEs
 
     def populate_material(self):
+        """This should be overrided to yeild bandParams"""
         raise NotImplementedError('Material property is not implemented')
 
     def solve_whole(self) -> np.ndarray:
@@ -215,6 +220,35 @@ class SchrodingerLayer(object):
                                                 self.xVc, self.xMc)
             self.psis = onedq.cSimpleFillPsi(self.xres, self.eigenEs,
                                              self.xVc, self.xMc)
+            return self.eigenEs
+        xBand = onedq.Band(self.crystalType, *self.bandParams)
+        if not self.periodic:
+            self.eigenEs = onedq.cBandSolve1D(
+                self.xres, Es, self.xVc, xBand)
+            self.psis = onedq.cBandFillPsi(self.xres, self.eigenEs,
+                                           self.xVc, xBand)
+        else:
+            bandOffsets = self.xVc + self.xPoints * self.EField * EUnit
+            offset = max(bandOffsets) - min(bandOffsets)
+            # mass = self.xMc[np.argmin(self.xVc)]
+            # # ground state for triangular well
+            # Emin = 2.33810741 * (hbar**2*(self.EField*EUnit)**2/(
+            #     2*m0*mass*e0**2))**(1/3)
+            # Es = np.linspace(np.min(self.xVc)+Emin, np.max(self.xVc), 1024)
+            self.Emin = (min(m.parm['EcG'] for m in self.mtrlAlloys)
+                         - PeriodL*offset)
+            self.Emax = (max(m.parm['EcG'] for m in self.mtrlAlloys)
+                         + PeriodU*offset)
+            Eshift = self.EField*EUnit*sum(self.layerWidths)
+            Es = np.arange(self.Emin - Eshift, self.Emin, self.Eres/1E3)
+            eigenEs = onedq.cBandSolve1DBonded(
+                self.xres, Es, self.Emin, self.Emax,
+                self.EField, self.xVc, xBand)
+            psis = onedq.cBandFillPsi(
+                self.xres, eigenEs, self.xVc, xBand,
+                Elower=self.Emin, Eupper=self.Emax, field=self.EField)
+            self.psis, self.eigenEs = self.shiftPeriod(
+                                          (-1, 0, 1, 2), psis, eigenEs)
         return self.eigenEs
 
     def solve_whole_matrix(self) -> np.ndarray:
@@ -318,6 +352,7 @@ class SchrodingerLayer(object):
         self.layerARs = self.layerARs[start:end]
         self._layerVc = self._layerVc[start:end]
         self._layerMc = self._layerMc[start:end]
+        self.periodic = False
 
     def dipole(self, upper: int, lower: int) -> float:
         """Return Electrical dipole between upper and lower states,
@@ -401,7 +436,7 @@ description : str
     def __init__(self, substrate="InP", materials=["InGaAs", "AlInAs"],
                  moleFracs=[0.53, 0.52], xres=0.5, Eres=0.5,
                  layerWidths=[0.0], layerMtrls=[0], layerDopings=[0.0],
-                 layerARs=[True], EField=0, repeats=3, T=300.0, Solver="ODE",
+                 layerARs=[True], EField=0, repeats=3, T=300.0, solver="ODE",
                  description="", wl=3.0):
         super().__init__(xres, Eres, layerWidths, layerARs,
                          # layerVc and layerMc is not used for this sub class
@@ -414,11 +449,9 @@ description : str
         self.layerMtrls = layerMtrls
         self.layerDopings = layerDopings
         self.Temperature = T
-        self.solver = Solver
+        self.solver = solver
         self.description = description
         self.wl = 3.0
-        self.periodic = False
-        # self.periodic = True
 
         self.subM = Material.Material(self.substrate, self.Temperature)
         self.update_strain()
@@ -535,7 +568,8 @@ description : str
     def populate_material(self):
         """
         Update following band structure parameters (with type *np.array
-        of float*): **xVc, xVX, xVL, xVLH, xVSO, xEg, xMc, xESP, xF**
+        of float*): **xVc, xVX, xVL, xVLH, xVSO,
+        bandParams = (xEg, xF, xEp, xESO)**
         """
         if self.crystalType == 'ZincBlende':
             N = self.xPoints.size
@@ -547,19 +581,20 @@ description : str
             self.xVSO = np.empty(N)  # The heavy hole valence band
 
             # band parameters
-            self.xEg = np.empty(N)
-            self.xESO = np.empty(N)
-            self.xEp = np.empty(N)
-            self.xF = np.empty(N)
+            xF = np.empty(N)
+            xEg = np.empty(N)
+            xESO = np.empty(N)
+            xEp = np.empty(N)
 
             for n in range(len(self.layerWidths)):
                 indices = (self.xLayerNums == n)
                 self.xDopings[indices] = self.layerDopings[n]
                 for (p, key) in ((self.xVLH, 'EvLH'), (self.xVSO, 'EvSO'),
                                  (self.xVX, 'EcX'), (self.xVL, 'EcL'),
-                                 (self.xEg, 'EgLH'), (self.xESO, 'ESO'),
-                                 (self.xEp, 'Ep'), (self.xF, 'F')):
+                                 (xEg, 'EgLH'), (xESO, 'ESO'),
+                                 (xEp, 'Ep'), (xF, 'F')):
                     p[indices] = self.mtrlAlloys[self.layerMtrls[n]].parm[key]
+            self.bandParams = (xEg, xF, xEp, xESO)
 
             ExtField = self.xPoints * self.EField * EUnit
             for p in (self.xVX, self.xVL, self.xVLH, self.xVSO):
@@ -570,53 +605,8 @@ description : str
                      self.crystalType
                  ))
 
-    def solve_whole_ode(self):
-        """
-        solve eigen modes for the whole structure
-
-        Yield
-        -----
-        eigenEs : np.array of float
-            the eigenenergy of the layer structure
-        psis : np.array of float
-            the wave function
-
-        """
-        # mass = self.xMc[np.argmin(self.xVc)]
-        # # ground state for triangular well
-        # Emin = 2.33810741 * (hbar**2*(self.EField*EUnit)**2/(
-        #     2*m0*mass*e0**2))**(1/3)
-        # Es = np.linspace(np.min(self.xVc)+Emin, np.max(self.xVc), 1024)
-        Es = np.arange(np.min(self.xVc), np.max(self.xVc), self.Eres/1E3)
-        xBand = onedq.Band(self.crystalType, self.xEg, self.xF, self.xEp,
-                           self.xESO)
-        if self.periodic:
-            offset = self.offset()
-            self.Emin = (min(m.parm['EcG'] for m in self.mtrlAlloys)
-                         - PeriodL*offset)
-            self.Emax = (max(m.parm['EcG'] for m in self.mtrlAlloys)
-                         + PeriodU*offset)
-            Eshift = self.EField*EUnit*sum(self.layerWidths)
-            Es = np.arange(self.Emin - Eshift, self.Emin, self.Eres/1E3)
-            eigenEs = onedq.cBandSolve1DBonded(
-                self.xres, Es, self.Emin, self.Emax,
-                self.EField, self.xVc, xBand)
-            psis = onedq.cBandFillPsi(
-                self.xres, eigenEs, self.xVc, xBand,
-                Elower=self.Emin, Eupper=self.Emax, field=self.EField)
-            self.psis, self.eigenEs = self.shiftPeriod(
-                                          (-1, 0, 1, 2), psis, eigenEs)
-        else:
-            self.eigenEs = onedq.cBandSolve1D(
-                self.xres, Es, self.xVc, xBand)
-            self.psis = onedq.cBandFillPsi(self.xres, self.eigenEs,
-                                           self.xVc, xBand)
-        return self.eigenEs
-        #  self.stateFilter()
-
     def reset_for_basis(self, start, end):
         super().reset_for_basis(start, end)
-        self.periodic = False
         self.layerMtrls = self.layerMtrls[start:end]
         self.layerDopings = self.layerDopings[start:end]
 
