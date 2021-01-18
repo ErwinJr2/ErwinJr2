@@ -200,17 +200,22 @@ void FillPsi(double step, numpyint N, const double *EigenEs,
             double modsq = 0;
             if (mat != NULL) {
                 /*MP assume only mass is updated*/
-                UpdateBand(mat, EigenEs[i], V, bandm);
+                BandUpdateM(mat, EigenEs[i], V, bandm);
             }
             ode(step, len, 0.0, Y_EPS, EigenEs[i],
                     V+starts[i], bandm+starts[i], psi);
             /* Normalization */
-            for(j=0; j<len; j++) {
-                modsq += sq(psi[j]);
-            }
-            modsq = sqrt(modsq * step);
-            for(j=0; j<len; j++) {
-                psi[j] /= modsq;
+            if (mat != NULL) {
+                BandNormalize(mat, EigenEs[i], V, psi, step);
+            } else {
+                /* default normalization */
+                for(j=0; j<len; j++) {
+                    modsq += sq(psi[j]);
+                }
+                modsq = sqrt(modsq * step);
+                for(j=0; j<len; j++) {
+                    psi[j] /= modsq;
+                }
             }
         }
         if (mat != NULL) {
@@ -294,7 +299,7 @@ numpyint Solve1D(double step, numpyint N,
 #endif
         for(i=0; i<EN; i++) {
             if(mat != NULL) {
-                UpdateBand(mat, Es[i], V, mband);
+                BandUpdateM(mat, Es[i], V, mband);
             }
             yend[i] = ode(step, N, 0.0, Y_EPS, Es[i], V, mband, y);
         }
@@ -321,7 +326,7 @@ numpyint Solve1D(double step, numpyint N,
 #ifndef SIMPLE
                 int count=0;
                 if(mat != NULL) {
-                    UpdateBand(mat, E0, V, mband);
+                    BandUpdateM(mat, E0, V, mband);
                 }
                 y0 = ode(step, N, 0.0, Y_EPS, E0, V, mband, y);
                 y1 = yend[i-1];
@@ -346,7 +351,7 @@ numpyint Solve1D(double step, numpyint N,
                     }
                     E0 = findZero(E1, y1, E2, y2);
                     if(mat != NULL) {
-                        UpdateBand(mat, E0, V, mband);
+                        BandUpdateM(mat, E0, V, mband);
                     }
                     y0 = ode(step, N, 0.0, Y_EPS, E0, V, mband, y);
                     count++;
@@ -445,7 +450,7 @@ numpyint Solve1DBonded(double step, numpyint N,
             if(start < 0)
                 start = 0;
             if(mat != NULL) {
-                UpdateBand(mat, E, V, mband);
+                BandUpdateM(mat, E, V, mband);
             }
             yend[i] = ode(step, start+length<=N ? length : N-start,
                     0.0, Y_EPS, E, V+start, mband+start, y+start);
@@ -476,7 +481,7 @@ numpyint Solve1DBonded(double step, numpyint N,
                 if(start < 0)
                     start = 0;
                 if(mat != NULL) {
-                    UpdateBand(mat, E0, V, mband);
+                    BandUpdateM(mat, E0, V, mband);
                 }
                 y0 = ode(step, start+length<=N ? length : N-start,
                         0.0, Y_EPS, E0, V+start, mband+start, y+start);
@@ -502,7 +507,7 @@ numpyint Solve1DBonded(double step, numpyint N,
                     }
                     E0 = findZero(E1, y1, E2, y2);
                     if(mat != NULL) {
-                        UpdateBand(mat, E0, V, mband);
+                        BandUpdateM(mat, E0, V, mband);
                     }
                     start = (int) floor((Elower - E0)/field);
                     if(start < 0)

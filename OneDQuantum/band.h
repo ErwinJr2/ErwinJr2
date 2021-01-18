@@ -21,18 +21,33 @@ typedef struct BAND Band;
  */
 typedef numpyint (*UpdateFunc)(Band *, double, const double *, double *);
 
+/**
+ * An update parameter function pointer that accepts a pointer to
+ * to band struct (with its parameters as members) and according to
+ * the Band parameters and energy, update para (usually effective mass).
+ * The latter two double * parameters are potential (including band offset)
+ * and effective mass respectively.
+ */
+typedef double (*NormalizeFunc)(Band *, double, const double *,
+                                double *, double);
+
 /** @brief Base class for band structure */
 typedef struct BAND{
-    const UpdateFunc update;  /**< Update band structure */
-    numpyint N;               /**< Size of datas */
-    double *Eg;               /**< Band gap in eV */
+    const UpdateFunc updateM;       /**< Update band structure effective mass */
+    const NormalizeFunc normalize;  /**< Normalize the wave function */
+    numpyint N;                     /**< Size of datas */
+    double *Eg;                     /**< Band gap in eV */
 } Band;
 
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif
 /** @brief Update effective mass in band */
-numpyint UpdateBand(Band *band, double E, const double *xVc, double *m);
+numpyint BandUpdateM(Band *band, double E, const double *xVc, double *m);
+
+/** @brief Normalize the wave function psi according to the band */
+double BandNormalize(Band *band, double E, const double *xVc,
+                     double *psi, double xres);
 
 #ifdef _WINDLL
 __declspec(dllexport)

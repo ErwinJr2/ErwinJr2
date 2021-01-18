@@ -6,6 +6,7 @@
  */
 
 
+#include <math.h>
 #include "band.h"
 
 #ifdef __cplusplus
@@ -14,8 +15,16 @@ extern "C" {
 
 /** @cond IMPL
  * implemtation of functions in header files should be excluded in doxygen */
-numpyint UpdateBand(Band *band, double E, const double *xVc, double *m) {
-    return band->update(band, E, xVc, m);
+numpyint BandUpdateM(Band *band, double E, const double *xVc, double *m) {
+    return band->updateM(band, E, xVc, m);
+}
+/** @endcond */
+
+/** @cond IMPL
+ * implemtation of functions in header files should be excluded in doxygen */
+double BandNormalize(Band *band, double E, const double *xVc,
+                     double *psi, double xres) {
+    return band->normalize(band, E, xVc, psi, xres);
 }
 /** @endcond */
 
@@ -23,8 +32,9 @@ numpyint UpdateBand(Band *band, double E, const double *xVc, double *m) {
  * structure for Zinc-blende band
  */
 typedef struct ZBBAND {
-    UpdateFunc updateM;    /**< Update effective mass */
-    numpyint N;            /**< Number of finite x positions */
+    UpdateFunc updateM;       /**< Update effective mass */
+    NormalizeFunc normalize;  /**< Normalize the wave function */
+    numpyint N;               /**< Number of finite x positions */
     const double *xEg;     /**< Direct energy gap  */
     const double *xF;      /**< Kane parameter  */
     const double *xEp;     /**< Matrix element */
@@ -37,13 +47,39 @@ numpyint ZBupdateM(Band *mat, double Eq, const double *xVc, double *m) {
     int q;
     for(q=0; q<zbmat->N; q++) {
         double E = Eq - xVc[q];
-        if(E < -zbmat->xEg[q]/2)
-            E = -zbmat->xEg[q]/2; /* Avoid singularity */
+        if(E < -zbmat->xEg[q]/2)  E = -zbmat->xEg[q]/2; /* Avoid singularity */
         m[q] = 1 / (1 + 2*zbmat->xF[q] + zbmat->xEp[q]/3 * (
                     2 / (E + zbmat->xEg[q]) +
                     1 / (E + zbmat->xEg[q] + zbmat->xESO[q])) );
     }
     return zbmat->N;
+}
+
+#define SQ(x) (x)*(x)
+double ZBNormalize(Band *mat, double Eq, const double *xVc,
+                   double *psi, double xres) {
+    ZBBand *zbmat = (ZBBand *) mat;
+    int q;
+    double modsq = 0;
+    for(q=1; q<zbmat->N; q++) {
+        /* parameters are averaged to get the middle value */
+        double Vc = (xVc[q] + xVc[q-1]) / 2;
+        double E = Eq - Vc;
+        double ESO = (zbmat->xESO[q] + zbmat->xESO[q-1]) / 2;
+        double Eg = (zbmat->xEg[q] + zbmat->xEg[q-1]) / 2;
+        double Ep = (zbmat->xEp[q] + zbmat->xEp[q-1]) / 2;
+        double psi_avg = (psi[q]+psi[q-1]) / 2;
+        double psidiff = (psi[q] - psi[q-1]) / xres;
+        if(E < -Eg/2)  E = -Eg/2;  /* Avoid singularity */
+        modsq += SQ(psi_avg) + psidiff * psidiff * Ep * 3.8100 / 3 * (
+            2 / (SQ(E+Eg)) + 1 / (SQ(E+Eg+ESO)));
+        /* 3.8100 = hbar^2/(2*m0) in eV Angstrom^2 */
+    }
+    modsq = sqrt(modsq * xres);
+    for (q = 0; q < zbmat->N; q++) {
+        psi[q] /= modsq;
+    }
+    return modsq;
 }
 
 /** @cond IMPL
@@ -52,6 +88,7 @@ Band *ZBband_new(numpyint N, const double *xEg, const double *xF,
         const double *xEp, const double *xESO) {
     ZBBand *zbband = (ZBBand *) malloc( sizeof(ZBBand) );
     zbband->updateM = ZBupdateM;
+    zbband->normalize = ZBNormalize;
     zbband->N = N;
     zbband->xEg = xEg;
     zbband->xF = xF;
@@ -91,8 +128,9 @@ void ZBband_check(const Band *band, numpyint N, const double *xEg,
 
 /** @brief struct for Wurtzite band */
 typedef struct WZBand {
-    UpdateFunc updateM;   /**< Update effective mass */
-    numpyint N;           /**< Number of finite x positions */
+    UpdateFunc updateM;       /**< Update effective mass */
+    NormalizeFunc normalize;  /**< Normalize the wave function */
+    numpyint N;               /**< Number of finite x positions */
     const double *xEg;    /**< Direct energy gap */
     const double *xEp;    /**< Matrix parameter */
     const double *xESO;   /**< Spin-orbit splitting */
@@ -113,12 +151,39 @@ numpyint WZupdateM(Band *mat, double Eq, const double *xVc, double *m) {
     return wzmat->N;
 }
 
+double WZNormalize(Band *mat, double Eq, const double *xVc,
+                   double *psi, double xres) {
+    ZBBand *zbmat = (ZBBand *) mat;
+    int q;
+    double modsq = 0;
+    for(q=1; q<zbmat->N; q++) {
+        /* parameters are averaged to get the middle value */
+        double Vc = (xVc[q] + xVc[q-1]) / 2;
+        double E = Eq - Vc;
+        double ESO = (zbmat->xESO[q] + zbmat->xESO[q-1]) / 2;
+        double Eg = (zbmat->xEg[q] + zbmat->xEg[q-1]) / 2;
+        double Ep = (zbmat->xEp[q] + zbmat->xEp[q-1]) / 2;
+        double psi_avg = (psi[q]+psi[q-1]) / 2;
+        double psidiff = (psi[q] - psi[q-1]) / xres;
+        if(E < -Eg/2)  E = -Eg/2;  /* Avoid singularity */
+        modsq += SQ(psi_avg) + psidiff * psidiff * Ep * 3.8100 / 3 * (
+            2 / (SQ(E+Eg)) + 1 / (SQ(E+Eg+ESO)));
+        /* 3.8100 = hbar^2/(2*m0) in eV Angstrom^2 */
+    }
+    modsq = sqrt(modsq * xres);
+    for (q = 0; q < zbmat->N; q++) {
+        psi[q] /= modsq;
+    }
+    return modsq;
+}
+
 /** @cond IMPL
  * implemtation of functions in header files should be excluded in doxygen */
 Band *WZband_new(numpyint N, const double *xEg,
         const double *xEp, const double *xESO) {
     WZBand *wzband = (WZBand *) malloc( sizeof(WZBand) );
     wzband->updateM = WZupdateM;
+    wzband->normalize = WZNormalize;
     wzband->N = N;
     wzband->xEg = xEg;
     wzband->xEp = xEp;
