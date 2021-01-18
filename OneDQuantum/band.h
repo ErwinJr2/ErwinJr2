@@ -45,6 +45,9 @@ __declspec(dllexport)
 /** @brief Update effective mass in band */
 numpyint BandUpdateM(Band *band, double E, const double *xVc, double *m);
 
+#ifdef _WINDLL
+__declspec(dllexport)
+#endif
 /** @brief Normalize the wave function psi according to the band */
 double BandNormalize(Band *band, double E, const double *xVc,
                      double *psi, double xres);
