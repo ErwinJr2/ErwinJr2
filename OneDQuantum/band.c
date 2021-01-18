@@ -71,9 +71,9 @@ double ZBNormalize(Band *mat, double Eq, const double *xVc,
         double psi_avg = (psi[q]+psi[q-1]) / 2;
         double psidiff = (psi[q] - psi[q-1]) / xres;
         if(E < -Eg/2)  E = -Eg/2;  /* Avoid singularity */
-        modsq += SQ(psi_avg) + psidiff * psidiff * Ep * 3.8100 / 3 * (
+        modsq += SQ(psi_avg) + psidiff * psidiff * Ep * 3.809982 / 3 * (
             2 / (SQ(E+Eg)) + 1 / (SQ(E+Eg+ESO)));
-        /* 3.8100 = hbar^2/(2*m0) in eV Angstrom^2 */
+        /* 3.809982 = hbar^2/(2*m0) in eV Angstrom^2 */
     }
     modsq = sqrt(modsq * xres);
     for (q = 0; q < zbmat->N; q++) {
@@ -166,9 +166,9 @@ double WZNormalize(Band *mat, double Eq, const double *xVc,
         double psi_avg = (psi[q]+psi[q-1]) / 2;
         double psidiff = (psi[q] - psi[q-1]) / xres;
         if(E < -Eg/2)  E = -Eg/2;  /* Avoid singularity */
-        modsq += SQ(psi_avg) + psidiff * psidiff * Ep * 3.8100 / 3 * (
+        modsq += SQ(psi_avg) + psidiff * psidiff * Ep * 3.809982 / 3 * (
             2 / (SQ(E+Eg)) + 1 / (SQ(E+Eg+ESO)));
-        /* 3.8100 = hbar^2/(2*m0) in eV Angstrom^2 */
+        /* 3.809982 = hbar^2/(2*m0) in eV Angstrom^2 */
     }
     modsq = sqrt(modsq * xres);
     for (q = 0; q < zbmat->N; q++) {

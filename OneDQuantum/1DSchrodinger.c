@@ -136,7 +136,8 @@ __declspec(dllexport)
 /**
  * Fill in wavefunctions in \f$ \psi \f$'s accroding to eigen energy in EigenEs.
  * \f$ \psi + i N \times sizeof(double) \f$ is the wavefunction with Energy EigenEs[i]
- * The result is normalized to 1 (so psi is unit sqrt(Angstrom^-1)
+ * The result is normalized to 1 (so psi is unit sqrt(Angstrom^-1))
+ * if mat == NULL  or the normalization defined in mat.
  *
  * @param[in] step step size
  * @param[in] N number of steps
@@ -149,8 +150,9 @@ __declspec(dllexport)
  * @param[in] *starts
  * @param[in] *ends wavefuntion limited to psi[starts[i]:ends[i]]
  * @param[in] *mat is a pointer to band structure, for updating
- *                effective mass according to energy. When it's NULL it means
- *                using constant mass without non-parabolic effective mass.
+ *                effective mass according to energy and perform normalization.
+ *                When it's NULL it means using constant mass with parabolic
+ *                kinetic energy.
  * @param[out] *psis (output)
  *                   \f$ \psi + i N \times sizeof(double) \f$ is the
  *                   wavefunction with energy EigenEs[i].
