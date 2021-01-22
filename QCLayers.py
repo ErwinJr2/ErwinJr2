@@ -86,16 +86,18 @@ class SchrodingerLayer(object):
 
     def __init__(self, xres: float = 0.5, Eres: float = 0.5,
                  layerWidths: List[float] = [0.0],
-                 layerARs: List[bool] = [True],
-                 layerVc: List[float] = [0.0],
-                 layerMc: List[float] = [1.0],
+                 layerARs: List[bool] = None,
+                 layerVc: List[float] = None,
+                 layerMc: List[float] = None,
                  EField: float = 0.0, repeats: int = 1):
         self.xres = xres
         self.Eres = Eres
+        assert(isinstance(layerWidths, list))
         self.layerWidths = layerWidths
-        self._layerVc = layerVc
-        self._layerMc = layerMc
-        self.layerARs = layerARs
+        N = len(layerWidths)
+        self._layerVc = layerVc if layerVc is not None else [0.0]*N
+        self._layerMc = layerMc if layerMc is not None else [1.0]*N
+        self.layerARs = layerARs if layerARs is not None else [True]*N
         self.EField = EField
         self.repeats = repeats
 
@@ -465,19 +467,21 @@ description : str
     """
     def __init__(self, substrate="InP", materials=["InGaAs", "AlInAs"],
                  moleFracs=[0.53, 0.52], xres=0.5, Eres=0.5,
-                 layerWidths=[0.0], layerMtrls=[0], layerDopings=[0.0],
-                 layerARs=[True], EField=0, repeats=3, T=300.0, solver="ODE",
+                 layerWidths=[0.0], layerMtrls=None, layerDopings=None,
+                 layerARs=None, EField=0, repeats=3, T=300.0, solver="ODE",
                  description="", wl=3.0):
+        assert(isinstance(layerWidths, list))
+        N = len(layerWidths)
         super().__init__(xres, Eres, layerWidths, layerARs,
                          # layerVc and layerMc is not used for this sub class
-                         [0.0]*len(layerWidths), [1.0]*len(layerWidths),
+                         None, None,
                          EField, repeats)
         self.substrate = substrate
         self.crystalType = Material.MParm[substrate]["Crystal"]
         self.materials = materials
         self.moleFracs = moleFracs
-        self.layerMtrls = layerMtrls
-        self.layerDopings = layerDopings
+        self.layerMtrls = [0]*N if layerMtrls is None else layerMtrls
+        self.layerDopings = [0.0]*N if layerDopings is None else layerDopings
         self.Temperature = T
         self.solver = solver
         self.description = description
