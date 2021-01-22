@@ -89,7 +89,7 @@ class SchrodingerLayer(object):
                  layerARs: List[bool] = [True],
                  layerVc: List[float] = [0.0],
                  layerMc: List[float] = [1.0],
-                 EField: float = 0.0, repeats: int = 3):
+                 EField: float = 0.0, repeats: int = 1):
         self.xres = xres
         self.Eres = Eres
         self.layerWidths = layerWidths
@@ -163,7 +163,7 @@ class SchrodingerLayer(object):
     def xLayerMask(self, n: int) -> np.ndarray:
         """Return the mask for the given layer number `n`.
         A left and right extra point is included for plotting purposes."""
-        xSlt = (self.xLayerNums == int)
+        xSlt = (self.xLayerNums == n)
         xSlt = (xSlt | np.roll(xSlt, 1) | np.roll(xSlt, -1))
         return ~xSlt
 
@@ -383,7 +383,7 @@ class SchrodingerLayer(object):
         self.z = np.trapz(psi_i * xInvMc_j * np.gradient(psi_j) -
                           np.gradient(psi_i) * xInvMc_i * psi_j)
         self.z *= hbar**2 / (2 * (Ei - Ej) * e0 * m0) / (1E-10)**2  # Angstrom
-        return self.z
+        return np.abs(self.z)
 
     def _xBandMassInv(self, energy):
         """
