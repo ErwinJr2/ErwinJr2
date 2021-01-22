@@ -369,17 +369,42 @@ class SchrodingerLayer(object):
         psi_j = self.psis[lower, :]
         Ei = self.eigenEs[upper]
         Ej = self.eigenEs[lower]
-        self.deltaE = Ei - Ej
-        # TODO: eff mass for non-parabolic
-        avgpsi_i = (psi_i[:-1] + psi_i[1:])/2
-        avgxMc = (self.xMc[:-1] + self.xMc[1:])/2
+        # interpolate half grid wave function and effective mass
+        # avgpsi_i = (psi_i[:-1] + psi_i[1:])/2
+        # avgpsi_j = (psi_j[:-1] + psi_j[1:])/2
+        # avgxMc = (self.xMc[:-1] + self.xMc[1:])/2
         # d_z 1/m + 1/m d_z = [d_z 1/m d_z, z] ~ [P^2, z] ~ [H, z],
         # where d_z means spatial derivative d/d z, P is momentum
+        # self.z = np.sum(avgpsi_i * np.diff(psi_j/self.xMc)
+        #                 # + 1/avgxMc * (avgpsi_i * np.diff(psi_j)))
         # Eq.(8) in PhysRevB.50.8663
-        self.z = np.sum(avgpsi_i * np.diff(psi_j/self.xMc)
-                        + 1/avgxMc * (avgpsi_i * np.diff(psi_j)))
+        xInvMc_i = self._xBandMassInv(Ei)
+        xInvMc_j = self._xBandMassInv(Ej)
+        self.z = np.trapz(psi_i * xInvMc_j * np.gradient(psi_j) -
+                          np.gradient(psi_i) * xInvMc_i * psi_j)
         self.z *= hbar**2 / (2 * (Ei - Ej) * e0 * m0) / (1E-10)**2  # Angstrom
         return self.z
+
+    def _xBandMassInv(self, energy):
+        """
+        Return the energy dependent effective mass in the form of m0/m
+        for the given eigen energy.
+
+        The xPoints should have been populated.
+        This method is not used in state solver. To completely re-write this
+        method it is required to also do it in the C library.
+        """
+        if self.crystalType == 'simple':
+            return self.xMc
+        if self.crystalType == 'ZincBlende':
+            xEg, xF, xEp, xESO = self.bandParams
+            E = energy - self.xVc
+            return 1 + 2*xF + 1/3 * xEp/(E+xEg+xESO) + 2/3 * xEp/(E+xEg)
+        else:
+            raise NotImplementedError(
+                 'Material property for {} crystal is not implemented'.format(
+                     self.crystalType
+                 ))
 
 
 class QCLayers(SchrodingerLayer):
@@ -599,6 +624,7 @@ description : str
                                  (xEg, 'EgLH'), (xESO, 'ESO'),
                                  (xEp, 'Ep'), (xF, 'F')):
                     p[indices] = self.mtrlAlloys[self.layerMtrls[n]].parm[key]
+            # xF = -np.ones(N)/2
             self.bandParams = (xEg, xF, xEp, xESO)
 
             ExtField = self.xPoints * self.EField * EUnit
@@ -808,6 +834,9 @@ description : str
         """Optimize FoM*Lorenzian for n-th layer thickness"""
         # TODO: this part need to be improved!!!
         wl = self.wl
+        Ei = self.eigenEs[upper]
+        Ej = self.eigenEs[lower]
+        self.deltaE = Ei - Ej
         resonancew = self.deltaE/hbar
         FoMnow = self.calc_FoM(upper, lower)/(self.tauUpperLower**2 +
                                               (resonancew-wl)**2)
