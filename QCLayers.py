@@ -237,10 +237,8 @@ class SchrodingerLayer(object):
             # Emin = 2.33810741 * (hbar**2*(self.EField*EUnit)**2/(
             #     2*m0*mass*e0**2))**(1/3)
             # Es = np.linspace(np.min(self.xVc)+Emin, np.max(self.xVc), 1024)
-            self.Emin = (min(m.parm['EcG'] for m in self.mtrlAlloys)
-                         - PeriodL*offset)
-            self.Emax = (max(m.parm['EcG'] for m in self.mtrlAlloys)
-                         + PeriodU*offset)
+            self.Emin = (min(bandOffsets) - PeriodL*offset)
+            self.Emax = (max(bandOffsets) + PeriodU*offset)
             Eshift = self.EField*EUnit*sum(self.layerWidths)
             Es = np.arange(self.Emin - Eshift, self.Emin, self.Eres/1E3)
             eigenEs = onedq.cBandSolve1DBonded(

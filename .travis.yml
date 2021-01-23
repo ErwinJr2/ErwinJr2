@@ -23,6 +23,7 @@ script:
   - pytest -v test/SimpleSchrodinger.py
   - python3 test/SimpleSchrodinger.py MP
   - pytest -v test/testMaterial.py
+  - pytest -v test/testQuantumWell.py
   - pytest -v test/testQCLayers.py
 jobs:
   include:
@@ -47,6 +48,7 @@ jobs:
       - CC=gcc-10 OMP_NUM_THREADS=4
     script:
       - python3 test/SimpleSchrodinger.py MP
+      - pytest -v test/testQuantumWell.py
   - name: MacOS with Clang
     os: osx
     osx_image: xcode11.5
@@ -57,6 +59,7 @@ jobs:
       - CC=/usr/local/opt/llvm/bin/clang OMP_NUM_THREADS=4
     script:
       - python3 test/SimpleSchrodinger.py MP
+      - pytest -v test/testQuantumWell.py
   - name: Windows
     # currently only building is tested, TODO
     os: windows
@@ -82,4 +85,5 @@ jobs:
       - ls OneDQuantum
       - python test/SimpleSchrodinger.py
       - python test/SimpleSchrodinger.py MP
+      - pytest -v test/testQuantumWell.py
 
