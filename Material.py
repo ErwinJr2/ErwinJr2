@@ -123,7 +123,7 @@ class Material(object):
         self.eps_perp = self.a_perp / self.parm["alc"] - 1
         if self.type == "ZincBlende":
             Pec = (2 * self.eps_parallel + self.eps_perp) * self.parm["acG"]
-            Pe = (2 * self.eps_parallel + self.eps_perp) * self.parm["av"]
+            Pev = (2 * self.eps_parallel + self.eps_perp) * self.parm["av"]
             Qe = (- self.parm["b"] * (self.parm["c11"] + 2 * self.parm["c12"])
                   / self.parm["c11"] * self.eps_parallel)
             self.parm["EcG"] = (self.parm["VBO"] + self.parm["EgG"] + Pec
@@ -140,13 +140,16 @@ class Material(object):
                                 - bandBaseln)
             self.parm["ESO"] = sqrt(9 * Qe**2 + 2 * Qe * self.parm["DSO"] +
                                     self.parm["DSO"]**2)
-            self.parm["EgLH"] = (self.parm["EgG"] + Pec + Pe - 1/2 * (
+            self.parm["EgLH"] = (self.parm["EgG"] + Pec + Pev - 1/2 * (
                 Qe - self.parm["DSO"] + self.parm["ESO"]))
-            self.parm["EgSO"] = (self.parm["EgG"] + Pec + Pe - 1/2 * (
+            self.parm["EgSO"] = (self.parm["EgG"] + Pec + Pev - 1/2 * (
                 Qe - self.parm["DSO"] - self.parm["ESO"]))
             self.parm["EvLH"] = self.parm["EcG"] - self.parm["EgLH"]
             self.parm["EvSO"] = self.parm["EcG"] - self.parm["EgSO"]
         else:
+            print("Warning: the strain effect on {} is not implemented".format(
+                self.type
+            ))
             self.parm["EcG"] = (self.parm["VBO"] + self.parm["EgG"]
                                 - bandBaseln)
 
