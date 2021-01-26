@@ -83,7 +83,7 @@ class TestQuantumWell(unittest.TestCase):
         self.assertAlmostEqual(qcLayers.dipole(0, 1) / 15.3, 1, 0)
 
     def test_double_well(self):
-        layers = [100, 59, 13, 24, 100]
+        layers = [200, 59, 13, 24, 200]
         mtrls = [1, 0, 1, 0, 1]
         qcLayers = QCLayers(xres=0.01, layerWidths=layers,
                             layerMtrls=mtrls, repeats=1, T=10.0)
@@ -97,7 +97,7 @@ class TestQuantumWell(unittest.TestCase):
         self.assertAlmostEqual(qcLayers.dipole(0, 1), 16.4, 0)
 
     def test_three_well(self):
-        layers = [100, 46, 10, 20, 10, 19, 100]
+        layers = [300, 46, 10, 20, 10, 19, 300]
         mtrls = [1, 0, 1, 0, 1, 0, 1]
         qcLayers = QCLayers(xres=0.01, layerWidths=layers,
                             layerMtrls=mtrls, repeats=1, T=10.0)
@@ -115,7 +115,7 @@ class TestQuantumWell(unittest.TestCase):
 
 def plot_debugger():
     import matplotlib.pyplot as plt
-    layers = [100, 46, 10, 20, 10, 19, 100]
+    layers = [300, 46, 10, 20, 10, 19, 300]
     mtrls = [1, 0, 1, 0, 1, 0, 1]
     singleWell = GaInAs_AlInAs_Layer(0.01, layers, mtrls)
     singleWell.populate_x()
@@ -139,7 +139,7 @@ def plot_debugger():
     plt.plot(qcLayers.xPoints, qcLayers.xVc, 'k', linewidth=1)
     for n in range(qcLayers.eigenEs.size):
         plt.plot(qcLayers.xPoints,
-                 15*qcLayers.psis[n, :]**2 + qcLayers.eigenEs[n])
+                 10*qcLayers.psis[n, :] + qcLayers.eigenEs[n])
     plt.show()
 
 
