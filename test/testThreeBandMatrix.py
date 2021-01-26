@@ -18,12 +18,15 @@ class TestThreeBandMatrix(unittest.TestCase):
         qcLayers.populate_x()
         qcLayers.solve_whole()
         psis_ode, eigenEs_ode = qcLayers.psis, qcLayers.eigenEs
+        dipole_ode = qcLayers.dipole(0, 1)
         qcLayers.solver = 'matrix'
         qcLayers.matrixEigenCount = 4
         qcLayers.solve_whole()
         psis_mtx, eigenEs_mtx = qcLayers.psis, qcLayers.eigenEs
+        dipole_mtx = qcLayers.dipole(0, 1)
         np.testing.assert_almost_equal(eigenEs_ode, eigenEs_mtx, decimal=8)
         np.testing.assert_almost_equal(psis_ode, psis_mtx, decimal=6)
+        self.assertAlmostEqual(dipole_ode, dipole_mtx, places=3)
 
 
 def plot_debugger():

@@ -316,20 +316,15 @@ class SchrodingerLayer(object):
             xVcHalf[0] = self.xVc[0]
             self.HBanded = np.zeros((4, 3*N))
             self.Hdiag = self.HBanded[3]
-
             self.HBanded[3, ::3] = 2 * (1 + 2*xFhalf) * unit + xVcHalf
             self.HBanded[3, 1::3] = self.xVc - xEg
             self.HBanded[3, 2::3] = self.xVc - xEg - xESO
-
             P = sqrt(xEp * unit)
             self.HBanded[2, 1::3] = sqrt(2/3)*P
             self.HBanded[2, 3::3] = sqrt(1/3)*P[:-1]
-
             self.HBanded[1, 2::3] = -sqrt(1/3)*P
             self.HBanded[1, 3::3] = -sqrt(2/3)*P[:-1]
-
             self.HBanded[0, 3::3] = -(1 + 2*xF[:-1]) * unit
-
             self.Hsparse = sparse.diags(
                 [self.HBanded[0, 3:], self.HBanded[1, 2:], self.HBanded[2, 1:],
                  self.HBanded[3, :],
@@ -338,16 +333,17 @@ class SchrodingerLayer(object):
             )
             Es_low = np.min(self.xVc)
             Es_hi = np.max(self.xVc)
-            self.eigen_all, self.psi_all = splg.eigsh(
-                self.Hsparse, self.matrixEigenCount, sigma=(Es_low + Es_hi)/2)
             # self.eigen_all, self.psi_all = slg.eig_banded(
             #     self.HBanded, select='v', select_range=(Es_low, Es_hi))
+            self.eigen_all, self.psi_all = splg.eigsh(
+                self.Hsparse, self.matrixEigenCount, sigma=(Es_low + Es_hi)/2)
             # normalization should be sum(self.psi_all**2)*self.xres = 1
             self.psi_all /= sqrt(self.xres)
             self.psis = np.zeros((self.eigen_all.shape[0], N))
             psis = self.psi_all[::3, :].T
             self.psis[:, :-1] = (psis[:, 1:] + psis[:, :-1])/2
             for psi in self.psis:
+                # for consistency of the phase definition with the ODE solver
                 if psi[np.argmax(np.abs(psi) > 1E-3)] < 0:
                     psi[:] = -psi
             self.eigenEs = self.eigen_all
@@ -423,27 +419,34 @@ class SchrodingerLayer(object):
         """Return Electrical dipole between upper and lower states,
         update self.dipole. Should be called for any other related physics
         quantities."""
-        if upper < lower:
-            upper, lower = lower, upper
-        psi_i = self.psis[upper, :]
-        psi_j = self.psis[lower, :]
-        Ei = self.eigenEs[upper]
-        Ej = self.eigenEs[lower]
-        # interpolate half grid wave function and effective mass
-        # avgpsi_i = (psi_i[:-1] + psi_i[1:])/2
-        # avgpsi_j = (psi_j[:-1] + psi_j[1:])/2
-        # avgxMc = (self.xMc[:-1] + self.xMc[1:])/2
-        # d_z 1/m + 1/m d_z = [d_z 1/m d_z, z] ~ [P^2, z] ~ [H, z],
-        # where d_z means spatial derivative d/d z, P is momentum
-        # self.z = np.sum(avgpsi_i * np.diff(psi_j/self.xMc)
-        #                 # + 1/avgxMc * (avgpsi_i * np.diff(psi_j)))
-        # Eq.(8) in PhysRevB.50.8663
-        xInvMc_i = self._xBandMassInv(Ei)
-        xInvMc_j = self._xBandMassInv(Ej)
-        self.z = np.trapz(psi_i * xInvMc_j * np.gradient(psi_j) -
-                          np.gradient(psi_i) * xInvMc_i * psi_j)
-        self.z *= hbar**2 / (2 * (Ei - Ej) * e0 * m0) / (1E-10)**2  # Angstrom
-        return np.abs(self.z)
+        if self.solver == 'ODE':
+            psi_i = self.psis[upper, :]
+            psi_j = self.psis[lower, :]
+            Ei = self.eigenEs[upper]
+            Ej = self.eigenEs[lower]
+            # interpolate half grid wave function and effective mass
+            # avgpsi_i = (psi_i[:-1] + psi_i[1:])/2
+            # avgpsi_j = (psi_j[:-1] + psi_j[1:])/2
+            # avgxMc = (self.xMc[:-1] + self.xMc[1:])/2
+            # d_z 1/m + 1/m d_z = [d_z 1/m d_z, z] ~ [P^2, z] ~ [H, z],
+            # where d_z means spatial derivative d/d z, P is momentum
+            # self.z = np.sum(avgpsi_i * np.diff(psi_j/self.xMc)
+            #                 # + 1/avgxMc * (avgpsi_i * np.diff(psi_j)))
+            # Eq.(8) in PhysRevB.50.8663
+            xInvMc_i = self._xBandMassInv(Ei)
+            xInvMc_j = self._xBandMassInv(Ej)
+            self.z = np.trapz(psi_i * xInvMc_j * np.gradient(psi_j) -
+                              np.gradient(psi_i) * xInvMc_i * psi_j)
+            self.z *= hbar**2 / (2*(Ei-Ej)*e0*m0) / (1E-10)**2  # Angstrom
+        elif self.solver == 'matrix':
+            print('matrix dipole')
+            self.z = self.xres * sum(
+                np.trapz(self.psi_all[t::3, upper] * self.xPoints
+                         * self.psi_all[t::3, lower]) for t in range(3))
+        else:
+            raise NotImplementedError(
+                '{} not implemented for diple'.format(self.solver))
+        return self.z
 
     def _xBandMassInv(self, energy):
         """
