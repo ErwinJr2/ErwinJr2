@@ -24,6 +24,7 @@ script:
   - python3 test/SimpleSchrodinger.py MP
   - pytest -v test/testMaterial.py
   - pytest -v test/testQuantumWell.py
+  - pytest -v test/testThreeBandMatrix.py
   - pytest -v test/testQCLayers.py
 jobs:
   include:
