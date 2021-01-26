@@ -6,6 +6,8 @@ from numpy import sqrt
 from scipy.constants import (e as e0, epsilon_0 as eps0, h as h,
                              hbar as hbar, electron_mass as m0, c as c0)
 import scipy.linalg as slg
+import scipy.sparse as sparse
+import scipy.sparse.linalg as splg
 import OneDQuantum as onedq
 import Material
 from OptStrata import rIdx
@@ -70,6 +72,13 @@ class SchrodingerLayer(object):
         For basis solver if there should be seperator between AR->Injector
     basisInjectorAR : bool
         For basis solver if there should be seperator between Injector->AR
+
+    solver : str
+        The solver used for the eigen problem: 'ODE' or 'matrix'.
+        By default 'ODE'. 'matrix' solver is exmperimental.
+    matrixEigenCount : int
+        The number of eigen pairs to calculate in the 'matrix' solver.
+        It would be very expensive to calculate all of them.
     """
     xres: float
     Eres: float
@@ -83,6 +92,7 @@ class SchrodingerLayer(object):
     basisARInjector: bool
     basisInjectorAR: bool
     basisARonly: bool
+    matrixEigenCount: int
 
     def __init__(self, xres: float = 0.5, Eres: float = 0.5,
                  layerWidths: List[float] = [0.0],
@@ -103,6 +113,7 @@ class SchrodingerLayer(object):
 
         self.crystalType = 'simple'
         self.solver = 'ODE'
+        self.matrixEigenCount = 50
 
         self.basisARonly = False
         self.basisARInjector = True
@@ -264,24 +275,25 @@ class SchrodingerLayer(object):
             the wave function
 
         """
-        # populate mass half grid self.xMc[i] is m at i+-0.5
-        layerCumSum = [0] + np.cumsum(self.layerWidths).tolist()
-        periodL = layerCumSum[-1]
-        self.xMcplus = np.empty(self.xPoints.size)
-        self.xMcminus = np.empty(self.xPoints.size)
-        for n in range(len(self.layerWidths)):
-            Indices = np.logical_or.reduce([
-                (self.xPoints >= layerCumSum[n] + k * periodL - self.xres/2)
-                & (self.xPoints < layerCumSum[n+1] + k * periodL - self.xres/2)
-                for k in range(self.repeats)])
-            self.xMcplus[Indices] = self.layerMc(n)
-        self.xMcplus[-1] = self.xMcplus[-2]
-        self.xMcminus[1:] = self.xMcplus[:-1]
-        self.xMcminus[0] = self.xMcminus[1]
-
         # unit eV/step^2
         unit = hbar**2/(2*e0*m0*(1E-10*self.xres)**2)
         if self.crystalType == 'simple':
+            # populate mass half grid self.xMc[i] is m at i+-0.5
+            # TODO: reconsider how half step mass should be used
+            layerCumSum = [0] + np.cumsum(self.layerWidths).tolist()
+            periodL = layerCumSum[-1]
+            self.xMcplus = np.empty(self.xPoints.size)
+            self.xMcminus = np.empty(self.xPoints.size)
+            for n in range(len(self.layerWidths)):
+                Indices = np.logical_or.reduce([
+                    (self.xPoints >= layerCumSum[n]+k*periodL-self.xres/2)
+                    & (self.xPoints < layerCumSum[n+1]+k*periodL-self.xres/2)
+                    for k in range(self.repeats)])
+                self.xMcplus[Indices] = self.layerMc(n)
+            self.xMcplus[-1] = self.xMcplus[-2]
+            self.xMcminus[1:] = self.xMcplus[:-1]
+            self.xMcminus[0] = self.xMcminus[1]
+
             # diagonal and sub-diagonal of Hamiltonian
             self.Hdiag = unit*(1/self.xMcplus + 1/self.xMcminus) + self.xVc
             self.Hsubd = -unit / self.xMcplus[:-1]
@@ -291,9 +303,57 @@ class SchrodingerLayer(object):
             self.psis /= sqrt(self.xres)
             self.psis = self.psis.T
             return self.eigenEs
-        else:
-            raise NotImplementedError('Matrix solver is not implemented '
-                                      'for {}'.format(self.crystalType))
+        if self.crystalType == 'ZincBlende':
+            # The 3 band model
+            print('matrix solver for ZincBlende')
+            N = len(self.xPoints)
+            xEg, xF, xEp, xESO = self.bandParams
+            xFhalf = np.empty(N)
+            xFhalf[1:] = (xF[1:] + xF[:-1])/2
+            xFhalf[0] = xF[0]
+            xVcHalf = np.empty(N)
+            xVcHalf[1:] = (self.xVc[1:] + self.xVc[:-1])/2
+            xVcHalf[0] = self.xVc[0]
+            self.HBanded = np.zeros((4, 3*N))
+            self.Hdiag = self.HBanded[3]
+
+            self.HBanded[3, ::3] = 2 * (1 + 2*xFhalf) * unit + xVcHalf
+            self.HBanded[3, 1::3] = self.xVc - xEg
+            self.HBanded[3, 2::3] = self.xVc - xEg - xESO
+
+            P = sqrt(xEp * unit)
+            self.HBanded[2, 1::3] = sqrt(2/3)*P
+            self.HBanded[2, 3::3] = sqrt(1/3)*P[:-1]
+
+            self.HBanded[1, 2::3] = -sqrt(1/3)*P
+            self.HBanded[1, 3::3] = -sqrt(2/3)*P[:-1]
+
+            self.HBanded[0, 3::3] = -(1 + 2*xF[:-1]) * unit
+
+            self.Hsparse = sparse.diags(
+                [self.HBanded[0, 3:], self.HBanded[1, 2:], self.HBanded[2, 1:],
+                 self.HBanded[3, :],
+                 self.HBanded[2, 1:], self.HBanded[1, 2:], self.HBanded[0, 3:]
+                 ], [-3, -2, -1, 0, 1, 2, 3], shape=(3*N, 3*N)
+            )
+            Es_low = np.min(self.xVc)
+            Es_hi = np.max(self.xVc)
+            self.eigen_all, self.psi_all = splg.eigsh(
+                self.Hsparse, self.matrixEigenCount, sigma=(Es_low + Es_hi)/2)
+            # self.eigen_all, self.psi_all = slg.eig_banded(
+            #     self.HBanded, select='v', select_range=(Es_low, Es_hi))
+            # normalization should be sum(self.psi_all**2)*self.xres = 1
+            self.psi_all /= sqrt(self.xres)
+            self.psis = np.zeros((self.eigen_all.shape[0], N))
+            psis = self.psi_all[::3, :].T
+            self.psis[:, :-1] = (psis[:, 1:] + psis[:, :-1])/2
+            for psi in self.psis:
+                if psi[np.argmax(np.abs(psi) > 1E-3)] < 0:
+                    psi[:] = -psi
+            self.eigenEs = self.eigen_all
+            return self.eigenEs
+        raise NotImplementedError('Matrix solver is not implemented '
+                                  'for {}'.format(self.crystalType))
 
     def solve_basis(self) -> np.ndarray:
         """
