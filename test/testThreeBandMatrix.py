@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 from context import *  # type: ignore # noqa: F401, F403
-from QCLayers import SchrodingerLayer, QCLayers
+from QCLayers import QCLayers
 import numpy as np
-from numpy import sqrt
-from scipy.constants import e as e0, hbar as hbar, electron_mass as m0
 import unittest
 
 """This unit test is to compare simulation with PhysRevB.50.8663"""
+
 
 class TestThreeBandMatrix(unittest.TestCase):
     def test_three_well(self):
@@ -38,9 +37,12 @@ def plot_debugger():
     qcLayers.populate_x()
     qcLayers.solve_whole()
     psis_ode, eigenEs_ode = qcLayers.psis, qcLayers.eigenEs
+    print(psis_ode, eigenEs_ode)
     qcLayers.solver = 'matrix'
     qcLayers.matrixEigenCount = 4
     qcLayers.solve_whole()
+    psis_mtx, eigenEs_mtx = qcLayers.psis, qcLayers.eigenEs
+    print(psis_mtx, eigenEs_mtx)
     # validate_ODE(qcLayers)
     print(qcLayers.eigenEs)
     print(np.diff(qcLayers.eigenEs))
