@@ -43,7 +43,6 @@ def plot_debugger():
     qcLayers.solve_whole()
     psis_mtx, eigenEs_mtx = qcLayers.psis, qcLayers.eigenEs
     print(psis_mtx, eigenEs_mtx)
-    # validate_ODE(qcLayers)
     print(qcLayers.eigenEs)
     print(np.diff(qcLayers.eigenEs))
     print(qcLayers.dipole(0, 1))

@@ -276,7 +276,7 @@ class SchrodingerLayer(object):
 
         """
         # unit eV/step^2
-        unit = hbar**2/(2*e0*m0*(1E-10*self.xres)**2)
+        kunit = hbar**2/(2*e0*m0*(1E-10*self.xres)**2)
         if self.crystalType == 'simple':
             # populate mass half grid self.xMc[i] is m at i+-0.5
             # TODO: reconsider how half step mass should be used
@@ -295,8 +295,8 @@ class SchrodingerLayer(object):
             self.xMcminus[0] = self.xMcminus[1]
 
             # diagonal and sub-diagonal of Hamiltonian
-            self.Hdiag = unit*(1/self.xMcplus + 1/self.xMcminus) + self.xVc
-            self.Hsubd = -unit / self.xMcplus[:-1]
+            self.Hdiag = kunit*(1/self.xMcplus + 1/self.xMcminus) + self.xVc
+            self.Hsubd = -kunit / self.xMcplus[:-1]
             self.eigenEs, self.psis = slg.eigh_tridiagonal(
                 self.Hdiag, self.Hsubd, select='v',
                 select_range=(np.min(self.xVc), np.max(self.xVc)))
@@ -305,7 +305,6 @@ class SchrodingerLayer(object):
             return self.eigenEs
         if self.crystalType == 'ZincBlende':
             # The 3 band model
-            print('matrix solver for ZincBlende')
             N = len(self.xPoints)
             xEg, xF, xEp, xESO = self.bandParams
             xFhalf = np.empty(N)
@@ -316,15 +315,27 @@ class SchrodingerLayer(object):
             xVcHalf[0] = self.xVc[0]
             self.HBanded = np.zeros((4, 3*N))
             self.Hdiag = self.HBanded[3]
-            self.HBanded[3, ::3] = 2 * (1 + 2*xFhalf) * unit + xVcHalf
-            self.HBanded[3, 1::3] = self.xVc - xEg
-            self.HBanded[3, 2::3] = self.xVc - xEg - xESO
-            P = sqrt(xEp * unit)
+            self.HBanded[3, ::3] = 2*(1 + 2*xFhalf)*kunit + xVcHalf
+            self.HBanded[3, 1::3] = self.xVc - xEg  # lh band
+            self.HBanded[3, 2::3] = self.xVc - xEg - xESO  # so band
+            P = sqrt(xEp * kunit)
             self.HBanded[2, 1::3] = sqrt(2/3)*P
             self.HBanded[2, 3::3] = sqrt(1/3)*P[:-1]
             self.HBanded[1, 2::3] = -sqrt(1/3)*P
             self.HBanded[1, 3::3] = -sqrt(2/3)*P[:-1]
-            self.HBanded[0, 3::3] = -(1 + 2*xF[:-1]) * unit
+            self.HBanded[0, 3::3] = -(1 + 2*xF[:-1]) * kunit
+            if hasattr(self, 'luttinger'):
+                gamma1, gamma2, _ = self.luttinger
+                tlh = gamma1 + 2*gamma2 - 2*xEp/xEg/3
+                tso = gamma1 - xEp/xEg/3
+                tlhhalf = (tlh[1:] + tlh[:-1])/2
+                tsohalf = (tso[1:] + tso[:-1])/2
+                tlh[1:-1] = (tlhhalf[1:] + tlhhalf[:-1])/2
+                tso[1:-1] = (tsohalf[1:] + tsohalf[:-1])/2
+                self.HBanded[3, 1::3] -= 2*tlh*kunit
+                self.HBanded[3, 2::3] -= 2*tso*kunit
+                self.HBanded[0, 4::3] = tlhhalf*kunit
+                self.HBanded[0, 5::3] = tsohalf*kunit
             self.Hsparse = sparse.diags(
                 [self.HBanded[0, 3:], self.HBanded[1, 2:], self.HBanded[2, 1:],
                  self.HBanded[3, :],

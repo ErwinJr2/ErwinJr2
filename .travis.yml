@@ -25,6 +25,7 @@ script:
   - pytest -v test/testMaterial.py
   - pytest -v test/testQuantumWell.py
   - pytest -v test/testThreeBandMatrix.py
+  - pytest -v test/testEffMass.py
   - pytest -v test/testQCLayers.py
 jobs:
   include:
