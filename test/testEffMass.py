@@ -40,7 +40,7 @@ class TestEffectiveMass(unittest.TestCase):
         ks = np.pi/L * np.arange(1, 4)
         layer.solver = 'matrix'
         layer.populate_x()
-        layer.solve_whole()
+        layer.populate_Kane_matrix()
         eigen_c = splg.eigsh(layer.Hsparse, 3, sigma=0,
                              return_eigenvectors=False)
         diag = sparse.diags(np.ones(3*layer.xPoints.size))

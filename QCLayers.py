@@ -304,44 +304,7 @@ class SchrodingerLayer(object):
             self.psis = self.psis.T
             return self.eigenEs
         if self.crystalType == 'ZincBlende':
-            # The 3 band model
-            N = len(self.xPoints)
-            xEg, xF, xEp, xESO = self.bandParams
-            xFhalf = np.empty(N)
-            xFhalf[1:] = (xF[1:] + xF[:-1])/2
-            xFhalf[0] = xF[0]
-            xVcHalf = np.empty(N)
-            xVcHalf[1:] = (self.xVc[1:] + self.xVc[:-1])/2
-            xVcHalf[0] = self.xVc[0]
-            self.HBanded = np.zeros((4, 3*N))
-            self.Hdiag = self.HBanded[3]
-            self.HBanded[3, ::3] = 2*(1 + 2*xFhalf)*kunit + xVcHalf
-            self.HBanded[3, 1::3] = self.xVc - xEg  # lh band
-            self.HBanded[3, 2::3] = self.xVc - xEg - xESO  # so band
-            P = sqrt(xEp * kunit)
-            self.HBanded[2, 1::3] = sqrt(2/3)*P
-            self.HBanded[2, 3::3] = sqrt(1/3)*P[:-1]
-            self.HBanded[1, 2::3] = -sqrt(1/3)*P
-            self.HBanded[1, 3::3] = -sqrt(2/3)*P[:-1]
-            self.HBanded[0, 3::3] = -(1 + 2*xF[:-1]) * kunit
-            if hasattr(self, 'luttinger'):
-                gamma1, gamma2, _ = self.luttinger
-                tlh = gamma1 + 2*gamma2 - 2*xEp/xEg/3
-                tso = gamma1 - xEp/xEg/3
-                tlhhalf = (tlh[1:] + tlh[:-1])/2
-                tsohalf = (tso[1:] + tso[:-1])/2
-                tlh[1:-1] = (tlhhalf[1:] + tlhhalf[:-1])/2
-                tso[1:-1] = (tsohalf[1:] + tsohalf[:-1])/2
-                self.HBanded[3, 1::3] -= 2*tlh*kunit
-                self.HBanded[3, 2::3] -= 2*tso*kunit
-                self.HBanded[0, 4::3] = tlhhalf*kunit
-                self.HBanded[0, 5::3] = tsohalf*kunit
-            self.Hsparse = sparse.diags(
-                [self.HBanded[0, 3:], self.HBanded[1, 2:], self.HBanded[2, 1:],
-                 self.HBanded[3, :],
-                 self.HBanded[2, 1:], self.HBanded[1, 2:], self.HBanded[0, 3:]
-                 ], [-3, -2, -1, 0, 1, 2, 3], shape=(3*N, 3*N)
-            )
+            self.populate_Kane_matrix()
             Es_low = np.min(self.xVc)
             Es_hi = np.max(self.xVc)
             # self.eigen_all, self.psi_all = slg.eig_banded(
@@ -350,7 +313,7 @@ class SchrodingerLayer(object):
                 self.Hsparse, self.matrixEigenCount, sigma=(Es_low + Es_hi)/2)
             # normalization should be sum(self.psi_all**2)*self.xres = 1
             self.psi_all /= sqrt(self.xres)
-            self.psis = np.zeros((self.eigen_all.shape[0], N))
+            self.psis = np.zeros((self.eigen_all.shape[0], self.xPoints.size))
             psis = self.psi_all[::3, :].T
             self.psis[:, :-1] = (psis[:, 1:] + psis[:, :-1])/2
             for psi in self.psis:
@@ -361,6 +324,64 @@ class SchrodingerLayer(object):
             return self.eigenEs
         raise NotImplementedError('Matrix solver is not implemented '
                                   'for {}'.format(self.crystalType))
+
+    def populate_Kane_matrix(self) -> sparse.spmatrix:
+        """
+        Populate the finite difference Hamiltonian operation for the Kane
+        3 band model.
+
+        Return
+        ------
+        Hsparse : scipy.sparse.spmatrix
+            A sparse matrix for the Hamiltonian
+
+        Yield
+        -----
+        Hsparse : scipy.sparse.spmatrix
+            Same above
+        Hbanded : np.ndarray
+            Upper banded form of the matrix for the banded solver, as
+            used in scipy.linalg.eig_banded
+        """
+        assert(self.crystalType == 'ZincBlende')
+        kunit = hbar**2/(2*e0*m0*(1E-10*self.xres)**2)
+        # The 3 band model
+        N = len(self.xPoints)
+        xEg, xF, xEp, xESO = self.bandParams
+        xFhalf = np.empty(N)
+        xFhalf[1:] = (xF[1:] + xF[:-1])/2
+        xFhalf[0] = xF[0]
+        xVcHalf = np.empty(N)
+        xVcHalf[1:] = (self.xVc[1:] + self.xVc[:-1])/2
+        xVcHalf[0] = self.xVc[0]
+        self.HBanded = np.zeros((4, 3*N))
+        self.HBanded[3, ::3] = 2*(1 + 2*xFhalf)*kunit + xVcHalf
+        self.HBanded[3, 1::3] = self.xVc - xEg  # lh band
+        self.HBanded[3, 2::3] = self.xVc - xEg - xESO  # so band
+        P = sqrt(xEp * kunit)
+        self.HBanded[2, 1::3] = sqrt(2/3)*P
+        self.HBanded[2, 3::3] = sqrt(1/3)*P[:-1]
+        self.HBanded[1, 2::3] = -sqrt(1/3)*P
+        self.HBanded[1, 3::3] = -sqrt(2/3)*P[:-1]
+        self.HBanded[0, 3::3] = -(1 + 2*xF[:-1]) * kunit
+        if hasattr(self, 'luttinger'):
+            gamma1, gamma2, _ = self.luttinger
+            tlh = gamma1 + 2*gamma2 - 2*xEp/xEg/3
+            tso = gamma1 - xEp/xEg/3
+            tlhhalf = (tlh[1:] + tlh[:-1])/2
+            tsohalf = (tso[1:] + tso[:-1])/2
+            tlh[1:-1] = (tlhhalf[1:] + tlhhalf[:-1])/2
+            tso[1:-1] = (tsohalf[1:] + tsohalf[:-1])/2
+            self.HBanded[3, 1::3] -= 2*tlh*kunit
+            self.HBanded[3, 2::3] -= 2*tso*kunit
+            self.HBanded[0, 4::3] = tlhhalf*kunit
+            self.HBanded[0, 5::3] = tsohalf*kunit
+        self.Hsparse = sparse.diags(
+            [self.HBanded[0, 3:], self.HBanded[1, 2:], self.HBanded[2, 1:],
+             self.HBanded[3, :],
+             self.HBanded[2, 1:], self.HBanded[1, 2:], self.HBanded[0, 3:]
+             ], [-3, -2, -1, 0, 1, 2, 3], shape=(3*N, 3*N))
+        return self.Hsparse
 
     def solve_basis(self) -> np.ndarray:
         """
@@ -449,8 +470,7 @@ class SchrodingerLayer(object):
             self.z = np.trapz(psi_i * xInvMc_j * np.gradient(psi_j) -
                               np.gradient(psi_i) * xInvMc_i * psi_j)
             self.z *= hbar**2 / (2*(Ei-Ej)*e0*m0) / (1E-10)**2  # Angstrom
-        elif self.solver == 'matrix':
-            print('matrix dipole')
+        elif self.solver == 'matrix' and self.crystalType == 'ZincBlende':
             self.z = self.xres * sum(
                 np.trapz(self.psi_all[t::3, upper] * self.xPoints
                          * self.psi_all[t::3, lower]) for t in range(3))
