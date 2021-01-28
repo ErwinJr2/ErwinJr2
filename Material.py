@@ -35,7 +35,8 @@ BOWING = True
 VARSH = True
 
 # for In0.53Ga0.47As, EcG = 0.22004154
-#    use this as a zero point baseline
+#    use this as a zero point baseline. This is only here for consistency
+#    with legacy code
 bandBaseln = 0.22004154
 
 
@@ -232,6 +233,7 @@ class Alloy(Material):
 
 
 MParm = {
+    # TODO: include Luttinger gamma
     "GaAs": {  # from Vurgaftman[0] unless specified
         "Crystal": "ZincBlende",
         # Lattice constant and thermal expension
