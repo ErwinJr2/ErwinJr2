@@ -18,6 +18,10 @@
 #ifdef __GNUC__
 #define NOINLINE __attribute__((noinline))
 #define WARN_UNUSED_RESULT __attribute__ ((warn_unused_result))
+#if __STDC_VERSION__ < 199901L
+/* C99 not supportted */
+#define restrict
+#endif
 #else
 #define NOINLINE
 #define WARN_UNUSED_RESULT
