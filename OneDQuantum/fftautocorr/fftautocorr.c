@@ -2,7 +2,7 @@
  *  This file is part of fftautocorr
  *
  *  Copyright (C) 2020 CareF
- *  \author CareF 
+ *  \author CareF
  *  Licensed under a 3-clause BSD style license - see LICENSE.md
  */
 
@@ -26,6 +26,9 @@
 #ifdef _WINDOWS
 /* Make compatible with visual studio's limited support for C99 */
 #define restrict __restrict
+#endif
+
+#ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
 
@@ -35,33 +38,33 @@
 #define cosm1(x) (-2 * SQ(sin((x)/2))) /**< cos(x) - 1 */
 
 NOINLINE static void calc_first_octant(int den, double * restrict res) {
-    const int n = (den+4) >> 3, l1 = (int)sqrt(n); 
+    const int n = (den+4) >> 3, l1 = (int)sqrt(n);
     int i, start;
-    if(n == 0) 
+    if (n == 0)
         return;
     res[0] = 1.0;
     res[1] = 0.0;
-    if(n == 1)
+    if (n == 1)
         return;
-    for(i = 1; i < l1; ++i) {
+    for (i = 1; i < l1; ++i) {
         const double theta = M_PI * 2 * i / den;
         res[2*i] = cosm1(theta);
         res[2*i + 1] = sin(theta);
     }
-    for(start = l1; start < n; start += l1) {
+    for (start = l1; start < n; start += l1) {
         const double theta = M_PI * 2.0 * start / den;
         const double c = cosm1(theta), s = sin(theta);
         int end;
         res[2*start] = c + 1;
         res[2*start + 1] = s;
         end = start + l1 > n ? n - start : l1;
-        for(i = 1; i < end; ++i) {
+        for (i = 1; i < end; ++i) {
             const double cx = res[2*i], sx = res[2*i+1];
             res[2*(start + i)] = c*cx - s*sx + c + cx + 1;
             res[2*(start + i) + 1] = c*sx + s*cx + s + sx;
         }
     }
-    for(i = 1; i < l1; ++i) {
+    for (i = 1; i < l1; ++i) {
         res[2*i] += 1.0;
     }
 }
@@ -71,14 +74,14 @@ NOINLINE static void calc_first_quadrant(int n, double * restrict res) {
     const int ndone = (n + 2) >> 2;
     int i, idx1, idx2;
     calc_first_octant(n<<1, p);
-    for(i =  0, idx1 =  0, idx2 =  2 * ndone - 2; i + 1 < ndone; 
+    for (i =  0, idx1 =  0, idx2 =  2 * ndone - 2; i + 1 < ndone;
         i += 2, idx1 += 2, idx2 -= 2) {
         res[idx1]   = p[2*i];
         res[idx1+1] = p[2*i+1];
         res[idx2]   = p[2*i+3];
         res[idx2+1] = p[2*i+2];
     }
-    if(i != ndone) {
+    if (i != ndone) {
         res[idx1]   = p[2*i];
         res[idx1+1] = p[2*i+1];
     }
@@ -89,25 +92,25 @@ NOINLINE static void calc_first_half(int n, double * restrict res) {
     double * p = res + n - 1;
     int i;
     calc_first_octant(n<<2, p);
-    for(i = 0; 4*i <= n - 4*i; ++i) {
+    for (i = 0; 4*i <= n - 4*i; ++i) {
         /* octant 0 */
         int xm = 8*i;
         res[2*i]   = p[xm];
         res[2*i+1] = p[xm+1];
     }
-    for(; 4*i - n <= 0; ++i) {
+    for (; 4*i - n <= 0; ++i) {
         /* octant 1 */
         int xm = 2*n - 8*i;
         res[2*i]   = p[xm+1];
         res[2*i+1] = p[xm];
     }
-    for(; 4*i <= 3*n - 4*i; ++i) {
+    for (; 4*i <= 3*n - 4*i; ++i) {
         /* octant 2 */
         int xm = 8*i - 2*n;
         res[2*i]   = -p[xm+1];
         res[2*i+1] = p[xm];
     }
-    for(; 2 * i < n; ++i) {
+    for (; 2 * i < n; ++i) {
         /* octant 3 */
         int xm = 4*n - 8*i;
         res[2*i] = -p[xm];
@@ -118,9 +121,9 @@ NOINLINE static void calc_first_half(int n, double * restrict res) {
 #define hsqrt2 0.707106781186547524400844362104849  /**< sqrt(2)/2 */
 NOINLINE static void fill_first_quadrant(int n, double * restrict res) {
     int quart = n >> 2, i, j;
-    if(n % 8 == 0)
+    if (n % 8 == 0)
         res[quart] = res[quart+1] = hsqrt2;
-    for(i=2, j=2*quart-2; i<quart; i+=2, j-=2) {
+    for (i=2, j=2*quart-2; i<quart; i+=2, j-=2) {
         res[j]   = res[i+1];
         res[j+1] = res[i];
     }
@@ -129,13 +132,13 @@ NOINLINE static void fill_first_quadrant(int n, double * restrict res) {
 NOINLINE static void fill_first_half(int n, double * restrict res) {
     int half = n>>1;
     int i, j;
-    if(n % 4 == 0)
-        for(i=0; i<half; i+=2) {
+    if (n % 4 == 0)
+        for (i=0; i<half; i+=2) {
             res[i+half]   = -res[i+1];
             res[i+half+1] =  res[i  ];
         }
     else
-        for(i=2, j=2*half-2; i<half; i+=2, j-=2) {
+        for (i=2, j=2*half-2; i<half; i+=2, j-=2) {
         res[j]   = -res[i];
         res[j+1] =  res[i+1];
         }
@@ -145,18 +148,18 @@ NOINLINE static void fill_first_half(int n, double * restrict res) {
  * @brief calculate sin / cos FFT coefficient
  * put res[2*i] = cos(2 * M_PI * i / n ) and
  * res[2*i+1] = sin(2 * M_PI * i / n ) for i in range(0, nn)
- * when n % 4 == 0, nn = n/2; when 
- * 
+ * when n % 4 == 0, nn = n/2; when
+ *
  * @param[in] n the nubmer of grid on 2 pi
  * @param[out] res the address to save the result
  */
 NOINLINE static void sincos_2pibyn_half(int n, double * restrict res) {
-    if(n % 4 == 0) {
+    if (n % 4 == 0) {
         calc_first_octant(n, res);
         fill_first_quadrant(n, res);
         fill_first_half(n, res);
     }
-    else if(n % 2 == 0) {
+    else if (n % 2 == 0) {
         calc_first_quadrant(n, res);
         fill_first_half(n, res);
     }
@@ -176,7 +179,7 @@ typedef struct fft_fctdata {
  * @brief The struct for a rfft plan
  */
 typedef struct autocorr_plan_i {
-    int memlen;            /**< the length for the FFT algorithm, 
+    int memlen;            /**< the length for the FFT algorithm,
                             *   >= 2*autocorr_plan_i#datalen */
     int nfct;              /**< number of seperation factors */
     size_t datalen;        /**< the logical length, length of the original
@@ -197,17 +200,17 @@ NOINLINE static void radf2 (int ido, int l1, const double * restrict cc,
                             double * restrict ch, const double * restrict wa) {
     const int cdim=2;
     int k, i;
-    for(k = 0; k < l1; k++)
+    for (k = 0; k < l1; k++)
         PM (CH(0,0,k),CH(ido-1,1,k),CC(0,k,0),CC(0,k,1))
-    if(ido % 2 == 0)
-        for(k = 0; k < l1; k++) {
+    if (ido % 2 == 0)
+        for (k = 0; k < l1; k++) {
             CH(    0,1,k) = -CC(ido-1,k,1);
             CH(ido-1,0,k) =  CC(ido-1,k,0);
         }
-    if(ido<=2)
+    if (ido<=2)
         return;
-    for(k = 0; k < l1; k++)
-        for(i = 2; i < ido; i += 2) {
+    for (k = 0; k < l1; k++)
+        for (i = 2; i < ido; i += 2) {
             int ic = ido - i;
             double tr2, ti2;
             MULPM(tr2, ti2, WA(0, i-2), WA(0, i-1), CC(i-1, k, 1), CC(i, k, 1))
@@ -221,16 +224,16 @@ NOINLINE static void radf3(int ido, int l1, const double * restrict cc,
                            double * restrict ch, const double * restrict wa) {
     const int cdim = 3;
     int k, i;
-    for(k = 0; k < l1; k++) {
+    for (k = 0; k < l1; k++) {
         double cr2 = CC(0, k, 1) + CC(0, k, 2);
         CH(0,     0, k) = CC(0, k, 0) + cr2;
         CH(0,     2, k) = hsqrt3 * (CC(0, k, 2) - CC(0, k, 1));
         CH(ido-1, 1, k) = CC(0, k, 0) - 0.5 * cr2;
     }
-    if(ido == 1)
+    if (ido == 1)
         return;
-    for(k = 0; k < l1; k++)
-        for(i = 2; i < ido; i += 2) {
+    for (k = 0; k < l1; k++)
+        for (i = 2; i < ido; i += 2) {
             int ic = ido - i;
             double di2, di3, dr2, dr3;
             double tr2, tr3, ti2, ti3;
@@ -262,24 +265,24 @@ NOINLINE static void radf4(int ido, int l1, const double * restrict cc,
                            double * restrict ch, const double * restrict wa) {
     const int cdim=4;
     int k, i;
-    for(k=0; k<l1; k++)
+    for (k=0; k<l1; k++)
         {
         double tr1,tr2;
         PM (tr1,CH(0,2,k),CC(0,k,3),CC(0,k,1))
         PM (tr2,CH(ido-1,1,k),CC(0,k,0),CC(0,k,2))
         PM (CH(0,0,k),CH(ido-1,3,k),tr2,tr1)
         }
-    if(ido % 2 == 0)
-        for(k=0; k<l1; k++) {
+    if (ido % 2 == 0)
+        for (k=0; k<l1; k++) {
             double ti1 = -hsqrt2 * (CC(ido-1,k,1)+CC(ido-1,k,3));
             double tr1= hsqrt2*(CC(ido-1,k,1)-CC(ido-1,k,3));
             PM (CH(ido-1,0,k),CH(ido-1,2,k),CC(ido-1,k,0),tr1);
             PM (CH(    0,3,k),CH(    0,1,k),ti1,CC(ido-1,k,2));
         }
-    if(ido <= 2)
+    if (ido <= 2)
         return;
-    for(k = 0; k < l1; k++)
-        for(i = 2; i < ido; i+=2) {
+    for (k = 0; k < l1; k++)
+        for (i = 2; i < ido; i+=2) {
             int ic = ido - i;
             double ci2, ci3, ci4, cr2, cr3, cr4;
             double ti1, ti2, ti3, ti4, tr1, tr2, tr3, tr4;
@@ -305,7 +308,7 @@ NOINLINE static void radf5(int ido, int l1, const double * restrict cc,
                            double * restrict ch, const double * restrict wa) {
     const int cdim=5;
     int k, i;
-    for(k = 0; k < l1; k++) {
+    for (k = 0; k < l1; k++) {
         double cr2, cr3, ci4, ci5;
         PM(cr2, ci5, CC(0, k, 4), CC(0, k, 1));
         PM(cr3, ci4, CC(0, k, 3), CC(0, k, 2));
@@ -315,10 +318,10 @@ NOINLINE static void radf5(int ido, int l1, const double * restrict cc,
         CH(ido-1, 3, k) = CC(0, k, 0) + tr12*cr2 + tr11*cr3;
         CH(0, 4, k)     = ti12*ci5 - ti11*ci4;
     }
-    if(ido == 1) 
+    if (ido == 1)
         return;
-    for(k = 0; k < l1; ++k)
-        for(i = 2; i < ido; i += 2) {
+    for (k = 0; k < l1; ++k)
+        for (i = 2; i < ido; i += 2) {
             double ci2, ci3, ci4, ci5, di2, di3, di4, di5, ti2, ti3, ti4, ti5;
             double cr2, cr3, cr4, cr5, dr2, dr3, dr4, dr5, tr2, tr3, tr4, tr5;
             int ic = ido - i;
@@ -354,17 +357,17 @@ NOINLINE static void radb2(int ido, int l1, const double * restrict cc,
                            double * restrict ch, const double * restrict wa) {
     const int cdim=2;
     int k, i;
-    for(k = 0; k < l1; k++)
+    for (k = 0; k < l1; k++)
         PM(CH(0, k, 0), CH(0, k, 1), CC(0, 0, k), CC(ido-1, 1, k));
-    if(ido % 2 == 0)
-        for(k = 0; k < l1; k++) {
+    if (ido % 2 == 0)
+        for (k = 0; k < l1; k++) {
             CH(ido-1, k, 0) =  2. * CC(ido-1, 0, k);
             CH(ido-1, k, 1) = -2. * CC(0    , 1, k);
         }
-    if(ido <= 2)
+    if (ido <= 2)
         return;
-    for(k = 0; k < l1; ++k)
-        for(i = 2; i < ido; i += 2) {
+    for (k = 0; k < l1; ++k)
+        for (i = 2; i < ido; i += 2) {
             int ic = ido - i;
             double ti2, tr2;
             PM(CH(i-1, k, 0), tr2,         CC(i-1, 0, k), CC(ic-1, 1, k));
@@ -377,7 +380,7 @@ NOINLINE static void radb3(int ido, int l1, const double * restrict cc,
                            double * restrict ch, const double * restrict wa) {
     const int cdim=3;
     int k, i;
-    for(k = 0; k < l1; k++) {
+    for (k = 0; k < l1; k++) {
         double tr2  = 2. * CC(ido-1, 1, k);
         double cr2  = CC(0, 0, k) - 0.5 * tr2;
         double ci3;
@@ -385,10 +388,10 @@ NOINLINE static void radb3(int ido, int l1, const double * restrict cc,
         ci3 = 2. * hsqrt3 * CC(0, 2, k);
         PM(CH(0, k, 2), CH(0, k, 1), cr2, ci3);
     }
-    if(ido == 1)
+    if (ido == 1)
         return;
-    for(k = 0; k < l1; k++)
-        for(i = 2; i < ido; i += 2) {
+    for (k = 0; k < l1; k++)
+        for (i = 2; i < ido; i += 2) {
             int ic = ido - i;
             /* t2 = CC(I) + conj(CC(ic)) */
             double tr2 = CC(i-1, 2, k) + CC(ic-1, 1, k);
@@ -418,7 +421,7 @@ NOINLINE static void radb4(int ido, int l1, const double * restrict cc,
                            double * restrict ch, const double * restrict wa) {
     const int cdim=4;
     int k, i;
-    for(k=0; k<l1; k++) {
+    for (k=0; k<l1; k++) {
         double tr1, tr2, tr3, tr4;
         PM(tr2, tr1, CC(0, 0, k), CC(ido-1, 3, k));
         tr3 = 2. * CC(ido-1, 1, k);
@@ -426,8 +429,8 @@ NOINLINE static void radb4(int ido, int l1, const double * restrict cc,
         PM (CH(0,k,0),CH(0,k,2),tr2,tr3)
         PM (CH(0,k,3),CH(0,k,1),tr1,tr4)
     }
-    if(ido % 2 == 0)
-        for(int k=0; k<l1; k++) {
+    if (ido % 2 == 0)
+        for (k=0; k<l1; k++) {
             double tr1, tr2, ti1, ti2;
             PM(ti1, ti2, CC(0    , 3, k), CC(0    , 1, k));
             PM(tr2, tr1, CC(ido-1, 0, k), CC(ido-1, 2, k));
@@ -436,10 +439,10 @@ NOINLINE static void radb4(int ido, int l1, const double * restrict cc,
             CH(ido-1, k, 2) = ti2 + ti2;
             CH(ido-1, k, 3) = -sqrt2 * (tr1 + ti1);
         }
-    if(ido <= 2)
+    if (ido <= 2)
         return;
-    for(k = 0; k < l1; ++k)
-        for(i = 2; i < ido; i += 2) {
+    for (k = 0; k < l1; ++k)
+        for (i = 2; i < ido; i += 2) {
             double ci2, ci3, ci4, cr2, cr3, cr4;
             double ti1, ti2, ti3, ti4, tr1, tr2, tr3, tr4;
             int ic = ido - i;
@@ -461,7 +464,7 @@ NOINLINE static void radb5(int ido, int l1, const double * restrict cc,
                            double * restrict ch, const double * restrict wa) {
     const int cdim=5;
     int k, i;
-    for(k = 0; k < l1; k++) {
+    for (k = 0; k < l1; k++) {
         double ci4, ci5, cr2, cr3;
         double ti5 = CC(0, 2, k) + CC(0, 2, k);
         double ti4 = CC(0, 4, k) + CC(0, 4, k);
@@ -474,10 +477,10 @@ NOINLINE static void radb5(int ido, int l1, const double * restrict cc,
         PM(CH(0, k, 4), CH(0, k, 1), cr2, ci5);
         PM(CH(0, k, 3), CH(0, k, 2), cr3, ci4);
     }
-    if(ido == 1)
+    if (ido == 1)
         return;
-    for(k = 0; k < l1; ++k)
-        for(i = 2; i < ido; i += 2) {
+    for (k = 0; k < l1; ++k)
+        for (i = 2; i < ido; i += 2) {
             int ic = ido-i;
             double tr2, tr3, tr4, tr5, ti2, ti3, ti4, ti5;
             double cr2, ci2, cr3, ci3;
@@ -513,41 +516,42 @@ NOINLINE static void radb5(int ido, int l1, const double * restrict cc,
 #undef WA
 
 static void copy_and_norm(double *c, double *p1, int n, double fct) {
-    if(p1 != c) {
-        if(fct != 1.) {
-            for(int i=0; i<n; ++i)
+    int i;
+    if (p1 != c) {
+        if (fct != 1.) {
+            for (i=0; i<n; ++i)
                 c[i] = fct*p1[i];
         }
         else {
             memcpy (c,p1,n*sizeof(double));
         }
     }
-    else if(fct != 1.) {
-        for(int i=0; i<n; ++i)
+    else if (fct != 1.) {
+        for (i=0; i<n; ++i)
             c[i] *= fct;
     }
 }
 
 /**
  * @brief Calculate forward rFFT
- * 
- * @param plan 
- * @param c 
- * @param fct 
- * @param mem 
- * @return WARN_UNUSED_RESULT 
+ *
+ * @param plan
+ * @param c
+ * @param fct
+ * @param mem
+ * @return WARN_UNUSED_RESULT
  */
 WARN_UNUSED_RESULT
-static int rfftp_forward(autocorr_plan plan, double c[], 
+static int rfftp_forward(autocorr_plan plan, double c[],
                          double fct, double *mem) {
-    if(plan->memlen == 1)
+    if (plan->memlen == 1)
         return 0;
     int n = plan->memlen;
     int l1 = n, nf = plan->nfct;
     double *p1 = c, *p2 = mem;
     int k1;
 
-    for(k1 = 0; k1 < nf; ++k1) {
+    for (k1 = 0; k1 < nf; ++k1) {
         int k = nf-k1-1;
         int ip = plan->fct[k].fct;
         int ido = n / l1;
@@ -576,23 +580,24 @@ static int rfftp_forward(autocorr_plan plan, double c[],
 
 /**
  * @brief Calculate backward rFFT
- * 
- * @param plan 
- * @param c 
- * @param fct 
- * @param mem 
- * @return WARN_UNUSED_RESULT 
+ *
+ * @param plan
+ * @param c
+ * @param fct
+ * @param mem
+ * @return WARN_UNUSED_RESULT
  */
 WARN_UNUSED_RESULT
-static int rfftp_backward(autocorr_plan plan, double c[], 
+static int rfftp_backward(autocorr_plan plan, double c[],
                           double fct, double *mem) {
-    if(plan->memlen == 1)
+    if (plan->memlen == 1)
         return 0;
     int n = plan->memlen;
     int l1 = 1, nf = plan->nfct;
     double *p1 = c, *p2 = mem;
+    int k;
 
-    for(int k = 0; k < nf; k++) {
+    for (k = 0; k < nf; k++) {
         int ip = plan->fct[k].fct, ido = n / (ip*l1);
         switch(ip) {
             case 4:
@@ -622,21 +627,21 @@ static int rfftp_backward(autocorr_plan plan, double c[],
 /**
  * @brief Factorize for plan
  * so that prod(plan->fct[:plan->nfct]) = plan->memlen >= 2 * plan->datalen
- * 
- * @param[in] plan 
+ *
+ * @param[in] plan
  * @return int 0 if success, -1 if failed
  */
 WARN_UNUSED_RESULT
-static int rfftp_factorize (autocorr_plan plan) { 
+static int rfftp_factorize (autocorr_plan plan) {
     int length=1;
     int nfct=0;
     while(length < 2 * plan->datalen) {
-        if(nfct >= NFCT) 
-            return -1; 
+        if (nfct >= NFCT)
+            return -1;
         plan->fct[nfct++].fct=4;
         length <<= 2;
     }
-    if(length >= 4 * plan->datalen) {
+    if (length >= 4 * plan->datalen) {
         plan->fct[0].fct = 2;
         length >>= 1;
     }
@@ -656,15 +661,15 @@ static int rfftp_factorize (autocorr_plan plan) {
  * @brief Factorize for plan using a built-in table
  * so that prod(plan->fct[:plan->nfct]) = plan->memlen >= 2 * plan->datalen
  * and plan->memlen is the minimum of such that is a composite of 2, 3, 4, 5
- * 
- * @param[in] plan 
+ *
+ * @param[in] plan
  * @return 0 if success, -1 if failed
  */
 WARN_UNUSED_RESULT
-static int rfftp_factorize (autocorr_plan plan) { 
+static int rfftp_factorize (autocorr_plan plan) {
     int length = find_factor(plan->datalen*2);
     int nfct = 0;
-    if(length == -1)
+    if (length == -1)
         return -1;
     plan->memlen = length;
     while (length % 4 == 0) {
@@ -684,7 +689,7 @@ static int rfftp_factorize (autocorr_plan plan) {
         plan->fct[nfct++].fct = 5;
         length /= 5;
     }
-    if (length != 1) 
+    if (length != 1)
         return -1;
     plan->nfct=nfct;
     return 0;
@@ -695,13 +700,14 @@ static int rfftp_factorize (autocorr_plan plan) {
 /**
  * @brief The total length of the memory needed to store the twiddle factors
  *        for the real FFT calculation.
- * 
+ *
  * @param[in] plan The plan to compute the twiddle factors for.
  * @return Number of double float twiddle factors for the plan
  */
 static size_t rfftp_twsize(autocorr_plan plan) {
     int twsize = 0, l1 = 1;
-    for(int k = 0; k < plan->nfct - 1; ++k) {
+    int k;
+    for (k = 0; k < plan->nfct - 1; ++k) {
         int ip = plan->fct[k].fct, ido = plan->memlen / (l1*ip);
         twsize += (ip - 1) * (ido - 1);
         l1 *= ip;
@@ -711,7 +717,7 @@ static size_t rfftp_twsize(autocorr_plan plan) {
 
 /**
  * @brief Compute the twiddle factors for a plan
- * 
+ *
  * @param[in,out] plan The plan to compute the twiddle factors for
  * @return 0 for success, -1 for fail.
  */
@@ -719,20 +725,20 @@ WARN_UNUSED_RESULT NOINLINE static int rfftp_comp_twiddle (autocorr_plan plan) {
     int length=plan->memlen;
     double *twid = (double *)malloc(2*length * sizeof(double)), *ptr;
     int l1=1, k;
-    if(twid == NULL) 
+    if (twid == NULL)
         return -1;
     sincos_2pibyn_half(length, twid);
     ptr = plan->mem;
-    for(k = 0; k < plan->nfct; ++k) {
+    for (k = 0; k < plan->nfct; ++k) {
         int fct = plan->fct[k].fct;
         int ido = length / (l1 * fct);
-        if(k < plan->nfct - 1) {
+        if (k < plan->nfct - 1) {
             /* last factor doesn't need twiddles */
             int i, j;
             plan->fct[k].tw = ptr;
             ptr += (fct - 1) * (ido - 1);
-            for(j = 0; j < fct-1; ++j)
-            for(i = 0; i <= (ido - 1) / 2 - 1; ++i) {
+            for (j = 0; j < fct-1; ++j)
+            for (i = 0; i <= (ido - 1) / 2 - 1; ++i) {
                 int fctidx = j * (ido - 1) + 2*i;
                 int twididx = 2 * (j+1) * l1 * (i+1);
                 plan->fct[k].tw[fctidx] = twid[twididx];
@@ -750,27 +756,28 @@ WARN_UNUSED_RESULT NOINLINE static int rfftp_comp_twiddle (autocorr_plan plan) {
 
 autocorr_plan make_autocorr_plan(size_t length) {
     autocorr_plan plan;
-    if(length==0) 
+    int i;
+    if (length==0)
         return NULL;
     plan = (autocorr_plan)malloc(sizeof(autocorr_plan_i));
-    if(!plan) 
+    if (!plan)
         return NULL;
     plan->datalen = length;
     plan->nfct=0;
     plan->mem=NULL;
-    for (int i=0; i<NFCT; ++i)
+    for (i=0; i<NFCT; ++i)
         plan->fct[i]=(fft_fctdata){0,0};
-    if(rfftp_factorize(plan)!=0) {
-        free(plan); 
-        return NULL; 
+    if (rfftp_factorize(plan)!=0) {
+        free(plan);
+        return NULL;
     }
     size_t tws = rfftp_twsize(plan);
     plan->mem = (double *)malloc(tws * sizeof(double));
-    if(!plan->mem){
-        free(plan); 
+    if (!plan->mem){
+        free(plan);
         return NULL;
     }
-    if(rfftp_comp_twiddle(plan) != 0){
+    if (rfftp_comp_twiddle(plan) != 0){
         free(plan->mem);
         free(plan);
         return NULL;
@@ -794,16 +801,17 @@ size_t data_len(autocorr_plan plan) {
 }
 
 int autocorr_mem(autocorr_plan plan, double data[], double *mempool) {
-    if(rfftp_forward(plan, data, 1, mempool) != 0)
+    int i;
+    if (rfftp_forward(plan, data, 1, mempool) != 0)
         return -1;
     data[0] = SQ(data[0]);
-    for (int i = 1; 2 * i < mem_len(plan); i++) {
+    for (i = 1; 2 * i < mem_len(plan); i++) {
         data[2*i - 1] = SQ(data[2*i - 1]) + SQ(data[2*i]);
         data[2*i] = 0;
     }
-    if(mem_len(plan) % 2 == 0)
+    if (mem_len(plan) % 2 == 0)
         data[mem_len(plan) - 1] = SQ(data[mem_len(plan) - 1]);
-    if(rfftp_backward(plan, data, 1.0/mem_len(plan), mempool) != 0)
+    if (rfftp_backward(plan, data, 1.0/mem_len(plan), mempool) != 0)
         return -1;
     return 0;
 }
@@ -811,7 +819,7 @@ int autocorr_mem(autocorr_plan plan, double data[], double *mempool) {
 int autocorr_p(autocorr_plan plan, double data[]) {
     int result;
     double *mempool = (double *) malloc(mem_len(plan) * sizeof(double));
-    if(!mempool) {
+    if (!mempool) {
         return -1;
     }
     result = autocorr_mem(plan, data, mempool);
@@ -823,17 +831,17 @@ int autocorr(double data[], size_t length) {
     autocorr_plan plan = make_autocorr_plan(length);
     double *fftauto = malloc(mem_len(plan) * sizeof(double));
     int i;
-    for(i = 0; i < length; i++) {
+    for (i = 0; i < length; i++) {
         fftauto[i] = data[i];
     }
-    for(; i < mem_len(plan); i++) {
+    for (; i < mem_len(plan); i++) {
         fftauto[i] = 0;
     }
     if (autocorr_p(plan, fftauto) != 0) {
         destroy_autocorr_plan(plan);
         return -1;
     }
-    for(i = 0; i < length; i++) {
+    for (i = 0; i < length; i++) {
         data[i] = fftauto[i];
     }
     destroy_autocorr_plan(plan);
