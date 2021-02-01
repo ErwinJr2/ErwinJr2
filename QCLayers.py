@@ -345,7 +345,6 @@ class SchrodingerLayer(object):
         """
         assert(self.crystalType == 'ZincBlende')
         kunit = hbar**2/(2*e0*m0*(1E-10*self.xres)**2)
-        # The 3 band model
         N = len(self.xPoints)
         xEg, xF, xEp, xESO = self.bandParams
         xFhalf = np.empty(N)
@@ -756,6 +755,9 @@ description : str
         self.psis = self.psis[ss, :]
 
     def loTransition(self, upper, lower):
+        """The LO phonon transition lifetime from upper to lower,
+        at zero temperature"""
+        # TODO: finite temperature version
         INV_INF = 1e-20  # for infinite small decay rate (ns-1)
         if upper < lower:
             upper, lower = lower, upper
@@ -773,10 +775,9 @@ description : str
                 # LO phonon scattering doesn't happen
                 return INV_INF
 
-            # TODO: improve expression for eff mass
-            mass = m0 * sqrt(np.sum(self.xMc * psi_i**2 * self.xres)
-                             * np.sum(self.xMc * psi_j**2 * self.xres))
-            kl = sqrt(2 * mass / hbar**2 * (Ei-Ej-hwLO) * e0)
+            # mi = m0 * np.trapz(self.xMc * psi_i**2) * self.xres
+            mj = m0 * np.trapz(self.xMc * psi_j**2) * self.xres
+            kl = sqrt(2 * mj / hbar**2 * (Ei-Ej-hwLO) * e0)
             # to improve this by adding the knowledge of zero's of psi
             # convpsi = fft.irfft(
             #     np.abs(fft.rfft(psi_i*psi_j, 2*len(psi_i)))**2)[:len(psi_i)]
@@ -793,14 +794,13 @@ description : str
             # C implementation
             Iij = onedq.OneDSchrodinger.cLOphononScatter(self.xres, kl,
                                                          psi_i, psi_j)
-            # print(upper, lower, Iij, Iijc)
             epsInf = np.array([a.parm["epsInf"] for a in self.mtrlAlloys])
             epss = np.array([a.parm["epss"] for a in self.mtrlAlloys])
             epsrho = 1 / (1/epsInf - 1/epss)
             epsrho = (np.sum(epsrho[self.layerMtrls] * self.layerWidths)
                       / sum(self.layerWidths))
             self.loMatrix[upper][lower] = (
-                mass * e0**2 * hwLO * e0 / hbar * Iij
+                mj * e0**2 * hwLO * e0 / hbar * Iij
                 / (4 * hbar**2 * epsrho * eps0 * kl))
         return self.loMatrix[upper][lower] / 1e12  # unit ps^-1
 
@@ -816,15 +816,15 @@ description : str
         idxs = self.eigenEs <= Ei - hwLO
         psi_js = self.psis[idxs]
         Ejs = self.eigenEs[idxs]
-        masses = m0 * sqrt(np.sum(self.xMc*psi_i**2*self.xres) *
-                           np.sum(self.xMc*psi_js**2*self.xres, axis=1))
-        kls = sqrt(2 * masses / hbar**2 * (Ei - Ejs - hwLO) * e0)
+        # mi = m0 * np.trapz(self.xMc * psi_i**2) * self.xres
+        mjs = m0 * np.trapz(self.xMc * psi_js**2, axis=1) * self.xres
+        kls = sqrt(2 * mjs / hbar**2 * (Ei - Ejs - hwLO) * e0)
         epsInf = np.array([a.parm["epsInf"] for a in self.mtrlAlloys])
         epss = np.array([a.parm["epss"] for a in self.mtrlAlloys])
         epsrho = 1 / (1/epsInf - 1/epss)
         epsrho = (np.sum(epsrho[self.layerMtrls] * self.layerWidths)
                   / sum(self.layerWidths))
-        fjs = (masses * e0**2 * hwLO * e0 / hbar
+        fjs = (mjs * e0**2 * hwLO * e0 / hbar
                / (4 * hbar**2 * epsrho * eps0 * kls))
         Iijtotal = onedq.OneDSchrodinger.cLOtotal(
             self.xres, kls, psi_i, psi_js, fjs)
