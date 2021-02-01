@@ -553,9 +553,10 @@ __declspec(dllexport)
 /**
  * Calculate the LO phonon scattering rate
  *
- * @param[in] step step size
+ * @param[in] step step size in unit Angstrom
  * @param[in] N number of steps
- * @param[in] kl wavevector of LO phonon
+ * @param[in] kl wavevector of LO phonon in unit m^-1. This is DIFFERENT than
+ *            the step unit for convience to use kl.
  * @param[in] *psi_i \f$\psi_i\f$ wavefunction i
  * @param[in] *psi_j \f$\psi_j\f$ wavefunction j
  * @return    \f$I_{ij} = \int\mathrm dx\mathrm dy\, \psi_i(x)\psi_j(x)
@@ -605,9 +606,9 @@ __declspec(dllexport)
 /**
  * Calculate sum LO phonon scattering rate from psi_i to all psi_j's
  *
- * @param[in] step step size
+ * @param[in] step step size in unit Angstrom
  * @param[in] N number of steps
- * @param[in] *kls wavevector of LO phonon between psi_i to psi_j's
+ * @param[in] *kls wavevector of LO phonon between psi_i to psi_j's in unit m^-1
  * @param[in] *psi_i \f$\psi_i\f$ wavefunction i
  * @param[in] *psi_js psi_j = psi_js[n*N] \f$\psi_j\f$ wavefunction j
  * @param[in] *fjs the factor \f$f_j\f$ before \f$I_{ij}\f$ before sum
