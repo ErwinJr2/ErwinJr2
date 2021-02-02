@@ -69,7 +69,7 @@ class TestQuantumWell(unittest.TestCase):
         Ei = singleWell.eigenEs[1]
         Ej = singleWell.eigenEs[0]
         self.assertAlmostEqual((Ei-Ej) / (0.381-0.123), 1, 1)
-        self.assertAlmostEqual(singleWell.dipole(0, 1) / 15.3, 1, 0)
+        self.assertAlmostEqual(abs(singleWell.dipole(1, 0)) / 15.3, 1, 0)
 
         # Test QCLayers
         qcLayers = QCLayers(xres=0.01, layerWidths=layers,
@@ -80,7 +80,7 @@ class TestQuantumWell(unittest.TestCase):
         Ei = qcLayers.eigenEs[1]
         Ej = qcLayers.eigenEs[0]
         self.assertAlmostEqual((Ei-Ej) / (0.381-0.123), 1, 1)
-        self.assertAlmostEqual(qcLayers.dipole(0, 1) / 15.3, 1, 0)
+        self.assertAlmostEqual(abs(qcLayers.dipole(1, 0)) / 15.3, 1, 0)
 
     def test_double_well(self):
         layers = [200, 59, 13, 24, 200]
@@ -94,7 +94,7 @@ class TestQuantumWell(unittest.TestCase):
                                0.252 - 0.102, 2)
         self.assertAlmostEqual(qcLayers.eigenEs[2] - qcLayers.eigenEs[0],
                                0.373 - 0.102, 1)
-        self.assertAlmostEqual(qcLayers.dipole(0, 1), 16.4, 0)
+        self.assertAlmostEqual(abs(qcLayers.dipole(1, 0)), 16.4, 0)
 
     def test_three_well(self):
         layers = [300, 46, 10, 20, 10, 19, 300]
@@ -110,7 +110,7 @@ class TestQuantumWell(unittest.TestCase):
                                0.383 - 0.126, 2)
         self.assertAlmostEqual(qcLayers.eigenEs[3] - qcLayers.eigenEs[0],
                                0.494 - 0.126, 2)
-        self.assertAlmostEqual(qcLayers.dipole(0, 1), 18.6, -1)
+        self.assertAlmostEqual(abs(qcLayers.dipole(1, 0)), 18.6, -1)
 
 
 def plot_debugger():
