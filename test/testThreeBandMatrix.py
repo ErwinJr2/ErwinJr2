@@ -17,14 +17,18 @@ class TestThreeBandMatrix(unittest.TestCase):
         qcLayers.populate_x()
         qcLayers.solve_whole()
         psis_ode, eigenEs_ode = qcLayers.psis, qcLayers.eigenEs
+        philh_ode, phiso_ode = qcLayers.philh, qcLayers.phiso
         dipole_ode = qcLayers.dipole(0, 1)
         qcLayers.solver = 'matrix'
         qcLayers.matrixEigenCount = 4
         qcLayers.solve_whole()
         psis_mtx, eigenEs_mtx = qcLayers.psis, qcLayers.eigenEs
+        philh_mtx, phiso_mtx = qcLayers.philh, qcLayers.phiso
         dipole_mtx = qcLayers.dipole(0, 1)
         np.testing.assert_almost_equal(eigenEs_ode, eigenEs_mtx, decimal=8)
         np.testing.assert_almost_equal(psis_ode, psis_mtx, decimal=6)
+        np.testing.assert_almost_equal(philh_ode, philh_mtx, decimal=3)
+        np.testing.assert_almost_equal(phiso_ode, phiso_mtx, decimal=3)
         self.assertAlmostEqual(dipole_ode, dipole_mtx, places=3)
 
 
@@ -37,6 +41,7 @@ def plot_debugger():
     qcLayers.populate_x()
     qcLayers.solve_whole()
     psis_ode, eigenEs_ode = qcLayers.psis, qcLayers.eigenEs
+    philh_ode, _ = qcLayers.philh, qcLayers.phiso
     print(psis_ode, eigenEs_ode)
     qcLayers.solver = 'matrix'
     qcLayers.matrixEigenCount = 4
@@ -62,6 +67,10 @@ def plot_debugger():
                  10*qcLayers.psis[n, :] + qcLayers.eigenEs[n])
         plt.plot(qcLayers.xPoints,
                  10*psis_ode[n, :] + qcLayers.eigenEs[n], '--')
+        plt.plot(qcLayers.xPoints,
+                 10*qcLayers.philh[n, :] + qcLayers.eigenEs[n])
+        plt.plot(qcLayers.xPoints,
+                 10*philh_ode[n, :] + qcLayers.eigenEs[n], '--')
     plt.show()
 
 

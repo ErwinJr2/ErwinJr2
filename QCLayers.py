@@ -260,6 +260,18 @@ class SchrodingerLayer(object):
                 Elower=self.Emin, Eupper=self.Emax, field=self.EField)
             self.psis, self.eigenEs = self.shiftPeriod(
                                           (-1, 0, 1, 2), psis, eigenEs)
+        if self.crystalType == 'ZincBlende':
+            xEg, xF, xEp, xESO = self.bandParams
+            kunit = hbar**2/(2*e0*m0*(1E-10*self.xres)**2)
+            xP = sqrt(xEp * kunit)
+            dphic = np.zeros(self.psis.shape)
+            dphic[:, 1:-1] = (self.psis[:, 2:] - self.psis[:, :-2])/2
+            self.philh = np.zeros(self.psis.shape)
+            xE = np.broadcast_to(self.eigenEs.reshape(-1, 1), self.psis.shape)
+            xE = xE - self.xVc
+            self.philh = -sqrt(2/3)*xP/(xE+xEg) * dphic
+            self.phiso = np.zeros(self.psis.shape)
+            self.phiso = sqrt(1/3)*xP/(xE+xEg+xESO) * dphic
         return self.eigenEs
 
     def solve_whole_matrix(self) -> np.ndarray:
@@ -313,13 +325,16 @@ class SchrodingerLayer(object):
                 self.Hsparse, self.matrixEigenCount, sigma=(Es_low + Es_hi)/2)
             # normalization should be sum(self.psi_all**2)*self.xres = 1
             self.psi_all /= sqrt(self.xres)
+            for n in range(len(self.eigen_all)):
+                phic = self.psi_all[::3, n]
+                # for consistency of the phase definition with the ODE solver
+                if phic[np.argmax(np.abs(phic) > 1E-3)] < 0:
+                    self.psi_all[:, n] = -self.psi_all[:, n]
             self.psis = np.zeros((self.eigen_all.shape[0], self.xPoints.size))
             psis = self.psi_all[::3, :].T
             self.psis[:, :-1] = (psis[:, 1:] + psis[:, :-1])/2
-            for psi in self.psis:
-                # for consistency of the phase definition with the ODE solver
-                if psi[np.argmax(np.abs(psi) > 1E-3)] < 0:
-                    psi[:] = -psi
+            self.philh = self.psi_all[1::3, :].T
+            self.phiso = self.psi_all[2::3, :].T
             self.eigenEs = self.eigen_all
             return self.eigenEs
         raise NotImplementedError('Matrix solver is not implemented '
@@ -468,7 +483,7 @@ class SchrodingerLayer(object):
             xInvMc_j = self._xBandMassInv(Ej)
             self.z = np.trapz(psi_i * xInvMc_j * np.gradient(psi_j) -
                               np.gradient(psi_i) * xInvMc_i * psi_j)
-            self.z *= hbar**2 / (2*(Ei-Ej)*e0*m0) / (1E-10)**2  # Angstrom
+            self.z *= hbar**2 / (2*(Ej-Ei)*e0*m0) / (1E-10)**2  # Angstrom
         elif self.solver == 'matrix' and self.crystalType == 'ZincBlende':
             self.z = self.xres * sum(
                 np.trapz(self.psi_all[t::3, upper] * self.xPoints
