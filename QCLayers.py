@@ -2,7 +2,7 @@
 This file defines the QCLayer class for simulating QC structure
 """
 import numpy as np
-from numpy import sqrt
+from numpy import sqrt, pi, exp, log
 from scipy.constants import (e as e0, epsilon_0 as eps0, h as h,
                              hbar as hbar, electron_mass as m0, c as c0)
 import scipy.linalg as slg
@@ -55,6 +55,14 @@ class SchrodingerLayer(object):
     layerARs : list of bool, len = No. of layers
         Binaries indicating if the layer is active(True) or not(False),
         only affects basis solver
+    ifrDelta : List of float, len = No. of layers
+        The standard deviation of the interface roughness for the interface at
+        layer n and layer n+1, in unit angstrom.
+        Default zero
+    ifrLambda : List of float, len = No. of layers
+        The correlation length of the interface roughness for the interface at
+        layer n and layer n+1, in unit angstrom.
+        Default zero
 
     EField : float
         External (static) electrical field, in kV/cm = 1e5 V/m
@@ -99,6 +107,8 @@ class SchrodingerLayer(object):
                  layerARs: List[bool] = None,
                  layerVc: List[float] = None,
                  layerMc: List[float] = None,
+                 ifrDelta: List[float] = None,
+                 ifrLambda: List[float] = None,
                  EField: float = 0.0, repeats: int = 1):
         self.xres = xres
         self.Eres = Eres
@@ -108,6 +118,8 @@ class SchrodingerLayer(object):
         self._layerVc = layerVc if layerVc is not None else [0.0]*N
         self._layerMc = layerMc if layerMc is not None else [1.0]*N
         self.layerARs = layerARs if layerARs is not None else [True]*N
+        self.ifrDelta = ifrDelta if ifrDelta is not None else [0.0]*N
+        self.ifrLambda = ifrLambda if ifrLambda is not None else [0.0]*N
         self.EField = EField
         self.repeats = repeats
 
@@ -462,9 +474,9 @@ class SchrodingerLayer(object):
         self.periodic = False
 
     def dipole(self, upper: int, lower: int) -> float:
-        """Return Electrical dipole between upper and lower states,
-        update self.dipole. Should be called for any other related physics
-        quantities."""
+        """Return Electrical dipole between upper and lower states
+        in unit angstrom, update self.dipole.
+        Should be called for any other related physics quantities."""
         if self.solver == 'ODE':
             psi_i = self.psis[upper, :]
             psi_j = self.psis[lower, :]
@@ -492,6 +504,48 @@ class SchrodingerLayer(object):
             raise NotImplementedError(
                 '{} not implemented for diple'.format(self.solver))
         return self.z
+
+    def ifrTransition(self, upper: int, lower: int) -> float:
+        r"""Calculate the interface roughness (IFR) transition rate from
+        upper to lower state at zero temperature, in unit ps^-1.
+
+        .. math::
+            \frac{1}{\tau_{ij}^\text{IFR}} =
+            \frac{\pi m^*_j}{\hbar^3} \sum_n
+            \Delta_n^2\Lambda_n^2\delta U_n^2
+            \left|\psi_i(z_n)\psi_j^*(z_n)\right|^2
+            \mathrm e^{- \Lambda^2 m_j^* (E_i - E_j))/2\hbar^2}
+        """
+        # TODO: finite temperature
+        if upper < lower:
+            return 1e-20
+        psi_i = self.psis[upper, :]
+        psi_j = self.psis[lower, :]
+        Ei = self.eigenEs[upper]
+        Ej = self.eigenEs[lower]
+        mj = m0 * np.trapz(self.xMc * psi_j**2) * self.xres
+        kl = sqrt(2 * mj / hbar**2 * (Ei-Ej) * e0)
+        tauInv = 0
+        zn = 0
+        layerN = len(self.layerWidths)
+        for _ in range(self.repeats):
+            for n in range(layerN):
+                lamb = self.ifrLambda[n] * 1E-10  # to m
+                delt = self.ifrDelta[n]
+                dU = (self.layerVc((n+1) % layerN) - self.layerVc(n))
+                dU *= e0  # to J
+                # find interface
+                zn += self.layerWidths[n]
+                zIdx = np.argmax(self.xPoints >= zn)
+                if zIdx == 0 or zIdx == len(self.xPoints)-1:
+                    continue
+                z1 = self.xPoints[zIdx-1]
+                z2 = self.xPoints[zIdx]
+                psi_iz = (psi_i[zIdx-1]*(zn-z2) - psi_i[zIdx]*(z1-zn))/(z2-z1)
+                psi_jz = (psi_j[zIdx-1]*(zn-z2) - psi_j[zIdx]*(z1-zn))/(z2-z1)
+                tauInv += (pi * mj / hbar**3 * delt**2 * lamb**2 * dU**2
+                           * (psi_iz*psi_jz)**2 * exp(-lamb**2 * kl**2 / 4))
+        return tauInv / 1e12  # unit ps^-1
 
     def _xBandMassInv(self, energy):
         """
@@ -574,14 +628,26 @@ description : str
     def __init__(self, substrate="InP", materials=["InGaAs", "AlInAs"],
                  moleFracs=[0.53, 0.52], xres=0.5, Eres=0.5,
                  layerWidths=[0.0], layerMtrls=None, layerDopings=None,
+                 ifrDelta=None, ifrLambda=None,
                  layerARs=None, EField=0, repeats=3, T=300.0, solver="ODE",
                  description="", wl=3.0):
         assert(isinstance(layerWidths, list))
+        assert(isinstance(materials, list))
+        assert(isinstance(moleFracs, list))
+        assert(len(materials) == len(moleFracs))
         N = len(layerWidths)
-        super().__init__(xres, Eres, layerWidths, layerARs,
-                         # layerVc and layerMc is not used for this sub class
-                         None, None,
-                         EField, repeats)
+        if isinstance(ifrDelta, list):
+            assert(len(ifrDelta) == N)
+        elif ifrDelta is not None:
+            ifrDelta = [ifrDelta] * N
+        if isinstance(ifrLambda, list):
+            assert(len(ifrLambda) == N)
+        if ifrLambda is not None:
+            ifrLambda = [ifrLambda] * N
+        super().__init__(xres=xres, Eres=Eres,
+                         layerWidths=layerWidths, layerARs=layerARs,
+                         ifrDelta=ifrDelta, ifrLambda=ifrLambda,
+                         EField=EField, repeats=repeats)
         self.substrate = substrate
         self.crystalType = Material.MParm[substrate]["Crystal"]
         self.materials = materials
@@ -792,7 +858,7 @@ description : str
 
             # mi = m0 * np.trapz(self.xMc * psi_i**2) * self.xres
             mj = m0 * np.trapz(self.xMc * psi_j**2) * self.xres
-            kl = sqrt(2 * mj / hbar**2 * (Ei-Ej-hwLO) * e0)
+            kl = sqrt(2 * mj / hbar**2 * (Ei - Ej - hwLO) * e0)
             # to improve this by adding the knowledge of zero's of psi
             # convpsi = fft.irfft(
             #     np.abs(fft.rfft(psi_i*psi_j, 2*len(psi_i)))**2)[:len(psi_i)]

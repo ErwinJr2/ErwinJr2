@@ -71,20 +71,20 @@ def parseQcl(ldict: typing.Dict[str, typing.Any]) -> QCLayers:
     if ldict["FileType"] != "ErwinJr2 Data File":
         raise TypeError("Wrong file type")
     if int(ldict["Version"]) >= 181107:
-        o = QCLayers(ldict["Substrate"],
-                     ldict["Materials"]["Compostion"],
-                     ldict["Materials"]["Mole Fraction"],
-                     ldict["x resolution"],
-                     ldict["E resolution"],
-                     ldict["QC Layers"]["Width"],
-                     ldict["QC Layers"]["Material"],
-                     ldict["QC Layers"]["Doping"],
-                     ldict["QC Layers"]["Active Region"],
-                     ldict["EField"],
-                     ldict["Repeats"],
-                     ldict["Temperature"],
-                     ldict["Solver"],
-                     ldict["Description"])
+        o = QCLayers(substrate=ldict["Substrate"],
+                     materials=ldict["Materials"]["Compostion"],
+                     moleFracs=ldict["Materials"]["Mole Fraction"],
+                     xres=ldict["x resolution"],
+                     Eres=ldict["E resolution"],
+                     layerWidths=ldict["QC Layers"]["Width"],
+                     layerMtrls=ldict["QC Layers"]["Material"],
+                     layerDopings=ldict["QC Layers"]["Doping"],
+                     layerARs=ldict["QC Layers"]["Active Region"],
+                     EField=ldict["EField"],
+                     repeats=ldict["Repeats"],
+                     T=ldict["Temperature"],
+                     solver=ldict["Solver"],
+                     description=ldict["Description"])
         o.wl = ldict["Wavelength"] if "Wavelength" in ldict else 1.5
     else:
         raise NotImplementedError("Version %s not supported" %
@@ -106,13 +106,13 @@ def parseStrata(ldict: typing.Dict[str, typing.Any]) -> OptStrata:
                 cstprd[item] = ldict["custom"][item]["period"]
             if "gain" in ldict["custom"][item]:
                 cstgain[item] = ldict["custom"][item]["gain"]
-        o = OptStrata(ldict["wavelength"],
-                      ldict["materials"],
-                      ldict["moleFracs"],
-                      ldict["dopings"],
-                      ldict["width"],
-                      ldict["mobilities"],
-                      cstidx, cstprd, cstgain)
+        o = OptStrata(wl=ldict["wavelength"],
+                      materials=ldict["materials"],
+                      moleFracs=ldict["moleFracs"],
+                      dopings=ldict["dopings"],
+                      Ls=ldict["width"],
+                      mobilities=ldict["mobilities"],
+                      cstmIndx=cstidx, cstmPrd=cstprd, cstmGain=cstgain)
     else:
         raise NotImplementedError("Version %s not supported" %
                                   ldict["Version"])
