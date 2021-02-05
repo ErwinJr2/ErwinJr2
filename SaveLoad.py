@@ -70,7 +70,8 @@ def loadBoth(fhandle: typing.TextIO) -> typing.Union[QCLayers, OptStrata]:
 def parseQcl(ldict: typing.Dict[str, typing.Any]) -> QCLayers:
     if ldict["FileType"] != "ErwinJr2 Data File":
         raise TypeError("Wrong file type")
-    if int(ldict["Version"]) >= 181107:
+    version = int(ldict["Version"])
+    if version >= 181107:
         o = QCLayers(substrate=ldict["Substrate"],
                      materials=ldict["Materials"]["Compostion"],
                      moleFracs=ldict["Materials"]["Mole Fraction"],
@@ -86,6 +87,12 @@ def parseQcl(ldict: typing.Dict[str, typing.Any]) -> QCLayers:
                      solver=ldict["Solver"],
                      description=ldict["Description"])
         o.wl = ldict["Wavelength"] if "Wavelength" in ldict else 1.5
+        if version >= 210205:
+            o.customIFR = ldict["IFR"]["custom IFR"]
+            o.mtrlIFRDelta = ldict["IFR"]["material IFR delta"]
+            o.mtrlIFRLambda = ldict["IFR"]["material IFR lambda"]
+            o.ifrDelta = ldict["IFR"]["layer IFR delta"]
+            o.ifrLambda = ldict["IFR"]["layer IFR lambda"]
     else:
         raise NotImplementedError("Version %s not supported" %
                                   ldict["Version"])
@@ -119,33 +126,9 @@ def parseStrata(ldict: typing.Dict[str, typing.Any]) -> OptStrata:
     return o
 
 
-JSONTemplateOld = """{
-    "FileType": "ErwinJr2 Data File",
-    "Version": "181107",
-    "Description": %s,
-    "Substrate": %s,
-    "EField": %s,
-    "x resolution": %s,
-    "E resolution": %s,
-    "Solver": %s,
-    "Temperature": %s,
-    "Repeats": %s,
-    "Materials": {
-        "Compostion": %s,
-        "Mole Fraction": %s
-    },
-    "QC Layers": {
-        "Material": %s,
-        "Width": %s,
-        "Doping": %s,
-        "Active Region": %s
-    }
-}"""
-
-
 JSONTemplate = """{
     "FileType": "ErwinJr2 Data File",
-    "Version": "200504",
+    "Version": "210205",
     "Description": %s,
     "Wavelength": %s,
     "Substrate": %s,
@@ -158,6 +141,13 @@ JSONTemplate = """{
     "Materials": {
         "Compostion": %s,
         "Mole Fraction": %s
+    },
+    "IFR": {
+        "custom IFR": %s,
+        "material IFR delta": %s,
+        "material IFR lambda": %s,
+        "layer IFR delta": %s,
+        "layer IFR lambda": %s
     },
     "QC Layers": {
         "Material": %s,
@@ -175,30 +165,6 @@ JSONTemplate = """{
         "custom": %s
     }
 }"""
-
-
-def qclSaveJSON(fhandle: typing.TextIO, qclayers: QCLayers):
-    """
-    Save QCLayers as a json file
-
-    Parameters
-    ----------
-    fhandle : file handle
-        File handle of a json file to save to.
-    qclayers : QCLayers.QCLayers
-        The QCLayers class to be saved.
-    """
-    if not isinstance(qclayers, QCLayers):
-        raise TypeError("qclSave: Nothing to save.."
-                        "QCLayers not valid type")
-    o = qclayers
-    parameters = [json.dumps(s) for s in (o.description, o.substrate,
-                                          o.EField, o.xres, o.Eres, o.solver,
-                                          o.Temperature, o.repeats,
-                                          o.materials, o.moleFracs,
-                                          o.layerMtrls, o.layerWidths,
-                                          o.layerDopings, o.layerARs)]
-    fhandle.write(JSONTemplateOld % tuple(parameters))
 
 
 def EJSaveJSON(fhandle: typing.TextIO, qclayers: QCLayers,
@@ -231,6 +197,9 @@ def EJSaveJSON(fhandle: typing.TextIO, qclayers: QCLayers,
                                           o.EField, o.xres, o.Eres, o.solver,
                                           o.Temperature, o.repeats,
                                           o.materials, o.moleFracs,
+                                          o.customIFR,
+                                          o.mtrlIFRDelta, o.mtrlIFRLambda,
+                                          o.ifrDelta, o.ifrLambda,
                                           o.layerMtrls, o.layerWidths,
                                           o.layerDopings, o.layerARs,
                                           s.wl, s.materials, s.moleFracs,

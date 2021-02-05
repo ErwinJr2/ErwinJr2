@@ -2,7 +2,7 @@
 This file defines the QCLayer class for simulating QC structure
 """
 import numpy as np
-from numpy import sqrt, pi, exp, log
+from numpy import sqrt, pi, exp
 from scipy.constants import (e as e0, epsilon_0 as eps0, h as h,
                              hbar as hbar, electron_mass as m0, c as c0)
 import scipy.linalg as slg
@@ -55,6 +55,7 @@ class SchrodingerLayer(object):
     layerARs : list of bool, len = No. of layers
         Binaries indicating if the layer is active(True) or not(False),
         only affects basis solver
+
     ifrDelta : List of float, len = No. of layers
         The standard deviation of the interface roughness for the interface at
         layer n and layer n+1, in unit angstrom.
@@ -63,6 +64,13 @@ class SchrodingerLayer(object):
         The correlation length of the interface roughness for the interface at
         layer n and layer n+1, in unit angstrom.
         Default zero
+    avghwLO : float
+        The average LO phonon energy in unit eV.
+        This value is used for LO phonon scattering calculation.
+    epsrho : float
+        The effective relative permitivity for LO phonon.
+        1/epsrho = 1/(epsilon for high frequency) - 1/(epsilon for static)
+        The value is used for LO phonon scattering calculation.
 
     EField : float
         External (static) electrical field, in kV/cm = 1e5 V/m
@@ -94,6 +102,10 @@ class SchrodingerLayer(object):
     _layerVc: List[float]
     _layerMc: List[float]
     layerARs: List[bool]
+    ifrDelta: List[float]
+    ifrLambda: List[float]
+    avghwLO: float
+    epsrho: float
     EField: float
     repeats: int
     crystalType: str
@@ -109,6 +121,8 @@ class SchrodingerLayer(object):
                  layerMc: List[float] = None,
                  ifrDelta: List[float] = None,
                  ifrLambda: List[float] = None,
+                 avghwLO: float = 35E-3,
+                 epsrho: float = 69.0,
                  EField: float = 0.0, repeats: int = 1):
         self.xres = xres
         self.Eres = Eres
@@ -122,6 +136,8 @@ class SchrodingerLayer(object):
         self.ifrLambda = ifrLambda if ifrLambda is not None else [0.0]*N
         self.EField = EField
         self.repeats = repeats
+        self.avghwLO = avghwLO
+        self.epsrho = epsrho
 
         self.crystalType = 'simple'
         self.solver = 'ODE'
@@ -334,7 +350,8 @@ class SchrodingerLayer(object):
             # self.eigen_all, self.psi_all = slg.eig_banded(
             #     self.HBanded, select='v', select_range=(Es_low, Es_hi))
             self.eigen_all, self.psi_all = splg.eigsh(
-                self.Hsparse, self.matrixEigenCount, sigma=(Es_low + Es_hi)/2)
+                self.Hsparse, self.matrixEigenCount, sigma=(Es_low + Es_hi)/2,
+                tol=1E-7)
             # normalization should be sum(self.psi_all**2)*self.xres = 1
             self.psi_all /= sqrt(self.xres)
             for n in range(len(self.eigen_all)):
@@ -505,6 +522,67 @@ class SchrodingerLayer(object):
                 '{} not implemented for diple'.format(self.solver))
         return self.z
 
+    def loTransition(self, upper, lower):
+        """The LO phonon transition lifetime from upper to lower,
+        at zero temperature"""
+        # TODO: finite temperature version
+        INV_INF = 1e-20  # for infinite small decay rate (ns-1)
+        if self.loMatrix[upper][lower] is None:
+
+            psi_i = self.psis[upper, :]
+            psi_j = self.psis[lower, :]
+            Ei = self.eigenEs[upper]
+            Ej = self.eigenEs[lower]
+
+            if Ei - Ej - self.avghwLO < 0:
+                # energy difference is smaller than a LO phonon
+                # LO phonon scattering doesn't happen
+                return INV_INF
+
+            # mi = m0 * np.trapz(self.xMc * psi_i**2) * self.xres
+            mj = m0 * np.trapz(self.xMc * psi_j**2) * self.xres
+            kl = sqrt(2 * mj / hbar**2 * (Ei - Ej - self.avghwLO) * e0)
+            # to improve this by adding the knowledge of zero's of psi
+            # convpsi = fft.irfft(
+            #     np.abs(fft.rfft(psi_i*psi_j, 2*len(psi_i)))**2)[:len(psi_i)]
+            # Iij = 2*self.xres**2*np.trapz(
+            #     exp(-kl*self.xPoints*1E-10)*convpsi)
+            # Python implementation
+            # dIij = np.empty(self.xPoints.size)
+            # for n in range(self.xPoints.size):
+            #     x1 = self.xPoints[n]
+            #     x2 = self.xPoints
+            #     dIij[n] = np.sum(psi_i * psi_j * exp(-kl*abs(x1 - x2)*1e-10)
+            #                      * psi_i[n] * psi_j[n] * self.xres**2)
+            # Iij = np.sum(dIij)
+            # C implementation
+            Iij = onedq.OneDSchrodinger.cLOphononScatter(self.xres, kl,
+                                                         psi_i, psi_j)
+            self.loMatrix[upper][lower] = (
+                mj * e0**2 * self.avghwLO * e0 / hbar * Iij
+                / (4 * hbar**2 * self.epsrho * eps0 * kl))
+        return self.loMatrix[upper][lower] / 1e12  # unit ps^-1
+
+    def loLifeTime(self, state):
+        """ Return the life time due to LO phonon scattering of the
+        given state(label)"""
+        # return 1/sum(self.loTransition(state, q) for q in range(state))
+        Ei = self.eigenEs[state]
+        psi_i = self.psis[state]
+        # return 1/sum(self.loTransition(state, q) for q in range(stat
+        #                if self.eigenEs[q] <= Ei - self.avghwLO)
+        idxs = self.eigenEs <= Ei - self.avghwLO
+        psi_js = self.psis[idxs]
+        Ejs = self.eigenEs[idxs]
+        # mi = m0 * np.trapz(self.xMc * psi_i**2) * self.xres
+        mjs = m0 * np.trapz(self.xMc * psi_js**2, axis=1) * self.xres
+        kls = sqrt(2 * mjs / hbar**2 * (Ei - Ejs - self.avghwLO) * e0)
+        fjs = (mjs * e0**2 * self.avghwLO * e0 / hbar
+               / (4 * hbar**2 * self.epsrho * eps0 * kls))
+        Iijtotal = onedq.OneDSchrodinger.cLOtotal(
+            self.xres, kls, psi_i, psi_js, fjs)
+        return 1e12 / Iijtotal if Iijtotal > 0 else 1E20
+
     def ifrTransition(self, upper: int, lower: int) -> float:
         r"""Calculate the interface roughness (IFR) transition rate from
         upper to lower state at zero temperature, in unit ps^-1.
@@ -586,11 +664,10 @@ substrate : str
     GaSb      InAs\ :sub:`y`\ Sb\ :sub:`1-y`   Al\ :sub:`x`\ Ga\ :sub:`1-x`\ Sb
     ========= ================================ ================================
 
-materials : list of str, len = 2
+materials : list of str, len >= 2
     Name of alloys
-moleFrac : list of float
+moleFrac : list of float, len = Mp. of materials
     mole fraction for each possible layer material,
-    in format [well, barrier]*4
 xres : float
     Position resolution, in Armstrong
 Eres : float
@@ -614,6 +691,14 @@ layerARs : list of bool, len = No. of layers
     Binaries indicating if the layer is active(True) or not(False),
     only affects basis solver
 
+customIFR : bool
+    Wether to use a customized IFR parameter rather than a material decidede
+    parameter.
+mtrlIFRLambda : list of float, len = No. of materials
+    The interface roughness lambda after materials[n]
+mtrlIFRDelta : list of float, len = No. of materials
+    The interface roughness delta after materials[n]
+
 EField : float
     External (static) electrical field, in kV/cm = 1e5 V/m
 repeats : int
@@ -628,39 +713,60 @@ description : str
     def __init__(self, substrate="InP", materials=["InGaAs", "AlInAs"],
                  moleFracs=[0.53, 0.52], xres=0.5, Eres=0.5,
                  layerWidths=[0.0], layerMtrls=None, layerDopings=None,
+                 customIFR=False, mtrlIFRLambda=None, mtrlIFRDelta=None,
                  ifrDelta=None, ifrLambda=None,
                  layerARs=None, EField=0, repeats=3, T=300.0, solver="ODE",
                  description="", wl=3.0):
         assert(isinstance(layerWidths, list))
         assert(isinstance(materials, list))
         assert(isinstance(moleFracs, list))
-        assert(len(materials) == len(moleFracs))
         N = len(layerWidths)
-        if isinstance(ifrDelta, list):
-            assert(len(ifrDelta) == N)
-        elif ifrDelta is not None:
-            ifrDelta = [ifrDelta] * N
-        if isinstance(ifrLambda, list):
-            assert(len(ifrLambda) == N)
-        if ifrLambda is not None:
-            ifrLambda = [ifrLambda] * N
-        super().__init__(xres=xres, Eres=Eres,
-                         layerWidths=layerWidths, layerARs=layerARs,
-                         ifrDelta=ifrDelta, ifrLambda=ifrLambda,
-                         EField=EField, repeats=repeats)
+        M = len(materials)
+        assert(M >= 1)
+        assert(len(moleFracs) == M)
         self.substrate = substrate
-        self.crystalType = Material.MParm[substrate]["Crystal"]
         self.materials = materials
         self.moleFracs = moleFracs
         self.layerMtrls = [0]*N if layerMtrls is None else layerMtrls
         self.layerDopings = [0.0]*N if layerDopings is None else layerDopings
         self.Temperature = T
-        self.solver = solver
+        self.customIFR = customIFR
+        if not customIFR:
+            if isinstance(mtrlIFRDelta, list):
+                assert(len(mtrlIFRDelta) == M)
+                assert(isinstance(mtrlIFRLambda, list))
+                assert(len(mtrlIFRLambda) == M)
+                self.mtrlIFRDelta = mtrlIFRDelta
+                self.mtrlIFRLambda = mtrlIFRLambda
+            else:
+                self.mtrlIFRDelta = [mtrlIFRDelta or 0.0] * M
+                self.mtrlIFRLambda = [mtrlIFRLambda or 0.0] * M
+            ifrDelta, ifrLambda = self._get_IFRList()
         self.description = description
-        self.wl = 3.0
-
+        super().__init__(xres=xres, Eres=Eres,
+                         layerWidths=layerWidths, layerARs=layerARs,
+                         ifrDelta=ifrDelta, ifrLambda=ifrLambda,
+                         EField=EField, repeats=repeats)
+        self.crystalType = Material.MParm[substrate]["Crystal"]
         self.subM = Material.Material(self.substrate, self.Temperature)
+        self.wl = 3.0
+        self.solver = solver
+        # self.solver = 'matrix'
         self.update_strain()
+
+    def _get_IFRList(self):
+        """Get IFR parameters for SchrodingerLayer. Should be called
+        every time the material list changes."""
+        assert(not self.customIFR)
+        if self.mtrlIFRDelta is not None:
+            ifrDelta = [self.mtrlIFRDelta[m] for m in self.layerMtrls]
+        else:
+            ifrDelta = [0] * len(self.layerMtrls)
+        if self.mtrlIFRLambda is not None:
+            ifrLambda = [self.mtrlIFRLambda[m] for m in self.layerMtrls]
+        else:
+            ifrLambda = [0] * len(self.layerMtrls)
+        return ifrDelta, ifrLambda
 
     def update_strain(self):
         self.a_parallel = self.subM.parm['alc']
@@ -756,15 +862,6 @@ description : str
                           for n in range(len(self.layerWidths)))
         return 100 * totalStrain / sum(self.layerWidths)
 
-    def avghwLO(self):
-        """Return average LO phonon energy in unit eV"""
-        if sum(self.layerWidths) <= 1e-5:
-            return -1
-        sumhwlo = sum(self.mtrlAlloys[self.layerMtrls[n]].parm['hwLO']
-                      * self.layerWidths[n]
-                      for n in range(len(self.layerWidths)))
-        return sumhwlo / sum(self.layerWidths)
-
     def layerVc(self, n: int):
         return self.mtrlAlloys[self.layerMtrls[n]].parm['EcG']
 
@@ -811,6 +908,26 @@ description : str
                  'Material property for {} crystal is not implemented'.format(
                      self.crystalType
                  ))
+        # LO phonon
+        if sum(self.layerWidths) <= 1e-5:
+            self.avghwLO = -1
+            self.epsrho = 69.0
+        else:
+            sumhwlo = sum(self.mtrlAlloys[self.layerMtrls[n]].parm['hwLO']
+                          * self.layerWidths[n]
+                          for n in range(len(self.layerWidths)))
+            self.avghwLO = sumhwlo / sum(self.layerWidths)
+            epsInf = np.array([a.parm["epsInf"] for a in self.mtrlAlloys])
+            epss = np.array([a.parm["epss"] for a in self.mtrlAlloys])
+            epsrho = 1 / (1/epsInf - 1/epss)
+            self.epsrho = (np.sum(epsrho[self.layerMtrls] * self.layerWidths)
+                           / sum(self.layerWidths))
+
+        # IFR
+        if not self.customIFR:
+            self.ifrDelta, self.ifrLambda = self._get_IFRList()
+
+        self.matrixEigenCount = self.repeats * 20
 
     def reset_for_basis(self, start, end):
         super().reset_for_basis(start, end)
@@ -834,82 +951,6 @@ description : str
         ss = sorted(bounded + semiBounded)
         self.eigenEs = self.eigenEs[ss]
         self.psis = self.psis[ss, :]
-
-    def loTransition(self, upper, lower):
-        """The LO phonon transition lifetime from upper to lower,
-        at zero temperature"""
-        # TODO: finite temperature version
-        INV_INF = 1e-20  # for infinite small decay rate (ns-1)
-        if upper < lower:
-            upper, lower = lower, upper
-
-        if self.loMatrix[upper][lower] is None:
-
-            psi_i = self.psis[upper, :]
-            psi_j = self.psis[lower, :]
-            Ei = self.eigenEs[upper]
-            Ej = self.eigenEs[lower]
-            hwLO = self.avghwLO()
-
-            if Ei - Ej - hwLO < 0:
-                # energy difference is smaller than a LO phonon
-                # LO phonon scattering doesn't happen
-                return INV_INF
-
-            # mi = m0 * np.trapz(self.xMc * psi_i**2) * self.xres
-            mj = m0 * np.trapz(self.xMc * psi_j**2) * self.xres
-            kl = sqrt(2 * mj / hbar**2 * (Ei - Ej - hwLO) * e0)
-            # to improve this by adding the knowledge of zero's of psi
-            # convpsi = fft.irfft(
-            #     np.abs(fft.rfft(psi_i*psi_j, 2*len(psi_i)))**2)[:len(psi_i)]
-            # Iij = 2*self.xres**2*np.trapz(
-            #     exp(-kl*self.xPoints*1E-10)*convpsi)
-            # Python implementation
-            # dIij = np.empty(self.xPoints.size)
-            # for n in range(self.xPoints.size):
-            #     x1 = self.xPoints[n]
-            #     x2 = self.xPoints
-            #     dIij[n] = np.sum(psi_i * psi_j * exp(-kl*abs(x1 - x2)*1e-10)
-            #                      * psi_i[n] * psi_j[n] * self.xres**2)
-            # Iij = np.sum(dIij)
-            # C implementation
-            Iij = onedq.OneDSchrodinger.cLOphononScatter(self.xres, kl,
-                                                         psi_i, psi_j)
-            epsInf = np.array([a.parm["epsInf"] for a in self.mtrlAlloys])
-            epss = np.array([a.parm["epss"] for a in self.mtrlAlloys])
-            epsrho = 1 / (1/epsInf - 1/epss)
-            epsrho = (np.sum(epsrho[self.layerMtrls] * self.layerWidths)
-                      / sum(self.layerWidths))
-            self.loMatrix[upper][lower] = (
-                mj * e0**2 * hwLO * e0 / hbar * Iij
-                / (4 * hbar**2 * epsrho * eps0 * kl))
-        return self.loMatrix[upper][lower] / 1e12  # unit ps^-1
-
-    def loLifeTime(self, state):
-        """ Return the life time due to LO phonon scattering of the
-        given state(label)"""
-        # return 1/sum(self.loTransition(state, q) for q in range(state))
-        Ei = self.eigenEs[state]
-        psi_i = self.psis[state]
-        hwLO = self.avghwLO()
-        # return 1/sum(self.loTransition(state, q) for q in range(stat
-        #                if self.eigenEs[q] <= Ei - hwLO)
-        idxs = self.eigenEs <= Ei - hwLO
-        psi_js = self.psis[idxs]
-        Ejs = self.eigenEs[idxs]
-        # mi = m0 * np.trapz(self.xMc * psi_i**2) * self.xres
-        mjs = m0 * np.trapz(self.xMc * psi_js**2, axis=1) * self.xres
-        kls = sqrt(2 * mjs / hbar**2 * (Ei - Ejs - hwLO) * e0)
-        epsInf = np.array([a.parm["epsInf"] for a in self.mtrlAlloys])
-        epss = np.array([a.parm["epss"] for a in self.mtrlAlloys])
-        epsrho = 1 / (1/epsInf - 1/epss)
-        epsrho = (np.sum(epsrho[self.layerMtrls] * self.layerWidths)
-                  / sum(self.layerWidths))
-        fjs = (mjs * e0**2 * hwLO * e0 / hbar
-               / (4 * hbar**2 * epsrho * eps0 * kls))
-        Iijtotal = onedq.OneDSchrodinger.cLOtotal(
-            self.xres, kls, psi_i, psi_js, fjs)
-        return 1e12 / Iijtotal if Iijtotal > 0 else 1E20
 
     def dephasing(self, upper, lower):
         """Calculate the broadening gamma of transition between upper ->
