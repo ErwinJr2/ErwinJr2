@@ -1322,6 +1322,13 @@ class QuantumTab(QWidget):
         self.update_quantumCanvas()
 
 # ===========================================================================
+# Model triggering
+# ===========================================================================
+    def triggerIFR(self):
+        self.qclayers.includeIFR = not self.qclayers.includeIFR
+        # TODO: dynamically hide IFR block
+
+# ===========================================================================
 # Calculations
 # ===========================================================================
     @pyqtSlot(bool)
@@ -1453,45 +1460,31 @@ class QuantumTab(QWidget):
         self.eDiff = 1000 * (Ei - Ej)  # from eV to meV
         self.wavelength = h * c0 / (e0 * np.abs(Ei - Ej)) * 1e6  # um
 
-        if self.solveType == 'basis':
-            couplingEnergy = self.qclayers.coupleBroadening(upper, lower)
-            self.transitionBroadening = self.qclayers.ifrBroadening(
-                upper, lower)
+        if self.solveType is None:
+            self.FoMButton.setEnabled(False)
+            self.pairString = ''
+        else:
             self.opticalDipole = self.qclayers.dipole(upper, lower)
-            self.tauLO_ul = 1 / self.qclayers.loTransition(
-                upper, lower)
+            self.tauLO_ul = 1 / self.qclayers.loTransition(upper, lower)
+            if self.qclayers.includeIFR:
+                self.tauIFR_ul = 1 / self.qclayers.ifrTransition(upper, lower)
+            else:
+                self.transitionBroadening = 0.1 * self.eDiff  # TODO
             self.pairString = (
                 "selected: %d, %d<br>"
                 "energy diff: <b>%6.1f meV</b> (%6.1f \u00B5m)<br>"
-                "coupling: %6.1f meV<br>broadening: %6.1f meV<br>"
-                "dipole: <b>%6.1f \u212B</b>"
-                "<br>LO scattering: <b>%6.3g ps</b><br>") % (
-                    self.stateHolder[0],
-                    self.stateHolder[1],
+                "dipole: <b>%6.1f \u212B</b><br>") % (
+                    self.stateHolder[0], self.stateHolder[1],
                     self.eDiff, self.wavelength,
-                    couplingEnergy,
-                    self.transitionBroadening,
-                    self.opticalDipole,
-                    self.tauLO_ul)
-
-        elif self.solveType == 'whole':
-            self.opticalDipole = self.qclayers.dipole(upper, lower)
-            self.tauLO_ul = 1 / self.qclayers.loTransition(
-                upper, lower)
-            self.tauIFR_ul = 1 / self.qclayers.ifrTransition(upper, lower)
-            self.transitionBroadening = 0.1 * self.eDiff  # TODO
-            self.pairString = (
-                "selected: %d, %d<br>"
-                "energy diff:<br>&nbsp;&nbsp;"
-                "<b>%6.1f meV</b> (%6.1f \u00B5m)<br>"
-                "dipole: %6.1f \u212B<br>"
-                "LO scattering: %6.3g ps<br>"
-                "IFR scattering: %6.3g ps<br>"
-            ) % (self.stateHolder[0], self.stateHolder[1],
-                 self.eDiff, self.wavelength, self.opticalDipole,
-                 self.tauLO_ul, self.tauIFR_ul)
-        else:
-            self.FoMButton.setEnabled(False)
+                    self.opticalDipole
+                )
+            if self.solveType == 'basis':
+                couplingEnergy = self.qclayers.coupleBroadening(upper, lower)
+                self.pairString += "coupling: %6.1f meV<br>" % couplingEnergy
+            self.pairString += "LO scattering: %6.3g ps<br>" % self.tauLO_ul
+            if self.qclayers.includeIFR:
+                self.pairString += (
+                    "IFR scattering: %6.3g ps<br>" % self.tauIFR_ul)
 
         self.stateParmText.clear()
         self.stateParmText.setText(self.pairString)
@@ -1510,19 +1503,33 @@ class QuantumTab(QWidget):
         if upper < lower:
             upper, lower = lower, upper
 
-        tauUpper = self.qclayers.loLifeTime(upper)
-        tauLower = self.qclayers.loLifeTime(lower)
+        tauLO_u = self.qclayers.loLifeTime(upper)
+        tauLO_l = self.qclayers.loLifeTime(lower)
+        if self.qclayers.includeIFR:
+            tauIFR_u = self.qclayers.ifrLifeTime(upper)
+            tauIFR_l = self.qclayers.ifrLifeTime(lower)
+        # tau_u = 1/(1/tauLO_u + 1/tauIFR_u)
+        # tau_l = 1/(1/tauLO_l + 1/tauIFR_l)
         FoM = self.qclayers.calc_FoM(upper, lower)
         gaincoeff = self.qclayers.gainCoefficient(upper, lower)
         # tauUpperLower is the inverse of transition rate (lifetime)
 
         self.FoMString = (
-            "<i>\u03C4<sub>upper</sub></i> : %6.3f ps<br>"
-            "<i>\u03C4<sub>lower</sub></i> : %6.3f ps<br>"
+            "<i>\u03C4<sup>LO</sup><sub>upper</sub></i> : %6.3f ps<br>"
+            "<i>\u03C4<sup>LO</sup><sub>lower</sub></i> : %6.3f ps<br>"
+            ) % (tauLO_u, tauLO_l)
+        if self.qclayers.includeIFR:
+            self.FoMString += (
+                "<i>\u03C4<sup>IFR</sup><sub>upper</sub></i> : %6.3f ps<br>"
+                "<i>\u03C4<sup>IFR</sup><sub>lower</sub></i> : %6.3f ps<br>"
+            ) % (tauIFR_u, tauIFR_l)
+        self.FoMString += (
             "FoM: <b>%6.0f ps \u212B<sup>2</sup></b><br>"
             "Gain coefficient:<br>&nbsp;&nbsp; %.2f cm/kA"
-            ) % (tauUpper, tauLower, FoM, gaincoeff)
+        ) % (FoM, gaincoeff)
         self.stateParmText.setText(self.pairString + self.FoMString)
+        self.stateParmText.verticalScrollBar().setValue(
+            self.stateParmText.verticalScrollBar().maximum())
 
         self.calculating.emit(False)
         self.FoMButton.setEnabled(True)

@@ -7,11 +7,11 @@ import matplotlib.pyplot as plt
 import unittest
 
 def plot_band(axes, qcLayers):
-    """ Plot potential (quantum barriers and wells) and other band parameters 
+    """ Plot potential (quantum barriers and wells) and other band parameters
     of the layer scturecture on axes, assuming already populated"""
     # for xv, conf in ((qcLayers.xVL, 'g--'),
-    #                  (qcLayers.xVX, 'm-.'), 
-    #                  (qcLayers.xVLH, 'k'), 
+    #                  (qcLayers.xVX, 'm-.'),
+    #                  (qcLayers.xVLH, 'k'),
     #                  (qcLayers.xVSO, 'r--')):
     #     axes.plot(qcLayers.xPoints, xv, conf, linewidth=1)
 
@@ -22,9 +22,9 @@ def plot_band(axes, qcLayers):
 
     axes.plot(qcLayers.xPoints, qcLayers.xlayerSelected, 'b', linewidth=1)
 
-    if hasattr(qcLayers, 'eigenEs'): 
-        for n in range(qcLayers.eigenEs.size): 
-            axes.plot(qcLayers.xPoints, 
+    if hasattr(qcLayers, 'eigenEs'):
+        for n in range(qcLayers.eigenEs.size):
+            axes.plot(qcLayers.xPoints,
                       10*qcLayers.psis[n, :]**2 + qcLayers.eigenEs[n])
 
 if __name__ == "__main__":

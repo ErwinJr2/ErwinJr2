@@ -1,6 +1,7 @@
 """
 This file defines the QCLayer class for simulating QC structure
 """
+from re import L
 import numpy as np
 from numpy import sqrt, pi, exp
 from scipy.constants import (e as e0, epsilon_0 as eps0, h as h,
@@ -92,6 +93,8 @@ class SchrodingerLayer(object):
     solver : str
         The solver used for the eigen problem: 'ODE' or 'matrix'.
         By default 'ODE'. 'matrix' solver is exmperimental.
+    includeIFR : bool
+        Weather to include IFR scattering for performance estimation.
     matrixEigenCount : int
         The number of eigen pairs to calculate in the 'matrix' solver.
         It would be very expensive to calculate all of them.
@@ -113,6 +116,9 @@ class SchrodingerLayer(object):
     basisInjectorAR: bool
     basisARonly: bool
     matrixEigenCount: int
+
+    solver: str
+    includeIFR: bool
 
     def __init__(self, xres: float = 0.5, Eres: float = 0.5,
                  layerWidths: List[float] = [0.0],
@@ -141,6 +147,7 @@ class SchrodingerLayer(object):
 
         self.crystalType = 'simple'
         self.solver = 'ODE'
+        self.includeIFR = False
         self.matrixEigenCount = 50
 
         self.basisARonly = False
@@ -242,6 +249,8 @@ class SchrodingerLayer(object):
                 'The {} solver is not implemented'.format(self.solver))
         self.loMatrix = [[None]*len(self.eigenEs)
                          for _ in range(len(self.eigenEs))]
+        self.ifrMatrix = [[None]*len(self.eigenEs)
+                          for _ in range(len(self.eigenEs))]
         return self.eigenEs
 
     def solve_whole_ode(self) -> np.ndarray:
@@ -597,6 +606,8 @@ class SchrodingerLayer(object):
         # TODO: finite temperature
         if upper < lower:
             return 1e-20
+        if not self.ifrMatrix[upper][lower] is None:
+            return self.ifrMatrix[upper][lower]
         psi_i = self.psis[upper, :]
         psi_j = self.psis[lower, :]
         Ei = self.eigenEs[upper]
@@ -623,7 +634,12 @@ class SchrodingerLayer(object):
                 psi_jz = (psi_j[zIdx-1]*(zn-z2) - psi_j[zIdx]*(z1-zn))/(z2-z1)
                 tauInv += (pi * mj / hbar**3 * delt**2 * lamb**2 * dU**2
                            * (psi_iz*psi_jz)**2 * exp(-lamb**2 * kl**2 / 4))
-        return tauInv / 1e12  # unit ps^-1
+        self.ifrMatrix[upper][lower] = tauInv / 1e12  # unit ps^-1
+        return self.ifrMatrix[upper][lower]
+
+    def ifrLifeTime(self, state):
+        """ Return to total life time due to IFR scattering"""
+        return 1/sum(self.ifrTransition(state, q) for q in range(state))
 
     def _xBandMassInv(self, energy):
         """
@@ -974,20 +990,41 @@ description : str
 
         Yield
         ------
-        tauLower : float
+        tauLO_l : float
             the lower state lifetime from LO scattering
-        tauUpper : float
+        tauLO_u : float
             the upper state lifetime from LO scattering
-        tauUpperLower : float
+        tauLO_ul : float
             the transition rate from upper to lower due to LO scattering
+        tauIFR_l : float
+            the lower state lifetime from IFR scattering
+        tauIFR_u : float
+            the upper state lifetime from IFR scattering
+        tauIFR_ul : float
+            the transition rate from upper to lower due to IFR scattering
+        tau_u : float
+            1/(1/tauLO_u + 1/tauIFR_u)
+        tau_l : float
+            1/(1/tauLO_l + 1/tauIFR_l)
         FoM : float
             the Figure of Merit in unit angstrom^2 ps
         """
-        self.tauLower = self.loLifeTime(lower)
-        self.tauUpper = self.loLifeTime(upper)
-        self.tauUpperLower = 1/self.loTransition(upper, lower)
-        self.FoM = self.z**2 * self.tauUpper * (
-            1 - self.tauLower / self.tauUpperLower)
+        self.tauLO_ul = 1/self.loTransition(upper, lower)
+        self.tauLO_l = self.loLifeTime(lower)
+        self.tauLO_u = self.loLifeTime(upper)
+        if self.includeIFR:
+            self.tauIFR_ul = 1/self.ifrTransition(upper, lower)
+            self.tauIFR_u = self.ifrLifeTime(upper)
+            self.tauIFR_l = self.ifrLifeTime(lower)
+            self.tau_u = 1/(1/self.tauLO_u + 1/self.tauIFR_u)
+            self.tau_l = 1/(1/self.tauLO_l + 1/self.tauIFR_l)
+            self.tau_ul = 1/(1/self.tauLO_ul + 1/self.tauIFR_ul)
+        else:
+            self.tau_u = self.tauLO_u
+            self.tau_l = self.tauLO_l
+            self.tau_ul = self.tauLO_ul
+        self.FoM = self.z**2 * self.tau_u * (
+            1 - self.tau_l / self.tau_ul)
         return self.FoM
 
     def effective_ridx(self, wl):
@@ -1056,7 +1093,7 @@ description : str
         Ej = self.eigenEs[lower]
         self.deltaE = Ei - Ej
         resonancew = self.deltaE/hbar
-        FoMnow = self.calc_FoM(upper, lower)/(self.tauUpperLower**2 +
+        FoMnow = self.calc_FoM(upper, lower)/(self.tauLO_ul**2 +
                                               (resonancew-wl)**2)
         width = self.layerWidths[n]
         print(("Start Optimizing Layer NO %d " % n) +
@@ -1069,7 +1106,7 @@ description : str
             self.solve_whole()
             self.dipole(upper, lower)
             resonancew = self.deltaE/hbar
-            FoMback = self.calc_FoM(upper, lower)/(self.tauUpperLower**2 +
+            FoMback = self.calc_FoM(upper, lower)/(self.tauLO_ul**2 +
                                                    (resonancew-wl)**2)
 
             self.layerWidths[n] = width + self.xres
@@ -1077,7 +1114,7 @@ description : str
             self.solve_whole()
             self.dipole(upper, lower)
             resonancew = self.deltaE/hbar
-            FoMforward = self.calc_FoM(upper, lower)/(self.tauUpperLower**2 +
+            FoMforward = self.calc_FoM(upper, lower)/(self.tauLO_ul**2 +
                                                       (resonancew-wl)**2)
 
             FoMpp = (FoMforward + FoMback - 2*FoMnow)
@@ -1108,7 +1145,7 @@ description : str
             FoMnow = self.calc_FoM(upper, lower)
             wl = h * c0 / (e0 * self.deltaE) * 1e6
             print("\twidth=%.2f, FoM=%.2f, lambda=%.1f" % (width, FoMnow, wl))
-            FoMnow = FoMnow/(self.tauUpperLower**2 + (resonancew-wl)**2)
+            FoMnow = FoMnow/(self.tauLO_ul**2 + (resonancew-wl)**2)
 
         print("Maximum iteration reached! width=%.2f" % width)
         self.layerWidths[n] = width

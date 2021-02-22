@@ -125,6 +125,7 @@ def plot_debugger():
     print(singleWell.dipole(0, 1))
 
     qcLayers = QCLayers(xres=0.01, layerWidths=layers,
+                        ifrDelta=50, ifrLambda=10,
                         layerMtrls=mtrls, repeats=1, T=10.0)
     qcLayers.populate_x()
     qcLayers.solve_whole()
@@ -132,6 +133,9 @@ def plot_debugger():
     print(qcLayers.eigenEs)
     print(np.diff(qcLayers.eigenEs))
     print(qcLayers.dipole(0, 1))
+    print(1/qcLayers.ifrTransition(1, 0))
+    print(1/qcLayers.ifrTransition(2, 1))
+    print(1/qcLayers.ifrTransition(3, 2))
 
     # qcLayers = singleWell
     plt.xlabel('Position (Å)')
@@ -140,9 +144,9 @@ def plot_debugger():
     for n in range(qcLayers.eigenEs.size):
         plt.plot(qcLayers.xPoints,
                  10*qcLayers.psis[n, :] + qcLayers.eigenEs[n])
-    plt.show()
+    # plt.show()
 
 
 if __name__ == "__main__":
-    unittest.main()
-    # plot_debugger()
+    # unittest.main()
+    plot_debugger()

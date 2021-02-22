@@ -238,6 +238,22 @@ class MainWindow(QMainWindow):
                                           None,
                                           plotwf, plotFill))
 
+        # model menu
+        self.model_menu = self.menuBar().addMenu("&Model")
+        self.solverActions = {}
+        for solver in ("ODE", "matrix"):
+            self.solverActions[solver] = self.create_action(
+                solver, checkable=True,
+                ischecked=self.qtab.qclayers.solver == solver,
+                slot=partial(self.choose_solver, solver)
+            )
+        solver_menu = self.model_menu.addMenu("Solver")
+        solver_menu.addActions(self.solverActions.values())
+        ifrAction = self.create_action(
+            "IFR scattering", checkable=True, ischecked=False,
+            slot=self.qtab.triggerIFR)
+        self.add_actions(self.model_menu, (None, ifrAction))
+
         # help menu
         self.help_menu = self.menuBar().addMenu("&Help")
         about_action = self.create_action("&About",
@@ -434,6 +450,21 @@ class MainWindow(QMainWindow):
             value=nowTemp, min=0)
         if buttonResponse:
             self.qtab.set_temperature(nowTemp)
+
+# ===========================================================================
+# Model Menu Items
+# ===========================================================================
+    def choose_solver(self, solver):
+        if solver not in ("matrix", "ODE"):
+            QMessageBox.warning(self, "Known solver: {}".format(solver)
+                                + traceback.format_exc())
+            return
+        if solver != self.qtab.qclayers.solver:
+            for action in self.solverActions.values():
+                action.setChecked(False)
+            self.solverActions[solver].setChecked(True)
+            self.qtab.qclayers.solver = solver
+            self.dirty.emit()
 
 # ===========================================================================
 # Help Menu Items
