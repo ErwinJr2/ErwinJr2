@@ -464,7 +464,8 @@ class MainWindow(QMainWindow):
                 action.setChecked(False)
             self.solverActions[solver].setChecked(True)
             self.qtab.qclayers.solver = solver
-            self.dirty.emit()
+            self.dirty = True
+            self.thingsChanged()
 
 # ===========================================================================
 # Help Menu Items
