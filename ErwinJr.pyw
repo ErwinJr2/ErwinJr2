@@ -250,7 +250,8 @@ class MainWindow(QMainWindow):
         solver_menu = self.model_menu.addMenu("Solver")
         solver_menu.addActions(self.solverActions.values())
         ifrAction = self.create_action(
-            "IFR scattering", checkable=True, ischecked=False,
+            "IFR scattering", checkable=True,
+            ischecked=self.qtab.qclayers.includeIFR,
             slot=self.qtab.triggerIFR)
         self.add_actions(self.model_menu, (None, ifrAction))
 
