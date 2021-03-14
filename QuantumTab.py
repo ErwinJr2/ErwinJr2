@@ -212,6 +212,7 @@ class QuantumTab(QWidget):
         self.descBox.setSizePolicy(QSizePolicy(
             QSizePolicy.Fixed, QSizePolicy.Expanding))
         self.descBox.textChanged.connect(self.input_description)
+        self.descBox.setToolTip('Description text is not used in modeling.')
         settingBox.addWidget(self.descBox)
 
         settingBox.addWidget(QLabel(
@@ -221,6 +222,8 @@ class QuantumTab(QWidget):
         self.inputSubstrateBox.addItems(qcMaterial.keys())
         self.inputSubstrateBox.currentIndexChanged[str].connect(
             self.input_substrate)
+        self.inputSubstrateBox.setToolTip(
+            'The substrate decides possible choices of materials.')
         settingBox.addWidget(self.inputSubstrateBox)
 
         settingBox.addWidget(QLabel(
@@ -231,6 +234,9 @@ class QuantumTab(QWidget):
         self.inputEFieldBox.setSuffix(' kV/cm')
         self.inputEFieldBox.setRange(-250.0, 250.0)
         self.inputEFieldBox.valueChanged[float].connect(self.input_EField)
+        self.inputEFieldBox.setToolTip(
+            'The Bias setting for the structure. '
+            'Negative values may results in artifact results.')
         settingBox.addWidget(self.inputEFieldBox)
 
         settingBox.addWidget(QLabel(
@@ -244,8 +250,9 @@ class QuantumTab(QWidget):
         self.inputxResBox.valueChanged[float].connect(self.input_xres)
         settingBox.addWidget(self.inputxResBox)
 
-        settingBox.addWidget(QLabel(
-            '<center><b>Energy<br>Resolution</b></center>'))
+        self.eResLabel = QLabel(
+            '<center><b>Energy<br>Resolution</b></center>')
+        settingBox.addWidget(self.eResLabel)
         self.inputEresBox = QDoubleSpinBox()
         self.inputEresBox.setMaximumWidth(width)
         self.inputEresBox.setDecimals(2)
@@ -253,7 +260,23 @@ class QuantumTab(QWidget):
         self.inputEresBox.setSingleStep(0.1)
         self.inputEresBox.setSuffix(' meV')
         self.inputEresBox.valueChanged[float].connect(self.input_Eres)
+        self.inputEresBox.setToolTip(
+            'The energy resolution used for ODE solver root finding. '
+            'This number being too large may results in miss of states. \n'
+            'The value is not used for matrix solver.')
         settingBox.addWidget(self.inputEresBox)
+        self.eCountLabel = QLabel(
+            '<center><b>No of States<br>Per Period</b></center>')
+        settingBox.addWidget(self.eCountLabel)
+        self.inputECountBox = QSpinBox()
+        self.inputECountBox.setRange(1, 100)
+        self.inputECountBox.valueChanged.connect(self.input_Ecount)
+        self.inputECountBox.setToolTip(
+            'Increasee this number if you believe the number of states solved'
+            'is not enough. This is only used for matrix solver.'
+        )
+        settingBox.addWidget(self.inputECountBox)
+        self.algoParamUpdate()
 
         settingBox.addWidget(QLabel(
             '<center><b>Repeats</b></center>'))
@@ -388,13 +411,13 @@ class QuantumTab(QWidget):
     def _generateSolveBox(self, plotControlGrid, width):
         """ Return a Qt Layout containning material information,
         eigensolve control, states properties calculation and plot control"""
-        solveBox = QVBoxLayout()
+        self.solveBox = QVBoxLayout()
         self.solveBasisButton = QPushButton("Solve Basis")
         self.solveBasisButton.clicked.connect(self.solve_basis)
-        solveBox.addWidget(self.solveBasisButton)
+        self.solveBox.addWidget(self.solveBasisButton)
         self.solveWholeButton = QPushButton("Solve Whole")
         self.solveWholeButton.clicked.connect(self.solve_whole)
-        solveBox.addWidget(self.solveWholeButton)
+        self.solveBox.addWidget(self.solveWholeButton)
 
         # set up material composition inputs
         self.mtrlTable = QTableWidget()
@@ -428,7 +451,7 @@ class QuantumTab(QWidget):
         mtrlGrid.setSpacing(5)
         mtrlGroupBox = QGroupBox("Materials")
         mtrlGroupBox.setLayout(mtrlGrid)
-        solveBox.addWidget(mtrlGroupBox)
+        self.solveBox.addWidget(mtrlGroupBox)
 
         # IFR setting
         self.ifrDefBox = QCheckBox('Constant IFR')
@@ -451,14 +474,15 @@ class QuantumTab(QWidget):
         ifrGrid.addWidget(QLabel('<center>IRF Λ</center>'), 1, 1)
         ifrGrid.addWidget(self.ifrLambdaBox, 2, 1)
         self.ifrLambdaBox.valueChanged[float].connect(self.input_ifrLambda)
-        ifrGroupBox = QGroupBox('Interface Roughness')
-        ifrGroupBox.setLayout(ifrGrid)
-        solveBox.addWidget(ifrGroupBox)
+        # This is exposed s.t. it can be hiden when IFR is off.
+        self._ifrGroupBox = QGroupBox('Interface Roughness')
+        self._ifrGroupBox.setLayout(ifrGrid)
+        self.solveBox.addWidget(self._ifrGroupBox)
 
         # set up plot control inputs
         plotControlGroupBox = QGroupBox("Plot Controls")
         plotControlGroupBox.setLayout(plotControlGrid)
-        solveBox.addWidget(plotControlGroupBox)
+        self.solveBox.addWidget(plotControlGroupBox)
 
         # set up Calculate controls
         self.pairSelectButton = QPushButton("Pair Select")
@@ -495,10 +519,10 @@ class QuantumTab(QWidget):
         # TODO: voltage efficiency, hbar omega / field * Lp
         calculateControlGroupBox = QGroupBox("Calculate")
         calculateControlGroupBox.setLayout(calculateControlGrid)
-        solveBox.addWidget(calculateControlGroupBox)
+        self.solveBox.addWidget(calculateControlGroupBox)
 
-        solveBox.addStretch()
-        return solveBox
+        self.solveBox.addStretch()
+        return self.solveBox
         # _generateSolveBox end
 
     def reload(self):
@@ -538,6 +562,7 @@ class QuantumTab(QWidget):
         self.inputEFieldBox.setValue(self.qclayers.EField)
         self.inputxResBox.setValue(self.qclayers.xres)
         self.inputEresBox.setValue(self.qclayers.Eres)
+        self.inputECountBox.setValue(self.qclayers.statePerRepeat)
         self.inputWlBox.setValue(self.qclayers.wl)
         self.inputRepeatsBox.setValue(self.qclayers.repeats)
         self.updating = False
@@ -592,6 +617,13 @@ class QuantumTab(QWidget):
         Update initial energy resolution for eigensolver. Set this too small
         may result in loss of some eigenvalue. """
         self.qclayers.Eres = ERes
+        self.dirty.emit()
+
+    @pyqtSlot(int)
+    @settingslot
+    def input_Ecount(self, count: int):
+        self.qclayers.statePerRepeat = count
+        self.qclayers.matrixEigenCount = count * self.qclayers.repeats
         self.dirty.emit()
 
     @pyqtSlot(int)
@@ -1002,6 +1034,10 @@ class QuantumTab(QWidget):
         self.update_IFR_settings()
 
     def update_IFR_settings(self):
+        if self.qclayers.includeIFR:
+            self._ifrGroupBox.setVisible(True)
+        else:
+            self._ifrGroupBox.setVisible(False)
         if self.qclayers.customIFR:
             self.ifrDefBox.setEnabled(False)
             self.ifrDeltaBox.setEnabled(False)
@@ -1327,6 +1363,26 @@ class QuantumTab(QWidget):
     def triggerIFR(self):
         self.qclayers.includeIFR = not self.qclayers.includeIFR
         # TODO: dynamically hide IFR block
+        if self.qclayers.includeIFR:
+            self._ifrGroupBox.setVisible(True)
+        else:
+            self._ifrGroupBox.setVisible(False)
+
+    def triggerSolver(self, solver):
+        self.qclayers.solver = solver
+        self.algoParamUpdate()
+
+    def algoParamUpdate(self):
+        if self.qclayers.solver == 'matrix':
+            self.eResLabel.setVisible(False)
+            self.inputEresBox.setVisible(False)
+            self.eCountLabel.setVisible(True)
+            self.inputECountBox.setVisible(True)
+        else:
+            self.eResLabel.setVisible(True)
+            self.inputEresBox.setVisible(True)
+            self.eCountLabel.setVisible(False)
+            self.inputECountBox.setVisible(False)
 
 # ===========================================================================
 # Calculations

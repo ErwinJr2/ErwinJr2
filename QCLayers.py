@@ -95,6 +95,8 @@ class SchrodingerLayer(object):
         By default 'ODE'. 'matrix' solver is exmperimental.
     includeIFR : bool
         Weather to include IFR scattering for performance estimation.
+    statePerRepeat : int
+        Number of states per repeat, used for calculating matrixEigenCount
     matrixEigenCount : int
         The number of eigen pairs to calculate in the 'matrix' solver.
         It would be very expensive to calculate all of them.
@@ -121,6 +123,7 @@ class SchrodingerLayer(object):
     includeIFR: bool
 
     def __init__(self, xres: float = 0.5, Eres: float = 0.5,
+                 statePerRepeat: int = 20,
                  layerWidths: List[float] = [0.0],
                  layerARs: List[bool] = None,
                  layerVc: List[float] = None,
@@ -132,6 +135,7 @@ class SchrodingerLayer(object):
                  EField: float = 0.0, repeats: int = 1):
         self.xres = xres
         self.Eres = Eres
+        self.statePerRepeat = statePerRepeat
         assert(isinstance(layerWidths, list))
         self.layerWidths = layerWidths
         N = len(layerWidths)
@@ -148,7 +152,7 @@ class SchrodingerLayer(object):
         self.crystalType = 'simple'
         self.solver = 'ODE'
         self.includeIFR = False
-        self.matrixEigenCount = 50
+        self.matrixEigenCount = statePerRepeat * repeats
 
         self.basisARonly = False
         self.basisARInjector = True
@@ -207,6 +211,8 @@ class SchrodingerLayer(object):
 
         ExtField = self.xPoints * self.EField * EUnit
         self.xVc -= ExtField
+
+        self.matrixEigenCount = self.repeats * self.statePerRepeat
 
     def xLayerMask(self, n: int) -> np.ndarray:
         """Return the mask for the given layer number `n`.
@@ -942,8 +948,6 @@ description : str
         # IFR
         if not self.customIFR:
             self.ifrDelta, self.ifrLambda = self._get_IFRList()
-
-        self.matrixEigenCount = self.repeats * 20
 
     def reset_for_basis(self, start, end):
         super().reset_for_basis(start, end)

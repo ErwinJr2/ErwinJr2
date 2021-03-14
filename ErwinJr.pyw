@@ -464,7 +464,7 @@ class MainWindow(QMainWindow):
             for action in self.solverActions.values():
                 action.setChecked(False)
             self.solverActions[solver].setChecked(True)
-            self.qtab.qclayers.solver = solver
+            self.qtab.triggerSolver(solver)
             self.dirty = True
             self.thingsChanged()
 
