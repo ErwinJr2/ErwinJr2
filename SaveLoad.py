@@ -182,13 +182,12 @@ JSONTemplate = """{
 }"""
 
 IFRSettings = """{
-        "custom IFR": %s,
-        "material IFR delta": %s,
-        "material IFR lambda": %s,
-        "layer IFR delta": %s,
-        "layer IFR lambda": %s
-    }
-"""
+            "custom IFR": %s,
+            "material IFR delta": %s,
+            "material IFR lambda": %s,
+            "layer IFR delta": %s,
+            "layer IFR lambda": %s
+        }"""
 
 
 def EJSaveJSON(fhandle: typing.TextIO, qclayers: QCLayers,
@@ -218,9 +217,9 @@ def EJSaveJSON(fhandle: typing.TextIO, qclayers: QCLayers,
         if item in s.cstmGain:
             s_cstmtrl[item]["gain"] = s.cstmGain[item]
     if o.includeIFR:
-        ifrParams = IFRSettings % (
+        ifrParams = IFRSettings % tuple([json.dumps(s) for s in (
             o.customIFR, o.mtrlIFRDelta, o.mtrlIFRLambda,
-            o.ifrDelta, o.ifrLambda)
+            o.ifrDelta, o.ifrLambda)])
     else:
         ifrParams = 'false'
     parameters = [json.dumps(s) for s in (o.description, o.wl, o.substrate,
