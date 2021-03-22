@@ -16,9 +16,6 @@ import copy
 from typing import List
 
 EUnit = 1e-5    # E field unit from kV/cm to V/Angstrom
-# upper and lower bond extension for periodic solver
-PeriodU = 1
-PeriodL = 0.2
 
 qcMaterial = {
     "InP":  ["InGaAs", "AlInAs"],
@@ -209,10 +206,14 @@ class SchrodingerLayer(object):
         if self.crystalType != 'simple':
             self.populate_material()
 
+        self.offset = max(self.xVc) - min(self.xVc)
         ExtField = self.xPoints * self.EField * EUnit
         self.xVc -= ExtField
 
+        self.Es = np.arange(np.min(self.xVc), np.max(self.xVc), self.Eres/1E3)
         self.matrixEigenCount = self.repeats * self.statePerRepeat
+        # solving for eigen states energy close to sigma
+        self.matrixSigma = (np.min(self.xVc) + np.max(self.xVc))/2
 
     def xLayerMask(self, n: int) -> np.ndarray:
         """Return the mask for the given layer number `n`.
@@ -270,9 +271,8 @@ class SchrodingerLayer(object):
         psis : np.array of float
             the wave function
         """
-        Es = np.arange(np.min(self.xVc), np.max(self.xVc), self.Eres/1E3)
         if self.crystalType == 'simple':
-            self.eigenEs = onedq.cSimpleSolve1D(self.xres, Es,
+            self.eigenEs = onedq.cSimpleSolve1D(self.xres, self.Es,
                                                 self.xVc, self.xMc)
             self.psis = onedq.cSimpleFillPsi(self.xres, self.eigenEs,
                                              self.xVc, self.xMc)
@@ -280,19 +280,20 @@ class SchrodingerLayer(object):
         xBand = onedq.Band(self.crystalType, *self.bandParams)
         if not self.periodic:
             self.eigenEs = onedq.cBandSolve1D(
-                self.xres, Es, self.xVc, xBand)
+                self.xres, self.Es, self.xVc, xBand)
             self.psis = onedq.cBandFillPsi(self.xres, self.eigenEs,
                                            self.xVc, xBand)
         else:
-            bandOffsets = self.xVc + self.xPoints * self.EField * EUnit
-            offset = max(bandOffsets) - min(bandOffsets)
+            # This is experimental and may removed in the future if turn out to
+            # be useless. So is the corresponding C functions.
+            netVc = self.xVc + self.xPoints * self.EField * EUnit
             # mass = self.xMc[np.argmin(self.xVc)]
             # # ground state for triangular well
             # Emin = 2.33810741 * (hbar**2*(self.EField*EUnit)**2/(
             #     2*m0*mass*e0**2))**(1/3)
             # Es = np.linspace(np.min(self.xVc)+Emin, np.max(self.xVc), 1024)
-            self.Emin = (min(bandOffsets) - PeriodL*offset)
-            self.Emax = (max(bandOffsets) + PeriodU*offset)
+            self.Emin = (min(netVc) - 0.2*self.offset)
+            self.Emax = (max(netVc) + 1.1*self.offset)
             Eshift = self.EField*EUnit*sum(self.layerWidths)
             Es = np.arange(self.Emin - Eshift, self.Emin, self.Eres/1E3)
             eigenEs = onedq.cBandSolve1DBonded(
@@ -303,7 +304,9 @@ class SchrodingerLayer(object):
                 Elower=self.Emin, Eupper=self.Emax, field=self.EField)
             self.psis, self.eigenEs = self.shiftPeriod(
                                           (-1, 0, 1, 2), psis, eigenEs)
+
         if self.crystalType == 'ZincBlende':
+            # To restore lh and so band to keep consistent with matrix solver
             xEg, xF, xEp, xESO = self.bandParams
             kunit = hbar**2/(2*e0*m0*(1E-10*self.xres)**2)
             xP = sqrt(xEp * kunit)
@@ -360,12 +363,10 @@ class SchrodingerLayer(object):
             return self.eigenEs
         if self.crystalType == 'ZincBlende':
             self.populate_Kane_matrix()
-            Es_low = np.min(self.xVc)
-            Es_hi = np.max(self.xVc)
             # self.eigen_all, self.psi_all = slg.eig_banded(
             #     self.HBanded, select='v', select_range=(Es_low, Es_hi))
             self.eigen_all, self.psi_all = splg.eigsh(
-                self.Hsparse, self.matrixEigenCount, sigma=(Es_low + Es_hi)/2,
+                self.Hsparse, self.matrixEigenCount, sigma=self.matrixSigma,
                 tol=1E-7)
             # normalization should be sum(self.psi_all**2)*self.xres = 1
             self.psi_all /= sqrt(self.xres)
