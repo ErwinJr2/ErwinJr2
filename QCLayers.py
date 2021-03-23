@@ -355,9 +355,16 @@ class SchrodingerLayer(object):
             # diagonal and sub-diagonal of Hamiltonian
             self.Hdiag = kunit*(1/self.xMcplus + 1/self.xMcminus) + self.xVc
             self.Hsubd = -kunit / self.xMcplus[:-1]
-            self.eigenEs, self.psis = slg.eigh_tridiagonal(
-                self.Hdiag, self.Hsubd, select='v',
-                select_range=(np.min(self.xVc), np.max(self.xVc)))
+            # self.eigenEs, self.psis = slg.eigh_tridiagonal(
+            #     self.Hdiag, self.Hsubd, select='v',
+            #     select_range=(np.min(self.xVc), np.max(self.xVc)))
+            self.Hsubd = -kunit / self.xMcplus
+            N = len(self.xPoints)
+            self.Hsparse = sparse.diags([self.Hsubd, self.Hdiag, self.Hsubd],
+                                        [-1, 0, 1], shape=(N, N))
+            self.eigen_all, self.psi_all = splg.eigsh(
+                self.Hsparse, self.matrixEigenCount, sigma=self.matrixSigma,
+                tol=1E-7)
             self.psis /= sqrt(self.xres)
             self.psis = self.psis.T
             return self.eigenEs
