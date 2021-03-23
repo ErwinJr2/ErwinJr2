@@ -183,7 +183,7 @@ class SchrodingerLayer(object):
         """
         layerCumSum = [0] + np.cumsum(self.layerWidths).tolist()
         periodL = layerCumSum[-1]
-        self.xPoints = np.arange(0, periodL * self.repeats, self.xres)
+        self.xPoints = np.arange(0, periodL*self.repeats, self.xres)
         N = self.xPoints.size
         self.xLayerNums = np.empty(N, dtype=int)
         self.xVc = np.empty(N)
@@ -281,8 +281,8 @@ class SchrodingerLayer(object):
         if not self.periodic:
             self.eigenEs = onedq.cBandSolve1D(
                 self.xres, self.Es, self.xVc, xBand)
-            self.psis = onedq.cBandFillPsi(self.xres, self.eigenEs,
-                                           self.xVc, xBand)
+            self.psis = onedq.cBandFillPsi(
+                self.xres, self.eigenEs, self.xVc, xBand)
         else:
             # This is experimental and may removed in the future if turn out to
             # be useless. So is the corresponding C functions.
@@ -362,7 +362,7 @@ class SchrodingerLayer(object):
             N = len(self.xPoints)
             self.Hsparse = sparse.diags([self.Hsubd, self.Hdiag, self.Hsubd],
                                         [-1, 0, 1], shape=(N, N))
-            self.eigen_all, self.psi_all = splg.eigsh(
+            self.eigenEs, self.psis = splg.eigsh(
                 self.Hsparse, self.matrixEigenCount, sigma=self.matrixSigma,
                 tol=1E-7)
             self.psis /= sqrt(self.xres)
@@ -875,7 +875,7 @@ description : str
         self.subM.set_temperature(T)
         self.update_strain()
 
-    def offset(self):
+    def mtrlOffset(self):
         """Return the conduction band offset (difference between highest
         conduction band and lowest conduction band energy) of materials,
         in unit eV"""

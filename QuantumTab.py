@@ -1158,7 +1158,7 @@ class QuantumTab(QWidget):
         # TODO: why averaging?
         self.offsetLabel.setText(
             '<center>ΔE<sub>c</sub>: <b>%6.0f meV </b></center>' %
-            (self.qclayers.offset() * 1000))
+            (self.qclayers.mtrlOffset() * 1000))
         self.netStrainLabel.setText(
             "<center>Net Strain: <b>%6.3f%%</b></center>" %
             self.qclayers.netStrain())
