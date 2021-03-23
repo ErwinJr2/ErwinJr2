@@ -30,7 +30,7 @@ def plot_band(axes, qcLayers):
             start = np.argmax(psi > tol)
             end = len(psi) - np.argmax(psi[::-1] > tol)
             axes.plot(qcLayers.xPoints[start:end],
-                      10*psi[start:end] + qcLayers.eigenEs[n])
+                      5*psi[start:end] + qcLayers.eigenEs[n])
 
 
 if __name__ == '__main__':
