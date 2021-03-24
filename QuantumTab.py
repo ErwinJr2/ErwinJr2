@@ -1478,6 +1478,15 @@ class QuantumTab(QWidget):
 
             r = np.nanmin(sqrt(((xData - x) / xScale)**2 +
                                ((yData - y) / yScale)**2), axis=0)
+            # penalty for x axis away from visible region
+            if self.plotType in ("mode", "wf"):
+                x0 = np.argmax(
+                    np.abs(self.wfs) > plotconfig["wf_almost_zero"], axis=1)
+                xL = self.wfs.shape[1] - np.argmax(np.abs(
+                    self.wfs[:, ::-1]) > plotconfig["wf_almost_zero"], axis=1)
+                outOfSignt = np.arange(self.wfs.shape[0])[
+                    (x0*self.qclayers.xres > x) | (xL*self.qclayers.xres < x)]
+                r[outOfSignt] += np.inf
             ss = np.nanargmin(r)
             if len(self.stateHolder) == 1 and self.stateHolder[0] == ss:
                 r[ss] = np.nan
