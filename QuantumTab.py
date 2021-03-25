@@ -1206,47 +1206,35 @@ class QuantumTab(QWidget):
                     self.layerSelected] else 1)
 
         if hasattr(self.qclayers, 'eigenEs'):
+            periodSet = set(self.qclayers.periodRecognize())
             self.curveWF = []
             if self.plotType == "mode":
                 self.wfs = self.qclayers.psis**2 * plotconfig["modescale"]
             elif self.plotType == "wf":
                 self.wfs = self.qclayers.psis * plotconfig["wfscale"]
             # filter almost zero part
-            for n in range(len(self.qclayers.eigenEs)):
-                wf = self.wfs[n, :]
-                nonzero, = np.where(abs(wf) > plotconfig["wf_almost_zero"])
-                if nonzero.size:
-                    first, last = nonzero[[0, -1]]
-                    wf[0: first] = np.NAN
-                    add, = np.where(self.qclayers.xVc[last:] <
-                                    self.qclayers.eigenEs[n])
-                    wf[last+(add[0] if len(add) else 0): -1] = np.NAN
+            starts = np.argmax(abs(self.wfs) > plotconfig["wf_almost_zero"],
+                               axis=1)
+            ends = np.argmax(abs(self.wfs[:, ::-1]) > plotconfig[
+                "wf_almost_zero"], axis=1)
+            ends = len(self.qclayers.xPoints) - ends
             for n in range(len(self.qclayers.eigenEs)):
                 # plot states
-                curve, = self.quantumCanvas.axes.plot(
-                    self.qclayers.xPoints,
-                    self.wfs[n, :] + self.qclayers.eigenEs[n],
-                    color=self.colors[n % len(self.colors)])
+                x = self.qclayers.xPoints[starts[n]:ends[n]]
+                y = self.wfs[n, starts[n]:ends[n]] + self.qclayers.eigenEs[n]
+                if n in self.stateHolder:
+                    curve, = self.quantumCanvas.axes.plot(
+                        x, y, lw=2, color='k')
+                else:
+                    lw = 1.5 if n in periodSet else 0.7
+                    curve, = self.quantumCanvas.axes.plot(
+                        x, y, lw=lw, color=self.colors[n % len(self.colors)])
                 if self.fillplot:
                     self.quantumCanvas.axes.fill_between(
-                        self.qclayers.xPoints,
-                        self.wfs[n, :] + self.qclayers.eigenEs[n],
-                        self.qclayers.eigenEs[n],
+                        x, y, self.qclayers.eigenEs[n],
                         facecolor=self.colors[n % len(self.colors)],
                         alpha=self.fillplot)
                 self.curveWF.append(curve)
-            for n in self.stateHolder:
-                # plot selected states
-                curve, = self.quantumCanvas.axes.plot(
-                    self.qclayers.xPoints,
-                    self.wfs[n, :] + self.qclayers.eigenEs[n],
-                    'k', linewidth=2)
-            if self.qclayers.periodic and self.showPbound:
-                field = -self.qclayers.xPoints * self.qclayers.EField * EUnit
-                for E in (self.qclayers.Emin, self.qclayers.Emax):
-                    self.quantumCanvas.axes.plot(
-                        self.qclayers.xPoints, E + field,
-                        'k--', linewidth=0.5)
 
         if xmin is not None:
             self.quantumCanvas.axes.set_xlim(xmin, xmax)

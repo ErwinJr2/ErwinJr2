@@ -178,8 +178,8 @@ class SchrodingerLayer(object):
             The effective mass at different points
         """
         layerCumSum = [0] + np.cumsum(self.layerWidths).tolist()
-        periodL = layerCumSum[-1]
-        self.xPoints = np.arange(0, periodL*self.repeats, self.xres)
+        self.periodL = layerCumSum[-1]
+        self.xPoints = np.arange(0, self.periodL*self.repeats, self.xres)
         N = self.xPoints.size
         self.xLayerNums = np.empty(N, dtype=int)
         self.xVc = np.empty(N)
@@ -189,8 +189,8 @@ class SchrodingerLayer(object):
 
         for n in range(len(self.layerWidths)):
             indices = np.logical_or.reduce([
-                (self.xPoints >= layerCumSum[n] + k * periodL)
-                & (self.xPoints < layerCumSum[n+1] + k * periodL)
+                (self.xPoints >= layerCumSum[n] + k * self.periodL)
+                & (self.xPoints < layerCumSum[n+1] + k * self.periodL)
                 for k in range(self.repeats)])
             self.xLayerNums[indices] = n
             self.xVc[indices] = self.layerVc(n)
@@ -203,8 +203,8 @@ class SchrodingerLayer(object):
             self.populate_material()
 
         self.offset = max(self.xVc) - min(self.xVc)
-        ExtField = self.xPoints * self.EField * EUnit
-        self.xVc -= ExtField
+        self.xVField = self.xPoints * self.EField * EUnit
+        self.xVc -= self.xVField
 
         self.Es = np.arange(np.min(self.xVc), np.max(self.xVc), self.Eres/1E3)
         self.matrixEigenCount = self.repeats * self.statePerRepeat
@@ -626,6 +626,31 @@ class SchrodingerLayer(object):
     def ifrLifeTime(self, state):
         """ Return to total life time due to IFR scattering"""
         return 1/sum(self.ifrTransition(state, q) for q in range(state))
+
+    def periodRecognize(self, tol=1E-5):
+        """ Pick a set of eigen states as states in a period."""
+        periodIdx = self.periodL / self.xres
+        self.singlePeriodIdx = []
+        psisq = np.abs(self.psis)**2
+        starts = np.argmax(psisq > tol, axis=1)
+        ends = np.argmax(psisq[:, ::-1] > tol, axis=1)
+        self.singlePeriodIdx = np.arange(len(self.eigenEs))[
+            (starts > periodIdx/3) & (starts < 4*periodIdx/3)]
+        # check if all states are far away enough from boundary
+        self.looselyBounded = [
+            n for n in self.singlePeriodIdx if ends[n] < periodIdx / 4]
+        # print(self.singlePeriodIdx, self.looselyBounded)
+        # warning for not enough periods
+        e0 = self.eigenEs[self.singlePeriodIdx[0]]
+        emax = e0 + self.periodL * self.EField * EUnit
+        for n in self.singlePeriodIdx[1:]:
+            if self.eigenEs[n] > emax:
+                break
+            if n in self.looselyBounded:
+                # use warning package
+                print('Warning: repeats may not be large enough '
+                      'for state No. {}.'.format(n))
+        return self.singlePeriodIdx
 
     def _xBandMassInv(self, energy):
         """
