@@ -1,12 +1,11 @@
 """
 This file defines the QCLayer class for simulating QC structure
 """
-from re import L
 import numpy as np
 from numpy import sqrt, pi, exp
 from scipy.constants import (e as e0, epsilon_0 as eps0, h as h,
                              hbar as hbar, electron_mass as m0, c as c0)
-import scipy.linalg as slg
+# import scipy.linalg as slg
 import scipy.sparse as sparse
 import scipy.sparse.linalg as splg
 import OneDQuantum as onedq
@@ -494,17 +493,10 @@ class SchrodingerLayer(object):
             psi_j = self.psis[lower, :]
             Ei = self.eigenEs[upper]
             Ej = self.eigenEs[lower]
-            # interpolate half grid wave function and effective mass
-            # avgpsi_i = (psi_i[:-1] + psi_i[1:])/2
-            # avgpsi_j = (psi_j[:-1] + psi_j[1:])/2
-            # avgxMc = (self.xMc[:-1] + self.xMc[1:])/2
-            # d_z 1/m + 1/m d_z = [d_z 1/m d_z, z] ~ [P^2, z] ~ [H, z],
-            # where d_z means spatial derivative d/d z, P is momentum
-            # self.z = np.sum(avgpsi_i * np.diff(psi_j/self.xMc)
-            #                 # + 1/avgxMc * (avgpsi_i * np.diff(psi_j)))
-            # Eq.(8) in PhysRevB.50.8663
             xInvMc_i = self._xBandMassInv(Ei)
             xInvMc_j = self._xBandMassInv(Ej)
+            # Eq.(8) in PhysRevB.50.8663, with more precise mass
+            # m_j comes from the density of states of transition final state
             self.z = np.trapz(psi_i * xInvMc_j * np.gradient(psi_j) -
                               np.gradient(psi_i) * xInvMc_i * psi_j)
             self.z *= hbar**2 / (2*(Ej-Ei)*e0*m0) / (1E-10)**2  # Angstrom
@@ -626,6 +618,17 @@ class SchrodingerLayer(object):
     def ifrLifeTime(self, state):
         """ Return to total life time due to IFR scattering"""
         return 1/sum(self.ifrTransition(state, q) for q in range(state))
+
+    def lifeTime(self, state):
+        if self.includeIFR:
+            return 1/(self.ifrLifeTime(state) + 1/self.loLifeTime(state))
+        else:
+            return self.loLifeTime(state)
+
+    def ifrBroadening(self, upper, lower):
+        """Interface roughness induced broadening"""
+        # TODO
+        return 0
 
     def periodRecognize(self, tol=1E-5):
         """ Pick a set of eigen states as states in a period."""
@@ -978,10 +981,25 @@ description : str
         self.psis = self.psis[ss, :]
 
     def dephasing(self, upper, lower):
-        """Calculate the broadening gamma of transition between upper ->
-        lower transition, return gamma/omega"""
-        # TODO
-        return 0.1
+        r"""Calculate the broadening gamma of transition between upper ->
+        lower transition, return gamma in unit eV as in Lorenzian:
+
+        .. math::
+            \mathcal L(\omega) =
+            \frac{1}{\pi} \frac{\gamma}{\gamma^2 + (\omega - \omega_0)^2}
+
+        If IFR scattering is included the broadening is calculated dominatly
+        from IFR broadening and finite lifetime of upper and lower states.
+        Otherwise 0.1 is returned.
+        """
+        de = np.abs(self.eigenEs[upper] - self.eigenEs[lower])
+        if not self.includeIFR:
+            return 0.1 * de
+        tau1 = self.lifeTime(upper)
+        tau2 = self.lifeTime(lower)
+        gamma_parallel = self.ifrBroadening(upper, lower)
+        # 1E12: ps^-1 -> Hz
+        return (gamma_parallel + (1/tau1 + 1/tau2)/2) * 1E12 * hbar / e0
 
     def calc_FoM(self, upper, lower):
         """Calculate Figure of Merit.
@@ -1047,20 +1065,10 @@ description : str
         return np.average(1/self.layerRIdx**2,
                           weights=self.layerWidths)**(-1/2)
 
-    def coupleBroadening(self, upper, lower):
-        """Broadening of energy difference between upper state and lower state
-        due to coupling to other states"""
-        # TODO
-        return 0
-
-    def ifrBroadening(self, upper, lower):
-        """Interface roughness induced broadening"""
-        # TODO
-        return 0
-
     def gainCoefficient(self, upper, lower):
-        """Calculate the gain coefficient from upper -> lower transition,
-        in unit cm/kA (gain/current density)
+        """Calculate the gain coefficient from upper -> lower transition, for
+        the wavelength of this transition.
+        Result is in unit cm/kA (gain/current density)
 
         Parameters
         ----------
@@ -1070,28 +1078,17 @@ description : str
 
         Return
         -------
-        float : gain coefficient
-
-        Yield
-        ------
-        wl : float
-            the wavelength corresponds to upper -> lower transition, unit um
-        neff : float
-            the effective refractive index for wl
-        gaincoef : float
-            the gain coefficient on wl from upper -> lower transition,
+        float : the gain coefficient on wl from upper -> lower transition,
             unit kA/cm
         """
-        self.wl = c0 * h / (e0 *
-                            np.abs(self.eigenEs[upper] - self.eigenEs[lower]))
-        self.wl *= 1E6  # m->um
-        self.neff = self.effective_ridx(self.wl)
-        delta = self.dephasing(upper, lower)
-        Lp = np.sum(self.layerWidths) * 1E-10  # m
+        de = np.abs(self.eigenEs[upper] - self.eigenEs[lower])
+        wl0 = c0 * h / (e0 * de) * 1E6  # m->um
+        gamma = self.dephasing(upper, lower)/de
+        Lp = self.periodL * 1E-10  # m
+        # 1E-27 = 1E-32 * 1E5
         # 1E-32 angstrom^2 ps -> m^2 s, 1E5 m/A -> cm/kA
-        self.gaincoef = e0 * self.FoM * 1E-27 / (
-            delta * hbar * c0 * eps0 * self.effective_ridx(self.wl) * Lp)
-        return self.gaincoef
+        return e0 * self.FoM * 1E-27 / (
+            gamma * hbar * c0 * eps0 * self.effective_ridx(wl0) * Lp)
 
     # Optimization
     def optimizeLayer(self, n, upper, lower):

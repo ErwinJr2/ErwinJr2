@@ -224,7 +224,7 @@ class MainWindow(QMainWindow):
             slot=self.qtab.set_plotwf)
         plotFill = self.create_action(
             "Fill wave function curve",
-            checkable=True, ischecked=self.qtab.fillplot,
+            checkable=True, ischecked=self.qtab.fillPlot,
             slot=self.qtab.set_fill)
         self.add_actions(self.view_menu, (VXBandAction,
                                           VLBandAction,

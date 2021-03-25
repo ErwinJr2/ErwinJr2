@@ -5,7 +5,7 @@ and scattering
 
 # TODO:
 # In plot controls, add "show one period"
-# save and load pickle for qclayers
+# save and load pickle for qcLayers
 # Reverse layers
 # export excel file for growth sheet
 # Debugging plot
@@ -19,7 +19,7 @@ import numpy as np
 from numpy import sqrt
 from functools import partial, wraps
 
-from QCLayers import QCLayers, qcMaterial, h, c0, e0, EUnit
+from QCLayers import QCLayers, qcMaterial, h, c0, e0
 from EJcanvas import EJcanvas, EJplotControl
 from EJcanvas import config as plotconfig
 
@@ -64,7 +64,7 @@ class QuantumTab(QWidget):
                    be saved
 
         --- state selection ---
-        stateHolder: the list containing the index of seleted states. the
+        stateHolder: the list containing the index of selected states. the
                     index is defined in qclayers
         pairSelected: Boolean flag for if a pair of states is selected
         --- plot flags ---
@@ -99,7 +99,7 @@ class QuantumTab(QWidget):
             netStrainLabel
             LOPhononLabel
             layerSelectButton
-            zoominButton            zoomOutButton
+            zoomInButton            zoomOutButton
             panButton               clearWFsButton
             pairSelectButton
             FoMButton
@@ -124,6 +124,9 @@ class QuantumTab(QWidget):
     def __init__(self, qclayers=None, parent=None):
         super(QuantumTab, self).__init__(parent)
         self.qclayers = qclayers if qclayers else QCLayers()
+        # status can be 'unsolved', 'solved', which decides whether to plot
+        # wavefunctions
+        self._status = 'unsolved'
 
         # colors for different wavefunctions
         self.colors = ((0.584, 0.450, 0.701), (0.431, 0.486, 0.745),
@@ -155,10 +158,10 @@ class QuantumTab(QWidget):
         # plotType can be mode, wf or DoS (TODO)
         #  self.plotType = "wf"
         self.plotType = "mode"
-        #  self.fillplot = 0.3  # alpha of fill; False for not fill
-        self.fillplot = False
+        #  self.fillPlot = 0.3  # alpha of fill; False for not fill
+        self.fillPlot = False
 
-        # Platform dependent settings, eg. layerout size settings
+        # Platform dependent settings, eg. layout size settings
         if sys.platform.startswith('win'):
             settingBoxWidth = 150
             layerBoxWidth = 230
@@ -383,8 +386,8 @@ class QuantumTab(QWidget):
         figureBox = QVBoxLayout()
         figureBox.addWidget(self.quantumCanvas)
 
-        self.zoominButton = QPushButton("Zoom")
-        self.plotControl.set_action('zoom', self.zoominButton)
+        self.zoomInButton = QPushButton("Zoom")
+        self.plotControl.set_action('zoom', self.zoomInButton)
         self.zoomOutButton = QPushButton("Reset")
         self.plotControl.set_action('home', self.zoomOutButton)
         self.panButton = QPushButton("Pan")  # to move
@@ -397,7 +400,7 @@ class QuantumTab(QWidget):
         self.clearWFsButton.clicked.connect(self.clear_WFs)
         plotControlGrid = QGridLayout()
         plotControlGrid.addWidget(self.layerSelectButton, 0, 0, 1, 2)
-        plotControlGrid.addWidget(self.zoominButton, 1, 0, 1, 1)
+        plotControlGrid.addWidget(self.zoomInButton, 1, 0, 1, 1)
         plotControlGrid.addWidget(self.zoomOutButton, 1, 1, 1, 1)
         plotControlGrid.addWidget(self.panButton, 2, 0, 1, 1)
         plotControlGrid.addWidget(self.clearWFsButton, 2, 1, 1, 1)
@@ -407,7 +410,7 @@ class QuantumTab(QWidget):
         # _generateFigureBox end
 
     def _generateSolveBox(self, plotControlGrid, width):
-        """ Return a Qt Layout containning material information,
+        """ Return a Qt Layout containing material information,
         eigensolve control, states properties calculation and plot control"""
         self.solveBox = QVBoxLayout()
         self.solveBasisButton = QPushButton("Solve Basis")
@@ -704,7 +707,7 @@ class QuantumTab(QWidget):
         self.dirty.emit()
 
     def set_temperature(self, T):
-        """A public method to wrap temperature setings"""
+        """A public method to wrap temperature settings"""
         self.qclayers.set_temperature(T)
         self.qclayers.populate_x()
         self.dirty.emit()
@@ -828,7 +831,7 @@ class QuantumTab(QWidget):
     def optimizeLayer(self):
         """SLOT connected to self.optimizeLayerButton.clicked()"""
         n = self.layerTable.currentRow()
-        if not hasattr(self.qclayers, "eigenEs"):
+        if self._status == 'unsolved':
             QMessageBox.warning(self, ejWarning, "Solve the model first.")
             return
         if n < 0 or n > len(self.qclayers.layerWidths):
@@ -914,7 +917,7 @@ class QuantumTab(QWidget):
 
         elif column == 2:
             # column == 2 for item change in mtrl column, should be
-            # controled by layerTable_materialChanged
+            # controlled by layerTable_materialChanged
             raise Exception("Should not be here")
 
         elif column == 3:
@@ -927,8 +930,7 @@ class QuantumTab(QWidget):
         else:
             raise Exception("Should not be here")
 
-        if hasattr(self.qclayers, 'eigenEs'):
-            delattr(self.qclayers, "eigenEs")
+        self._status = 'unsolved'
         self._update_layerTable()
         self.layerTable.setCurrentCell(row, column)
         self.qclayers.populate_x()
@@ -1153,7 +1155,6 @@ class QuantumTab(QWidget):
 
     def update_mtrl_info(self):
         """Update labels below mtrlTable"""
-        # TODO: why averaging?
         self.offsetLabel.setText(
             '<center>ΔE<sub>c</sub>: <b>%6.0f meV </b></center>' %
             (self.qclayers.mtrlOffset() * 1000))
@@ -1168,8 +1169,8 @@ class QuantumTab(QWidget):
 # Quantum Tab Plotting and Plot Control
 # =========================================================================
     def update_quantumCanvas(self):
-        """Update the canvas to show band diagram, and if self.quantum has
-        eigen states infomation (.hasattr("eigenEs")), draw wavefuntions"""
+        """Update the canvas to show band diagram, and if status == 'solved',
+        draw wavefunctions"""
         if self.plotControl.zoomed:
             xmin, xmax = self.quantumCanvas.axes.get_xlim()
             ymin, ymax = self.quantumCanvas.axes.get_ylim()
@@ -1179,7 +1180,7 @@ class QuantumTab(QWidget):
         self.quantumCanvas.axes.plot(self.qclayers.xPoints,
                                      self.qclayers.xVc, 'k', linewidth=1)
 
-        # plot Conduction Band L-Valley/X-Valley, Light Hole Valence Bnad and
+        # plot Conduction Band L-Valley/X-Valley, Light Hole Valence Band and
         # Spin-Orbit coupling Valence Band
         for bandFlag, xv, conf in (
                 (self.plotVL, self.qclayers.xVL, 'g--'),
@@ -1196,7 +1197,6 @@ class QuantumTab(QWidget):
             self.qclayers.xPoints, ARVc,
             'k', linewidth=1.5)
         if self.layerSelected is not None:
-            # layerSelected == 0 is meaningful so explictely None
             selectedVc = np.ma.masked_where(
                 self.qclayers.xLayerMask(self.layerSelected),
                 self.qclayers.xVc)
@@ -1205,7 +1205,7 @@ class QuantumTab(QWidget):
                 'b', linewidth=1.5 if self.qclayers.layerARs[
                     self.layerSelected] else 1)
 
-        if hasattr(self.qclayers, 'eigenEs'):
+        if self._status == 'solved':
             periodSet = set(self.qclayers.periodRecognize())
             self.curveWF = []
             if self.plotType == "mode":
@@ -1229,11 +1229,11 @@ class QuantumTab(QWidget):
                     lw = 1.5 if n in periodSet else 0.7
                     curve, = self.quantumCanvas.axes.plot(
                         x, y, lw=lw, color=self.colors[n % len(self.colors)])
-                if self.fillplot:
+                if self.fillPlot:
                     self.quantumCanvas.axes.fill_between(
                         x, y, self.qclayers.eigenEs[n],
                         facecolor=self.colors[n % len(self.colors)],
-                        alpha=self.fillplot)
+                        alpha=self.fillPlot)
                 self.curveWF.append(curve)
 
         if xmin is not None:
@@ -1275,8 +1275,8 @@ class QuantumTab(QWidget):
             # Trigger itemSelectionChanged SIGNAL and thus update_quantumCanvas
 
     def clear_WFs(self):
-        if hasattr(self.qclayers, 'eigenEs'):
-            delattr(self.qclayers, 'eigenEs')
+        self._status = 'unsolved'
+        self.stateHolder = []
         self.pairSelectButton.setEnabled(False)
         self.update_quantumCanvas()
 
@@ -1292,9 +1292,9 @@ class QuantumTab(QWidget):
                    np.column_stack([self.qclayers.xPoints, self.qclayers.xVc]),
                    delimiter=',')
 
-        if hasattr(self.qclayers, 'psis'):
+        if self._status == 'solved':
             # otherwise band structure hasn't been solved yet
-            # TODO: make it consistant with plotting
+            # TODO: make it consistent with plotting
             xyPsiPsiEig = np.zeros(self.qclayers.psis.shape)
             for q in range(len(self.qclayers.eigenEs)):
                 xyPsiPsiEig[:, q] = (self.qclayers.psis[:, q] +
@@ -1333,10 +1333,10 @@ class QuantumTab(QWidget):
         self.update_quantumCanvas()
 
     def set_fill(self):
-        if self.fillplot:
-            self.fillplot = False
+        if self.fillPlot:
+            self.fillPlot = False
         else:
-            self.fillplot = 0.3
+            self.fillPlot = 0.3
         self.update_quantumCanvas()
 
 # ===========================================================================
@@ -1385,15 +1385,13 @@ class QuantumTab(QWidget):
 
     @pyqtSlot()
     def solve_whole(self):  # solves whole structure
-        """SLOT connected to solveWholeButton.clicked()
-        Whole solver """
-        self.pairSelectButton.setEnabled(False)
-        self.pairSelected = False
+        """SLOT connected to solveWholeButton.clicked(): Whole solver """
+        self.clear_WFs()
         self.calculating.emit(True)
         try:
-            self.stateHolder = []
             self.qclayers.solve_whole()
             self.solveType = 'whole'
+            self._status = 'solved'
             self.update_quantumCanvas()
             self.pairSelectButton.setEnabled(True)
         except (IndexError, TypeError):
@@ -1414,16 +1412,13 @@ class QuantumTab(QWidget):
 
     @pyqtSlot()
     def solve_basis(self):  # solves structure with basis
-        """SLOT connected to solveBasisButton.clicked()
-        Basis solver """
-        if hasattr(self.qclayers, "eigenEs"):
-            self.clear_WFs()
-        self.pairSelected = False
+        """SLOT connected to solveBasisButton.clicked(): Basis solver """
+        self.clear_WFs()
         self.calculating.emit(True)
         try:
-            self.stateHolder = []
             self.qclayers.solve_basis()
             self.solveType = 'basis'
+            self._status = 'solved'
             self.update_quantumCanvas()
             self.pairSelectButton.setEnabled(True)
         except (ValueError, IndexError):
@@ -1434,7 +1429,7 @@ class QuantumTab(QWidget):
     def state_pick(self, event):
         """Callback registered in plotControl when it's in pairselect mode.
         It's mpl_connect to button_release_event of quantumCanvas """
-        if not hasattr(self.qclayers, 'eigenEs'):
+        if self.status == 'unsolved':
             # Not yet solved
             return
 
@@ -1469,7 +1464,9 @@ class QuantumTab(QWidget):
                 xL = self.wfs.shape[1] - np.argmax(np.abs(
                     self.wfs[:, ::-1]) > plotconfig["wf_almost_zero"], axis=1)
                 outOfSignt = np.arange(self.wfs.shape[0])[
-                    (x0*self.qclayers.xres > x) | (xL*self.qclayers.xres < x)]
+                    (x0*self.qclayers.xres > x+5) |
+                    (xL*self.qclayers.xres < x-5)
+                    ]
                 r[outOfSignt] += np.inf
             ss = np.nanargmin(r)
             if len(self.stateHolder) == 1 and self.stateHolder[0] == ss:
@@ -1527,9 +1524,6 @@ class QuantumTab(QWidget):
                     self.eDiff, self.wavelength,
                     self.opticalDipole
                 )
-            if self.solveType == 'basis':
-                couplingEnergy = self.qclayers.coupleBroadening(upper, lower)
-                self.pairString += "coupling: %6.1f meV<br>" % couplingEnergy
             self.pairString += "LO scattering: %6.3g ps<br>" % self.tauLO_ul
             if self.qclayers.includeIFR:
                 self.pairString += (
