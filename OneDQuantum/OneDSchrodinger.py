@@ -9,8 +9,7 @@ import os
 path = os.path.dirname(__file__)
 __all__ = ['cSimpleSolve1D', 'cSimpleFillPsi',
            'Band', 'cBandFillPsi', 'cBandSolve1D',
-           'cLOphononScatter', 'cLOtotal',
-           'cBandSolve1DBonded']
+           'cLOphononScatter', 'cLOtotal']
 
 
 def bindOpenMP(on: bool = True) -> typing.Tuple[CDLL, typing.Type[object]]:
@@ -35,12 +34,6 @@ def bindOpenMP(on: bool = True) -> typing.Tuple[CDLL, typing.Type[object]]:
                               doubleArray, doubleArray,
                               POINTER(cBand), doubleArray]
     _clib.Solve1D.restype = c_int
-
-    _clib.Solve1DBonded.argtypes = [c_double, c_int, c_double, c_double,
-                                    c_double, doubleArray, c_int,
-                                    doubleArray, doubleArray,
-                                    POINTER(cBand), doubleArray]
-    _clib.Solve1DBonded.restype = c_int
 
     _clib.FillPsi.argtypes = [c_double, c_int, doubleArray, c_int,
                               doubleArray, doubleArray, doubleArray,
@@ -147,24 +140,6 @@ def cBandFillPsi(step: float, EigenEs: np.ndarray, V: np.ndarray, band: Band,
                   V[xmin:xmax], np.empty(0), psis,
                   starts, ends, band.c)
     return psis.reshape((EigenEs.size, xmax-xmin))
-
-
-def cBandSolve1DBonded(step: float, Es: np.ndarray, Elower: float,
-                       Eupper: float, field: float, V: np.ndarray, band: Band,
-                       xmin: int = 0, xmax: typing.Optional[int] = None
-                       ) -> np.ndarray:
-    """
-    Find eigen energies using band mass.
-    bonded by [Elower-field*x, Eupper-field*x]
-    """
-    if not xmax:
-        xmax = V.size
-    EigenE = np.empty(Es.size)
-    EigenEN = _clib.Solve1DBonded(c_double(step), xmax-xmin, c_double(Elower),
-                                  c_double(Eupper), c_double(field),
-                                  Es, Es.size, V[xmin:xmax],
-                                  np.empty(0), band.c, EigenE)
-    return EigenE[:EigenEN]
 
 
 def cLOphononScatter(step: float, kl: float, psi_i: np.ndarray,

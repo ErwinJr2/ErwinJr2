@@ -218,10 +218,6 @@ class MainWindow(QMainWindow):
             "Split Off Valence Band",
             checkable=True, ischecked=self.qtab.plotSO,
             slot=self.qtab.view_SOBand)
-        PBoundAction = self.create_action(
-            "Show Periodic Energy Boundary",
-            checkable=True, ischecked=self.qtab.showPbound,
-            slot=self.qtab.view_PBound)
         plotwf = self.create_action(
             "Plot Wave function",
             checkable=True, ischecked=self.qtab.plotType == 'wf',
@@ -234,7 +230,6 @@ class MainWindow(QMainWindow):
                                           VLBandAction,
                                           LHBandAction,
                                           SOBandAction,
-                                          PBoundAction,
                                           None,
                                           plotwf, plotFill))
 

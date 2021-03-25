@@ -155,10 +155,6 @@ class SchrodingerLayer(object):
         self.basisARInjector = True
         self.basisInjectorAR = True
 
-        # This is an experimental feature for periodic solver
-        self.periodic = False
-        # self.periodic = True
-
     def layerVc(self, n: int) -> float:
         """The conduction band offset at n-th layer in eV"""
         return self._layerVc[n]
@@ -278,32 +274,9 @@ class SchrodingerLayer(object):
                                              self.xVc, self.xMc)
             return self.eigenEs
         xBand = onedq.Band(self.crystalType, *self.bandParams)
-        if not self.periodic:
-            self.eigenEs = onedq.cBandSolve1D(
-                self.xres, self.Es, self.xVc, xBand)
-            self.psis = onedq.cBandFillPsi(
-                self.xres, self.eigenEs, self.xVc, xBand)
-        else:
-            # This is experimental and may removed in the future if turn out to
-            # be useless. So is the corresponding C functions.
-            netVc = self.xVc + self.xPoints * self.EField * EUnit
-            # mass = self.xMc[np.argmin(self.xVc)]
-            # # ground state for triangular well
-            # Emin = 2.33810741 * (hbar**2*(self.EField*EUnit)**2/(
-            #     2*m0*mass*e0**2))**(1/3)
-            # Es = np.linspace(np.min(self.xVc)+Emin, np.max(self.xVc), 1024)
-            self.Emin = (min(netVc) - 0.2*self.offset)
-            self.Emax = (max(netVc) + 1.1*self.offset)
-            Eshift = self.EField*EUnit*sum(self.layerWidths)
-            Es = np.arange(self.Emin - Eshift, self.Emin, self.Eres/1E3)
-            eigenEs = onedq.cBandSolve1DBonded(
-                self.xres, Es, self.Emin, self.Emax,
-                self.EField, self.xVc, xBand)
-            psis = onedq.cBandFillPsi(
-                self.xres, eigenEs, self.xVc, xBand,
-                Elower=self.Emin, Eupper=self.Emax, field=self.EField)
-            self.psis, self.eigenEs = self.shiftPeriod(
-                                          (-1, 0, 1, 2), psis, eigenEs)
+        self.eigenEs = onedq.cBandSolve1D(self.xres, self.Es, self.xVc, xBand)
+        self.psis = onedq.cBandFillPsi(
+            self.xres, self.eigenEs, self.xVc, xBand)
 
         if self.crystalType == 'ZincBlende':
             # To restore lh and so band to keep consistent with matrix solver
@@ -511,7 +484,6 @@ class SchrodingerLayer(object):
         self.layerARs = self.layerARs[start:end]
         self._layerVc = self._layerVc[start:end]
         self._layerMc = self._layerMc[start:end]
-        self.periodic = False
 
     def dipole(self, upper: int, lower: int) -> float:
         """Return Electrical dipole between upper and lower states

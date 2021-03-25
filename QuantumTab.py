@@ -71,7 +71,6 @@ class QuantumTab(QWidget):
         solveType: 'basis' or 'whole', decide different kinds of solving
         !plotVX, !plotVL, !plotLH, !plotSO: show X point of conduction band
                                             (L point, LH band, SO band)
-        !showPbound: show E(x) bond for periodic solver
 
         --- GUI widget ---
         1st column (settingBox):
@@ -149,7 +148,6 @@ class QuantumTab(QWidget):
         self.plotVL = False
         self.plotLH = False
         self.plotSO = False
-        self.showPbound = False
         self.layerSelected = None
 
         self.stateHolder = []
@@ -1342,10 +1340,6 @@ class QuantumTab(QWidget):
         self.plotSO = not self.plotSO
         self.update_quantumCanvas()
 
-    def view_PBound(self):
-        self.showPbound = not self.showPbound
-        self.update_quantumCanvas()
-
     def set_plotwf(self):
         self.plotType = 'wf' if self.plotType != 'wf' else 'mode'
         self.update_quantumCanvas()
@@ -1373,6 +1367,8 @@ class QuantumTab(QWidget):
         self.algoParamUpdate()
 
     def algoParamUpdate(self):
+        # This is causing "has active key-value observers (KVO)" when recreate
+        # window warning, but we don't see any real issue.
         if self.qclayers.solver == 'matrix':
             self.eResLabel.setVisible(False)
             self.inputEresBox.setVisible(False)
