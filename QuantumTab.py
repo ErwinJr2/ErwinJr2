@@ -23,7 +23,7 @@ from QCLayers import QCLayers, qcMaterial, h, c0, e0
 from EJcanvas import EJcanvas, EJplotControl
 from EJcanvas import config as plotconfig
 
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, QObject, QThread, Qt
 from PyQt5.QtGui import QPalette, QColor
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLabel, QComboBox,
                              QSpinBox, QDoubleSpinBox, QGroupBox,
@@ -49,6 +49,23 @@ def settingslot(fn):
         else:
             return fn(self, *args, **kwargs)
     return wrapper
+
+
+class CalculateHolder(QObject):
+    finished = pyqtSignal()
+    failed = pyqtSignal(str)
+
+    def __init__(self, calc, parent=None):
+        self.calc = calc
+        super().__init__(parent)
+
+    def run(self):
+        try:
+            self.calc()
+        except (IndexError, TypeError):
+            self.failed.emit(traceback.format_exc())
+        finally:
+            self.finished.emit()
 
 
 class QuantumTab(QWidget):
@@ -118,12 +135,13 @@ class QuantumTab(QWidget):
         (private is omitted)
         """
     dirty = pyqtSignal()
-    calculating = pyqtSignal(bool)
     toOptics = pyqtSignal(QCLayers)
 
     def __init__(self, qclayers=None, parent=None):
         super(QuantumTab, self).__init__(parent)
         self.qclayers = qclayers if qclayers else QCLayers()
+        self.calcThread = QThread()
+        self._worker = None
         # status can be 'unsolved', 'solved', which decides whether to plot
         # wavefunctions
         self._status = 'unsolved'
@@ -194,7 +212,6 @@ class QuantumTab(QWidget):
         self.setLayout(quantumLayout)
         self.setAutoFillBackground(True)
         self.setBackgroundRole(QPalette.Window)
-        self.calculating.connect(self.calcRepaint)
 
         self.reload()
     # __init__ end
@@ -1371,10 +1388,26 @@ class QuantumTab(QWidget):
 # ===========================================================================
 # Calculations
 # ===========================================================================
-    @pyqtSlot(bool)
+    def _threadRun(self, calc, postCalc=None):
+        """ This is a helper function for multiple threading to avoid GUI
+        freeze."""
+        self.calcRepaint(True)
+        assert(not self.calcThread.isRunning())
+        self._worker = CalculateHolder(calc)
+        self._worker.moveToThread(self.calcThread)
+        self.calcThread.started.connect(self._worker.run)
+        self._worker.finished.connect(self.calcThread.quit)
+        self._worker.finished.connect(self._worker.deleteLater)
+        self._worker.failed.connect(lambda traceInfo: QMessageBox.warning(
+            self, ejError, traceInfo))
+        self.calcThread.finished.connect(lambda: self.calcRepaint(False))
+        # self.calcThread.finished.connect(self.thread.deleteLater)
+        if postCalc is not None:
+            self.calcThread.finished.connect(postCalc)
+        self.calcThread.start()
+
     def calcRepaint(self, is_doing):
-        """SLOT connect to self.calculating,
-        UI repaint for doing calculating """
+        """UI repaint for doing calculating """
         for button in (self.solveWholeButton, self.solveBasisButton,
                        self.pairSelectButton):
             button.setEnabled(not is_doing)
@@ -1382,22 +1415,29 @@ class QuantumTab(QWidget):
         if self.pairSelected:
             self.FoMButton.setEnabled(not is_doing)
             self.FoMButton.repaint()
+        self.update_quantumCanvas()
+
+    def _solve_whole(self):
+        self.qclayers.solve_whole()
+        self._status = 'solved'
 
     @pyqtSlot()
     def solve_whole(self):  # solves whole structure
         """SLOT connected to solveWholeButton.clicked(): Whole solver """
         self.clear_WFs()
-        self.calculating.emit(True)
-        try:
-            self.qclayers.solve_whole()
-            self.solveType = 'whole'
-            self._status = 'solved'
-            self.update_quantumCanvas()
-            self.pairSelectButton.setEnabled(True)
-        except (IndexError, TypeError):
-            QMessageBox.warning(self, ejError,
-                                traceback.format_exc())
-        self.calculating.emit(False)
+        self.solveType = 'whole'
+        self._threadRun(self._solve_whole)
+
+    def _solve_basis(self):
+        self.qclayers.solve_basis()
+        self._status = 'solved'
+
+    @pyqtSlot()
+    def solve_basis(self):  # solves structure with basis
+        """SLOT connected to solveBasisButton.clicked(): Basis solver """
+        self.clear_WFs()
+        self.solveType = 'basis'
+        self._threadRun(self._solve_basis)
 
     def filter(self):
         # TODO
@@ -1410,26 +1450,10 @@ class QuantumTab(QWidget):
             self.update_quantumCanvas()
             self.flted = True
 
-    @pyqtSlot()
-    def solve_basis(self):  # solves structure with basis
-        """SLOT connected to solveBasisButton.clicked(): Basis solver """
-        self.clear_WFs()
-        self.calculating.emit(True)
-        try:
-            self.qclayers.solve_basis()
-            self.solveType = 'basis'
-            self._status = 'solved'
-            self.update_quantumCanvas()
-            self.pairSelectButton.setEnabled(True)
-        except (ValueError, IndexError):
-            QMessageBox.warning(self, ejError,
-                                traceback.format_exc())
-        self.calculating.emit(False)
-
     def state_pick(self, event):
         """Callback registered in plotControl when it's in pairselect mode.
         It's mpl_connect to button_release_event of quantumCanvas """
-        if self.status == 'unsolved':
+        if self._status == 'unsolved':
             # Not yet solved
             return
 
@@ -1532,15 +1556,7 @@ class QuantumTab(QWidget):
         self.stateParmText.clear()
         self.stateParmText.setText(self.pairString)
 
-    def updateFoM(self):
-        """SLOT connected to FoMButton.clicked()
-        Calculate Figure of merit.  """
-        if len(self.stateHolder) < 2:
-            return
-        self.calculating.emit(True)
-        self.FoMButton.setEnabled(False)
-        self.FoMButton.repaint()
-
+    def _calcFoM(self):
         upper = self.stateHolder[1]
         lower = self.stateHolder[0]
         if upper < lower:
@@ -1570,12 +1586,23 @@ class QuantumTab(QWidget):
             "FoM: <b>%6.0f ps \u212B<sup>2</sup></b><br>"
             "Gain coefficient:<br>&nbsp;&nbsp; %.2f cm/kA"
         ) % (FoM, gaincoeff)
+
+    @pyqtSlot()
+    def _updateFoM(self):
         self.stateParmText.setText(self.pairString + self.FoMString)
         self.stateParmText.verticalScrollBar().setValue(
             self.stateParmText.verticalScrollBar().maximum())
-
-        self.calculating.emit(False)
         self.FoMButton.setEnabled(True)
         self.toOpticsButton.setEnabled(True)
+
+    def updateFoM(self):
+        """SLOT connected to FoMButton.clicked()
+        Calculate Figure of merit.  """
+        if len(self.stateHolder) < 2:
+            print('Warning: FoM button triggered before state selection.')
+            return
+        self.FoMButton.setEnabled(False)
+        self.FoMButton.repaint()
+        self._threadRun(self._calcFoM, self._updateFoM)
 
 # vim: ts=4 sw=4 sts=4 expandtab
