@@ -58,7 +58,7 @@ double numerov(double step, numpyint N, double y0, double y1,
                 fabs(m[n] - m[n-1])/step < 1E-5*m[n-1] ) {
         /* if(0){ */
             /* Numerov's method, step error O(step^6) */
-            /* is bad for m is in the middle of derivative TODO*/
+            /* is bad for m is in the middle of derivative */
             y[n+1] = (2 * y[n] * (1.0 - 5.0/12 * ( E - V[n]) * unit * m[n])
                     - y[n-1] * (1.0 + 1.0/12 * (E - V[n-1]) * unit * m[n-1]))
                 / (1.0 + 1.0/12 * (E - V[n+1]) * unit * m[n+1]);

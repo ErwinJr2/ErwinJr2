@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 
-# TODO:
-# Ctrl+z support
-# add status bar
-
 import os
 import sys
 import traceback
 from functools import partial
 
-from QCLayers import QCLayers
+from QCLayers import QCLayers, onedq
 from OptStrata import OptStrata
 import SaveLoad
 
@@ -242,7 +238,10 @@ class MainWindow(QMainWindow):
                 ischecked=self.qtab.qclayers.solver == solver,
                 slot=partial(self.choose_solver, solver)
             )
-        solver_menu = self.model_menu.addMenu("Solver")
+        if onedq is None:
+            # C library does not exist
+            self.solverActions['ODE'].setEnabled(False)
+        solver_menu = self.model_menu.addMenu("Eigen Solver")
         solver_menu.addActions(self.solverActions.values())
         ifrAction = self.create_action(
             "IFR scattering", checkable=True,

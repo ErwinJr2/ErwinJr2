@@ -546,7 +546,7 @@ class QuantumTab(QWidget):
     def reload(self):
         """ Reload everything from qclayers, typically when it's changed
         externally or loaded"""
-        # TODO
+        # TODO: reconsider when reload is needed.
         self.qclayers.populate_x()
         self._update_settingBox()
         self._update_mtrlList()
@@ -1157,6 +1157,9 @@ class QuantumTab(QWidget):
             mn = self.mtrlTable.currentRow()
             self.qclayers.mtrlIFRLambda[mn] = ifrLambda
         self.qclayers.populate_material()
+        if self._status == 'solved':
+            self.qclayers.ifrMatrix = [[None]*len(self.eigenEs)
+                                       for _ in range(len(self.eigenEs))]
         self.dirty.emit()
 
     @pyqtSlot(float)
@@ -1168,6 +1171,9 @@ class QuantumTab(QWidget):
             mn = self.mtrlTable.currentRow()
             self.qclayers.mtrlIFRDelta[mn] = ifrDelta
         self.qclayers.populate_material()
+        if self._status == 'solved':
+            self.qclayers.ifrMatrix = [[None]*len(self.eigenEs)
+                                       for _ in range(len(self.eigenEs))]
         self.dirty.emit()
 
     def update_mtrl_info(self):

@@ -3,12 +3,17 @@ This file defines the QCLayer class for simulating QC structure
 """
 import numpy as np
 from numpy import sqrt, pi, exp
+from numpy import fft
 from scipy.constants import (e as e0, epsilon_0 as eps0, h as h,
                              hbar as hbar, electron_mass as m0, c as c0)
 # import scipy.linalg as slg
 import scipy.sparse as sparse
 import scipy.sparse.linalg as splg
-import OneDQuantum as onedq
+try:
+    import OneDQuantum as onedq
+except OSError:
+    onedq = None
+    print('C library is not compiled. Features are limited.')
 import Material
 from OptStrata import rIdx
 import copy
@@ -530,21 +535,15 @@ class SchrodingerLayer(object):
             mj = m0 * np.trapz(self.xMc * psi_j**2) * self.xres
             kl = sqrt(2 * mj / hbar**2 * (Ei - Ej - self.avghwLO) * e0)
             # to improve this by adding the knowledge of zero's of psi
-            # convpsi = fft.irfft(
-            #     np.abs(fft.rfft(psi_i*psi_j, 2*len(psi_i)))**2)[:len(psi_i)]
-            # Iij = 2*self.xres**2*np.trapz(
-            #     exp(-kl*self.xPoints*1E-10)*convpsi)
-            # Python implementation
-            # dIij = np.empty(self.xPoints.size)
-            # for n in range(self.xPoints.size):
-            #     x1 = self.xPoints[n]
-            #     x2 = self.xPoints
-            #     dIij[n] = np.sum(psi_i * psi_j * exp(-kl*abs(x1 - x2)*1e-10)
-            #                      * psi_i[n] * psi_j[n] * self.xres**2)
-            # Iij = np.sum(dIij)
+            if onedq is None:
+                convpsi = fft.irfft(np.abs(fft.rfft(
+                    psi_i*psi_j, 2*len(psi_i)))**2)[:len(psi_i)]
+                Iij = 2*self.xres**2*np.trapz(
+                    exp(-kl*self.xPoints*1E-10)*convpsi)
             # C implementation
-            Iij = onedq.OneDSchrodinger.cLOphononScatter(self.xres, kl,
-                                                         psi_i, psi_j)
+            else:
+                Iij = onedq.OneDSchrodinger.cLOphononScatter(
+                    self.xres, kl, psi_i, psi_j)
             self.loMatrix[upper][lower] = (
                 mj * e0**2 * self.avghwLO * e0 / hbar * Iij
                 / (4 * hbar**2 * self.epsrho * eps0 * kl))
@@ -553,15 +552,14 @@ class SchrodingerLayer(object):
     def loLifeTime(self, state):
         """ Return the life time due to LO phonon scattering of the
         given state(label)"""
-        # return 1/sum(self.loTransition(state, q) for q in range(state))
         Ei = self.eigenEs[state]
         psi_i = self.psis[state]
-        # return 1/sum(self.loTransition(state, q) for q in range(stat
-        #                if self.eigenEs[q] <= Ei - self.avghwLO)
+        if onedq is None:
+            return 1/sum(self.loTransition(state, q) for q in range(state)
+                         if self.eigenEs[q] <= Ei - self.avghwLO)
         idxs = self.eigenEs <= Ei - self.avghwLO
         psi_js = self.psis[idxs]
         Ejs = self.eigenEs[idxs]
-        # mi = m0 * np.trapz(self.xMc * psi_i**2) * self.xres
         mjs = m0 * np.trapz(self.xMc * psi_js**2, axis=1) * self.xres
         kls = sqrt(2 * mjs / hbar**2 * (Ei - Ejs - self.avghwLO) * e0)
         fjs = (mjs * e0**2 * self.avghwLO * e0 / hbar
@@ -781,7 +779,8 @@ description : str
         self.subM = Material.Material(self.substrate, self.Temperature)
         self.wl = 3.0
         self.solver = solver
-        # self.solver = 'matrix'
+        if onedq is None:
+            self.solver = 'matrix'
         self.update_strain()
 
     def _get_IFRList(self):

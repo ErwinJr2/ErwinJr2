@@ -159,7 +159,6 @@ class EJplotControl(NavigationToolbar2, QObject):
         self._custom_mode = None
         self._custom_callBack = None
         button.setCheckable(True)
-        # TODO Can this function become a decorator?
 
     def _get_mode_name(self):
         # This is a work around for backward compatiblity due to
