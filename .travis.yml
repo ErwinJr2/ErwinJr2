@@ -63,7 +63,6 @@ jobs:
       - python3 test/SimpleSchrodinger.py MP
       - pytest -v test/testQuantumWell.py
   - name: Windows
-    # currently only building is tested, TODO
     os: windows
     language: cpp
     before_install:
