@@ -40,12 +40,11 @@ def bindOpenMP(on: bool = True) -> typing.Tuple[CDLL, typing.Type[object]]:
                               intArray, intArray, POINTER(cBand)]
     _clib.FillPsi.restype = None
 
-    _clib.LOphononScatter.argtypes = [c_double, c_int, c_double,
-                                      doubleArray, doubleArray]
+    _clib.LOphononScatter.argtypes = [c_double, c_int, c_double, doubleArray]
     _clib.LOphononScatter.restype = c_double
 
     _clib.LOtotal.argtypes = [c_double, c_int, doubleArray, doubleArray,
-                              doubleArray, doubleArray, c_int]
+                              doubleArray, c_int]
     _clib.LOtotal.restype = c_double
     return _clib, Band
 
@@ -142,19 +141,19 @@ def cBandFillPsi(step: float, EigenEs: np.ndarray, V: np.ndarray, band: Band,
     return psis.reshape((EigenEs.size, xmax-xmin))
 
 
-def cLOphononScatter(step: float, kl: float, psi_i: np.ndarray,
-                     psi_j: np.ndarray, xmin: int = 0,
+def cLOphononScatter(step: float, kl: float,
+                     psi_ij: np.ndarray, xmin: int = 0,
                      xmax: typing.Optional[int] = None) -> float:
     if not xmax:
-        xmax = psi_i.size
-    return _clib.LOphononScatter(c_double(step), xmax-xmin, c_double(kl),
-                                 psi_i, psi_j)
+        xmax = psi_ij.size
+    return _clib.LOphononScatter(c_double(step), xmax-xmin,
+                                 c_double(kl), psi_ij)
 
 
-def cLOtotal(step: float, kls: np.ndarray, psi_i: np.ndarray,
-             psi_js: np.ndarray, fjs: np.ndarray):
-    return _clib.LOtotal(c_double(step), len(psi_i), kls, psi_i,
-                         psi_js.flatten(), fjs, len(psi_js))
+def cLOtotal(step: float, kls: np.ndarray,
+             psi_ijs: np.ndarray, fjs: np.ndarray):
+    return _clib.LOtotal(c_double(step), psi_ijs.shape[1], kls,
+                         psi_ijs.flatten(), fjs, psi_ijs.shape[0])
 
 
 def isMP() -> bool:

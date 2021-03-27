@@ -1158,8 +1158,9 @@ class QuantumTab(QWidget):
             self.qclayers.mtrlIFRLambda[mn] = ifrLambda
         self.qclayers.populate_material()
         if self._status == 'solved':
-            self.qclayers.ifrMatrix = [[None]*len(self.eigenEs)
-                                       for _ in range(len(self.eigenEs))]
+            N = self.qclayers.eigenEs.size
+            self.qclayers.ifrMatrix = [[None]*N for _ in range(N)]
+            self.qclayers.ifrGammas = [[None]*N for _ in range(N)]
         self.dirty.emit()
 
     @pyqtSlot(float)
@@ -1172,8 +1173,9 @@ class QuantumTab(QWidget):
             self.qclayers.mtrlIFRDelta[mn] = ifrDelta
         self.qclayers.populate_material()
         if self._status == 'solved':
-            self.qclayers.ifrMatrix = [[None]*len(self.eigenEs)
-                                       for _ in range(len(self.eigenEs))]
+            N = self.qclayers.eigenEs.size
+            self.qclayers.ifrMatrix = [[None]*N for _ in range(N)]
+            self.qclayers.ifrGammas = [[None]*N for _ in range(N)]
         self.dirty.emit()
 
     def update_mtrl_info(self):
@@ -1200,8 +1202,8 @@ class QuantumTab(QWidget):
         else:
             xmin = xmax = ymin = ymax = None
         self.quantumCanvas.clear()
-        self.quantumCanvas.axes.plot(self.qclayers.xPoints,
-                                     self.qclayers.xVc, 'k', linewidth=1)
+        axes = self.quantumCanvas.axes
+        axes.plot(self.qclayers.xPoints, self.qclayers.xVc, 'k', linewidth=1)
 
         # plot Conduction Band L-Valley/X-Valley, Light Hole Valence Band and
         # Spin-Orbit coupling Valence Band
@@ -1211,22 +1213,18 @@ class QuantumTab(QWidget):
                 (self.plotLH, self.qclayers.xVLH, 'k--'),
                 (self.plotSO, self.qclayers.xVSO, 'r--')):
             if bandFlag:
-                self.quantumCanvas.axes.plot(self.qclayers.xPoints, xv,
-                                             conf, linewidth=1)
+                axes.plot(self.qclayers.xPoints, xv, conf, linewidth=1)
 
         # highlight selected layer & make AR layers bold
         ARVc = np.ma.masked_where(~self.qclayers.xARs, self.qclayers.xVc)
-        self.quantumCanvas.axes.plot(
-            self.qclayers.xPoints, ARVc,
-            'k', linewidth=1.5)
+        axes.plot(self.qclayers.xPoints, ARVc, 'k', linewidth=1.5)
         if self.layerSelected is not None:
             selectedVc = np.ma.masked_where(
                 self.qclayers.xLayerMask(self.layerSelected),
                 self.qclayers.xVc)
-            self.quantumCanvas.axes.plot(
-                self.qclayers.xPoints, selectedVc,
-                'b', linewidth=1.5 if self.qclayers.layerARs[
-                    self.layerSelected] else 1)
+            axes.plot(self.qclayers.xPoints, selectedVc, 'b',
+                      linewidth=1.5 if self.qclayers.layerARs[
+                          self.layerSelected] else 1)
 
         if self._status == 'solved':
             periodSet = set(self.qclayers.periodRecognize())
@@ -1246,22 +1244,21 @@ class QuantumTab(QWidget):
                 x = self.qclayers.xPoints[starts[n]:ends[n]]
                 y = self.wfs[n, starts[n]:ends[n]] + self.qclayers.eigenEs[n]
                 if n in self.stateHolder:
-                    curve, = self.quantumCanvas.axes.plot(
-                        x, y, lw=2, color='k')
+                    curve, = axes.plot(x, y, lw=2, color='k')
                 else:
                     lw = 1.5 if n in periodSet else 0.7
-                    curve, = self.quantumCanvas.axes.plot(
+                    curve, = axes.plot(
                         x, y, lw=lw, color=self.colors[n % len(self.colors)])
                 if self.fillPlot:
-                    self.quantumCanvas.axes.fill_between(
+                    axes.fill_between(
                         x, y, self.qclayers.eigenEs[n],
                         facecolor=self.colors[n % len(self.colors)],
                         alpha=self.fillPlot)
                 self.curveWF.append(curve)
 
         if xmin is not None:
-            self.quantumCanvas.axes.set_xlim(xmin, xmax)
-            self.quantumCanvas.axes.set_ylim(ymin, ymax)
+            axes.set_xlim(xmin, xmax)
+            axes.set_ylim(ymin, ymax)
         self.quantumCanvas.draw()
 
     @pyqtSlot(bool)

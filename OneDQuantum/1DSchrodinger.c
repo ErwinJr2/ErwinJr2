@@ -386,7 +386,7 @@ numpyint Solve1D(double step, numpyint N,
 }
 
 
-# define MINPSI 1E-5 /**< The min cutoff for integral of wavefunctions */
+# define MINPSI 1E-8 /**< The min cutoff for integral of wavefunctions */
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif
@@ -397,31 +397,26 @@ __declspec(dllexport)
  * @param[in] N number of steps
  * @param[in] kl wavevector of LO phonon in unit m^-1. This is DIFFERENT than
  *            the step unit for convience to use kl.
- * @param[in] *psi_i \f$\psi_i\f$ wavefunction i
- * @param[in] *psi_j \f$\psi_j\f$ wavefunction j
+ * @param[in] *psi_ij \f$\psi_i \psi_j\f$ wavefunction overlap
  * @return    \f$I_{ij} = \int\mathrm dx\mathrm dy\, \psi_i(x)\psi_j(x)
  *             \exp\left[-k_l|x-y|\right]\psi_i(y)\psi_j(y) \f$
  */
 double LOphononScatter(double step, numpyint N, double kl,
-        const double *psi_i, const double *psi_j) {
+        const double *psi_ij) {
     double Iij = 0;
     int i;
     double powerUnit = -kl*step*ANG;
     double *psiij;
     int start, end;
-    for(start = 0; start < N &&
-            (fabs(psi_i[start]) < MINPSI || fabs(psi_j[start]) < MINPSI);
-            start++);
-    for(end = N-1; end >= start  &&
-            (fabs(psi_i[end]) < MINPSI || fabs(psi_j[end]) < MINPSI);
-            end--);
+    for(start = 0; start < N && fabs(psi_ij[start]) < MINPSI; start++);
+    for(end = N-1; end >= start  && fabs(psi_ij[end]) < MINPSI; end--);
     if(start == end)
         return 0.0;
     end += 1;
     /* end - start is at least 1 */
     psiij = (double *)malloc(sizeof(double)*(end-start));
     for(i=start; i<end; i++) {
-        psiij[i-start] = psi_i[i] * psi_j[i];
+        psiij[i-start] = psi_ij[i];
     }
     end = end - start;
     if(autocorr(psiij, end) != 0) {
@@ -458,18 +453,10 @@ __declspec(dllexport)
  *             \exp\left[-k_l|x-y|\right]\psi_i(y)\psi_j(y) \f$
  */
 double LOtotal(double step, numpyint N, const double *kls,
-        const double *psi_i, const double *psi_js, const double *fjs,
-        numpyint Nj) {
+        const double *psi_ijs, const double *fjs, numpyint Nj) {
     double Iij = 0;
-    int starti, endi;
     autocorr_plan plan;
-    for(starti = 0; starti < N && fabs(psi_i[starti]) < MINPSI; starti++);
-    for(endi = N-1; endi >= starti && fabs(psi_i[endi]) < MINPSI; endi--);
-    if(starti == endi)
-        return 0.0;
-    endi = endi - starti + 1;
-    psi_i += starti;
-    plan = make_autocorr_plan(endi);
+    plan = make_autocorr_plan(N);
 #ifdef __MP
     int failed = 0;
 #pragma omp parallel
@@ -486,10 +473,10 @@ double LOtotal(double step, numpyint N, const double *kls,
             if(failed)
                 continue;
             #endif
-            const double *psi_j = psi_js + N*n + starti;
+            const double *psi_ij = psi_ijs + N*n;
             const double powerUnit = -kls[n]*step*ANG;
-            for(i = 0; i < endi; i++) {
-                psiij[i] = psi_i[i] * psi_j[i];
+            for(i = 0; i < N; i++) {
+                psiij[i] = psi_ij[i];
             }
             for(; i < mem_len(plan); i++) {
                 psiij[i] = 0.0;
@@ -511,7 +498,7 @@ double LOtotal(double step, numpyint N, const double *kls,
                 #endif
             }
             Iij += fjs[n] * psiij[0]/2;
-            for(i = 1; i < endi; i++) {
+            for(i = 1; i < N; i++) {
                 Iij += fjs[n] * psiij[i] * exp(powerUnit*i);
             }
         }
