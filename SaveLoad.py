@@ -71,7 +71,7 @@ def parseQcl(ldict: typing.Dict[str, typing.Any]) -> QCLayers:
     if ldict["FileType"] != "ErwinJr2 Data File":
         raise TypeError("Wrong file type")
     version = int(ldict["Version"])
-    if version >= 181107 and version < 210225:
+    if version >= 181107 and version < 210330:
         # Don't touch this for compatibility
         o = QCLayers(substrate=ldict["Substrate"],
                      materials=ldict["Materials"]["Compostion"],
@@ -88,7 +88,7 @@ def parseQcl(ldict: typing.Dict[str, typing.Any]) -> QCLayers:
                      solver=ldict["Solver"],
                      description=ldict["Description"])
         o.wl = ldict["Wavelength"] if "Wavelength" in ldict else 1.5
-    elif version >= 210225:
+    elif version >= 210330:
         discription = ldict["Description"]
         ldict = ldict["QCLayers"]
         o = QCLayers(substrate=ldict["Substrate"],
@@ -96,6 +96,7 @@ def parseQcl(ldict: typing.Dict[str, typing.Any]) -> QCLayers:
                      moleFracs=ldict["MaterialDefs"]["Mole Fraction"],
                      xres=ldict["x resolution"],
                      Eres=ldict["E resolution"],
+                     statePerRepeat=ldict["No of states"],
                      layerWidths=ldict["Width"],
                      layerMtrls=ldict["Material"],
                      layerDopings=ldict["Doping"],
@@ -149,7 +150,7 @@ def parseStrata(ldict: typing.Dict[str, typing.Any]) -> OptStrata:
 
 JSONTemplate = """{
     "FileType": "ErwinJr2 Data File",
-    "Version": "210225",
+    "Version": "210330",
     "Description": %s,
     "QCLayers": {
         "Wavelength": %s,
@@ -157,6 +158,7 @@ JSONTemplate = """{
         "EField": %s,
         "x resolution": %s,
         "E resolution": %s,
+        "No of states": %s,
         "Solver": %s,
         "Temperature": %s,
         "Repeats": %s,
@@ -223,7 +225,8 @@ def EJSaveJSON(fhandle: typing.TextIO, qclayers: QCLayers,
     else:
         ifrParams = 'false'
     parameters = [json.dumps(s) for s in (o.description, o.wl, o.substrate,
-                                          o.EField, o.xres, o.Eres, o.solver,
+                                          o.EField, o.xres, o.Eres,
+                                          o.statePerRepeat, o.solver,
                                           o.Temperature, o.repeats,
                                           o.materials, o.moleFracs,
                                           o.layerMtrls, o.layerWidths,

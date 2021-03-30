@@ -126,7 +126,7 @@ class SchrodingerLayer(object):
 
     def __init__(self, xres: float = 0.5, Eres: float = 0.5,
                  statePerRepeat: int = 20,
-                 layerWidths: List[float] = [0.0],
+                 layerWidths: List[float] = [10.0],
                  layerARs: List[bool] = None,
                  layerVc: List[float] = None,
                  layerMc: List[float] = None,
@@ -345,7 +345,7 @@ class SchrodingerLayer(object):
                                         [-1, 0, 1], shape=(N, N))
             self.eigenEs, self.psis = splg.eigsh(
                 self.Hsparse, self.matrixEigenCount, sigma=self.matrixSigma,
-                tol=1E-7)
+                tol=1E-8)
             self.psis /= sqrt(self.xres)
             self.psis = self.psis.T
             return self.eigenEs
@@ -355,7 +355,7 @@ class SchrodingerLayer(object):
             #     self.HBanded, select='v', select_range=(Es_low, Es_hi))
             self.eigen_all, self.psi_all = splg.eigsh(
                 self.Hsparse, self.matrixEigenCount, sigma=self.matrixSigma,
-                tol=1E-7)
+                tol=1E-8)
             # filter artifacts
             idx = np.abs(self.psi_all[0, :]) < 1E-1
             self.eigen_all = self.eigen_all[idx]
@@ -795,8 +795,8 @@ description : str
     Description of the data
     """
     def __init__(self, substrate="InP", materials=["InGaAs", "AlInAs"],
-                 moleFracs=[0.53, 0.52], xres=0.5, Eres=0.5,
-                 layerWidths=[0.0], layerMtrls=None, layerDopings=None,
+                 moleFracs=[0.53, 0.52], xres=0.5, Eres=0.5, statePerRepeat=20,
+                 layerWidths=[10.0], layerMtrls=None, layerDopings=None,
                  customIFR=False, mtrlIFRLambda=None, mtrlIFRDelta=None,
                  ifrDelta=None, ifrLambda=None,
                  layerARs=None, EField=0, repeats=3, T=300.0, solver="ODE",
@@ -827,7 +827,7 @@ description : str
                 self.mtrlIFRLambda = [mtrlIFRLambda or 0.0] * M
             ifrDelta, ifrLambda = self._get_IFRList()
         self.description = description
-        super().__init__(xres=xres, Eres=Eres,
+        super().__init__(xres=xres, Eres=Eres, statePerRepeat=statePerRepeat,
                          layerWidths=layerWidths, layerARs=layerARs,
                          ifrDelta=ifrDelta, ifrLambda=ifrLambda,
                          EField=EField, repeats=repeats)
