@@ -20,6 +20,7 @@ import copy
 from typing import List
 
 EUnit = 1e-5    # E field unit from kV/cm to V/Angstrom
+BasisPad = 100  # padding barreir for basis solver, unit Angstrom
 
 qcMaterial = {
     "InP":  ["InGaAs", "AlInAs"],
@@ -214,6 +215,7 @@ class SchrodingerLayer(object):
         self.matrixEigenCount = self.repeats * self.statePerRepeat
         # solving for eigen states energy close to sigma
         self.matrixSigma = (np.min(self.xVc) + np.max(self.xVc))/2
+        self.Eshift = self.periodL * self.EField * EUnit
 
     def xLayerMask(self, n: int) -> np.ndarray:
         """Return the mask for the given layer number `n`.
@@ -228,18 +230,18 @@ class SchrodingerLayer(object):
         return correlated wave functions and EigenEs. """
         if xPoints is None:
             xPoints = self.xPoints
-        period = sum(self.layerWidths)
-        Eshift = period * self.EField * EUnit
+        period = self.periodL
         psis = np.empty((0, self.xPoints.size))
         eigenEs = np.empty(0)
         for n in sorted(ns, reverse=True):
-            psisn = np.array([np.interp(self.xPoints, xPoints+period*n,
-                                        psi) for psi in psis0])
+            psisn = np.array([np.interp(self.xPoints, xPoints+period*n, psi,
+                                        left=0, right=0) for psi in psis0])
             # filter almost zero sols)
             if len(psisn) > 0:
                 idx = np.sum(psisn**2, axis=1)*self.xres > 0.1
                 psis = np.concatenate((psis, psisn[idx]))
-                eigenEs = np.concatenate((eigenEs, eigenEs0[idx] - Eshift*n))
+                es = eigenEs0[idx] - self.Eshift * n
+                eigenEs = np.concatenate((eigenEs, es))
         return psis, eigenEs
 
     def populate_material(self):
@@ -354,6 +356,10 @@ class SchrodingerLayer(object):
             self.eigen_all, self.psi_all = splg.eigsh(
                 self.Hsparse, self.matrixEigenCount, sigma=self.matrixSigma,
                 tol=1E-7)
+            # filter artifacts
+            idx = np.abs(self.psi_all[0, :]) < 1E-1
+            self.eigen_all = self.eigen_all[idx]
+            self.psi_all = self.psi_all[:, idx]
             # normalization should be sum(self.psi_all**2)*self.xres = 1
             self.psi_all /= sqrt(self.xres)
             for n in range(len(self.eigen_all)):
@@ -436,6 +442,15 @@ class SchrodingerLayer(object):
              ], [-3, -2, -1, 0, 1, 2, 3], shape=(3*N, 3*N))
         return self.Hsparse
 
+    def _isBasisBreak(self, n):
+        if self.basisInjectorAR:
+            if not self.layerARs[n-1] and self.layerARs[n]:
+                return True
+        if self.basisARInjector:
+            if self.layerARs[n-1] and not self.layerARs[n]:
+                return True
+        return False
+
     def solve_basis(self) -> np.ndarray:
         """
         solve basis for the QC device, with each basis being the eigen mode of
@@ -448,42 +463,51 @@ class SchrodingerLayer(object):
         psis : np.array of float
             the wave function
         """
-        StartInd = []
-        EndInd = []
+        startIdx = []
+        endIdx = []
         # Get the region of interest
         if self.basisARonly:
             if self.layerARs[0]:
-                StartInd.append(0)
+                startIdx.append(0)
             for n in range(1, len(self.layerARs)):
                 if not self.layerARs[n-1] and self.layerARs[n]:
-                    StartInd.append(n)
+                    startIdx.append(n)
                 if self.layerARs[n-1] and not self.layerARs[n]:
-                    EndInd.append(n)
+                    endIdx.append(n)
             if self.layerARs[-1]:
-                EndInd.append(len(self.layerARs))
+                endIdx.append(len(self.layerARs))
         else:
-            StartInd.append(0)
+            startIdx.append(-1)
             for n in range(1, len(self.layerARs)):
-                if ((self.basisInjectorAR and
-                     not self.layerARs[n-1] and self.layerARs[n]) or
-                    (self.basisARInjector and
-                     self.layerARs[n-1] and not self.layerARs[n])):
-                    StartInd.append(n)
-                    EndInd.append(n)
-            EndInd.append(len(self.layerARs))
+                if self._isBasisBreak(n):
+                    barrier = n if self.layerVc(n) > self.layerVc(n-1) else n-1
+                    if barrier != startIdx[-1]:
+                        startIdx.append(barrier)
+                        endIdx.append(barrier + 1)
+            if self._isBasisBreak(0):
+                barrier = 0 if self.layerVc(0) > self.layerVc(-1) else -1
+                barrier += len(self.layerWidths)
+                startIdx.append(barrier)
+                endIdx.append(barrier + 1)
+            if len(endIdx) == 0:
+                startIdx = [0]
+                endIdx = [len(self.layerWidths)]
+            else:
+                startIdx = startIdx[1:]
+                endIdx = endIdx[1:] + [endIdx[0] + len(self.layerWidths)]
 
         self.eigenEs = np.empty((0))
         self.psis = np.empty((0, self.xPoints.size))
-        for n in range(0, len(StartInd)):
+        for n in range(0, len(startIdx)):
             dCL = copy.deepcopy(self)
-            dCL.reset_for_basis(StartInd[n], EndInd[n])
+            dCL.reset_for_basis(startIdx[n], endIdx[n])
             dCL.populate_x()
             dCL.solve_whole()
 
             # map dCL result back to self
-            shift = sum(self.layerWidths[:StartInd[n]])
+            shift = sum(self.layerWidths[:startIdx[n]]) - BasisPad
             psis, eigenEs = self.shiftPeriod(
-                range(self.repeats), dCL.psis,
+                range(-1, self.repeats), dCL.psis,
                 dCL.eigenEs - shift*self.EField*EUnit,
                 dCL.xPoints + shift)
             self.eigenEs = np.concatenate((self.eigenEs, eigenEs))
@@ -500,10 +524,14 @@ class SchrodingerLayer(object):
         """Reset the parameters for only solving the layers of [start:end].
         This is a helper method for solve_basis"""
         self.repeats = 1
-        self.layerWidths = self.layerWidths[start:end]
-        self.layerARs = self.layerARs[start:end]
-        self._layerVc = self._layerVc[start:end]
-        self._layerMc = self._layerMc[start:end]
+        self.statePerRepeat = (
+            self.statePerRepeat * (end - start) // len(self.layerWidths))
+        self.layerWidths = (self.layerWidths*2)[start:end]
+        self.layerWidths[0] += BasisPad
+        self.layerWidths[-1] += BasisPad
+        self.layerARs = (self.layerARs*2)[start:end]
+        self._layerVc = (self._layerVc*2)[start:end]
+        self._layerMc = (self._layerMc*2)[start:end]
 
     def dipole(self, upper: int, lower: int) -> float:
         """Return Electrical dipole between upper and lower states
@@ -594,7 +622,7 @@ class SchrodingerLayer(object):
             \mathrm e^{- \Lambda^2 m_j^* (E_i - E_j))/2\hbar^2}
         """
         # TODO: finite temperature
-        if upper < lower:
+        if self.eigenEs[upper] < self.eigenEs[lower]:
             return 1e-20
         if not self.ifrMatrix[upper][lower] is None:
             return self.ifrMatrix[upper][lower]
@@ -986,26 +1014,8 @@ description : str
 
     def reset_for_basis(self, start, end):
         super().reset_for_basis(start, end)
-        self.layerMtrls = self.layerMtrls[start:end]
-        self.layerDopings = self.layerDopings[start:end]
-
-    def stateFilter(self):
-        """Filter unbounded states:
-        States with energy higher than potential at the end and wf[-2] higher
-        than a threshold (1e-4) is considered unbounded. """
-        bounded = []
-        semiBounded = []
-        for n in range(self.eigenEs.size):
-            #  E = self.eigenEs[n]
-            #  k = sqrt((E-self.xVc[-1])*2*self.xMc[-1])/hbar
-            wf = self.psis[n, :]
-            if self.eigenEs[n] < self.xVc[-1] or abs(wf[-2]) < 1e-4:
-                bounded.append(n)
-            elif np.all(self.xVc[wf**2 > 1e-4] > self.eigenEs[n]):
-                semiBounded.append(n)
-        ss = sorted(bounded + semiBounded)
-        self.eigenEs = self.eigenEs[ss]
-        self.psis = self.psis[ss, :]
+        self.layerMtrls = (self.layerMtrls*2)[start:end]
+        self.layerDopings = (self.layerDopings*2)[start:end]
 
     def dephasing(self, upper, lower):
         r"""Calculate the broadening gamma of transition between upper ->
