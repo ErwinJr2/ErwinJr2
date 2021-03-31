@@ -523,7 +523,7 @@ class SchrodingerLayer(object):
         self.psis = np.empty((0, self.xPoints.size))
         for n in range(0, len(startIdx)):
             dCL = copy.deepcopy(self)
-            dCL.reset_for_basis(startIdx[n], endIdx[n])
+            dCL._reset_for_basis(startIdx[n], endIdx[n])
             dCL.populate_x()
             dCL.solve_whole()
 
@@ -543,7 +543,7 @@ class SchrodingerLayer(object):
                           for _ in range(len(self.eigenEs))]
         return self.eigenEs
 
-    def reset_for_basis(self, start: int, end: int):
+    def _reset_for_basis(self, start: int, end: int):
         """Reset the parameters for only solving the layers of [start:end].
         This is a helper method for solve_basis"""
         self.repeats = 1
@@ -1126,8 +1126,8 @@ description : str
         if not self.customIFR:
             self.ifrDelta, self.ifrLambda = self._get_IFRList()
 
-    def _resetForBasis(self, start: int, end: int):
-        super().reset_for_basis(start, end)
+    def _reset_for_basis(self, start: int, end: int):
+        super()._reset_for_basis(start, end)
         self.layerMtrls = (self.layerMtrls*2)[start:end]
         self.layerDopings = (self.layerDopings*2)[start:end]
 
