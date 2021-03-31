@@ -6,7 +6,7 @@ from numpy import sqrt, pi, exp
 from numpy import fft
 from scipy.constants import (e as e0, epsilon_0 as eps0, h as h,
                              hbar as hbar, electron_mass as m0, c as c0)
-# import scipy.linalg as slg
+from scipy.linalg import null_space
 import scipy.sparse as sparse
 import scipy.sparse.linalg as splg
 try:
@@ -19,10 +19,11 @@ from OptStrata import rIdx
 import copy
 from typing import List
 
-EUnit = 1e-5    # E field unit from kV/cm to V/Angstrom
-BasisPad = 100  # padding barreir for basis solver, unit Angstrom
+EUNIT = 1e-5    # E field unit from kV/cm to V/Angstrom
+BASISPAD = 100  # padding barrier for basis solver, unit Angstrom
+INV_INF = 1e-20  # for infinite small decay rate (ns-1)
 
-qcMaterial = {
+QCMaterial = {
     "InP":  ["InGaAs", "AlInAs"],
     "GaAs": ["AlGaAs"],
     "GaSb": ["InAsSb", "AlGaSb"]
@@ -45,15 +46,17 @@ class SchrodingerLayer(object):
         This number being too large may results in miss of some states while
         this being too small will make a long computation time.
         The parameter does not mean the accuracy of the eigen energy. It's
-        required for algorithm reasons because of lack of a unversal global
+        required for algorithm reasons because of lack of a universal global
         root finding
+    statePerRepeat : int
+        Number of states per repeat, used for calculating matrixEigenCount
 
     layerWidths : list of float, len = No. of layers
         Width of each layer, in unit angstrom
     layerVc : list of float, len = No. of layers
         The conduction band offset of each layer, in unit eV
     layerMc : list of float, len = No. of layers
-        The conduction band effecttive mass of each layer, in unit m0
+        The conduction band effective mass of each layer, in unit m0
         the free space electron mass
     layerARs : list of bool, len = No. of layers
         Binaries indicating if the layer is active(True) or not(False),
@@ -71,7 +74,7 @@ class SchrodingerLayer(object):
         The average LO phonon energy in unit eV.
         This value is used for LO phonon scattering calculation.
     epsrho : float
-        The effective relative permitivity for LO phonon.
+        The effective relative permittivity for LO phonon.
         1/epsrho = 1/(epsilon for high frequency) - 1/(epsilon for static)
         The value is used for LO phonon scattering calculation.
 
@@ -85,20 +88,18 @@ class SchrodingerLayer(object):
         used for the calculation. For setting other than "simple",
         `populate_material` should be implemented.
 
-    basisARonly : bool
+    basisAROnly : bool
         For basis solver if only the Active Region (AR) should be solved.
     basisARInjector : bool
-        For basis solver if there should be seperator between AR->Injector
+        For basis solver if there should be separator between AR->Injector
     basisInjectorAR : bool
-        For basis solver if there should be seperator between Injector->AR
+        For basis solver if there should be separator between Injector->AR
 
     solver : str
         The solver used for the eigen problem: 'ODE' or 'matrix'.
-        By default 'ODE'. 'matrix' solver is exmperimental.
+        By default 'ODE' if C library exists, 'matrix' is a full back.
     includeIFR : bool
         Weather to include IFR scattering for performance estimation.
-    statePerRepeat : int
-        Number of states per repeat, used for calculating matrixEigenCount
     matrixEigenCount : int
         The number of eigen pairs to calculate in the 'matrix' solver.
         It would be very expensive to calculate all of them.
@@ -118,7 +119,7 @@ class SchrodingerLayer(object):
     crystalType: str
     basisARInjector: bool
     basisInjectorAR: bool
-    basisARonly: bool
+    basisAROnly: bool
     matrixEigenCount: int
 
     solver: str
@@ -156,7 +157,7 @@ class SchrodingerLayer(object):
         self.includeIFR = False
         self.matrixEigenCount = statePerRepeat * repeats
 
-        self.basisARonly = False
+        self.basisAROnly = False
         self.basisARInjector = True
         self.basisInjectorAR = True
 
@@ -167,6 +168,28 @@ class SchrodingerLayer(object):
     def layerMc(self, n: int) -> float:
         """The conduction band effective mass at n-th layer, in m0"""
         return self._layerMc[n]
+
+    def rotate_layer(self):
+        for layerList in (self.layerWidths, self.layerARs,
+                          self._layerVc, self._layerMc,
+                          self.ifrDelta, self.ifrLambda):
+            layerList.insert(0, layerList.pop())
+
+    def del_layer(self, n: int):
+        for layerList in (self.layerWidths, self.layerARs,
+                          self._layerVc, self._layerMc,
+                          self.ifrDelta, self.ifrLambda):
+            layerList.pop(n)
+
+    def add_layer(self, n: int, width: float,
+                  Vc: float = 0.0, mc: float = 1.0, AR: bool = True,
+                  ifrDelta: float = 0.0, ifrLambda: float = 0.0):
+        self.layerWidths.insert(n, width)
+        self.layerARs.insert(n, AR)
+        self._layerVc.insert(n, Vc)
+        self._layerMc.insert(n, mc)
+        self.ifrDelta.insert(n, ifrDelta)
+        self.ifrLambda.insert(n, ifrLambda)
 
     def populate_x(self):
         """Calculate the properties in terms of position
@@ -190,7 +213,6 @@ class SchrodingerLayer(object):
         self.xVc = np.empty(N)
         self.xMc = np.empty(N)
         self.xARs = np.empty(N, dtype=bool)
-        # self.xRepeats = np.empty(N, dtype=int)
 
         for n in range(len(self.layerWidths)):
             indices = np.logical_or.reduce([
@@ -201,21 +223,18 @@ class SchrodingerLayer(object):
             self.xVc[indices] = self.layerVc(n)
             self.xMc[indices] = self.layerMc(n)
             self.xARs[indices] = self.layerARs[n]
-        # for k in range(self.repeats):
-        #     self.xRepeats[(self.xPoints < (k+1)*periodL)
-        #                   & (self.xPoints >= k*periodL)] = k
         if self.crystalType != 'simple':
             self.populate_material()
 
         self.offset = max(self.xVc) - min(self.xVc)
-        self.xVField = self.xPoints * self.EField * EUnit
+        self.xVField = self.xPoints * self.EField * EUNIT
         self.xVc -= self.xVField
 
         self.Es = np.arange(np.min(self.xVc), np.max(self.xVc), self.Eres/1E3)
         self.matrixEigenCount = self.repeats * self.statePerRepeat
         # solving for eigen states energy close to sigma
         self.matrixSigma = (np.min(self.xVc) + np.max(self.xVc))/2
-        self.Eshift = self.periodL * self.EField * EUnit
+        self.Eshift = self.periodL * self.EField * EUNIT
 
     def xLayerMask(self, n: int) -> np.ndarray:
         """Return the mask for the given layer number `n`.
@@ -236,7 +255,7 @@ class SchrodingerLayer(object):
         for n in sorted(ns, reverse=True):
             psisn = np.array([np.interp(self.xPoints, xPoints+period*n, psi,
                                         left=0, right=0) for psi in psis0])
-            # filter almost zero sols)
+            # filter almost zero solutions)
             if len(psisn) > 0:
                 idx = np.sum(psisn**2, axis=1)*self.xres > 0.1
                 psis = np.concatenate((psis, psisn[idx]))
@@ -245,7 +264,7 @@ class SchrodingerLayer(object):
         return psis, eigenEs
 
     def populate_material(self):
-        """This should be overrided to yeild bandParams"""
+        """This should be overridden to yield bandParams"""
         raise NotImplementedError('Material property is not implemented')
 
     def solve_whole(self) -> np.ndarray:
@@ -377,13 +396,16 @@ class SchrodingerLayer(object):
         raise NotImplementedError('Matrix solver is not implemented '
                                   'for {}'.format(self.crystalType))
 
-    def psi_overlap(self, low, high):
+    def psi_overlap(self, upper, lower, shift=0):
+        """Return psi[upper] * psi[lower] with psi[lower] shifted by shift
+        number of periods."""
         if self.crystalType == 'ZincBlende':
             return sum(
-                phi[low] * phi[high]
+                phi[upper] * np.interp(self.xPoints - shift*self.periodL,
+                                       self.xPoints, phi[lower])
                 for phi in (self.psis, self.philh, self.phiso))
         # default fallback and crystalType == 'simple'
-        return self.psis[low] * self.psis[high]
+        return self.psis[upper] * self.psis[lower]
 
     def populate_Kane_matrix(self) -> sparse.spmatrix:
         """
@@ -466,7 +488,7 @@ class SchrodingerLayer(object):
         startIdx = []
         endIdx = []
         # Get the region of interest
-        if self.basisARonly:
+        if self.basisAROnly:
             if self.layerARs[0]:
                 startIdx.append(0)
             for n in range(1, len(self.layerARs)):
@@ -505,10 +527,10 @@ class SchrodingerLayer(object):
             dCL.solve_whole()
 
             # map dCL result back to self
-            shift = sum(self.layerWidths[:startIdx[n]]) - BasisPad
+            shift = sum(self.layerWidths[:startIdx[n]]) - BASISPAD
             psis, eigenEs = self.shiftPeriod(
                 range(-1, self.repeats), dCL.psis,
-                dCL.eigenEs - shift*self.EField*EUnit,
+                dCL.eigenEs - shift*self.EField*EUNIT,
                 dCL.xPoints + shift)
             self.eigenEs = np.concatenate((self.eigenEs, eigenEs))
             self.psis = np.concatenate((self.psis, psis))
@@ -527,8 +549,8 @@ class SchrodingerLayer(object):
         self.statePerRepeat = (
             self.statePerRepeat * (end - start) // len(self.layerWidths))
         self.layerWidths = (self.layerWidths*2)[start:end]
-        self.layerWidths[0] += BasisPad
-        self.layerWidths[-1] += BasisPad
+        self.layerWidths[0] += BASISPAD
+        self.layerWidths[-1] += BASISPAD
         self.layerARs = (self.layerARs*2)[start:end]
         self._layerVc = (self._layerVc*2)[start:end]
         self._layerMc = (self._layerMc*2)[start:end]
@@ -557,47 +579,48 @@ class SchrodingerLayer(object):
                 self.psi_overlap(upper, lower) * self.xPoints)
         else:
             raise NotImplementedError(
-                '{} not implemented for diple'.format(self.solver))
+                '{} not implemented for dipole'.format(self.solver))
         return self.z
 
-    def loTransition(self, upper, lower):
-        """The LO phonon transition lifetime from upper to lower,
-        at zero temperature"""
+    def _lo_transition(self, upper: int, lower: int, shift: int = 0) -> float:
         # TODO: finite temperature version
-        INV_INF = 1e-20  # for infinite small decay rate (ns-1)
+        Eu = self.eigenEs[upper]
+        El = self.eigenEs[lower] - shift * self.Eshift
+        if Eu - El - self.avghwLO < 0:
+            # energy difference is smaller than a LO phonon
+            # LO phonon scattering doesn't happen
+            return INV_INF
+        psi_l_sq = self.psi_overlap(lower, lower)
+        ml = m0 * np.trapz(self.xMc * psi_l_sq) * self.xres
+        kl = sqrt(2 * ml / hbar**2 * (Eu - El - self.avghwLO) * e0)
+        N = self.xPoints.size
+        if onedq is None:
+            convpsi = fft.irfft(np.abs(fft.rfft(
+                self.psi_overlap(lower, upper, shift), 2*N))**2)[:N]
+            Iij = 2*self.xres**2*np.trapz(
+                exp(-kl*self.xPoints*1E-10)*convpsi)
+        # C implementation
+        else:
+            Iij = onedq.OneDSchrodinger.cLOphononScatter(
+                self.xres, kl, self.psi_overlap(lower, upper, shift))
+        return (ml * e0**2 * self.avghwLO * e0 / hbar * Iij
+                / (4 * hbar**2 * self.epsrho * eps0 * kl)) / 1e12  # unit ps^-1
+
+    def lo_transition(self, upper: int, lower: int, shift: int = 0) -> float:
+        """The LO phonon transition lifetime from upper to lower,
+        at zero temperature.
+        shift means lower state is shifted by this number of period."""
         if self.loMatrix[upper][lower] is None:
-            Eu = self.eigenEs[upper]
-            El = self.eigenEs[lower]
-            if Eu - El - self.avghwLO < 0:
-                # energy difference is smaller than a LO phonon
-                # LO phonon scattering doesn't happen
-                return INV_INF
+            self.loMatrix[upper][lower] = self._lo_transition(
+                upper, lower, shift)
+        return self.loMatrix[upper][lower]
 
-            # mi = m0 * np.trapz(self.xMc * psi_i**2) * self.xres
-            psi_l_sq = self.psi_overlap(lower, lower)
-            ml = m0 * np.trapz(self.xMc * psi_l_sq) * self.xres
-            kl = sqrt(2 * ml / hbar**2 * (Eu - El - self.avghwLO) * e0)
-            N = self.xPoints.size
-            if onedq is None:
-                convpsi = fft.irfft(np.abs(fft.rfft(
-                    self.psi_overlap(lower, upper), 2*N))**2)[:N]
-                Iij = 2*self.xres**2*np.trapz(
-                    exp(-kl*self.xPoints*1E-10)*convpsi)
-            # C implementation
-            else:
-                Iij = onedq.OneDSchrodinger.cLOphononScatter(
-                    self.xres, kl, self.psi_overlap(lower, upper))
-            self.loMatrix[upper][lower] = (
-                ml * e0**2 * self.avghwLO * e0 / hbar * Iij
-                / (4 * hbar**2 * self.epsrho * eps0 * kl))
-        return self.loMatrix[upper][lower] / 1e12  # unit ps^-1
-
-    def loLifeTime(self, state):
+    def lo_lifetime(self, state: int) -> float:
         """ Return the life time due to LO phonon scattering of the
         given state(label)"""
         Ei = self.eigenEs[state]
         if onedq is None:
-            return 1/sum(self.loTransition(state, q) for q in range(state)
+            return 1/sum(self.lo_transition(state, q) for q in range(state)
                          if self.eigenEs[q] <= Ei - self.avghwLO)
         idxs = self.eigenEs <= Ei - self.avghwLO
         psi_js_sq = self.psi_overlap(idxs, idxs)
@@ -610,27 +633,15 @@ class SchrodingerLayer(object):
             self.xres, kls, self.psi_overlap(state, idxs), fjs)
         return 1e12 / Iijtotal if Iijtotal > 0 else 1E20
 
-    def ifrTransition(self, upper: int, lower: int) -> float:
-        r"""Calculate the interface roughness (IFR) transition rate from
-        upper to lower state at zero temperature, in unit ps^-1.
-
-        .. math::
-            \frac{1}{\tau_{ij}^\text{IFR}} =
-            \frac{\pi m^*_j}{\hbar^3} \sum_n
-            \Delta_n^2\Lambda_n^2\delta U_n^2
-            \left|\psi_i(z_n)\psi_j^*(z_n)\right|^2
-            \mathrm e^{- \Lambda^2 m_j^* (E_i - E_j))/2\hbar^2}
-        """
+    def _ifr_transition(self, upper: int, lower: int, shift: int = 0):
         # TODO: finite temperature
-        if self.eigenEs[upper] < self.eigenEs[lower]:
-            return 1e-20
-        if not self.ifrMatrix[upper][lower] is None:
-            return self.ifrMatrix[upper][lower]
         psi_usq = self.psi_overlap(upper, upper)
         psi_lsq = self.psi_overlap(lower, lower)
-        psi_ul = self.psi_overlap(upper, lower)
+        psi_ul = self.psi_overlap(upper, lower, shift)
         Eu = self.eigenEs[upper]
-        El = self.eigenEs[lower]
+        El = self.eigenEs[lower] - shift * self.Eshift
+        if Eu < El:
+            return INV_INF, -1
         mu = m0 * np.trapz(self.xMc * psi_usq) * self.xres
         ml = m0 * np.trapz(self.xMc * psi_lsq) * self.xres
         kl = sqrt(2 * ml / hbar**2 * (Eu-El) * e0)
@@ -651,63 +662,159 @@ class SchrodingerLayer(object):
                     continue
                 z1 = self.xPoints[zIdx-1]
                 z2 = self.xPoints[zIdx]
-                psi_usqz = (psi_usq[zIdx-1]*(zn-z2) - psi_usq[zIdx]*(zn-z1)
-                            )/(z2-z1)
-                psi_lsqz = (psi_lsq[zIdx-1]*(zn-z2) - psi_lsq[zIdx]*(zn-z1)
-                            )/(z2-z1)
-                psi_ulz = (psi_ul[zIdx-1]*(zn-z2) - psi_ul[zIdx]*(zn-z1)
-                           )/(z2-z1)
+
+                def interpZ(psi):
+                    return (psi[zIdx-1]*(zn-z2) - psi[zIdx]*(zn-z1))/(z2-z1)
+                psi_usqz = interpZ(psi_usq)
+                psi_lsqz = interpZ(psi_lsq)
+                psi_ulz = interpZ(psi_ul)
                 tauInv += (pi * ml / hbar**3 * delt**2 * lamb**2 * dU**2
                            * psi_ulz**2 * exp(-lamb**2 * kl**2 / 4))
                 gamma += (pi / hbar**3 * delt**2 * lamb**2 * dU**2
                           * (psi_usqz - psi_lsqz)
                           * (psi_usqz * mu - psi_lsqz * ml))/2
-        self.ifrMatrix[upper][lower] = tauInv / 1E12  # unit ps^-1
-        gamma /= 1E12
-        self.ifrGammas[upper][lower] = self.ifrGammas[lower][upper] = gamma
+        return tauInv/1E12, gamma/1E12  # unit ps^-1
+
+    def ifr_transition(self, upper: int, lower: int, shift: int = 0) -> float:
+        r"""Calculate the interface roughness (IFR) transition rate from
+        upper to lower state at zero temperature, in unit ps^-1.
+
+        .. math::
+            \frac{1}{\tau_{ij}^\text{IFR}} =
+            \frac{\pi m^*_j}{\hbar^3} \sum_n
+            \Delta_n^2\Lambda_n^2\delta U_n^2
+            \left|\psi_i(z_n)\psi_j^*(z_n)\right|^2
+            \mathrm e^{- \Lambda^2 m_j^* (E_i - E_j))/2\hbar^2}
+        """
+        if not self.ifrMatrix[upper][lower] is None:
+            return self.ifrMatrix[upper][lower]
+        tauInv, gamma = self._ifr_transition(upper, lower, shift)
+        self.ifrMatrix[upper][lower] = tauInv
+        if gamma > 0:
+            self.ifrGammas[upper][lower] = self.ifrGammas[lower][upper] = gamma
         return self.ifrMatrix[upper][lower]
 
-    def ifrLifeTime(self, state):
+    def ifr_lifetime(self, state):
         """ Return to total life time due to IFR scattering"""
-        return 1/sum(self.ifrTransition(state, q) for q in range(state))
+        return 1/sum(self.ifr_transition(state, q) for q in range(state))
 
-    def lifeTime(self, state):
+    def lifetime(self, state):
         if self.includeIFR:
-            return 1/(self.ifrLifeTime(state) + 1/self.loLifeTime(state))
+            return 1/(self.ifr_lifetime(state) + 1/self.lo_lifetime(state))
         else:
-            return self.loLifeTime(state)
+            return self.lo_lifetime(state)
 
-    def ifrBroadening(self, upper, lower):
+    def ifr_broadening(self, upper: int, lower: int, shift: int = 0) -> float:
         """Interface roughness induced broadening"""
         if self.ifrGammas[upper][lower] is None:
-            self.ifrTransition(upper, lower)
+            self.ifr_transition(upper, lower, shift)
+            self.ifr_transition(lower, upper, shift)
         return self.ifrGammas[upper][lower]
 
-    def periodRecognize(self, tol=1E-5):
-        """ Pick a set of eigen states as states in a period."""
+    def period_recognize(self, tol=5E-5):
+        """Pick a set of eigen states as states in a period.
+
+        Return
+        ------
+        singlePeriodIdx : np.array of int
+            These are indices for the recognized states of a single period.
+        unBound : set of int
+            includes index of states that are not well bounded.
+        """
         periodIdx = self.periodL / self.xres
         self.singlePeriodIdx = []
         psisq = np.abs(self.psis)**2
-        starts = np.argmax(psisq > tol, axis=1)
-        ends = np.argmax(psisq[:, ::-1] > tol, axis=1)
+        self.starts = np.argmax(psisq > tol, axis=1)
+        self.ends = np.argmax(psisq[:, ::-1] > tol, axis=1)
         self.singlePeriodIdx = np.arange(len(self.eigenEs))[
-            (starts > periodIdx/3) & (starts < 4*periodIdx/3)]
+            (self.starts > periodIdx/3) & (self.starts < 4*periodIdx/3)]
         # check if all states are far away enough from boundary
-        self.looselyBounded = []
+        self.unBound = set()
         barrierBound = np.max(self.xVc + self.xVField) - self.xVField
         for n in self.singlePeriodIdx:
-            if ends[n] < periodIdx / 3:
-                self.looselyBounded.append(n)
-                if self.eigenEs[n] < barrierBound[-ends[n]]:
+            if self.ends[n] < periodIdx / 3:
+                self.unBound.add(n)
+                if self.eigenEs[n] < barrierBound[-self.ends[n]]:
                     # TODO: use warning package
                     print('State No.{} is close to right boundary. '
                           'More repeats may be needed'.format(n))
         # print(self.singlePeriodIdx, self.looselyBounded)
         # warning for not enough repeats
-        if len(self.singlePeriodIdx) - len(self.looselyBounded) == 0:
+        if len(self.singlePeriodIdx) - len(self.unBound) == 0:
             raise IndexError('No well bounded state found. '
                              'Try increase repeats.')
         return self.singlePeriodIdx
+
+    def full_population(self) -> np.ndarray:
+        """Calculate the electron full population on states, assuming the
+        result of solve_whole and periodRecognize is valid and no state has
+        coupling with itself of the next period.
+
+        Return
+        ------
+        population : np.array of float
+            The population of electrons in the first recognized period
+
+        Yield
+        -----
+        psis : np.array of float
+        eigenEs : np.array of float
+            Update these to only include the first and the second period
+        unBound : set of int
+        singlePeriodIdx : set of int
+            Update these to keep consistent
+        """
+        # construct periodic states
+        Eshift = self.periodL * self.EField * EUNIT
+        idxPeriod = len(self.singlePeriodIdx)
+
+        def twoPeriods(psi):
+            # cutoff of wavefunctions on the right does not matter because the
+            # overlap is zero anyway, so long as the overlap for the
+            # wavefunction of the same period is performed on the original.
+            return np.array([np.interp(
+                self.xPoints-n*self.periodL, self.xPoints, psi[i])
+                for n in (0, 1) for i in self.singlePeriodIdx])
+        self.psis = twoPeriods(self.psis)
+        self.eigenEs = np.array([
+            self.eigenEs[i] - n*Eshift
+            for n in (0, 1) for i in self.singlePeriodIdx])
+        if self.crystalType == 'ZincBlende':
+            self.philh = twoPeriods(self.philh)
+            self.phiso = twoPeriods(self.phiso)
+        self.unBound = set(n for n in range(idxPeriod)
+                           if self.singlePeriodIdx[n] in self.unBound)
+        self.singlePeriodIdx = set(range(idxPeriod))
+
+        self.transitions = np.zeros((idxPeriod, idxPeriod))
+        for i in range(idxPeriod):
+            for j in range(idxPeriod):
+                # transition from psi_i -> psi_j
+                if i != j:
+                    self.transitions[i][j] = sum(
+                        self._lo_transition(i, j, shift)
+                        + self._ifr_transition(i, j, shift)[0]
+                        for shift in (-1, 0, 1)
+                    )
+        transfer = (np.diag(-np.sum(self.transitions, axis=1))
+                    + self.transitions.T)
+        self.population = null_space(transfer)
+        if self.population.shape[1] != 1:
+            print('More than one steady state found. ',
+                  self.population.shape[1])
+        self.population = self.population[:, 0].T
+        self.population /= np.sum(self.population)
+        # print("transition: ", self.transitions)
+        # print("lifetimes: ", -1/transfer.diagonal())
+        # print("population: ", self.population)
+        return self.population
+
+    def carrierLeak(self) -> float:
+        return sum(self.population[n] for n in self.unBound)
+
+    def statePopulation(self, state):
+        """This method is only valid after fullPopulation has been called"""
+        return self.population[state % len(self.population)]
 
     def _xBandMassInv(self, energy):
         """
@@ -759,7 +866,7 @@ Eres : float
     This number being too large may results in miss of some states while
     this being too small will make a long computation time.
     The parameter does not mean the accuracy of the eigen energy. It's
-    required for algorithm reasons because of lack of a unversal global
+    required for algorithm reasons because of lack of a universal global
     root finding.
 wl : float
     The wavelength for the design, in unit um, for book keeping and
@@ -776,7 +883,7 @@ layerARs : list of bool, len = No. of layers
     only affects basis solver
 
 customIFR : bool
-    Wether to use a customized IFR parameter rather than a material decidede
+    Wether to use a customized IFR parameter rather than a material determined
     parameter.
 mtrlIFRLambda : list of float, len = No. of materials
     The interface roughness lambda after materials[n]
@@ -813,7 +920,7 @@ description : str
         self.moleFracs = moleFracs
         self.layerMtrls = [0]*N if layerMtrls is None else layerMtrls
         self.layerDopings = [0.0]*N if layerDopings is None else layerDopings
-        self.Temperature = T
+        self.temperature = T
         self.customIFR = customIFR
         if not customIFR:
             if isinstance(mtrlIFRDelta, list):
@@ -832,7 +939,7 @@ description : str
                          ifrDelta=ifrDelta, ifrLambda=ifrLambda,
                          EField=EField, repeats=repeats)
         self.crystalType = Material.MParm[substrate]["Crystal"]
-        self.subM = Material.Material(self.substrate, self.Temperature)
+        self.subM = Material.Material(self.substrate, self.temperature)
         self.wl = 3.0
         self.solver = solver
         if onedq is None:
@@ -857,7 +964,7 @@ description : str
         self.a_parallel = self.subM.parm['alc']
         self.mtrlAlloys = [Material.Alloy(self.materials[idx],
                                           self.moleFracs[idx],
-                                          self.Temperature)
+                                          self.temperature)
                            for idx in range(len(self.materials))]
 
         for al in self.mtrlAlloys:
@@ -873,16 +980,16 @@ description : str
             moleFrac = self.moleFracs[n]
         self.moleFracs[n] = moleFrac
         self.materials[n] = mtrl
-        self.mtrlAlloys[n] = Material.Alloy(mtrl, moleFrac, self.Temperature)
+        self.mtrlAlloys[n] = Material.Alloy(mtrl, moleFrac, self.temperature)
         self.mtrlAlloys[n].set_strain(self.a_parallel)
 
     def add_mtrl(self, mtrl=None, moleFrac=None):
         """Add a new material possibility"""
         self.materials.append(mtrl if mtrl else
-                              qcMaterial[self.substrate][0])
+                              QCMaterial[self.substrate][0])
         self.moleFracs.append(moleFrac if moleFrac else 0.0)
         self.mtrlAlloys.append(Material.Alloy(
-            self.materials[-1], self.moleFracs[-1], self.Temperature))
+            self.materials[-1], self.moleFracs[-1], self.temperature))
         self.mtrlAlloys[-1].set_strain(self.a_parallel)
 
     def del_mtrl(self, n):
@@ -900,33 +1007,34 @@ description : str
                                       else 0)
 
     def add_layer(self, n, width, mtrlIdx, AR, doping):
-        self.layerWidths.insert(n, width)
         self.layerMtrls.insert(n, mtrlIdx)
-        self.layerARs.insert(n, AR)
         self.layerDopings.insert(n, doping)
-
-    def del_layer(self, n):
-        for layerList in (self.layerWidths, self.layerARs,
-                          self.layerMtrls, self.layerDopings):
-            layerList.pop(n)
+        super().add_layer(n, width, AR=AR)
+        if not self.customIFR:
+            self.ifrDelta, self.ifrLambda = self._get_IFRList()
 
     def rotate_layer(self):
-        for layerList in (self.layerWidths, self.layerARs,
-                          self.layerMtrls, self.layerDopings):
+        super().rotate_layer()
+        for layerList in (self.layerMtrls, self.layerDopings):
             layerList.insert(0, layerList.pop())
 
+    def del_layer(self, n):
+        super().del_layer(n)
+        for layerList in (self.layerMtrls, self.layerDopings):
+            layerList.pop(n)
+
     def set_substrate(self, subs):
-        if subs in qcMaterial:
+        if subs in QCMaterial:
             self.substrate = subs
             self.crystalType = Material.MParm[subs]["Crystal"]
             matlN = len(self.materials)
-            self.materials = (qcMaterial[subs]*matlN)[0:matlN]
+            self.materials = (QCMaterial[subs]*matlN)[0:matlN]
             self.update_strain()
         else:
             raise TypeError("Substrate %s not supported" % subs)
 
     def set_temperature(self, T):
-        self.Temperature = T
+        self.temperature = T
         self.subM.set_temperature(T)
         self.update_strain()
 
@@ -982,10 +1090,9 @@ description : str
                                  (xEg, 'EgLH'), (xESO, 'ESO'),
                                  (xEp, 'Ep'), (xF, 'F')):
                     p[indices] = self.mtrlAlloys[self.layerMtrls[n]].parm[key]
-            # xF = -np.ones(N)/2
             self.bandParams = (xEg, xF, xEp, xESO)
 
-            ExtField = self.xPoints * self.EField * EUnit
+            ExtField = self.xPoints * self.EField * EUNIT
             for p in (self.xVX, self.xVL, self.xVLH, self.xVSO):
                 p -= ExtField
         else:
@@ -1007,34 +1114,33 @@ description : str
             epsrho = 1 / (1/epsInf - 1/epss)
             self.epsrho = (np.sum(epsrho[self.layerMtrls] * self.layerWidths)
                            / sum(self.layerWidths))
-
         # IFR
         if not self.customIFR:
             self.ifrDelta, self.ifrLambda = self._get_IFRList()
 
-    def reset_for_basis(self, start, end):
+    def _resetForBasis(self, start, end):
         super().reset_for_basis(start, end)
         self.layerMtrls = (self.layerMtrls*2)[start:end]
         self.layerDopings = (self.layerDopings*2)[start:end]
 
     def dephasing(self, upper, lower):
         r"""Calculate the broadening gamma of transition between upper ->
-        lower transition, return gamma in unit eV as in Lorenzian:
+        lower transition, return gamma in unit eV as in Lorentzian:
 
         .. math::
             \mathcal L(\omega) =
             \frac{1}{\pi} \frac{\gamma}{\gamma^2 + (\omega - \omega_0)^2}
 
-        If IFR scattering is included the broadening is calculated dominatly
+        If IFR scattering is included the broadening is calculated dominantly
         from IFR broadening and finite lifetime of upper and lower states.
         Otherwise 0.1 is returned.
         """
         de = np.abs(self.eigenEs[upper] - self.eigenEs[lower])
         if not self.includeIFR:
             return 0.1 * de
-        tau1 = self.lifeTime(upper)
-        tau2 = self.lifeTime(lower)
-        gamma_parallel = self.ifrBroadening(upper, lower)
+        tau1 = self.lifetime(upper)
+        tau2 = self.lifetime(lower)
+        gamma_parallel = self.ifr_broadening(upper, lower)
         # 1E12: ps^-1 -> Hz
         return (gamma_parallel + (1/tau1 + 1/tau2)/2) * 1E12 * hbar / e0
 
@@ -1073,13 +1179,13 @@ description : str
         FoM : float
             the Figure of Merit in unit angstrom^2 ps
         """
-        self.tauLO_ul = 1/self.loTransition(upper, lower)
-        self.tauLO_l = self.loLifeTime(lower)
-        self.tauLO_u = self.loLifeTime(upper)
+        self.tauLO_ul = 1/self.lo_transition(upper, lower)
+        self.tauLO_l = self.lo_lifetime(lower)
+        self.tauLO_u = self.lo_lifetime(upper)
         if self.includeIFR:
-            self.tauIFR_ul = 1/self.ifrTransition(upper, lower)
-            self.tauIFR_u = self.ifrLifeTime(upper)
-            self.tauIFR_l = self.ifrLifeTime(lower)
+            self.tauIFR_ul = 1/self.ifr_transition(upper, lower)
+            self.tauIFR_u = self.ifr_lifetime(upper)
+            self.tauIFR_l = self.ifr_lifetime(lower)
             self.tau_u = 1/(1/self.tauLO_u + 1/self.tauIFR_u)
             self.tau_l = 1/(1/self.tauLO_l + 1/self.tauIFR_l)
             self.tau_ul = 1/(1/self.tauLO_ul + 1/self.tauIFR_ul)
@@ -1129,7 +1235,7 @@ description : str
 
     # Optimization
     def optimizeLayer(self, n, upper, lower):
-        """Optimize FoM*Lorenzian for n-th layer thickness"""
+        """Optimize FoM*Lorentzian for n-th layer thickness"""
         # TODO: this part need to be improved!!!
         wl = self.wl
         Ei = self.eigenEs[upper]

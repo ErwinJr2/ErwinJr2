@@ -33,7 +33,7 @@ class MainWindow(QMainWindow):
             self.qsettings.setValue("firstRun", False)
             if not fname:
                 firstRunBox = QMessageBox(
-                    QMessageBox.Question, 'EwrinJr2 ' + Version,
+                    QMessageBox.Question, 'ErwinJr2 ' + Version,
                     ("Welcome to ErwinJr2!\n"
                      "Since this is your first time running the program, "
                      "would you like to open an example or a blank file?"),
@@ -100,10 +100,6 @@ class MainWindow(QMainWindow):
         self.create_menu()
 
     def q2o(self):
-        # print(self.qtab.qclayers.wl,
-        #       self.qtab.qclayers.EField,
-        #       self.qtab.qclayers.gaincoef,
-        #       sum(self.qtab.qclayers.layerWidths))
         wl = self.qtab.qclayers.wl
         self.otab.setupActive(wl, self.qtab.qclayers.EField,
                               self.qtab.qclayers.gaincoef,
@@ -186,7 +182,7 @@ class MainWindow(QMainWindow):
         rotateLayerAction.setShortcut("Ctrl+T")
         solveARonly = self.create_action(
             "&Solve Active Only", checkable=True,
-            ischecked=self.qtab.qclayers.basisARonly,
+            ischecked=self.qtab.qclayers.basisAROnly,
             slot=self.qtab.ARonly)
         copyStructureAction = self.create_action(
             "&Copy Structure", slot=self.qtab.copy_structure,
@@ -306,7 +302,7 @@ class MainWindow(QMainWindow):
 
     def unsaveConfirm(self):
         """Confirm if unsaved data should be saved. This returns False if the
-        user canels the operation"""
+        user cancels the operation"""
         if self.dirty:
             reply = QMessageBox.question(
                 self, "ErwinJr2 " + Version + " - Unsaved Changes",
@@ -439,7 +435,7 @@ class MainWindow(QMainWindow):
 # Edit Menu Items
 # ===========================================================================
     def set_temperature(self):
-        nowTemp = self.qtab.qclayers.Temperature
+        nowTemp = self.qtab.qclayers.temperature
         newTemp, buttonResponse = QInputDialog.getDouble(
             self, 'ErwinJr2 Input Dialog', 'Set Temperature',
             value=nowTemp, min=0)

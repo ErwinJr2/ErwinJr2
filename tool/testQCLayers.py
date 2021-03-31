@@ -17,8 +17,8 @@ if __name__ == "__main__":
     qcl.NonParabolic = False
     qcl.populate_x()
     qcl.solve_whole()
-    qcl.loTransition(5, 19)
-    qcl.loTransition(4, 18)
+    qcl.lo_transition(5, 19)
+    qcl.lo_transition(4, 18)
     axes = plt.axes()
     plot_band(axes, qcl)
     plt.show()

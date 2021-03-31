@@ -10,7 +10,7 @@ import unittest
 
 
 class GaInAs_AlInAs_Layer(SchrodingerLayer):
-    """Sadely the parameters given in PhysRevB.50.8663 is not complete"""
+    """Sadly the parameters given in PhysRevB.50.8663 is not complete"""
     def __init__(self, xres, layerWidths, layerMtrl, EField=0):
         # fixed offset 0.51 eV
         Vc = {0: 0, 1: 0.51}
@@ -133,9 +133,9 @@ def plot_debugger():
     print(qcLayers.eigenEs)
     print(np.diff(qcLayers.eigenEs))
     print(qcLayers.dipole(0, 1))
-    print(1/qcLayers.ifrTransition(1, 0))
-    print(1/qcLayers.ifrTransition(2, 1))
-    print(1/qcLayers.ifrTransition(3, 2))
+    print(1/qcLayers.ifr_transition(1, 0))
+    print(1/qcLayers.ifr_transition(2, 1))
+    print(1/qcLayers.ifr_transition(3, 2))
 
     # qcLayers = singleWell
     plt.xlabel('Position (Å)')

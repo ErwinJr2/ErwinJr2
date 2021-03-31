@@ -25,7 +25,10 @@ config = {
     "fontsize": 12,
     "wfscale": 0.2,
     "modescale": 3,
-    "wf_almost_zero": 3e-4,
+    # This number not necessarily but is chosen to be consistent with the
+    # default value of tol for QCLayers.periodRecognize as
+    # wf_almost_zero / modescale = tol
+    "wf_almost_zero": 1.5e-4,
 }
 if sys.platform == 'win32':
     config["PlotMargin"] = {'l': 0.9, 'r': 0.12, 'b': 0.55, 't': 0.09}

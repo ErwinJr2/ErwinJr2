@@ -227,7 +227,7 @@ def EJSaveJSON(fhandle: typing.TextIO, qclayers: QCLayers,
     parameters = [json.dumps(s) for s in (o.description, o.wl, o.substrate,
                                           o.EField, o.xres, o.Eres,
                                           o.statePerRepeat, o.solver,
-                                          o.Temperature, o.repeats,
+                                          o.temperature, o.repeats,
                                           o.materials, o.moleFracs,
                                           o.layerMtrls, o.layerWidths,
                                           o.layerDopings, o.layerARs)]

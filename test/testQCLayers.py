@@ -8,7 +8,7 @@ import unittest
 
 def plot_band(axes, qcLayers):
     """ Plot potential (quantum barriers and wells) and other band parameters
-    of the layer scturecture on axes, assuming already populated"""
+    of the layer structures on axes, assuming already populated"""
     # for xv, conf in ((qcLayers.xVL, 'g--'),
     #                  (qcLayers.xVX, 'm-.'),
     #                  (qcLayers.xVLH, 'k'),
@@ -52,7 +52,7 @@ class TestQCLayers(unittest.TestCase):
 
         qcl.layerSelected = 3
         qcl.NonParabolic = False
-        qcl.basisARonly = True
+        qcl.basisAROnly = True
         qcl.populate_x()
         qcl.solve_basis()
         # axes = plt.axes()
