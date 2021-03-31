@@ -1189,10 +1189,10 @@ class QuantumTab(QWidget):
         """Update labels below mtrlTable"""
         self.offsetLabel.setText(
             '<center>ΔE<sub>c</sub>: <b>%6.0f meV </b></center>' %
-            (self.qclayers.mtrlOffset() * 1000))
+            (self.qclayers.mtrl_offset() * 1000))
         self.netStrainLabel.setText(
             "<center>Net Strain: <b>%6.3f%%</b></center>" %
-            self.qclayers.netStrain())
+            self.qclayers.net_strain())
         self.LOPhononLabel.setText(
             "<center>E<sub>LO</sub>: <b>%4.1f meV</b></center>" %
             (1000*self.qclayers.avghwLO))
@@ -1268,7 +1268,7 @@ class QuantumTab(QWidget):
                     lw = 2
                 else:
                     color = (
-                        popMap.to_rgba(self.qclayers.statePopulation(n))
+                        popMap.to_rgba(self.qclayers.state_population(n))
                         if self._status == 'solved-full' else
                         self.colors[n % len(self.colors)]
                     )
@@ -1549,7 +1549,7 @@ class QuantumTab(QWidget):
             self.pairString = "selected: %d, ..<br>" % self.stateHolder[0]
             if self._status == 'solved-full':
                 self.pairString += 'population: %.1f<br>' % (
-                    100*self.qclayers.statePopulation(self.stateHolder[0]))
+                    100*self.qclayers.state_population(self.stateHolder[0]))
             self.stateParmText.setText(self.pairString)
 
         elif len(self.stateHolder) == 2:
@@ -1596,8 +1596,8 @@ class QuantumTab(QWidget):
             if self._status == 'solved-full':
                 self.pairString += 'population: <br>&nbsp;&nbsp;&nbsp;'
                 self.pairString += '%d: %.1f%% %d: %.1f%%<br>' % (
-                    upper, 100*self.qclayers.statePopulation(upper),
-                    lower, 100*self.qclayers.statePopulation(lower)
+                    upper, 100*self.qclayers.state_population(upper),
+                    lower, 100*self.qclayers.state_population(lower)
                 )
 
         self.stateParmText.clear()
@@ -1617,7 +1617,7 @@ class QuantumTab(QWidget):
         # tau_u = 1/(1/tauLO_u + 1/tauIFR_u)
         # tau_l = 1/(1/tauLO_l + 1/tauIFR_l)
         FoM = self.qclayers.calc_FoM(upper, lower)
-        gaincoeff = self.qclayers.gainCoefficient(upper, lower)
+        gaincoeff = self.qclayers.gain_coefficient(upper, lower)
         # tauUpperLower is the inverse of transition rate (lifetime)
 
         self.FoMString = (

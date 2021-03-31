@@ -17,7 +17,7 @@ except OSError:
 import Material
 from OptStrata import rIdx
 import copy
-from typing import List
+from typing import List, Tuple
 
 EUNIT = 1e-5    # E field unit from kV/cm to V/Angstrom
 BASISPAD = 100  # padding barrier for basis solver, unit Angstrom
@@ -244,7 +244,8 @@ class SchrodingerLayer(object):
         return ~xSlt
 
     def shiftPeriod(self, ns: List[int], psis0: np.ndarray,
-                    eigenEs0: np.ndarray, xPoints: np.ndarray = None):
+                    eigenEs0: np.ndarray, xPoints: np.ndarray = None
+                    ) -> Tuple[np.ndarray, np.ndarray]:
         """Shift all wave functions in `psis0` for `n` (in ns) period(s) and
         return correlated wave functions and EigenEs. """
         if xPoints is None:
@@ -396,7 +397,7 @@ class SchrodingerLayer(object):
         raise NotImplementedError('Matrix solver is not implemented '
                                   'for {}'.format(self.crystalType))
 
-    def psi_overlap(self, upper, lower, shift=0):
+    def psi_overlap(self, upper: int, lower: int, shift=0) -> np.ndarray:
         """Return psi[upper] * psi[lower] with psi[lower] shifted by shift
         number of periods."""
         if self.crystalType == 'ZincBlende':
@@ -464,7 +465,7 @@ class SchrodingerLayer(object):
              ], [-3, -2, -1, 0, 1, 2, 3], shape=(3*N, 3*N))
         return self.Hsparse
 
-    def _isBasisBreak(self, n):
+    def _isBasisBreak(self, n: int) -> bool:
         if self.basisInjectorAR:
             if not self.layerARs[n-1] and self.layerARs[n]:
                 return True
@@ -633,7 +634,8 @@ class SchrodingerLayer(object):
             self.xres, kls, self.psi_overlap(state, idxs), fjs)
         return 1e12 / Iijtotal if Iijtotal > 0 else 1E20
 
-    def _ifr_transition(self, upper: int, lower: int, shift: int = 0):
+    def _ifr_transition(self, upper: int, lower: int, shift: int = 0
+                        ) -> Tuple[float, float]:
         # TODO: finite temperature
         psi_usq = self.psi_overlap(upper, upper)
         psi_lsq = self.psi_overlap(lower, lower)
@@ -694,11 +696,11 @@ class SchrodingerLayer(object):
             self.ifrGammas[upper][lower] = self.ifrGammas[lower][upper] = gamma
         return self.ifrMatrix[upper][lower]
 
-    def ifr_lifetime(self, state):
+    def ifr_lifetime(self, state: int) -> float:
         """ Return to total life time due to IFR scattering"""
         return 1/sum(self.ifr_transition(state, q) for q in range(state))
 
-    def lifetime(self, state):
+    def lifetime(self, state: int) -> float:
         if self.includeIFR:
             return 1/(self.ifr_lifetime(state) + 1/self.lo_lifetime(state))
         else:
@@ -711,13 +713,16 @@ class SchrodingerLayer(object):
             self.ifr_transition(lower, upper, shift)
         return self.ifrGammas[upper][lower]
 
-    def period_recognize(self, tol=5E-5):
+    def period_recognize(self, tol: float = 5E-5) -> np.ndarray:
         """Pick a set of eigen states as states in a period.
 
         Return
         ------
         singlePeriodIdx : np.array of int
             These are indices for the recognized states of a single period.
+
+        Yield
+        -----
         unBound : set of int
             includes index of states that are not well bounded.
         """
@@ -812,11 +817,11 @@ class SchrodingerLayer(object):
     def carrierLeak(self) -> float:
         return sum(self.population[n] for n in self.unBound)
 
-    def statePopulation(self, state):
+    def state_population(self, state: int) -> float:
         """This method is only valid after fullPopulation has been called"""
         return self.population[state % len(self.population)]
 
-    def _xBandMassInv(self, energy):
+    def _xBandMassInv(self, energy: float) -> np.ndarray:
         """
         Return the energy dependent effective mass in the form of m0/m
         for the given eigen energy.
@@ -946,21 +951,23 @@ description : str
             self.solver = 'matrix'
         self.update_strain()
 
-    def _get_IFRList(self):
+    def _get_IFRList(self) -> Tuple[List[float], List[float]]:
         """Get IFR parameters for SchrodingerLayer. Should be called
         every time the material list changes."""
         assert(not self.customIFR)
         if self.mtrlIFRDelta is not None:
             ifrDelta = [self.mtrlIFRDelta[m] for m in self.layerMtrls]
         else:
-            ifrDelta = [0] * len(self.layerMtrls)
+            ifrDelta = [0.0] * len(self.layerMtrls)
         if self.mtrlIFRLambda is not None:
             ifrLambda = [self.mtrlIFRLambda[m] for m in self.layerMtrls]
         else:
-            ifrLambda = [0] * len(self.layerMtrls)
+            ifrLambda = [0.0] * len(self.layerMtrls)
         return ifrDelta, ifrLambda
 
     def update_strain(self):
+        """Update strain for the materials. This should be called every time
+        material parameters are updated."""
         self.a_parallel = self.subM.parm['alc']
         self.mtrlAlloys = [Material.Alloy(self.materials[idx],
                                           self.moleFracs[idx],
@@ -970,7 +977,7 @@ description : str
         for al in self.mtrlAlloys:
             al.set_strain(self.a_parallel)
 
-    def set_mtrl(self, n, mtrl=None, moleFrac=None):
+    def set_mtrl(self, n: int, mtrl: str = None, moleFrac: float = None):
         """Set material[n] to new material (mtrl) and/or moleFrac"""
         if mtrl is None and moleFrac is None:
             raise Exception("Nothing changed")
@@ -983,7 +990,7 @@ description : str
         self.mtrlAlloys[n] = Material.Alloy(mtrl, moleFrac, self.temperature)
         self.mtrlAlloys[n].set_strain(self.a_parallel)
 
-    def add_mtrl(self, mtrl=None, moleFrac=None):
+    def add_mtrl(self, mtrl: str = None, moleFrac: float = None):
         """Add a new material possibility"""
         self.materials.append(mtrl if mtrl else
                               QCMaterial[self.substrate][0])
@@ -992,7 +999,7 @@ description : str
             self.materials[-1], self.moleFracs[-1], self.temperature))
         self.mtrlAlloys[-1].set_strain(self.a_parallel)
 
-    def del_mtrl(self, n):
+    def del_mtrl(self, n: int):
         """Delete materials labeled n. All layers of this material will
         become previous materials[n-1 if n >0 else 1].  There should be
         at least two materials otherwise there will be error"""
@@ -1006,7 +1013,8 @@ description : str
                                       if self.layerMtrls[i] > 0
                                       else 0)
 
-    def add_layer(self, n, width, mtrlIdx, AR, doping):
+    def add_layer(self, n: int, width: int, mtrlIdx: int,
+                  AR: bool, doping: float):
         self.layerMtrls.insert(n, mtrlIdx)
         self.layerDopings.insert(n, doping)
         super().add_layer(n, width, AR=AR)
@@ -1018,12 +1026,12 @@ description : str
         for layerList in (self.layerMtrls, self.layerDopings):
             layerList.insert(0, layerList.pop())
 
-    def del_layer(self, n):
+    def del_layer(self, n: int):
         super().del_layer(n)
         for layerList in (self.layerMtrls, self.layerDopings):
             layerList.pop(n)
 
-    def set_substrate(self, subs):
+    def set_substrate(self, subs: str):
         if subs in QCMaterial:
             self.substrate = subs
             self.crystalType = Material.MParm[subs]["Crystal"]
@@ -1033,19 +1041,19 @@ description : str
         else:
             raise TypeError("Substrate %s not supported" % subs)
 
-    def set_temperature(self, T):
+    def set_temperature(self, T: float):
         self.temperature = T
         self.subM.set_temperature(T)
         self.update_strain()
 
-    def mtrlOffset(self):
+    def mtrl_offset(self) -> float:
         """Return the conduction band offset (difference between highest
         conduction band and lowest conduction band energy) of materials,
         in unit eV"""
         ecgs = [alloy.parm['EcG'] for alloy in self.mtrlAlloys]
         return max(ecgs) - min(ecgs)
 
-    def netStrain(self):
+    def net_strain(self) -> float:
         """Return average strain perpendicular to the layer plane, in
         percentage."""
         if sum(self.layerWidths) <= 1e-5:
@@ -1055,10 +1063,10 @@ description : str
                           for n in range(len(self.layerWidths)))
         return 100 * totalStrain / sum(self.layerWidths)
 
-    def layerVc(self, n: int):
+    def layerVc(self, n: int) -> float:
         return self.mtrlAlloys[self.layerMtrls[n]].parm['EcG']
 
-    def layerMc(self, n: int):
+    def layerMc(self, n: int) -> float:
         return self.mtrlAlloys[self.layerMtrls[n]].parm['me0']
 
     def populate_material(self):
@@ -1118,12 +1126,12 @@ description : str
         if not self.customIFR:
             self.ifrDelta, self.ifrLambda = self._get_IFRList()
 
-    def _resetForBasis(self, start, end):
+    def _resetForBasis(self, start: int, end: int):
         super().reset_for_basis(start, end)
         self.layerMtrls = (self.layerMtrls*2)[start:end]
         self.layerDopings = (self.layerDopings*2)[start:end]
 
-    def dephasing(self, upper, lower):
+    def dephasing(self, upper: int, lower: int) -> float:
         r"""Calculate the broadening gamma of transition between upper ->
         lower transition, return gamma in unit eV as in Lorentzian:
 
@@ -1144,7 +1152,7 @@ description : str
         # 1E12: ps^-1 -> Hz
         return (gamma_parallel + (1/tau1 + 1/tau2)/2) * 1E12 * hbar / e0
 
-    def calc_FoM(self, upper, lower):
+    def calc_FoM(self, upper: int, lower: int) -> float:
         """Calculate Figure of Merit.
         This function must be called after solving for wave functions
 
@@ -1197,7 +1205,7 @@ description : str
             1 - self.tau_l / self.tau_ul)
         return self.FoM
 
-    def effective_ridx(self, wl):
+    def effective_ridx(self, wl: float) -> float:
         """Return the effective refractive index for TM mode"""
         if sum(self.layerWidths) == 0:
             return 1.0
@@ -1208,7 +1216,7 @@ description : str
         return np.average(1/self.layerRIdx**2,
                           weights=self.layerWidths)**(-1/2)
 
-    def gainCoefficient(self, upper, lower):
+    def gain_coefficient(self, upper: int, lower: int) -> float:
         """Calculate the gain coefficient from upper -> lower transition, for
         the wavelength of this transition.
         Result is in unit cm/kA (gain/current density)
