@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 from context import *  # type: ignore # noqa: F401, F403
+import numpy as np
 import SaveLoad
 import unittest
 
@@ -18,6 +19,11 @@ class TestQCLayers(unittest.TestCase):
         for i, j in ((25, 41), (24, 40), (26, 42), (31, 49)):
             self.assertEqual(qcl.periodMap[i][1], 1)
             self.assertEqual(qcl.singlePeriodIdx[qcl.periodMap[i][0]], j)
+            np.testing.assert_almost_equal(
+                qcl.psi_overlap(44, j, 1), qcl.psi_overlap(44, i), decimal=6)
+        # Test overlapping
+        np.testing.assert_almost_equal(
+            qcl.psi_overlap(41, 49, 1), qcl.psi_overlap(41, 31), decimal=6)
         # This is just to make sure the program runs.
         # The consistency is checked in test/testThreeBandMatrix.py
         qcl.solver = 'ODE'
