@@ -23,7 +23,7 @@ from matplotlib import cm
 # from matplotlib.colors import LogNorm as cmNorm
 from matplotlib.colors import Normalize as cmNorm
 
-from QCLayers import QCLayers, QCMaterial, h, c0, e0
+from QCLayers import QCLayers, StateRecognizeError, QCMaterial, h, c0, e0
 from EJcanvas import EJcanvas, EJplotControl
 from EJcanvas import config as plotconfig
 
@@ -58,6 +58,7 @@ def settingslot(fn):
 class CalculateHolder(QObject):
     finished = pyqtSignal()
     failed = pyqtSignal(str)
+    warning = pyqtSignal(str)
 
     def __init__(self, calc, parent=None):
         self.calc = calc
@@ -66,6 +67,8 @@ class CalculateHolder(QObject):
     def run(self):
         try:
             self.calc()
+        except StateRecognizeError as e:
+            self.warning.emit('Warning: ' + e.expression)
         except (IndexError, TypeError):
             self.failed.emit(traceback.format_exc())
         finally:
@@ -124,7 +127,7 @@ class QuantumTab(QWidget):
             panButton               clearWFsButton
             pairSelectButton
             FoMButton
-            stateParmText
+            stateParamText
 
         4th column (figureBox):
             !quantumCanvas**
@@ -221,7 +224,7 @@ class QuantumTab(QWidget):
     # __init__ end
 
     def _generateSettingBox(self, width):
-        """ Return a Qt Layout object containning all setting parameters """
+        """ Return a Qt Layout object containing all setting parameters """
         settingBox = QVBoxLayout()
 
         # set up description box
@@ -294,7 +297,7 @@ class QuantumTab(QWidget):
         self.inputECountBox.setRange(1, 100)
         self.inputECountBox.valueChanged.connect(self.input_Ecount)
         self.inputECountBox.setToolTip(
-            'Increasee this number if you believe the number of states solved'
+            'Increase this number if you believe the number of states solved'
             'is not enough. This is only used for matrix solver.'
         )
         settingBox.addWidget(self.inputECountBox)
@@ -319,7 +322,7 @@ class QuantumTab(QWidget):
         self.inputWlBox.valueChanged[float].connect(self.input_wl)
         settingBox.addWidget(self.inputWlBox)
 
-        # Basis solver devider setting
+        # Basis solver divider setting
         basisGroupBox = QGroupBox("Basis Divisions")
         self.inputARInjectorCheck = QCheckBox("AR->Injector")
         self.inputInjectorARCheck = QCheckBox("Injector->AR")
@@ -364,7 +367,7 @@ class QuantumTab(QWidget):
         # _generateSettingBox end
 
     def _generateLayerBox(self, width):
-        """ Return a Qt Layout object containning all layer parameters """
+        """ Return a Qt Layout object containing all layer parameters """
         layerBox = QGridLayout()
         layerBox.setSpacing(5)
         self.insertLayerAboveButton = QPushButton("Insert Layer")
@@ -397,8 +400,8 @@ class QuantumTab(QWidget):
 
     def _generateFigureBox(self):
         """Return:
-            A Qt Layout containning a canvas for plotting;
-            A QGiridLayout containning plot control;"""
+            A Qt Layout containing a canvas for plotting;
+            A QGridLayout containing plot control;"""
         self.quantumCanvas = EJcanvas(xlabel='Position (Å)',
                                       ylabel='Energy (eV)', parent=self)
         self.plotControl = EJplotControl(self.quantumCanvas, self)
@@ -496,7 +499,7 @@ class QuantumTab(QWidget):
         ifrGrid.addWidget(QLabel('<center>IRF Λ</center>'), 1, 1)
         ifrGrid.addWidget(self.ifrLambdaBox, 2, 1)
         self.ifrLambdaBox.valueChanged[float].connect(self.input_ifrLambda)
-        # This is exposed s.t. it can be hiden when IFR is off.
+        # This is exposed s.t. it can be hidden when IFR is off.
         self._ifrGroupBox = QGroupBox('Interface Roughness')
         self._ifrGroupBox.setLayout(ifrGrid)
         self.solveBox.addWidget(self._ifrGroupBox)
@@ -521,21 +524,21 @@ class QuantumTab(QWidget):
         self.toOpticsButton = QPushButton("-> Optics")
         self.toOpticsButton.setEnabled(False)
         # signal is processed in ErwinJr main window
-        self.stateParmText = QTextEdit('')
-        self.stateParmText.setReadOnly(True)
-        self.stateParmText.setMaximumWidth(width)
-        self.stateParmText.setMinimumWidth(width)
-        self.stateParmText.setMinimumHeight(150)
-        self.stateParmText.setSizePolicy(QSizePolicy(
+        self.stateParamText = QTextEdit('')
+        self.stateParamText.setReadOnly(True)
+        self.stateParamText.setMaximumWidth(width)
+        self.stateParamText.setMinimumWidth(width)
+        self.stateParamText.setMinimumHeight(150)
+        self.stateParamText.setSizePolicy(QSizePolicy(
             QSizePolicy.Fixed, QSizePolicy.Expanding))
-        self.stateParmText.textChanged.connect(
+        self.stateParamText.textChanged.connect(
             lambda: self.toOpticsButton.setEnabled(False))
         calculateControlGrid = QGridLayout()
         calculateControlGrid.addWidget(self.pairSelectButton, 0, 0, 1, 2)
         calculateControlGrid.addWidget(self.FoMButton, 1, 0, 1, 1)
         calculateControlGrid.addWidget(self.fullPopulationButton, 1, 1, 1, 1)
         calculateControlGrid.addWidget(self.toOpticsButton, 2, 0, 1, 2)
-        calculateControlGrid.addWidget(self.stateParmText, 3, 0, 1, 2)
+        calculateControlGrid.addWidget(self.stateParamText, 3, 0, 1, 2)
         calculateControlGrid.setSpacing(5)
         # TODO: voltage efficiency, hbar omega / field * Lp
         calculateControlGroupBox = QGroupBox("Calculate")
@@ -743,14 +746,14 @@ class QuantumTab(QWidget):
         self.layerTable.blockSignals(True)
         self.layerTable.clear()
         self.layerTable.setColumnCount(5)
-        # An extra blanck line for adding new layers
+        # An extra blank line for adding new layers
         self.layerTable.setRowCount(len(self.qclayers.layerWidths) + 1)
         vertLabels = [str(n+1) for n in range(len(self.qclayers.layerWidths))]
         self.layerTable.setHorizontalHeaderLabels(
             ('Width', 'ML', 'Mtrl', 'AR', 'Doping'))
         self.layerTable.setVerticalHeaderLabels(vertLabels)
 
-        # gray2 = QColor(230, 230, 230)  # for unchangable background
+        # gray2 = QColor(230, 230, 230)  # for unchangeable background
 
         for q, layerWidths in enumerate(self.qclayers.layerWidths):
             color = self.mtrlcolors[
@@ -855,6 +858,11 @@ class QuantumTab(QWidget):
         if self._status == 'unsolved':
             QMessageBox.warning(self, ejWarning, "Solve the model first.")
             return
+        if self._status == 'solve-full':
+            QMessageBox.warning(
+                self, ejWarning,
+                "Try global optimization with full population.")
+            return
         if n < 0 or n > len(self.qclayers.layerWidths):
             QMessageBox.warning(self, ejError,
                                 "Select the layer to optimize.")
@@ -873,9 +881,10 @@ class QuantumTab(QWidget):
                                 "Select state pair to optimize.")
             return
         # TODO
-        self.qclayers.optimizeLayer(n, upper, lower)
+        self.qclayers.optimize_layer(n, upper, lower)
         self._update_layerTable()
         self.layerTable.setCurrentCell(n, 0)
+        self.dirty.emit()
 
     @pyqtSlot()
     def globalOptimize(self):
@@ -1147,6 +1156,7 @@ class QuantumTab(QWidget):
 
     @pyqtSlot(int)
     def ifrDefConstant(self, state):
+        # state is int from Qt definition but here it's used as a bool
         if state:
             m = len(self.qclayers.materials)
             self.qclayers.mtrlIFRLambda = [self.ifrLambdaBox.value()] * m
@@ -1234,14 +1244,6 @@ class QuantumTab(QWidget):
                           self.layerSelected] else 1)
 
         if self._status.startswith('solved'):
-            if self.solveType == 'whole':
-                if self._status == 'solved':
-                    try:
-                        periodSet = set(self.qclayers.period_recognize())
-                    except IndexError:
-                        periodSet = set()
-                else:
-                    periodSet = self.qclayers.singlePeriodIdx
             self.curveWF = []
             if self.plotType == "mode":
                 self.wfs = self.qclayers.psis**2 * plotconfig["modescale"]
@@ -1253,7 +1255,8 @@ class QuantumTab(QWidget):
             ends = np.argmax(abs(self.wfs[:, ::-1]) > plotconfig[
                 "wf_almost_zero"], axis=1)
             if self._status == 'solved-full':
-                # vmin = np.min(self.qclayers.population)
+                # Amin = np.min(self.qclayers.population)
+                self.qclayers.period_map()
                 vmin = 0
                 vmax = np.ceil(np.max(self.qclayers.population)*10)/10
                 popMap = cm.ScalarMappable(
@@ -1267,15 +1270,18 @@ class QuantumTab(QWidget):
                     color = 'k'
                     lw = 2
                 else:
-                    color = (
-                        popMap.to_rgba(self.qclayers.state_population(n))
-                        if self._status == 'solved-full' else
-                        self.colors[n % len(self.colors)]
-                    )
+                    if self._status == 'solved-full':
+                        if self.qclayers.periodMap[n] is not None:
+                            color = popMap.to_rgba(
+                                self.qclayers.state_population(n))
+                        else:
+                            color = 'g'
+                    else:
+                        color = self.colors[n % len(self.colors)]
                     if self.solveType == 'basis':
                         lw = 1.5
                     else:
-                        if n in periodSet:
+                        if n in self.periodSet:
                             # lw = 1 if n in self.qclayers.unBound else 1.5
                             lw = 1.5
                             if n in self.qclayers.unBound:
@@ -1435,6 +1441,7 @@ class QuantumTab(QWidget):
     def _threadRun(self, calc, postCalc=None):
         """ This is a helper function for multiple threading to avoid GUI
         freeze."""
+        # TODO: block all change
         self.calcRepaint(True)
         assert(not self.calcThread.isRunning())
         self._worker = CalculateHolder(calc)
@@ -1444,6 +1451,8 @@ class QuantumTab(QWidget):
         self._worker.finished.connect(self._worker.deleteLater)
         self._worker.failed.connect(lambda traceInfo: QMessageBox.warning(
             self, ejError, traceInfo))
+        self._worker.warning.connect(lambda message: QMessageBox.warning(
+            self, ejWarning, message))
         self._worker.failed.connect(self.clear_WFs)
         self.calcThread.finished.connect(lambda: self.calcRepaint(False))
         # self.calcThread.finished.connect(self.thread.deleteLater)
@@ -1468,6 +1477,11 @@ class QuantumTab(QWidget):
     def _solve_whole(self):
         self.qclayers.solve_whole()
         self._status = 'solved'
+        try:
+            self.periodSet = self.qclayers.period_recognize()
+        except StateRecognizeError as e:
+            self.periodSet = set()
+            raise e
 
     @pyqtSlot()
     def solve_whole(self):  # solves whole structure
@@ -1500,7 +1514,7 @@ class QuantumTab(QWidget):
                 self.stateHolder = []
                 self.pairSelected = False
 
-            # TODO: replace follwoing by matplotlib lines picker
+            # TODO: replace following by matplotlib lines picker
             x = event.xdata
             y = event.ydata
             xData = np.tile(self.qclayers.xPoints,
@@ -1534,8 +1548,6 @@ class QuantumTab(QWidget):
                 r[ss] = np.nan
                 ss = np.nanargmin(r)
             self.stateHolder.append(ss)
-            #  self.curveWF[ss].set_color('black')
-            #  self.curveWF[ss].set_linewidth(2)
         elif event.button == 3:  # right button clicked: remove last selection
             if len(self.stateHolder) == 2:
                 self.pairSelected = False
@@ -1545,12 +1557,13 @@ class QuantumTab(QWidget):
         self.update_quantumCanvas()
 
         if len(self.stateHolder) == 1:
-            self.stateParmText.clear()
+            self.stateParamText.clear()
             self.pairString = "selected: %d, ..<br>" % self.stateHolder[0]
             if self._status == 'solved-full':
-                self.pairString += 'population: %.1f<br>' % (
-                    100*self.qclayers.state_population(self.stateHolder[0]))
-            self.stateParmText.setText(self.pairString)
+                pop = self.qclayers.state_population(self.stateHolder[0])
+                if pop is not None:
+                    self.pairString += 'population: %.1f%%<br>' % (pop*100)
+            self.stateParamText.setText(self.pairString)
 
         elif len(self.stateHolder) == 2:
             self.pairSelected = True
@@ -1589,19 +1602,21 @@ class QuantumTab(QWidget):
                     self.eDiff, self.wavelength,
                     self.opticalDipole
                 )
-            self.pairString += "LO scattering: %6.3g ps<br>" % self.tauLO_ul
+            self.pairString += "LO scatter: %6.3g ps<br>" % self.tauLO_ul
             if self.qclayers.includeIFR:
                 self.pairString += (
-                    "IFR scattering: %6.3g ps<br>" % self.tauIFR_ul)
+                    "IFR scatter: %6.3g ps<br>" % self.tauIFR_ul)
             if self._status == 'solved-full':
                 self.pairString += 'population: <br>&nbsp;&nbsp;&nbsp;'
-                self.pairString += '%d: %.1f%% %d: %.1f%%<br>' % (
-                    upper, 100*self.qclayers.state_population(upper),
-                    lower, 100*self.qclayers.state_population(lower)
-                )
+                uPop = self.qclayers.state_population(upper)
+                uPop = 'N/A' if uPop is None else '%.1f%%' % (100*uPop)
+                lPop = self.qclayers.state_population(lower)
+                lPop = 'N/A' if lPop is None else '%.1f%%' % (100*lPop)
+                self.pairString += '%d: %s %d: %s<br>' % (
+                    upper, uPop, lower, lPop)
 
-        self.stateParmText.clear()
-        self.stateParmText.setText(self.pairString)
+        self.stateParamText.clear()
+        self.stateParamText.setText(self.pairString)
 
     def _calcFoM(self):
         upper = self.stateHolder[1]
@@ -1635,9 +1650,9 @@ class QuantumTab(QWidget):
         ) % (FoM, gaincoeff)
 
     def _updateFoM(self):
-        self.stateParmText.setText(self.pairString + self.FoMString)
-        self.stateParmText.verticalScrollBar().setValue(
-            self.stateParmText.verticalScrollBar().maximum())
+        self.stateParamText.setText(self.pairString + self.FoMString)
+        self.stateParamText.verticalScrollBar().setValue(
+            self.stateParamText.verticalScrollBar().maximum())
         self.FoMButton.setEnabled(True)
         self.toOpticsButton.setEnabled(True)
 
@@ -1658,7 +1673,7 @@ class QuantumTab(QWidget):
     def fullPopulation(self):
         """SLOT connected to fullPopulationButton.clicked()"""
         if not self._status.startswith('solved'):
-            print('Fullpopulation triggered before solving.')
+            print('Full_population triggered before solving.')
         self._threadRun(self._fullPopulation)
 
 # vim: ts=4 sw=4 sts=4 expandtab

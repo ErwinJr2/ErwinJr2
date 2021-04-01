@@ -17,17 +17,31 @@ except OSError:
 import Material
 from OptStrata import rIdx
 import copy
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 EUNIT = 1e-5    # E field unit from kV/cm to V/Angstrom
 BASISPAD = 100  # padding barrier for basis solver, unit Angstrom
 INV_INF = 1e-20  # for infinite small decay rate (ns-1)
+# used for typing as either an array or a float number
+ScalerArray = Union[float, np.ndarray]
 
 QCMaterial = {
     "InP":  ["InGaAs", "AlInAs"],
     "GaAs": ["AlGaAs"],
     "GaSb": ["InAsSb", "AlGaSb"]
 }
+
+
+class StateRecognizeError(Exception):
+    """Raised when QClayers cannot recognize a period of states.
+    This typically means the number of periods is too small, or for single
+    period structure the barrier at the end of the structure is not long
+    enough to bound a state.
+
+    Attributes:
+        expression -- input expression in which the error occurred."""
+    def __init__(self, expression=''):
+        self.expression = expression
 
 
 class SchrodingerLayer(object):
@@ -317,7 +331,6 @@ class SchrodingerLayer(object):
             xE = np.broadcast_to(self.eigenEs.reshape(-1, 1), self.psis.shape)
             xE = xE - self.xVc
             self.philh = -sqrt(2/3)*xP/(xE+xEg) * dphic
-            self.phiso = np.zeros(self.psis.shape)
             self.phiso = sqrt(1/3)*xP/(xE+xEg+xESO) * dphic
         return self.eigenEs
 
@@ -556,13 +569,17 @@ class SchrodingerLayer(object):
         self._layerVc = (self._layerVc*2)[start:end]
         self._layerMc = (self._layerMc*2)[start:end]
 
-    def dipole(self, upper: int, lower: int) -> float:
+    def dipole(self, upper: int, lower: int, shift: int = 0) -> float:
         """Return Electrical dipole between upper and lower states
         in unit angstrom, update self.dipole.
+        shift means lower state is shifted by this number of period.
         Should be called for any other related physics quantities."""
         if self.solver == 'ODE':
             psi_u = self.psis[upper, :]
             psi_l = self.psis[lower, :]
+            if shift != 0:
+                psi_l = np.interp(self.xPoints - shift*self.periodL,
+                                  self.xPoints, psi_l)
             Eu = self.eigenEs[upper]
             El = self.eigenEs[lower]
             xInvMc_u = self._xBandMassInv(Eu)
@@ -577,7 +594,7 @@ class SchrodingerLayer(object):
             # approximately the same as tested in unit tests.
             # The above is remained for legacy reasons.
             self.z = self.xres * np.trapz(
-                self.psi_overlap(upper, lower) * self.xPoints)
+                self.psi_overlap(upper, lower, shift) * self.xPoints)
         else:
             raise NotImplementedError(
                 '{} not implemented for dipole'.format(self.solver))
@@ -624,14 +641,15 @@ class SchrodingerLayer(object):
             return 1/sum(self.lo_transition(state, q) for q in range(state)
                          if self.eigenEs[q] <= Ei - self.avghwLO)
         idxs = self.eigenEs <= Ei - self.avghwLO
-        psi_js_sq = self.psi_overlap(idxs, idxs)
         Ejs = self.eigenEs[idxs]
+        idxs, = idxs.nonzero()
+        psi_js_sq = np.array([self.psi_overlap(idx, idx) for idx in idxs])
         mjs = m0 * np.trapz(self.xMc * psi_js_sq, axis=1) * self.xres
         kls = sqrt(2 * mjs / hbar**2 * (Ei - Ejs - self.avghwLO) * e0)
         fjs = (mjs * e0**2 * self.avghwLO * e0 / hbar
                / (4 * hbar**2 * self.epsrho * eps0 * kls))
-        Iijtotal = onedq.OneDSchrodinger.cLOtotal(
-            self.xres, kls, self.psi_overlap(state, idxs), fjs)
+        psi_ijs = np.array([self.psi_overlap(state, idx) for idx in idxs])
+        Iijtotal = onedq.OneDSchrodinger.cLOtotal(self.xres, kls, psi_ijs, fjs)
         return 1e12 / Iijtotal if Iijtotal > 0 else 1E20
 
     def _ifr_transition(self, upper: int, lower: int, shift: int = 0
@@ -727,7 +745,6 @@ class SchrodingerLayer(object):
             includes index of states that are not well bounded.
         """
         periodIdx = self.periodL / self.xres
-        self.singlePeriodIdx = []
         psisq = np.abs(self.psis)**2
         self.starts = np.argmax(psisq > tol, axis=1)
         self.ends = np.argmax(psisq[:, ::-1] > tol, axis=1)
@@ -744,11 +761,42 @@ class SchrodingerLayer(object):
                     print('State No.{} is close to right boundary. '
                           'More repeats may be needed'.format(n))
         # print(self.singlePeriodIdx, self.looselyBounded)
-        # warning for not enough repeats
         if len(self.singlePeriodIdx) - len(self.unBound) == 0:
-            raise IndexError('No well bounded state found. '
-                             'Try increase repeats.')
+            raise StateRecognizeError('No well bounded state found. '
+                                      'Try increase repeats.')
         return self.singlePeriodIdx
+
+    def period_map(self, tol: float = 5E-5, etol: float = 1E-3
+                   ) -> List[Tuple[int, int]]:
+        """Map states to self.singlePeriodIdx, self.periodMap[n] is a tuple of
+        (state index in self.singlePeriodIdx, shift of period(s) or
+        None meaning it's not mapped."""
+        self.periodMap = [None] * len(self.eigenEs)
+        singleE = self.eigenEs[self.singlePeriodIdx]
+        for n, state in enumerate(self.singlePeriodIdx):
+            self.periodMap[state] = (n, 0)
+        for state, en in enumerate(self.eigenEs):
+            if self.periodMap[state] is not None:
+                continue
+            psi = self.psis[state]
+            for shift in range(1, self.repeats):
+                en_shifted = en + shift * self.Eshift
+                psi_shifted = np.interp(self.xPoints + shift*self.periodL,
+                                        self.xPoints, psi)
+                for n, sE in enumerate(singleE):
+                    if sE < en_shifted - etol:
+                        continue
+                    if sE > en_shifted + etol:
+                        break
+                    sState = self.singlePeriodIdx[n]
+                    if np.average((psi_shifted - self.psis[sState])**2) < tol:
+                        # effective an L2 norm here, tested better than
+                        # L1 or L-max norm
+                        self.periodMap[state] = (n, shift)
+                        break
+                if self.periodMap[n] is not None:
+                    break
+        return self.periodMap
 
     def full_population(self) -> np.ndarray:
         """Calculate the electron full population on states, assuming the
@@ -770,43 +818,30 @@ class SchrodingerLayer(object):
             Update these to keep consistent
         """
         # construct periodic states
-        Eshift = self.periodL * self.EField * EUNIT
         idxPeriod = len(self.singlePeriodIdx)
 
-        def twoPeriods(psi):
-            # cutoff of wavefunctions on the right does not matter because the
-            # overlap is zero anyway, so long as the overlap for the
-            # wavefunction of the same period is performed on the original.
-            return np.array([np.interp(
-                self.xPoints-n*self.periodL, self.xPoints, psi[i])
-                for n in (0, 1) for i in self.singlePeriodIdx])
-        self.psis = twoPeriods(self.psis)
-        self.eigenEs = np.array([
-            self.eigenEs[i] - n*Eshift
-            for n in (0, 1) for i in self.singlePeriodIdx])
-        if self.crystalType == 'ZincBlende':
-            self.philh = twoPeriods(self.philh)
-            self.phiso = twoPeriods(self.phiso)
-        self.unBound = set(n for n in range(idxPeriod)
-                           if self.singlePeriodIdx[n] in self.unBound)
-        self.singlePeriodIdx = set(range(idxPeriod))
-
-        self.transitions = np.zeros((idxPeriod, idxPeriod))
-        for i in range(idxPeriod):
-            for j in range(idxPeriod):
-                # transition from psi_i -> psi_j
-                if i != j:
-                    self.transitions[i][j] = sum(
-                        self._lo_transition(i, j, shift)
-                        + self._ifr_transition(i, j, shift)[0]
-                        for shift in (-1, 0, 1)
-                    )
-        transfer = (np.diag(-np.sum(self.transitions, axis=1))
-                    + self.transitions.T)
+        self.internal = np.zeros((idxPeriod, idxPeriod))
+        self.forward = np.zeros((idxPeriod, idxPeriod))
+        self.backward = np.zeros((idxPeriod, idxPeriod))
+        for i, lower in enumerate(self.singlePeriodIdx):
+            for j, upper in enumerate(self.singlePeriodIdx):
+                self.forward[j][i] = (
+                    self._lo_transition(lower, upper, 1)
+                    + self._ifr_transition(lower, upper, 1)[0])
+                self.backward[j][i] = (
+                    self._lo_transition(lower, upper, -1)
+                    + self._ifr_transition(lower, upper, -1)[0])
+                if lower != upper:
+                    self.internal[j][i] = (
+                        self._lo_transition(lower, upper, 0)
+                        + self._ifr_transition(lower, upper, 0)[0])
+        self.transitions = self.internal + self.forward + self.backward
+        transfer = (np.diag(-np.sum(self.transitions, axis=0))
+                    + self.transitions)
         self.population = null_space(transfer)
         if self.population.shape[1] != 1:
-            print('More than one steady state found. ',
-                  self.population.shape[1])
+            raise ValueError('More than one steady state found. ',
+                             self.population.shape[1])
         self.population = self.population[:, 0].T
         self.population /= np.sum(self.population)
         # print("transition: ", self.transitions)
@@ -819,7 +854,10 @@ class SchrodingerLayer(object):
 
     def state_population(self, state: int) -> float:
         """This method is only valid after fullPopulation has been called"""
-        return self.population[state % len(self.population)]
+        # return self.population[state % len(self.population)]
+        if self.periodMap[state] is None:
+            return None
+        return self.population[self.periodMap[state][0]]
 
     def _xBandMassInv(self, energy: float) -> np.ndarray:
         """
@@ -1205,7 +1243,7 @@ description : str
             1 - self.tau_l / self.tau_ul)
         return self.FoM
 
-    def effective_ridx(self, wl: float) -> float:
+    def effective_ridx(self, wl: ScalerArray) -> ScalerArray:
         """Return the effective refractive index for TM mode"""
         if sum(self.layerWidths) == 0:
             return 1.0
@@ -1213,8 +1251,9 @@ description : str
                           (1 - m.moleFrac) * rIdx[m.B.name](wl))
                          for m in self.mtrlAlloys]
         self.layerRIdx = np.array([self.mtrlRIdx[n] for n in self.layerMtrls])
-        return np.average(1/self.layerRIdx**2,
-                          weights=self.layerWidths)**(-1/2)
+        self.neff = np.average(1/self.layerRIdx**2, axis=0,
+                               weights=self.layerWidths)**(-1/2)
+        return self.neff
 
     def gain_coefficient(self, upper: int, lower: int) -> float:
         """Calculate the gain coefficient from upper -> lower transition, for
@@ -1240,6 +1279,22 @@ description : str
         # 1E-32 angstrom^2 ps -> m^2 s, 1E5 m/A -> cm/kA
         return e0 * self.FoM * 1E-27 / (
             gamma * hbar * c0 * eps0 * self.effective_ridx(wl0) * Lp)
+
+    @property
+    def sheet_density(self) -> float:
+        """Return the sheet density of doping per period, in unit cm^-2"""
+        # 1E9 -> 1E17 cm^-3 * Angstrom -> cm^-2
+        return sum(self.layerDopings[n] * self.layerWidths[n]
+                   for n in range(0, len(self.layerWidths))) * 1E9
+
+    def full_population(self) -> np.array:
+        """Apart from SchrodingerLayer.full_population, this also yield
+        current density, with knowledge of doping"""
+        res = super().full_population()
+        self.current = np.sum((self.forward - self.backward) @ self.population)
+        # ps^-1 -> kA/cm^2, where 1E9 = 1E12 * 1E-3, 1E12 is (ps^-1 -> s^-1)
+        self.current *= self.sheet_density * e0 * 1E9
+        return res
 
     # Optimization
     def optimizeLayer(self, n, upper, lower):
