@@ -575,6 +575,7 @@ class SchrodingerLayer(object):
         in unit angstrom, update self.dipole.
         shift means lower state is shifted by this number of period.
         Should be called for any other related physics quantities."""
+        # TODO: clean up self cache for upper -> lower states
         if self.solver == 'ODE':
             psi_u = self.psis[upper, :]
             psi_l = self.psis[lower, :]
@@ -582,7 +583,7 @@ class SchrodingerLayer(object):
                 psi_l = np.interp(self.xPoints - shift*self.periodL,
                                   self.xPoints, psi_l)
             Eu = self.eigenEs[upper]
-            El = self.eigenEs[lower]
+            El = self.eigenEs[lower] - shift * self.Eshift
             xInvMc_u = self._xBandMassInv(Eu)
             xInvMc_l = self._xBandMassInv(El)
             # Eq.(8) in PhysRevB.50.8663, with more precise mass
@@ -1323,9 +1324,13 @@ description : str
                     if Eu < El:
                         Eu, El = El, Eu
                         dpop = -dpop
+                    print(dpop * dipole**2, upper, lower, shift,
+                          self.population[i], self.population[j], dipole,
+                          h * c0 / (Eu - El) / e0 * 1E6)
                     gain = gain + dpop * dipole**2 * gamma / (
                             gamma**2 + (Eu-El-de0)**2)
-        return gain*e0**2*de0*self.sheet_density / (hbar*neff*c0*eps0)
+        gain *= e0**2*de0*self.sheet_density / (hbar*neff*c0*eps0)
+        return gain
 
     def optimize_layer(self, n, upper, lower):
         """Optimize FoM*Lorentzian for n-th layer thickness, assuming the state
