@@ -1297,71 +1297,56 @@ description : str
         return res
 
     # Optimization
-    def optimizeLayer(self, n, upper, lower):
-        """Optimize FoM*Lorentzian for n-th layer thickness"""
-        # TODO: this part need to be improved!!!
-        wl = self.wl
-        Ei = self.eigenEs[upper]
-        Ej = self.eigenEs[lower]
-        self.deltaE = Ei - Ej
-        resonancew = self.deltaE/hbar
-        FoMnow = self.calc_FoM(upper, lower)/(self.tauLO_ul**2 +
-                                              (resonancew-wl)**2)
-        width = self.layerWidths[n]
+    def optimize_layer(self, n, upper, lower):
+        """Optimize FoM*Lorentzian for n-th layer thickness, assuming the state
+        index does not change. optimization is performed by searching on the
+        position resolution steps.
+        Warning: This cannot specify a correct state if there are states
+        index crossing.
+        """
+        Eu = self.eigenEs[upper]
+        El = self.eigenEs[lower]
+        if Eu < El:
+            upper, lower = lower, upper
+            Eu, El = El, Eu
+        # 1E-6 um -> m... in unit eV
+        w0 = h * c0 / (self.wl * 1E-6) / e0
+
+        def reduceFoM():
+            wul = Eu - El
+            gamma = self.dephasing(upper, lower)
+            return self.calc_FoM(upper, lower)*gamma*w0/(gamma**2+(wul-w0)**2)
+        width = round(self.layerWidths[n] / self.xres) * self.xres
+        FoMnow = reduceFoM()
         print(("Start Optimizing Layer NO %d " % n) +
               ("for FoM between state %d and %d.\n" % (upper, lower)) +
-              ("\tStart at width=%.1f, FoM=%.1f" % (width, FoMnow)))
+              ("\tStart at width=%.1f, FoM=%.5g" % (width, FoMnow)))
 
-        for i in range(20):
-            self.layerWidths[n] = width - self.xres
+        def newFoM(newWidth):
+            self.layerWidths[n] = newWidth
             self.populate_x()
             self.solve_whole()
             self.dipole(upper, lower)
-            resonancew = self.deltaE/hbar
-            FoMback = self.calc_FoM(upper, lower)/(self.tauLO_ul**2 +
-                                                   (resonancew-wl)**2)
-
-            self.layerWidths[n] = width + self.xres
-            self.populate_x()
-            self.solve_whole()
-            self.dipole(upper, lower)
-            resonancew = self.deltaE/hbar
-            FoMforward = self.calc_FoM(upper, lower)/(self.tauLO_ul**2 +
-                                                      (resonancew-wl)**2)
-
-            FoMpp = (FoMforward + FoMback - 2*FoMnow)
-            FoMp = (FoMforward - FoMback)/2
-            diff = -FoMp/FoMpp
-            print("%d-th iteration, FoMs=[%f, %f, %f], diff=%.2f" % (
-                i+1, FoMback, FoMnow, FoMforward, diff))
-            if abs(diff) < 0.5:
-                print("Converged at width=%.2f!" % width)
-                self.layerWidths[n] = width
-                self.populate_x()
-                self.solve_whole()
-                return
-            elif FoMpp > 0:
-                print("FoM'' > 0, Newton cannot go maximum. set 5*xres")
-                diff = 5 if FoMp > 0 else -5
-            elif abs(diff) > width/self.xres * 0.2 and abs(diff) > 5:
-                print("Difference too big.. set it to 5*xres")
-                diff = 5 if diff > 0 else -5
+            return reduceFoM()
+        FoMminus = newFoM(width - self.xres)
+        FoMplus = newFoM(width + self.xres)
+        for count in range(50):
+            if FoMnow < FoMplus:
+                FoMminus = FoMnow
+                FoMnow = FoMplus
+                width += self.xres
+                FoMplus = newFoM(width + self.xres)
+            elif FoMnow < FoMminus:
+                FoMplus = FoMnow
+                FoMnow = FoMminus
+                width -= self.xres
+                FoMminus = newFoM(width - self.xres)
             else:
-                diff = round(diff)
-
-            width += diff * self.xres
-            self.layerWidths[n] = width
-            self.populate_x()
-            self.solve_whole()
-            self.dipole(upper, lower)
-            FoMnow = self.calc_FoM(upper, lower)
-            wl = h * c0 / (e0 * self.deltaE) * 1e6
-            print("\twidth=%.2f, FoM=%.2f, lambda=%.1f" % (width, FoMnow, wl))
-            FoMnow = FoMnow/(self.tauLO_ul**2 + (resonancew-wl)**2)
-
-        print("Maximum iteration reached! width=%.2f" % width)
+                print("Maximum iteration reached.")
+                break
+            print("\twidth=%.1f, FoM=%.5g" % (width, FoMnow))
         self.layerWidths[n] = width
-        self.populate_x()
-        self.solve_whole()
+        print("finished, width=%.1f, FoM=%.5g" % (width, FoMnow))
+
 
 # vim: ts=4 sw=4 sts=4 expandtab
