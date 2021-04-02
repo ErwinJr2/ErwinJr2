@@ -1199,10 +1199,10 @@ class QuantumTab(QWidget):
         """Update labels below mtrlTable"""
         self.offsetLabel.setText(
             '<center>ΔE<sub>c</sub>: <b>%6.0f meV </b></center>' %
-            (self.qclayers.mtrl_offset() * 1000))
+            (self.qclayers.mtrlOffset * 1000))
         self.netStrainLabel.setText(
             "<center>Net Strain: <b>%6.3f%%</b></center>" %
-            self.qclayers.net_strain())
+            self.qclayers.netStrain)
         self.LOPhononLabel.setText(
             "<center>E<sub>LO</sub>: <b>%4.1f meV</b></center>" %
             (1000*self.qclayers.avghwLO))

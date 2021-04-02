@@ -23,7 +23,7 @@ EUNIT = 1e-5    # E field unit from kV/cm to V/Angstrom
 BASISPAD = 100  # padding barrier for basis solver, unit Angstrom
 INV_INF = 1e-20  # for infinite small decay rate (ns-1)
 # used for typing as either an array or a float number
-ScalerArray = Union[float, np.ndarray]
+ScalerOrArray = Union[float, np.ndarray]
 
 QCMaterial = {
     "InP":  ["InGaAs", "AlInAs"],
@@ -290,6 +290,7 @@ class SchrodingerLayer(object):
         else:
             raise NotImplementedError(
                 'The {} solver is not implemented'.format(self.solver))
+        # TODO: compatibility with shift
         self.loMatrix = [[None]*len(self.eigenEs)
                          for _ in range(len(self.eigenEs))]
         self.ifrMatrix = [[None]*len(self.eigenEs)
@@ -720,7 +721,7 @@ class SchrodingerLayer(object):
 
     def lifetime(self, state: int) -> float:
         if self.includeIFR:
-            return 1/(self.ifr_lifetime(state) + 1/self.lo_lifetime(state))
+            return 1/(1/self.ifr_lifetime(state) + 1/self.lo_lifetime(state))
         else:
             return self.lo_lifetime(state)
 
@@ -730,6 +731,29 @@ class SchrodingerLayer(object):
             self.ifr_transition(upper, lower, shift)
             self.ifr_transition(lower, upper, shift)
         return self.ifrGammas[upper][lower]
+
+    def dephasing(self, upper: int, lower: int, shift: int = 0) -> float:
+        r"""Calculate the broadening gamma of transition between upper ->
+        lower transition, return gamma in unit eV as in Lorentzian:
+
+        .. math::
+            \mathcal L(\omega) =
+            \frac{1}{\pi} \frac{\gamma}{\gamma^2 + (\omega - \omega_0)^2}
+
+        If IFR scattering is included the broadening is calculated dominantly
+        from IFR broadening and finite lifetime of upper and lower states.
+        Otherwise 0.1 is returned.
+        """
+        Eu = self.eigenEs[upper]
+        El = self.eigenEs[lower] - shift * self.Eshift
+        de = np.abs(Eu - El)
+        if not self.includeIFR:
+            return 0.1 * de
+        tau1 = self.lifetime(upper)
+        tau2 = self.lifetime(lower)
+        gamma_parallel = self.ifr_broadening(upper, lower, shift)
+        # 1E12: ps^-1 -> Hz
+        return (gamma_parallel + (1/tau1 + 1/tau2)/2) * 1E12 * hbar / e0
 
     def period_recognize(self, tol: float = 5E-5) -> np.ndarray:
         """Pick a set of eigen states as states in a period.
@@ -801,21 +825,12 @@ class SchrodingerLayer(object):
     def full_population(self) -> np.ndarray:
         """Calculate the electron full population on states, assuming the
         result of solve_whole and periodRecognize is valid and no state has
-        coupling with itself of the next period.
+        coupling with states two or more periods away.
 
         Return
         ------
         population : np.array of float
             The population of electrons in the first recognized period
-
-        Yield
-        -----
-        psis : np.array of float
-        eigenEs : np.array of float
-            Update these to only include the first and the second period
-        unBound : set of int
-        singlePeriodIdx : set of int
-            Update these to keep consistent
         """
         # construct periodic states
         idxPeriod = len(self.singlePeriodIdx)
@@ -825,6 +840,7 @@ class SchrodingerLayer(object):
         self.backward = np.zeros((idxPeriod, idxPeriod))
         for i, lower in enumerate(self.singlePeriodIdx):
             for j, upper in enumerate(self.singlePeriodIdx):
+                # keep this consistent with loMatrix etc
                 self.forward[j][i] = (
                     self._lo_transition(lower, upper, 1)
                     + self._ifr_transition(lower, upper, 1)[0])
@@ -849,8 +865,11 @@ class SchrodingerLayer(object):
         # print("population: ", self.population)
         return self.population
 
+    @property
     def carrierLeak(self) -> float:
-        return sum(self.population[n] for n in self.unBound)
+        return sum(
+            self.population[n] for n, state in enumerate(self.singlePeriodIdx)
+            if state in self.unBound)
 
     def state_population(self, state: int) -> float:
         """This method is only valid after fullPopulation has been called"""
@@ -1084,14 +1103,16 @@ description : str
         self.subM.set_temperature(T)
         self.update_strain()
 
-    def mtrl_offset(self) -> float:
+    @property
+    def mtrlOffset(self) -> float:
         """Return the conduction band offset (difference between highest
         conduction band and lowest conduction band energy) of materials,
         in unit eV"""
         ecgs = [alloy.parm['EcG'] for alloy in self.mtrlAlloys]
         return max(ecgs) - min(ecgs)
 
-    def net_strain(self) -> float:
+    @property
+    def netStrain(self) -> float:
         """Return average strain perpendicular to the layer plane, in
         percentage."""
         if sum(self.layerWidths) <= 1e-5:
@@ -1169,27 +1190,6 @@ description : str
         self.layerMtrls = (self.layerMtrls*2)[start:end]
         self.layerDopings = (self.layerDopings*2)[start:end]
 
-    def dephasing(self, upper: int, lower: int) -> float:
-        r"""Calculate the broadening gamma of transition between upper ->
-        lower transition, return gamma in unit eV as in Lorentzian:
-
-        .. math::
-            \mathcal L(\omega) =
-            \frac{1}{\pi} \frac{\gamma}{\gamma^2 + (\omega - \omega_0)^2}
-
-        If IFR scattering is included the broadening is calculated dominantly
-        from IFR broadening and finite lifetime of upper and lower states.
-        Otherwise 0.1 is returned.
-        """
-        de = np.abs(self.eigenEs[upper] - self.eigenEs[lower])
-        if not self.includeIFR:
-            return 0.1 * de
-        tau1 = self.lifetime(upper)
-        tau2 = self.lifetime(lower)
-        gamma_parallel = self.ifr_broadening(upper, lower)
-        # 1E12: ps^-1 -> Hz
-        return (gamma_parallel + (1/tau1 + 1/tau2)/2) * 1E12 * hbar / e0
-
     def calc_FoM(self, upper: int, lower: int) -> float:
         """Calculate Figure of Merit.
         This function must be called after solving for wave functions
@@ -1243,7 +1243,7 @@ description : str
             1 - self.tau_l / self.tau_ul)
         return self.FoM
 
-    def effective_ridx(self, wl: ScalerArray) -> ScalerArray:
+    def effective_ridx(self, wl: ScalerOrArray) -> ScalerOrArray:
         """Return the effective refractive index for TM mode"""
         if sum(self.layerWidths) == 0:
             return 1.0
@@ -1296,7 +1296,7 @@ description : str
         self.current *= self.sheet_density * e0 * 1E9
         return res
 
-    def full_auto_gain_spectrum(self, wl: ScalerArray) -> ScalerArray:
+    def full_auto_gain_spectrum(self, wl: ScalerOrArray) -> ScalerOrArray:
         """Perform fully automatic calculation for the gain on wavelength(s).
         """
         # TODO: wf -> population map
@@ -1307,24 +1307,26 @@ description : str
         neff = self.effective_ridx(wl)
         de0 = h * c0 / (wl * 1E-6) / e0
         gain = 0
-        if self.carrierLeak() > 5E-2:
+        if self.carrierLeak > 5E-2:
             print("The structure seems highly leak or more period needed.")
-        for lower in range(len(self.singlePeriodIdx)):
-            for upper in range(lower+1, len(self.singlePeriodIdx)):
+        for i in range(len(self.singlePeriodIdx)):
+            upper = self.singlePeriodIdx[i]
+            for j in range(i+1, len(self.singlePeriodIdx)):
+                lower = self.singlePeriodIdx[j]
                 for shift in (-1, 0, 1):
                     dipole = self.dipole(lower, upper, shift)
                     Eu = self.eigenEs[upper]
                     El = self.eigenEs[lower] - shift * self.Eshift
-                    dpop = self.population[upper] - self.population[lower]
-                    gamma = self.dephasing(upper, lower)
+                    dpop = self.population[i] - self.population[j]
+                    # gamma = self.dephasing(upper, lower)
+                    gamma = 0.1*np.abs(Eu - El)
                     if Eu < El:
                         Eu, El = El, Eu
                         dpop = -dpop
                     gain = gain + dpop * dipole**2 * gamma / (
                             gamma**2 + (Eu-El-de0)**2)
-        return gain * e0**2
+        return gain*e0**2*de0*self.sheet_density / (hbar*neff*c0*eps0)
 
-    # Optimization
     def optimize_layer(self, n, upper, lower):
         """Optimize FoM*Lorentzian for n-th layer thickness, assuming the state
         index does not change. optimization is performed by searching on the
