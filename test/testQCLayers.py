@@ -14,7 +14,7 @@ class TestQCLayers(unittest.TestCase):
         qcl.populate_x()
         qcl.solve_whole()
         qcl.period_recognize()
-        qcl.period_map()
+        qcl.period_map_build()
         self.assertAlmostEqual(qcl.eigenEs[41] - qcl.eigenEs[31], 0.26, 2)
         for i, j in ((25, 41), (24, 40), (26, 42), (31, 49)):
             self.assertEqual(qcl.periodMap[i][1], 1)

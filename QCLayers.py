@@ -766,8 +766,8 @@ class SchrodingerLayer(object):
                                       'Try increase repeats.')
         return self.singlePeriodIdx
 
-    def period_map(self, tol: float = 5E-5, etol: float = 1E-3
-                   ) -> List[Tuple[int, int]]:
+    def period_map_build(self, tol: float = 5E-5, etol: float = 1E-3
+                         ) -> List[Tuple[int, int]]:
         """Map states to self.singlePeriodIdx, self.periodMap[n] is a tuple of
         (state index in self.singlePeriodIdx, shift of period(s) or
         None meaning it's not mapped."""
@@ -1296,6 +1296,34 @@ description : str
         self.current *= self.sheet_density * e0 * 1E9
         return res
 
+    def full_auto_gain_spectrum(self, wl: ScalerArray) -> ScalerArray:
+        """Perform fully automatic calculation for the gain on wavelength(s).
+        """
+        # TODO: wf -> population map
+        self.populate_x()
+        self.solve_whole()
+        self.period_recognize()
+        self.full_population()
+        neff = self.effective_ridx(wl)
+        de0 = h * c0 / (wl * 1E-6) / e0
+        gain = 0
+        if self.carrierLeak() > 5E-2:
+            print("The structure seems highly leak or more period needed.")
+        for lower in range(len(self.singlePeriodIdx)):
+            for upper in range(lower+1, len(self.singlePeriodIdx)):
+                for shift in (-1, 0, 1):
+                    dipole = self.dipole(lower, upper, shift)
+                    Eu = self.eigenEs[upper]
+                    El = self.eigenEs[lower] - shift * self.Eshift
+                    dpop = self.population[upper] - self.population[lower]
+                    gamma = self.dephasing(upper, lower)
+                    if Eu < El:
+                        Eu, El = El, Eu
+                        dpop = -dpop
+                    gain = gain + dpop * dipole**2 * gamma / (
+                            gamma**2 + (Eu-El-de0)**2)
+        return gain * e0**2
+
     # Optimization
     def optimize_layer(self, n, upper, lower):
         """Optimize FoM*Lorentzian for n-th layer thickness, assuming the state
@@ -1330,7 +1358,7 @@ description : str
             return reduceFoM()
         FoMminus = newFoM(width - self.xres)
         FoMplus = newFoM(width + self.xres)
-        for count in range(50):
+        for _ in range(100):
             if FoMnow < FoMplus:
                 FoMminus = FoMnow
                 FoMnow = FoMplus

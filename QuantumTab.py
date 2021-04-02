@@ -1256,7 +1256,7 @@ class QuantumTab(QWidget):
                 "wf_almost_zero"], axis=1)
             if self._status == 'solved-full':
                 # Amin = np.min(self.qclayers.population)
-                self.qclayers.period_map()
+                self.qclayers.period_map_build()
                 vmin = 0
                 vmax = np.ceil(np.max(self.qclayers.population)*10)/10
                 popMap = cm.ScalarMappable(
