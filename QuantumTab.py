@@ -23,7 +23,8 @@ from matplotlib import cm
 # from matplotlib.colors import LogNorm as cmNorm
 from matplotlib.colors import Normalize as cmNorm
 
-from QCLayers import QCLayers, StateRecognizeError, QCMaterial, h, c0, e0
+from QCLayers import (QCLayers, StateRecognizeError, QCMaterial,
+                      h, hbar, eps0, c0, e0)
 from EJcanvas import EJcanvas, EJplotControl
 from EJcanvas import config as plotconfig
 
@@ -149,9 +150,6 @@ class QuantumTab(QWidget):
         self.qclayers = qclayers if qclayers else QCLayers()
         self.calcThread = QThread()
         self._worker = None
-        # status can be 'unsolved', 'solved', or 'solved-full'
-        # which decides whether how to plot wavefunctions
-        self._status = 'unsolved'
 
         # colors for different wavefunctions
         self.colors = ((0.584, 0.450, 0.701), (0.431, 0.486, 0.745),
@@ -855,13 +853,8 @@ class QuantumTab(QWidget):
     def optimizeLayer(self):
         """SLOT connected to self.optimizeLayerButton.clicked()"""
         n = self.layerTable.currentRow()
-        if self._status == 'unsolved':
+        if self.qclayers.status == 'unsolved':
             QMessageBox.warning(self, ejWarning, "Solve the model first.")
-            return
-        if self._status == 'solve-full':
-            QMessageBox.warning(
-                self, ejWarning,
-                "Try global optimization with full population.")
             return
         if n < 0 or n > len(self.qclayers.layerWidths):
             QMessageBox.warning(self, ejError,
@@ -960,7 +953,7 @@ class QuantumTab(QWidget):
         else:
             raise Exception("Should not be here")
 
-        self._status = 'unsolved'
+        self.qclayers.status = 'unsolved'
         self._update_layerTable()
         self.layerTable.setCurrentCell(row, column)
         self.qclayers.populate_x()
@@ -1172,11 +1165,10 @@ class QuantumTab(QWidget):
             mn = self.mtrlTable.currentRow()
             self.qclayers.mtrlIFRLambda[mn] = ifrLambda
         self.qclayers.populate_material()
-        if self._status.startswith('solved'):
-            self._status = 'solved'
-            N = self.qclayers.eigenEs.size
-            self.qclayers.ifrMatrix = [[None]*N for _ in range(N)]
-            self.qclayers.ifrGammas = [[None]*N for _ in range(N)]
+        if self.qclayers.status.startswith('solved'):
+            # following also do self.qclayers.status = 'solved'
+            self.qclayers.reset_IFR_cache()
+            self.update_quantumCanvas()
         self.dirty.emit()
 
     @pyqtSlot(float)
@@ -1188,11 +1180,10 @@ class QuantumTab(QWidget):
             mn = self.mtrlTable.currentRow()
             self.qclayers.mtrlIFRDelta[mn] = ifrDelta
         self.qclayers.populate_material()
-        if self._status.startswith('solved'):
-            self._status = 'solved'
-            N = self.qclayers.eigenEs.size
-            self.qclayers.ifrMatrix = [[None]*N for _ in range(N)]
-            self.qclayers.ifrGammas = [[None]*N for _ in range(N)]
+        if self.qclayers.status.startswith('solved'):
+            # following also do self.qclayers.status = 'solved'
+            self.qclayers.reset_IFR_cache()
+            self.update_quantumCanvas()
         self.dirty.emit()
 
     def update_mtrl_info(self):
@@ -1243,7 +1234,7 @@ class QuantumTab(QWidget):
                       linewidth=1.5 if self.qclayers.layerARs[
                           self.layerSelected] else 1)
 
-        if self._status.startswith('solved'):
+        if self.qclayers.status.startswith('solved'):
             self.curveWF = []
             if self.plotType == "mode":
                 self.wfs = self.qclayers.psis**2 * plotconfig["modescale"]
@@ -1254,7 +1245,7 @@ class QuantumTab(QWidget):
                                axis=1)
             ends = np.argmax(abs(self.wfs[:, ::-1]) > plotconfig[
                 "wf_almost_zero"], axis=1)
-            if self._status == 'solved-full':
+            if self.qclayers.status == 'solved-full':
                 # Amin = np.min(self.qclayers.population)
                 self.qclayers.period_map_build()
                 vmin = 0
@@ -1270,7 +1261,7 @@ class QuantumTab(QWidget):
                     color = 'k'
                     lw = 2
                 else:
-                    if self._status == 'solved-full':
+                    if self.qclayers.status == 'solved-full':
                         if self.qclayers.periodMap[n] is not None:
                             color = popMap.to_rgba(
                                 self.qclayers.state_population(n))
@@ -1294,7 +1285,7 @@ class QuantumTab(QWidget):
                         x, y, self.qclayers.eigenEs[n],
                         facecolor=color, alpha=self.fillPlot)
                 self.curveWF.append(curve)
-            if self._status == 'solved-full':
+            if self.qclayers.status == 'solved-full':
                 colorbar_axes = axes.inset_axes([0.02, 0.01, 0.5, 0.02])
                 self.quantumCanvas.figure.colorbar(
                     popMap, cax=colorbar_axes, orientation='horizontal',
@@ -1341,7 +1332,7 @@ class QuantumTab(QWidget):
             # Trigger itemSelectionChanged SIGNAL and thus update_quantumCanvas
 
     def clear_WFs(self):
-        self._status = 'unsolved'
+        self.qclayers.status = 'unsolved'
         self.stateHolder = []
         self.pairSelectButton.setEnabled(False)
         self.fullPopulationButton.setEnabled(False)
@@ -1359,7 +1350,7 @@ class QuantumTab(QWidget):
                    np.column_stack([self.qclayers.xPoints, self.qclayers.xVc]),
                    delimiter=',')
 
-        if self._status == 'solved':
+        if self.qclayers.status == 'solved':
             # otherwise band structure hasn't been solved yet
             # TODO: make it consistent with plotting
             xyPsiPsiEig = np.zeros(self.qclayers.psis.shape)
@@ -1476,7 +1467,6 @@ class QuantumTab(QWidget):
 
     def _solve_whole(self):
         self.qclayers.solve_whole()
-        self._status = 'solved'
         try:
             self.periodSet = self.qclayers.period_recognize()
         except StateRecognizeError as e:
@@ -1492,7 +1482,6 @@ class QuantumTab(QWidget):
 
     def _solve_basis(self):
         self.qclayers.solve_basis()
-        self._status = 'solved'
 
     @pyqtSlot()
     def solve_basis(self):  # solves structure with basis
@@ -1504,9 +1493,9 @@ class QuantumTab(QWidget):
     def state_pick(self, event):
         """Callback registered in plotControl when it's in pairselect mode.
         It's mpl_connect to button_release_event of quantumCanvas """
-        if self._status == 'unsolved':
+        if self.qclayers.status == 'unsolved':
             # Not yet solved
-            return
+            raise ValueError('Structure not solved yet.')
 
         if event.button == 1:  # left button clicked: select a state
             if len(self.stateHolder) >= 2:
@@ -1559,7 +1548,7 @@ class QuantumTab(QWidget):
         if len(self.stateHolder) == 1:
             self.stateParamText.clear()
             self.pairString = "selected: %d, ..<br>" % self.stateHolder[0]
-            if self._status == 'solved-full':
+            if self.qclayers.status == 'solved-full':
                 pop = self.qclayers.state_population(self.stateHolder[0])
                 if pop is not None:
                     self.pairString += 'population: %.1f%%<br>' % (pop*100)
@@ -1606,7 +1595,7 @@ class QuantumTab(QWidget):
             if self.qclayers.includeIFR:
                 self.pairString += (
                     "IFR scatter: %6.3g ps<br>" % self.tauIFR_ul)
-            if self._status == 'solved-full':
+            if self.qclayers.status == 'solved-full':
                 self.pairString += 'population: <br>&nbsp;&nbsp;&nbsp;'
                 uPop = self.qclayers.state_population(upper)
                 uPop = 'N/A' if uPop is None else '%.1f%%' % (100*uPop)
@@ -1621,7 +1610,7 @@ class QuantumTab(QWidget):
     def _calcFoM(self):
         upper = self.stateHolder[1]
         lower = self.stateHolder[0]
-        if upper < lower:
+        if self.qclayers.eigenEs[upper] < self.qclayers.eigenEs[lower]:
             upper, lower = lower, upper
 
         tauLO_u = self.qclayers.lo_lifetime(upper)
@@ -1632,7 +1621,14 @@ class QuantumTab(QWidget):
         # tau_u = 1/(1/tauLO_u + 1/tauIFR_u)
         # tau_l = 1/(1/tauLO_l + 1/tauIFR_l)
         FoM = self.qclayers.calc_FoM(upper, lower)
-        gaincoeff = self.qclayers.gain_coefficient(upper, lower)
+        # 1E-27 = 1E-32 * 1E5
+        # 1E-32 angstrom^2 ps -> m^2 s, 1E5 m/A -> cm/kA
+        de = self.qclayers.eigenEs[upper] - self.qclayers.eigenEs[lower]
+        wl0 = c0 * h / (e0 * de) * 1E6  # m->um
+        gamma = self.qclayers.dephasing(upper, lower)
+        neff = self.qclayers.effective_ridx(wl0)
+        gaincoeff = e0 * FoM * 1E-27 * de / (
+            gamma * hbar * c0 * eps0 * neff * self.qclayers.periodL * 1E-10)
         # tauUpperLower is the inverse of transition rate (lifetime)
 
         self.FoMString = (
@@ -1666,13 +1662,13 @@ class QuantumTab(QWidget):
         self._threadRun(self._calcFoM, self._updateFoM)
 
     def _fullPopulation(self):
+        self.stateHolder = []
         self.qclayers.full_population()
-        self._status = 'solved-full'
 
     @pyqtSlot()
     def fullPopulation(self):
         """SLOT connected to fullPopulationButton.clicked()"""
-        if not self._status.startswith('solved'):
+        if not self.qclayers.status.startswith('solved'):
             print('Full_population triggered before solving.')
         self._threadRun(self._fullPopulation)
 
