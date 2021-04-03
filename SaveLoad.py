@@ -105,7 +105,8 @@ def parseQcl(ldict: typing.Dict[str, typing.Any]) -> QCLayers:
                      repeats=ldict["Repeats"],
                      T=ldict["Temperature"],
                      solver=ldict["Solver"],
-                     description=discription)
+                     description=discription,
+                     wl=ldict["Wavelength"])
         if ldict["IFR"]:
             o.includeIFR = True
             o.customIFR = ldict["IFR"]["custom IFR"]

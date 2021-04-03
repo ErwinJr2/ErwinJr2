@@ -1026,7 +1026,7 @@ description : str
                          EField=EField, repeats=repeats)
         self.crystalType = Material.MParm[substrate]["Crystal"]
         self.subM = Material.Material(self.substrate, self.temperature)
-        self.wl = 3.0
+        self.wl = wl
         self.solver = solver
         if onedq is None:
             self.solver = 'matrix'
