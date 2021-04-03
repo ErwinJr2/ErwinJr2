@@ -23,6 +23,10 @@ class TestQCLayers(unittest.TestCase):
                 qcl.psi_overlap(44, j, 1), qcl.psi_overlap(44, i), decimal=6)
             self.assertAlmostEqual(
                 qcl._dipole(44, j, 1), qcl._dipole(44, i), 3)
+            self.assertAlmostEqual(
+                qcl._lo_transition(44, j, 1), qcl._lo_transition(44, i), 4)
+            self.assertAlmostEqual(
+                qcl._ifr_transition(44, j, 1), qcl._ifr_transition(44, i), 5)
         # Test overlapping
         np.testing.assert_almost_equal(
             qcl.psi_overlap(41, 49, 1), qcl.psi_overlap(41, 31), decimal=6)

@@ -632,13 +632,13 @@ class SchrodingerLayer(object):
         N = self.xPoints.size
         if onedq is None:
             convpsi = fft.irfft(np.abs(fft.rfft(
-                self.psi_overlap(lower, upper, shift), 2*N))**2)[:N]
+                self.psi_overlap(upper, lower, shift), 2*N))**2)[:N]
             Iij = 2*self.xres**2*np.trapz(
                 exp(-kl*self.xPoints*1E-10)*convpsi)
         # C implementation
         else:
             Iij = onedq.OneDSchrodinger.cLOphononScatter(
-                self.xres, kl, self.psi_overlap(lower, upper, shift))
+                self.xres, kl, self.psi_overlap(upper, lower, shift))
         return (ml * e0**2 * self.avghwLO * e0 / hbar * Iij
                 / (4 * hbar**2 * self.epsrho * eps0 * kl)) / 1e12  # unit ps^-1
 
