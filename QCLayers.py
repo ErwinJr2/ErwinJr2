@@ -790,12 +790,12 @@ class SchrodingerLayer(object):
         psisq = np.abs(self.psis)**2
         self.starts = np.argmax(psisq > tol, axis=1)
         self.ends = np.argmax(psisq[:, ::-1] > tol, axis=1)
-        self.singlePeriodIdx = np.arange(len(self.eigenEs))[
+        self.periodIdx = np.arange(len(self.eigenEs))[
             (self.starts > periodIdx/3) & (self.starts < 4*periodIdx/3)]
         # check if all states are far away enough from boundary
         self.unBound = set()
         barrierBound = np.max(self.xVc + self.xVField) - self.xVField
-        for n in self.singlePeriodIdx:
+        for n in self.periodIdx:
             if self.ends[n] < periodIdx / 3:
                 self.unBound.add(n)
                 if self.eigenEs[n] < barrierBound[-self.ends[n]]:
@@ -803,10 +803,10 @@ class SchrodingerLayer(object):
                     print('State No.{} is close to right boundary. '
                           'More repeats may be needed'.format(n))
         # print(self.singlePeriodIdx, self.looselyBounded)
-        if len(self.singlePeriodIdx) - len(self.unBound) == 0:
+        if len(self.periodIdx) - len(self.unBound) == 0:
             raise StateRecognizeError('No well bounded state found. '
                                       'Try increase repeats.')
-        return self.singlePeriodIdx
+        return self.periodIdx
 
     def period_map_build(self, tol: float = 5E-5, etol: float = 1E-3
                          ) -> List[Tuple[int, int]]:
@@ -814,8 +814,8 @@ class SchrodingerLayer(object):
         (state index in self.singlePeriodIdx, shift of period(s) or
         None meaning it's not mapped."""
         self.periodMap = [None] * len(self.eigenEs)
-        singleE = self.eigenEs[self.singlePeriodIdx]
-        for n, state in enumerate(self.singlePeriodIdx):
+        singleE = self.eigenEs[self.periodIdx]
+        for n, state in enumerate(self.periodIdx):
             self.periodMap[state] = (n, 0)
         for state, en in enumerate(self.eigenEs):
             if self.periodMap[state] is not None:
@@ -823,13 +823,13 @@ class SchrodingerLayer(object):
             psi = self.psis[state]
             for shift in range(1, self.repeats):
                 en_shifted = en + shift * self.Eshift
-                psi_shifted = self._shift_psi(psi, shift)
+                psi_shifted = self._shift_psi(psi, -shift)
                 for n, sE in enumerate(singleE):
                     if sE < en_shifted - etol:
                         continue
                     if sE > en_shifted + etol:
                         break
-                    sState = self.singlePeriodIdx[n]
+                    sState = self.periodIdx[n]
                     if np.average((psi_shifted - self.psis[sState])**2) < tol:
                         # effective an L2 norm here, tested better than
                         # L1 or L-max norm
@@ -901,7 +901,7 @@ class SchrodingerLayer(object):
     @property
     def carrierLeak(self) -> float:
         return sum(
-            self.population[n] for n, state in enumerate(self.singlePeriodIdx)
+            self.population[n] for n, state in enumerate(self.periodIdx)
             if state in self.unBound)
 
     def state_population(self, state: int) -> float:
@@ -1306,10 +1306,10 @@ description : str
         gain = 0
         if self.carrierLeak > 5E-2:
             print("The structure seems highly leak or more period needed.")
-        for i in range(len(self.singlePeriodIdx)):
-            upper = self.singlePeriodIdx[i]
-            for j in range(i+1, len(self.singlePeriodIdx)):
-                lower = self.singlePeriodIdx[j]
+        for i in range(len(self.periodIdx)):
+            upper = self.periodIdx[i]
+            for j in range(i+1, len(self.periodIdx)):
+                lower = self.periodIdx[j]
                 for shift in (-1, 0, 1):
                     dipole = self._dipole(upper, lower, shift)
                     Eu = self.eigenEs[upper]
