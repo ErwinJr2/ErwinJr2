@@ -410,7 +410,11 @@ double LOphononScatter(double step, numpyint N, double kl,
     int start, end;
     for(start = 0; start < N && fabs(psi_ij[start]) < MINPSI; start++);
     for(end = N-1; end >= start  && fabs(psi_ij[end]) < MINPSI; end--);
-    if(start == end)
+    #ifdef _DEBUG
+    printf("LO phonon scattering with start at %d, end at %d, length %d.\n",
+           start, end, N);
+    #endif
+    if(start >= end)
         return 0.0;
     end += 1;
     /* end - start is at least 1 */
