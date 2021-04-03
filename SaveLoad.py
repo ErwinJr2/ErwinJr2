@@ -149,6 +149,7 @@ def parseStrata(ldict: typing.Dict[str, typing.Any]) -> OptStrata:
     return o
 
 
+# Compostion is misspelled for legacy reason
 JSONTemplate = """{
     "FileType": "ErwinJr2 Data File",
     "Version": "210330",
@@ -204,7 +205,7 @@ def EJSaveJSON(fhandle: typing.TextIO, qclayers: QCLayers,
     qclayers : QCLayers.QCLayers
         The QCLayers class to be saved.
     optstratum : OptStrata.OptStratum
-        The OptStratum class to be saced
+        The OptStratum class to be saved
     """
     if not (isinstance(qclayers, QCLayers)
             and isinstance(optstratum, OptStrata)):
