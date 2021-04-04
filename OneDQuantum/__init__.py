@@ -1,13 +1,9 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-from . import OneDSchrodinger, OneDThermal, OneDMaxwell
+from . import OneDSchrodinger
 from .OneDSchrodinger import *
-from .OneDThermal import *
-from .OneDMaxwell import *
 __all__ = (OneDSchrodinger.__all__
-           + OneDThermal.__all__
-           + OneDMaxwell.__all__
-           + ['OneDSchrodinger', 'OneDThermal', 'OneDMaxwell'])
+           + ['OneDSchrodinger'])
 
 try:
     OneDSchrodinger.bindOpenMP(True)
