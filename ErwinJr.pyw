@@ -440,7 +440,7 @@ class MainWindow(QMainWindow):
             self, 'ErwinJr2 Input Dialog', 'Set Temperature',
             value=nowTemp, min=0)
         if buttonResponse:
-            self.qtab.set_temperature(nowTemp)
+            self.qtab.set_temperature(newTemp)
 
 # ===========================================================================
 # Model Menu Items
