@@ -133,7 +133,7 @@ class EJplotControl(NavigationToolbar2, QObject):
             'Left button pans, Right button zooms\n'
             'x/y fixes axis, CTRL fixes aspect',
             'move', 'pan'),
-            ('Zoom', 'Zoom to rectangle\nx/y fixes axis, CTRL fixes aspect',
+            ('Zoom', 'Zoom to rectangle \nx/y fixes axis, CTRL fixes aspect',
             'zoom_to_rect', 'zoom'),
             ('Subplots', 'Configure subplots', 'subplots',
                 'configure_subplots'),
@@ -152,10 +152,10 @@ class EJplotControl(NavigationToolbar2, QObject):
             raise TypeError("%s not supported." % callback)
 
     def set_custom(self, name, button, callback, cursor=cursors.HAND):
-        """cusomized callback action,
+        """customized callback action,
         s.t. this class manages the button's check status
         and its interaction with canvas.
-        Note that callback is called when clicke on canvas"""
+        Note that callback is called when clicked on canvas"""
         self._custom_active[name] = callback
         self._actions[name] = button
         self._custom_cursor[name] = cursor
@@ -164,7 +164,7 @@ class EJplotControl(NavigationToolbar2, QObject):
         button.setCheckable(True)
 
     def _get_mode_name(self):
-        # This is a work around for backward compatiblity due to
+        # This is a work around for backward compatibility due to
         # https://github.com/matplotlib/matplotlib/pull/17135
         if self._custom_mode:
             return self._custom_mode
@@ -175,7 +175,7 @@ class EJplotControl(NavigationToolbar2, QObject):
         return name
 
     def _update_buttons_checked(self):
-        # sync button checkstates to match active mode
+        # sync button check-states to match active mode
         if 'pan' in self._actions:
             self._actions['pan'].setChecked(self._get_mode_name() == 'PAN')
         if 'zoom' in self._actions:

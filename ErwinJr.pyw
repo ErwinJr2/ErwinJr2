@@ -10,8 +10,7 @@ from QCLayers import QCLayers, onedq
 from OptStrata import OptStrata
 import SaveLoad
 
-from PyQt5.QtCore import (QSettings, QFile, QUrl,
-                          QFileInfo, QVariant)
+from PyQt5.QtCore import QSettings, QFile, QUrl, QFileInfo, QVariant
 from PyQt5.QtGui import QIcon, QKeySequence, QDesktopServices, QPixmap
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTabWidget,
                              QAction, QMessageBox, QFileDialog,
@@ -437,7 +436,7 @@ class MainWindow(QMainWindow):
     def set_temperature(self):
         nowTemp = self.qtab.qclayers.temperature
         newTemp, buttonResponse = QInputDialog.getDouble(
-            self, 'ErwinJr2 Input Dialog', 'Set Temperature',
+            self, 'ErwinJr2 Input Temperature', 'Set Temperature',
             value=nowTemp, min=0)
         if buttonResponse:
             self.qtab.set_temperature(newTemp)
