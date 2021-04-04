@@ -18,6 +18,8 @@ import traceback
 import numpy as np
 from numpy import sqrt
 from functools import partial, wraps
+# figure is and should be used for gain spectrum plot only!
+from matplotlib.pyplot import figure
 from matplotlib import cm
 # the normalization used for state population
 # from matplotlib.colors import LogNorm as cmNorm
@@ -35,7 +37,8 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLabel, QComboBox,
                              QCheckBox, QTextEdit, QSizePolicy,
                              QGridLayout, QHBoxLayout, QPushButton,
                              QTableWidget, QTableWidgetItem,
-                             QApplication, QMessageBox)
+                             QApplication, QMessageBox,
+                             QDialog, QDialogButtonBox)
 from customQTClass import mtrlComboBox
 
 from Material import AParm
@@ -127,7 +130,8 @@ class QuantumTab(QWidget):
             zoomInButton            zoomOutButton
             panButton               clearWFsButton
             pairSelectButton
-            FoMButton
+            FoMButton               fullPopulationButton
+            toOpticsButton          gainSpecButton
             stateParamText
 
         4th column (figureBox):
@@ -519,8 +523,11 @@ class QuantumTab(QWidget):
         self.fullPopulationButton = QPushButton("Population")
         self.fullPopulationButton.setEnabled(False)
         self.fullPopulationButton.clicked.connect(self.fullPopulation)
-        self.toOpticsButton = QPushButton("-> Optics")
+        self.toOpticsButton = QPushButton("->Optics")
         self.toOpticsButton.setEnabled(False)
+        self.gainSpecButton = QPushButton("Gain Spec")
+        self.gainSpecButton.setEnabled(False)
+        self.gainSpecButton.clicked.connect(self.popGainSpecWindow)
         # signal is processed in ErwinJr main window
         self.stateParamText = QTextEdit('')
         self.stateParamText.setReadOnly(True)
@@ -535,7 +542,8 @@ class QuantumTab(QWidget):
         calculateControlGrid.addWidget(self.pairSelectButton, 0, 0, 1, 2)
         calculateControlGrid.addWidget(self.FoMButton, 1, 0, 1, 1)
         calculateControlGrid.addWidget(self.fullPopulationButton, 1, 1, 1, 1)
-        calculateControlGrid.addWidget(self.toOpticsButton, 2, 0, 1, 2)
+        calculateControlGrid.addWidget(self.toOpticsButton, 2, 0, 1, 1)
+        calculateControlGrid.addWidget(self.gainSpecButton, 2, 1, 1, 1)
         calculateControlGrid.addWidget(self.stateParamText, 3, 0, 1, 2)
         calculateControlGrid.setSpacing(5)
         # TODO: voltage efficiency, hbar omega / field * Lp
@@ -953,12 +961,11 @@ class QuantumTab(QWidget):
         else:
             raise Exception("Should not be here")
 
-        self.qclayers.status = 'unsolved'
         self._update_layerTable()
+        self.clear_WFs()
         self.layerTable.setCurrentCell(row, column)
         self.qclayers.populate_x()
         self.update_mtrl_info()
-        self.update_quantumCanvas()
         self.dirty.emit()
 
     @pyqtSlot()
@@ -976,6 +983,7 @@ class QuantumTab(QWidget):
         """SLOT as partial(self.layerTable_materialChanged, q)) connected to
         materialWidget.currentIndexChanged(int) """
         self.qclayers.layerMtrls[row] = selection
+        self.clear_WFs()
         self.qclayers.populate_x()
         self.layerTable.selectRow(row)
         self.update_mtrl_info()
@@ -1095,6 +1103,7 @@ class QuantumTab(QWidget):
         # not decorated by pyqt because it's not a real slot but a meta-slot
         self.qclayers.set_mtrl(row, QCMaterial[
             self.qclayers.substrate][selection])
+        self.clear_WFs()
         self.qclayers.populate_x()
         self.update_mtrl_info()
         self.update_quantumCanvas()
@@ -1123,6 +1132,7 @@ class QuantumTab(QWidget):
                 # Input is not a number or is larger than 1
                 QMessageBox.warning(self, ejError, "invalid mole Fraction")
             #  item.setText(str(self.qclayers.moleFracs[row]))
+            self.clear_WFs()
             self.qclayers.populate_x()
             self.update_mtrl_info()
             self.update_quantumCanvas()
@@ -1168,6 +1178,7 @@ class QuantumTab(QWidget):
         if self.qclayers.status.startswith('solved'):
             # following also do self.qclayers.status = 'solved'
             self.qclayers.reset_IFR_cache()
+            self.gainSpecButton.setEnabled(False)
             self.update_quantumCanvas()
         self.dirty.emit()
 
@@ -1183,6 +1194,7 @@ class QuantumTab(QWidget):
         if self.qclayers.status.startswith('solved'):
             # following also do self.qclayers.status = 'solved'
             self.qclayers.reset_IFR_cache()
+            self.gainSpecButton.setEnabled(False)
             self.update_quantumCanvas()
         self.dirty.emit()
 
@@ -1336,6 +1348,7 @@ class QuantumTab(QWidget):
         self.stateHolder = []
         self.pairSelectButton.setEnabled(False)
         self.fullPopulationButton.setEnabled(False)
+        self.gainSpecButton.setEnabled(False)
         self.update_quantumCanvas()
 
 # ===========================================================================
@@ -1668,6 +1681,7 @@ class QuantumTab(QWidget):
         self.stateHolder = []
         self.qclayers.full_population()
         self.FoMButton.setEnabled(False)
+        self.gainSpecButton.setEnabled(True)
 
     @pyqtSlot()
     def fullPopulation(self):
@@ -1675,5 +1689,54 @@ class QuantumTab(QWidget):
         if not self.qclayers.status.startswith('solved'):
             print('Full_population triggered before solving.')
         self._threadRun(self._fullPopulation)
+
+    @pyqtSlot()
+    def popGainSpecWindow(self):
+        """SLOT connected to gainSpecButton.clicked()"""
+        wlmin = 1.5
+        wlmax = int(4*self.qclayers.wl + 0.5)/2
+        wlDialog = WLDialog(self, wlmin, wlmax)
+        wlmin, wlmax, buttonRes = wlDialog.exec()
+        if buttonRes:
+            wlFigure = figure()
+            wlFigure.canvas.set_window_title('Gain Spectrum')
+            axes = wlFigure.add_subplot(111)
+            wls = np.linspace(wlmin, wlmax, 500)
+            axes.plot(wls, self.qclayers.full_gain_spectrum(wls))
+            axes.axhline(0, ls='--', lw=0.5)
+            axes.set_xlabel('Wavelength (μm)')
+            axes.set_ylabel('Gain (cm$^{-1}$)')
+            wlFigure.show()
+
+
+class WLDialog (QDialog):
+    def __init__(self, parent, wlMin, wlMax):
+        super().__init__(parent)
+        self.setModal(True)
+        self.setWindowTitle('ErwinJr2: Gain Spectrum Range')
+        self.wlMinBox = QDoubleSpinBox()
+        self.wlMaxBox = QDoubleSpinBox()
+        for box in (self.wlMinBox, self.wlMaxBox):
+            box.setDecimals(1)
+            box.setRange(0.5, 100)
+            box.setSingleStep(1)
+            box.setSuffix(' μm')
+        self.wlMinBox.setValue(wlMin)
+        self.wlMaxBox.setValue(wlMax)
+        mainLayout = QGridLayout()
+        mainLayout.addWidget(QLabel('min λ: '), 0, 0)
+        mainLayout.addWidget(self.wlMinBox, 0, 1)
+        mainLayout.addWidget(QLabel('max λ: '), 1, 0)
+        mainLayout.addWidget(self.wlMaxBox, 1, 1)
+        buttonBox = QDialogButtonBox(
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal)
+        buttonBox.accepted.connect(self.accept)
+        buttonBox.rejected.connect(self.reject)
+        mainLayout.addWidget(buttonBox, 2, 0, 1, 2)
+        self.setLayout(mainLayout)
+
+    def exec(self):
+        res = super().exec()
+        return self.wlMinBox.value(), self.wlMaxBox.value(), res
 
 # vim: ts=4 sw=4 sts=4 expandtab

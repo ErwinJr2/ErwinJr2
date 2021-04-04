@@ -1373,7 +1373,7 @@ description : str
         self.current = self.flow * self.sheet_density * e0 * 1E9
         return res
 
-    def full_auto_gain_spectrum(self, wl: ScalerOrArray) -> ScalerOrArray:
+    def full_gain_spectrum(self, wl: ScalerOrArray) -> ScalerOrArray:
         """Perform fully automatic calculation for the gain on wavelength(s).
         """
         neff = self.effective_ridx(wl)

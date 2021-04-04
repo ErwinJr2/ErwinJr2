@@ -14,7 +14,7 @@ def gainSpec(qcl):
     qcl.solve_whole()
     qcl.period_recognize()
     qcl.full_population()
-    gain = qcl.full_auto_gain_spectrum(wls)
+    gain = qcl.full_gain_spectrum(wls)
     plt.plot(wls, gain)
     # gg = 0
     # for key in qcl.gainul:
