@@ -1,6 +1,6 @@
 """
 This file defines the optical tab of ErwinJr, for simulation and optimization
-of 1D waveguiding
+of 1D waveguide
 """
 
 from functools import partial
@@ -16,7 +16,6 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
                              QTextEdit, QMessageBox)
 from OptStrata import OptStrata, rIdx, Alloy, Dopable
 from EJcanvas import EJcanvas
-# from EJcanvas import config as canvasConfig
 from customQTClass import mtrlComboBox
 from versionAndName import ejError
 mtrlList = list(rIdx.keys()) + list(Alloy.keys())
@@ -66,7 +65,6 @@ class OpticalTab(QWidget):
     def __init__(self, stratum=None, parent=None):
         super(OpticalTab, self).__init__(parent)
         self.stratum = stratum if stratum else OptStrata(3.0)
-        # TODO: put gain as part of ridx?
         self.periods = {}
         self.ridgeLength = 3.0
         self.ridgeLoss = 0.0
@@ -116,7 +114,7 @@ class OpticalTab(QWidget):
         self.update_xs()
 
     def _settingBox(self, width):
-        """Return a Qt Layout object containning all setting widgets"""
+        """Return a Qt Layout object containing all setting widgets"""
         settingBox = QVBoxLayout()
 
         settingBox.addWidget(QLabel('<b><center>Wavelength</center></b>'))
@@ -165,7 +163,7 @@ class OpticalTab(QWidget):
         self.fieldBox.setDecimals(1)
         self.fieldBox.setMaximum(500)
         mtrlLayout.addWidget(self.fieldBox, 8, 0)
-        mtrlLayout.addWidget(QLabel('<center>Gain Coef.</center>'), 7, 1)
+        mtrlLayout.addWidget(QLabel('<center>Gain Coeff.</center>'), 7, 1)
         self.gainCoeffBox = QDoubleSpinBox()
         self.gainCoeffBox.setSuffix(' cm/kA')
         self.gainCoeffBox.setEnabled(False)
@@ -193,7 +191,7 @@ class OpticalTab(QWidget):
         self.refBox = [None]*2
         for n in (0, 1):
             ridgeLayout.addWidget(QLabel(
-                "<center>Fecet%d</center>" % (n+1)), 0, n)
+                "<center>Facet%d</center>" % (n+1)), 0, n)
             self.facetBox[n] = QComboBox()
             self.facetBox[n].addItems(facetList)
             self.facetBox[n].setCurrentText(self.facet[n])
@@ -241,7 +239,7 @@ class OpticalTab(QWidget):
         # _settingBox end
 
     def _strataBox(self, width):
-        """Return a Qt Layout object containning all strata table widgets"""
+        """Return a Qt Layout object containing all strata table widgets"""
         strataBox = QGridLayout()
         strataBox.setSpacing(5)
         self.insertButton = QPushButton("Insert Strata")
@@ -378,6 +376,7 @@ class OpticalTab(QWidget):
         self.periodBox.setValue(Lp)
         self.gainCoeffBox.setValue(gaincoeff)
         self.update_customLength()
+        self.updateMtrl()
 
     def update_customLength(self):
         length = self.periodBox.value() * self.repeatBox.value() / 1E4  # to um
@@ -433,7 +432,6 @@ class OpticalTab(QWidget):
     def update_Loss(self):
         """Update the mirror loss, should be called whenever the facet
         settings are changed"""
-        # print(self.facetRefct(0), self.facetRefct(1))
         perRunLoss = self.facetRefct(1) * self.facetRefct(0)
         self.alpham = -log(perRunLoss)/(2*self.ridgeLength/10)  # to cm-1
         self.mirrorLoss.setText(
@@ -467,7 +465,7 @@ class OpticalTab(QWidget):
                 self.strataTable_refresh()
                 return
             if column == 1:
-                # molefrac
+                # mole fraction
                 if value > 1:
                     QMessageBox.warning(
                         self, ejError, "Mole Fraction must be between 0 and 1")
@@ -608,7 +606,7 @@ class OpticalTab(QWidget):
         confinement : float
             The confinement factor in unit 1 (percentage 100*confinement)
 
-        alphaw : float
+        alphaW : float
             The waveguide loss in unit cm-1
         """
         try:
@@ -620,7 +618,7 @@ class OpticalTab(QWidget):
         # TODO
         self.confinement = self.stratum.confinementy(
             self.beta, self.xs, self.Ey)
-        self.alphaw = 4*pi/(self.stratum.wl/1E4) * self.beta.imag  # cm^-1
+        self.alphaW = 4*pi/(self.stratum.wl/1E4) * self.beta.imag  # cm^-1
         self.update_canvas()
         self.update_Loss()
         self.update_info()
@@ -633,11 +631,11 @@ class OpticalTab(QWidget):
             info += "Effective refractive index:\n"
             info += "  β = %.3f + (%.3g)i\n" % (self.beta.real, self.beta.imag)
             info += "Waveguide loss:\n"
-            info += "  α<sub>w</sub> = %.3f cm<sup>-1</sup>\n" % self.alphaw
+            info += "  α<sub>w</sub> = %.3f cm<sup>-1</sup>\n" % self.alphaW
             info += "Confinement factor: "
             info += "  Γ = %.1f%%\n" % (self.confinement * 100)
             info += "Threshold gain:\n"
-            gth = (self.alpham + self.alphaw)/self.confinement
+            gth = (self.alpham + self.alphaW)/self.confinement
             info += " g<sub>th</sub> = %.1f cm<sup>-1</sup>\n" % gth
             try:
                 self.jth = gth / self.stratum.cstmGain["Active Core"]
