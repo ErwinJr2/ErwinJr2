@@ -75,7 +75,9 @@ pip install -r docs/requirements.txt
 - [X] install.py update
 - [ ] remove unnecessary C lib
 - [X] Add IFR scattering
-- [ ] Add gain spectrum
+- [ ] Add impurity scattering
+- [ ] Add finite temperature
+- [X] Add gain spectrum
 - [ ] global optimizer for QCLayers
 - [ ] optimizer for optical stratum
 - [ ] Test case improve:

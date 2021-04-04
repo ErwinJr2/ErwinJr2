@@ -845,7 +845,7 @@ class SchrodingerLayer(object):
             Eu = self.eigenEs[upper]
             El = self.eigenEs[lower]
             de = np.abs(Eu - El)
-            return 0.1 * de
+            return 0.05 * de
         gamma_u = 1/self.ifr_lifetime(upper) + 1/self.lo_lifetime(upper)
         gamma_l = 1/self.ifr_lifetime(lower) + 1/self.lo_lifetime(lower)
         gamma_parallel = self.ifr_broadening(upper, lower)
@@ -1294,7 +1294,7 @@ description : str
         self.layerMtrls = (self.layerMtrls*2)[start:end]
         self.layerDopings = (self.layerDopings*2)[start:end]
 
-    def calc_FoM(self, upper: int, lower: int) -> float:
+    def figure_of_merit(self, upper: int, lower: int) -> float:
         """Calculate Figure of Merit.
         This function must be called after solving for wave functions
 
@@ -1392,7 +1392,12 @@ description : str
                     dpop = self.population[i] - self.population[j]
                     if de < 0:
                         de, dpop = -de, -dpop
-                    gamma = (self._pGamma[shift][j][i] +
+                    if self.includeIFR:
+                        gamma_para = self._pGamma[shift][j][i]
+                    else:
+                        gamma_para = self.dephasing(upper, lower)
+                        gamma_para /= (1E12 * hbar/e0)  # unit to Hz
+                    gamma = (gamma_para +
                              (self.decayRates[i] + self.decayRates[j])/2
                              ) * 1E12 * hbar/e0
                     gainul = dpop * dipole**2 * gamma/(gamma**2 + (de-de0)**2)
@@ -1424,7 +1429,8 @@ description : str
         def reduceFoM():
             wul = Eu - El
             gamma = self.dephasing(upper, lower)
-            return self.calc_FoM(upper, lower)*gamma*w0/(gamma**2+(wul-w0)**2)
+            return self.figure_of_merit(upper, lower) * gamma * w0/(
+                gamma**2 + (wul - w0)**2)
         width = round(self.layerWidths[n] / self.xres) * self.xres
         FoMnow = reduceFoM()
         print(("Start Optimizing Layer NO %d " % n) +

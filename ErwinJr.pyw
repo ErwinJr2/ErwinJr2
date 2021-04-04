@@ -99,10 +99,8 @@ class MainWindow(QMainWindow):
         self.create_menu()
 
     def q2o(self):
-        wl = self.qtab.qclayers.wl
-        self.otab.setupActive(wl, self.qtab.qclayers.EField,
-                              self.qtab.qclayers.gaincoef,
-                              self.qtab.qclayers.effective_ridx(wl),
+        self.otab.setupActive(self.qtab.wavelength, self.qtab.qclayers.EField,
+                              self.qtab.gainCoeff, self.qtab.neff,
                               sum(self.qtab.qclayers.layerWidths))
         self.mainTabWidget.setCurrentIndex(1)
 

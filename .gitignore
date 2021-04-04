@@ -7,6 +7,7 @@
 *.lib
 *.iobj
 *.pdb
+*.pkl
 tags
 VSCache/
 .vs/

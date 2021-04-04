@@ -8,10 +8,8 @@ and scattering
 # save and load pickle for qcLayers
 # Reverse layers
 # export excel file for growth sheet
-# Debugging plot
 # Inverse rotate
-# last change
-# History
+# last change history
 
 import sys
 import traceback
@@ -487,13 +485,13 @@ class QuantumTab(QWidget):
         self.ifrDeltaBox.setMaximumWidth(width)
         self.ifrDeltaBox.setDecimals(1)
         self.ifrDeltaBox.setSuffix(' Å')
-        self.ifrDeltaBox.setRange(-50.0, 50.0)
+        self.ifrDeltaBox.setRange(0.0, 9999.0)
         self.ifrDeltaBox.valueChanged[float].connect(self.input_ifrDelta)
         self.ifrLambdaBox = QDoubleSpinBox()
         self.ifrLambdaBox.setMaximumWidth(width)
         self.ifrLambdaBox.setDecimals(1)
         self.ifrLambdaBox.setSuffix(' Å')
-        self.ifrLambdaBox.setRange(-50.0, 50.0)
+        self.ifrLambdaBox.setRange(0.0, 9999.0)
         ifrGrid = QGridLayout()
         ifrGrid.addWidget(self.ifrDefBox, 0, 0, 1, 2)
         ifrGrid.addWidget(QLabel('<center>IRF Δ</center>'), 1, 0)
@@ -1472,13 +1470,14 @@ class QuantumTab(QWidget):
                        self.pairSelectButton):
             button.setEnabled(not is_doing)
             button.repaint()
+        if is_doing:
+            self.toOpticsButton.setEnabled(False)
         if self.pairSelected:
             self.FoMButton.setEnabled(not is_doing)
             self.FoMButton.repaint()
         if self.solveType == 'whole':
             self.fullPopulationButton.setEnabled(not is_doing)
             self.fullPopulationButton.repaint()
-        self.update_quantumCanvas()
 
     def _solve_whole(self):
         self.qclayers.solve_whole()
@@ -1493,7 +1492,7 @@ class QuantumTab(QWidget):
         """SLOT connected to solveWholeButton.clicked(): Whole solver """
         self.clear_WFs()
         self.solveType = 'whole'
-        self._threadRun(self._solve_whole)
+        self._threadRun(self._solve_whole, self.update_quantumCanvas)
 
     def _solve_basis(self):
         self.qclayers.solve_basis()
@@ -1503,7 +1502,7 @@ class QuantumTab(QWidget):
         """SLOT connected to solveBasisButton.clicked(): Basis solver """
         self.clear_WFs()
         self.solveType = 'basis'
-        self._threadRun(self._solve_basis)
+        self._threadRun(self._solve_basis, self.update_quantumCanvas)
 
     def state_pick(self, event):
         """Callback registered in plotControl when it's in pairselect mode.
@@ -1576,37 +1575,28 @@ class QuantumTab(QWidget):
     def updateSelected(self):
         """Update easy-to-calculate parameters regarding picked two states"""
         self.FoMButton.setEnabled(True)
-        Ei = self.qclayers.eigenEs[self.stateHolder[0]]
-        Ej = self.qclayers.eigenEs[self.stateHolder[1]]
-        if Ei > Ej:
-            upper = self.stateHolder[0]
-            lower = self.stateHolder[1]
-        else:
-            upper = self.stateHolder[1]
-            lower = self.stateHolder[0]
-
-        self.eDiff = 1000 * (Ei - Ej)  # from eV to meV
-        self.wavelength = h * c0 / (e0 * np.abs(Ei - Ej)) * 1e6  # um
+        upper, lower = self.stateHolder
+        if self.qclayers.eigenEs[upper] < self.qclayers.eigenEs[lower]:
+            upper, lower = lower, upper
+        self.de = self.qclayers.eigenEs[upper] - self.qclayers.eigenEs[lower]
+        self.wavelength = h * c0 / (e0 * self.de) * 1e6  # um
 
         if self.solveType is None:
             self.FoMButton.setEnabled(False)
             self.pairString = ''
         else:
-            self.opticalDipole = self.qclayers.dipole(upper, lower)
-            self.tauLO_ul = 1 / self.qclayers.lo_transition(upper, lower)
+            opticalDipole = self.qclayers.dipole(upper, lower)
+            tauLO_ul = 1 / self.qclayers.lo_transition(upper, lower)
             if self.qclayers.includeIFR:
                 self.tauIFR_ul = 1 / self.qclayers.ifr_transition(upper, lower)
-            else:
-                self.transitionBroadening = 0.1 * self.eDiff  # TODO
             self.pairString = (
                 "selected: %d, %d<br>"
                 "energy diff: <b>%6.1f meV</b> (%6.1f \u00B5m)<br>"
                 "dipole: <b>%6.1f \u212B</b><br>") % (
                     self.stateHolder[0], self.stateHolder[1],
-                    self.eDiff, self.wavelength,
-                    self.opticalDipole
+                    1000*self.de, self.wavelength, opticalDipole
                 )
-            self.pairString += "LO scatter: %6.3g ps<br>" % self.tauLO_ul
+            self.pairString += "LO scatter: %6.3g ps<br>" % tauLO_ul
             if self.qclayers.includeIFR:
                 self.pairString += (
                     "IFR scatter: %6.3g ps<br>" % self.tauIFR_ul)
@@ -1618,16 +1608,13 @@ class QuantumTab(QWidget):
                 lPop = 'N/A' if lPop is None else '%.1f%%' % (100*lPop)
                 self.pairString += '%d: %s %d: %s<br>' % (
                     upper, uPop, lower, lPop)
-
         self.stateParamText.clear()
         self.stateParamText.setText(self.pairString)
 
     def _calcFoM(self):
-        upper = self.stateHolder[1]
-        lower = self.stateHolder[0]
+        upper, lower = self.stateHolder
         if self.qclayers.eigenEs[upper] < self.qclayers.eigenEs[lower]:
             upper, lower = lower, upper
-
         tauLO_u = self.qclayers.lo_lifetime(upper)
         tauLO_l = self.qclayers.lo_lifetime(lower)
         if self.qclayers.includeIFR:
@@ -1635,15 +1622,13 @@ class QuantumTab(QWidget):
             tauIFR_l = self.qclayers.ifr_lifetime(lower)
         # tau_u = 1/(1/tauLO_u + 1/tauIFR_u)
         # tau_l = 1/(1/tauLO_l + 1/tauIFR_l)
-        FoM = self.qclayers.calc_FoM(upper, lower)
+        FoM = self.qclayers.figure_of_merit(upper, lower)
+        self.neff = self.qclayers.effective_ridx(self.wavelength)
         # 1E-27 = 1E-32 * 1E5
         # 1E-32 angstrom^2 ps -> m^2 s, 1E5 m/A -> cm/kA
-        de = self.qclayers.eigenEs[upper] - self.qclayers.eigenEs[lower]
-        wl0 = c0 * h / (e0 * de) * 1E6  # m->um
         gamma = self.qclayers.dephasing(upper, lower)
-        neff = self.qclayers.effective_ridx(wl0)
-        gaincoeff = e0 * FoM * 1E-27 * de / (
-            gamma * hbar * c0 * eps0 * neff * self.qclayers.periodL * 1E-10)
+        self.gainCoeff = e0 * FoM * 1E-27 * self.de / (
+            gamma * hbar * c0 * eps0 * self.neff * self.qclayers.periodL*1E-10)
         # tauUpperLower is the inverse of transition rate (lifetime)
 
         self.FoMString = (
@@ -1658,7 +1643,7 @@ class QuantumTab(QWidget):
         self.FoMString += (
             "FoM: <b>%6.0f ps \u212B<sup>2</sup></b><br>"
             "Gain coefficient:<br>&nbsp;&nbsp; %.2f cm/kA"
-        ) % (FoM, gaincoeff)
+        ) % (FoM, self.gainCoeff)
 
     def _updateFoM(self):
         self.stateParamText.setText(self.pairString + self.FoMString)
@@ -1680,15 +1665,32 @@ class QuantumTab(QWidget):
     def _fullPopulation(self):
         self.stateHolder = []
         self.qclayers.full_population()
+        self.wavelength = self.inputWlBox.value()
+        self.neff = self.qclayers.effective_ridx(self.wavelength)
+        gain = self.qclayers.full_gain_spectrum(self.wavelength)
+        self.gainCoeff = gain / self.qclayers.current
+        self.specString = (
+            "Carrier Leakage: <br>"
+            "&nbsp;&nbsp; %.2f%%<br>"
+            "Current: %.1f kA/cm<sup>2</sup><br>"
+            "Gain coefficient:<br>"
+            "&nbsp;&nbsp; %.2f cm/kA"
+        ) % (self.qclayers.carrierLeak * 100, self.qclayers.current,
+             self.gainCoeff)
+
+    def _updatePopulation(self):
+        self.stateParamText.setText(self.specString)
         self.FoMButton.setEnabled(False)
         self.gainSpecButton.setEnabled(True)
+        self.toOpticsButton.setEnabled(True)
+        self.update_quantumCanvas()
 
     @pyqtSlot()
     def fullPopulation(self):
         """SLOT connected to fullPopulationButton.clicked()"""
         if not self.qclayers.status.startswith('solved'):
             print('Full_population triggered before solving.')
-        self._threadRun(self._fullPopulation)
+        self._threadRun(self._fullPopulation, self._updatePopulation)
 
     @pyqtSlot()
     def popGainSpecWindow(self):

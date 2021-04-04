@@ -14,6 +14,7 @@ def gainSpec(qcl):
     qcl.solve_whole()
     qcl.period_recognize()
     qcl.full_population()
+    print(1/qcl.flow, qcl.current, qcl.full_gain_spectrum(8.0))
     gain = qcl.full_gain_spectrum(wls)
     plt.plot(wls, gain)
     # gg = 0
@@ -21,7 +22,7 @@ def gainSpec(qcl):
     #     plt.plot(wls, qcl.gainul[key], label=str(key))
     #     gg += qcl.gainul[key]
     # plt.legend()
-    plt.show()
+    # plt.show()
 
 
 def iv(qcl):
@@ -41,6 +42,7 @@ def iv(qcl):
 
 
 if __name__ == "__main__":
+    # with open("../example/PQLiu.json") as f:
     with open("../example/std8um.json") as f:
         qcl = SaveLoad.qclLoad(f)
 
