@@ -1667,6 +1667,7 @@ class QuantumTab(QWidget):
     def _fullPopulation(self):
         self.stateHolder = []
         self.qclayers.full_population()
+        self.FoMButton.setEnabled(False)
 
     @pyqtSlot()
     def fullPopulation(self):
