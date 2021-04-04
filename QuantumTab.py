@@ -294,6 +294,7 @@ class QuantumTab(QWidget):
             '<center><b>No of States<br>Per Period</b></center>')
         settingBox.addWidget(self.eCountLabel)
         self.inputECountBox = QSpinBox()
+        self.inputECountBox.setMaximumWidth(width)
         self.inputECountBox.setRange(1, 100)
         self.inputECountBox.valueChanged.connect(self.input_Ecount)
         self.inputECountBox.setToolTip(
@@ -1690,6 +1691,7 @@ class QuantumTab(QWidget):
         """SLOT connected to fullPopulationButton.clicked()"""
         if not self.qclayers.status.startswith('solved'):
             print('Full_population triggered before solving.')
+        self.stateParamText.clear()
         self._threadRun(self._fullPopulation, self._updatePopulation)
 
     @pyqtSlot()
