@@ -1409,8 +1409,10 @@ class QuantumTab(QWidget):
             self._ifrGroupBox.setVisible(False)
 
     def triggerSolver(self, solver):
-        self.qclayers.solver = solver
-        self.algoParamUpdate()
+        if solver != self.qclayers.solver:
+            self.qclayers.solver = solver
+            self.clear_WFs()
+            self.algoParamUpdate()
 
     def algoParamUpdate(self):
         # This is causing "has active key-value observers (KVO)" when recreate
@@ -1659,6 +1661,7 @@ class QuantumTab(QWidget):
         if len(self.stateHolder) < 2:
             print('Warning: FoM button triggered before state selection.')
             return
+        self.FoMString = ''
         self._threadRun(self._calcFoM, self._updateFoM)
 
     def _fullPopulation(self):
