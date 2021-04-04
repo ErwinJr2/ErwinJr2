@@ -56,6 +56,37 @@ class TestQCLayers(unittest.TestCase):
         self.assertEqual(qcl.eigenEs.shape, (96,))
         self.assertEqual(qcl.psis.shape, (96, 1384))
 
+    def test_cache_consistency(self):
+        with open("../example/PQLiu.json") as f:
+            qcl = SaveLoad.qclLoad(f)
+        qcl.includeIFR = True
+        qcl.mtrlIFRLambda = [5.0] * 2
+        qcl.mtrlIFRDelta = [5.0] * 2
+        qcl.repeats = 4
+        qcl.populate_x()
+        qcl.solve_whole()
+        self.assertFalse(hasattr(qcl, 'periodMap'))
+        self.assertEqual(qcl.status, 'solved')
+        taulo = qcl.lo_lifetime(33)
+        tauifr = qcl.ifr_lifetime(33)
+        tau = qcl.lifetime(33)
+        gamma = qcl.ifr_broadening(31, 21)
+        qcl.period_recognize()
+        qcl.period_map_build()
+        qcl.full_population()
+        self.assertEqual(qcl.status, 'solved-full')
+        self.assertTrue(hasattr(qcl, 'periodMap'))
+        # A different cache is used
+        self.assertNotEqual(taulo, qcl.lo_lifetime(33), 4)
+        self.assertNotEqual(tauifr, qcl.ifr_lifetime(33), 4)
+        self.assertNotEqual(tau, qcl.lifetime(33), 4)
+        self.assertNotEqual(gamma, qcl.ifr_broadening(39, 31), 9)
+        # But result should be approximately same
+        self.assertAlmostEqual(taulo, qcl.lo_lifetime(33), 4)
+        self.assertAlmostEqual(tauifr, qcl.ifr_lifetime(33), 4)
+        self.assertAlmostEqual(tau, qcl.lifetime(33), 4)
+        self.assertAlmostEqual(gamma, qcl.ifr_broadening(31, 21), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

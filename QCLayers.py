@@ -642,18 +642,46 @@ class SchrodingerLayer(object):
         return (ml * e0**2 * self.avghwLO * e0 / hbar * Iij
                 / (4 * hbar**2 * self.epsrho * eps0 * kl)) / 1e12  # unit ps^-1
 
-    def lo_transition(self, upper: int, lower: int, shift: int = 0) -> float:
+    def lo_transition(self, upper: int, lower: int) -> float:
         """The LO phonon transition lifetime from upper to lower,
         at zero temperature.
-        shift means lower state is shifted by this number of period."""
+        This is using cached results.
+        if status is 'solved-full' and the state is a recognized state of a
+        period, it's calculated via translation of the wavefunction, otherwise
+        it's calculated based on row self.psis
+        """
+        if self.status == 'solved-full':
+            try:
+                pu, ushift = self.periodMap[upper]
+                pl, lshift = self.periodMap[lower]
+                if lshift - ushift not in (0, 1, -1):
+                    return INV_INF
+                return self._pLO[lshift-ushift][pl][pu]
+            except (TypeError, AttributeError):
+                # TypeError is when self.periodMap return None
+                # AttributeError is when self.periodMap does not exist
+                pass
         if self._cacheLO[upper][lower] is None:
             self._cacheLO[upper][lower] = self._lo_transition(
-                upper, lower, shift)
+                upper, lower)
         return self._cacheLO[upper][lower]
 
     def lo_lifetime(self, state: int) -> float:
         """ Return the life time due to LO phonon scattering of the
-        given state(label)"""
+        given state(label)
+        This is using cached results.
+        if status is 'solved-full' and the state is a recognized state of a
+        period, it's calculated via translation of the wavefunction, otherwise
+        it's calculated based on row self.psis
+        """
+        if self.status == 'solved-full':
+            try:
+                return 1/sum(np.sum(self._pLO[n][:, self.periodMap[state][0]])
+                             for n in range(3))
+            except (TypeError, AttributeError):
+                # TypeError is when self.periodMap return None
+                # AttributeError is when self.periodMap does not exist
+                pass
         Ei = self.eigenEs[state]
         if onedq is None:
             return 1/sum(self.lo_transition(state, q) for q in range(state)
@@ -712,7 +740,7 @@ class SchrodingerLayer(object):
                           * (psi_usqz * mu - psi_lsqz * ml))/2
         return tauInv/1E12, gamma/1E12  # unit ps^-1
 
-    def ifr_transition(self, upper: int, lower: int, shift: int = 0) -> float:
+    def ifr_transition(self, upper: int, lower: int) -> float:
         r"""Calculate the interface roughness (IFR) transition rate from
         upper to lower state at zero temperature, in unit ps^-1.
 
@@ -722,10 +750,27 @@ class SchrodingerLayer(object):
             \Delta_n^2\Lambda_n^2\delta U_n^2
             \left|\psi_i(z_n)\psi_j^*(z_n)\right|^2
             \mathrm e^{- \Lambda^2 m_j^* (E_i - E_j))/2\hbar^2}
+
+        This is using cached results.
+        if status is 'solved-full' and the state is a recognized state of a
+        period, it's calculated via translation of the wavefunction, otherwise
+        it's calculated based on row self.psis
         """
-        if shift == 0 and self._cacheIFR[upper][lower] is not None:
+        assert(self.includeIFR)
+        if self.status == 'solved-full':
+            try:
+                pu, ushift = self.periodMap[upper]
+                pl, lshift = self.periodMap[lower]
+                if lshift - ushift not in (0, 1, -1):
+                    return INV_INF
+                return self._pIFR[lshift-ushift][pl][pu]
+            except (TypeError, AttributeError):
+                # TypeError is when self.periodMap return None
+                # AttributeError is when self.periodMap does not exist
+                pass
+        if self._cacheIFR[upper][lower] is not None:
             return self._cacheIFR[upper][lower]
-        tauInv, gamma = self._ifr_transition(upper, lower, shift)
+        tauInv, gamma = self._ifr_transition(upper, lower)
         self._cacheIFR[upper][lower] = tauInv
         if gamma > 0:
             self._cacheGamma[upper][lower] = gamma
@@ -733,23 +778,58 @@ class SchrodingerLayer(object):
         return self._cacheIFR[upper][lower]
 
     def ifr_lifetime(self, state: int) -> float:
-        """ Return to total life time due to IFR scattering"""
+        """Return to total life time due to IFR scattering.
+        This is using cached results.
+        if status is 'solved-full' and the state is a recognized state of a
+        period, it's calculated via translation of the wavefunction, otherwise
+        it's calculated based on row self.psis
+        """
+        assert(self.includeIFR)
+        if self.status == 'solved-full':
+            try:
+                return 1/sum(np.sum(self._pIFR[n][:, self.periodMap[state][0]])
+                             for n in range(3))
+            except (TypeError, AttributeError):
+                # TypeError is when self.periodMap return None
+                # AttributeError is when self.periodMap does not exist
+                pass
         return 1/sum(self.ifr_transition(state, q) for q in range(state))
 
     def lifetime(self, state: int) -> float:
+        """A convenience wrap of return total lifetime of LO and IFR scattering
+        or only LO scattering depending on self.includeIFR."""
+        if self.status == 'solved-full':
+            try:
+                return 1/self.decayRates[self.periodMap[state][0]]
+            except (TypeError, AttributeError):
+                # TypeError is when self.periodMap return None
+                # AttributeError is when self.periodMap does not exist
+                pass
         if self.includeIFR:
             return 1/(1/self.ifr_lifetime(state) + 1/self.lo_lifetime(state))
         else:
             return self.lo_lifetime(state)
 
-    def ifr_broadening(self, upper: int, lower: int, shift: int = 0) -> float:
+    def ifr_broadening(self, upper: int, lower: int) -> float:
         """Interface roughness induced broadening"""
+        # TODO: shift life time
+        if self.status == 'solved-full':
+            try:
+                pu, ushift = self.periodMap[upper]
+                pl, lshift = self.periodMap[lower]
+                if lshift - ushift not in (0, 1, -1):
+                    return 1/INV_INF
+                return self._pGamma[lshift-ushift][pl][pu]
+            except (TypeError, AttributeError):
+                # TypeError is when self.periodMap return None
+                # AttributeError is when self.periodMap does not exist
+                pass
         if self._cacheGamma[upper][lower] is None:
-            self.ifr_transition(upper, lower, shift)
-            self.ifr_transition(lower, upper, shift)
+            self.ifr_transition(upper, lower)
+            self.ifr_transition(lower, upper)
         return self._cacheGamma[upper][lower]
 
-    def dephasing(self, upper: int, lower: int, shift: int = 0) -> float:
+    def dephasing(self, upper: int, lower: int) -> float:
         r"""Calculate the broadening gamma of transition between upper ->
         lower transition, return gamma in unit eV as in Lorentzian:
 
@@ -761,15 +841,14 @@ class SchrodingerLayer(object):
         from IFR broadening and finite lifetime of upper and lower states.
         Otherwise 0.1 is returned.
         """
-        # TODO: shift life time
         if not self.includeIFR:
             Eu = self.eigenEs[upper]
-            El = self.eigenEs[lower] - shift * self.Eshift
+            El = self.eigenEs[lower]
             de = np.abs(Eu - El)
             return 0.1 * de
         gamma_u = 1/self.ifr_lifetime(upper) + 1/self.lo_lifetime(upper)
         gamma_l = 1/self.ifr_lifetime(lower) + 1/self.lo_lifetime(lower)
-        gamma_parallel = self.ifr_broadening(upper, lower, shift)
+        gamma_parallel = self.ifr_broadening(upper, lower)
         # 1E12: ps^-1 -> Hz
         return (gamma_parallel + (gamma_u + gamma_l)/2) * 1E12 * hbar / e0
 
@@ -800,7 +879,7 @@ class SchrodingerLayer(object):
                 self.unBound.add(n)
                 if self.eigenEs[n] < barrierBound[-self.ends[n]]:
                     # TODO: use warning package
-                    print('State No.{} is close to right boundary. '
+                    print('State No.{} is close to the right boundary. '
                           'More repeats may be needed'.format(n))
         # print(self.singlePeriodIdx, self.looselyBounded)
         if len(self.periodIdx) - len(self.unBound) == 0:
@@ -846,52 +925,53 @@ class SchrodingerLayer(object):
 
         Return
         ------
-        population : np.array of float
-            The population of electrons in the first recognized period
+        population : np.array of float, dim = len(periodIdx)
+            The population of electrons in the first recognized period, state
+            label self.PeriodIdx[n]
 
         Yield
         -----
-        internal : np.array of float
-            The transition rate singlePeriodIdx[i] -> singlePeriodIdx[j]
-            within the period
-        forward : np.array of float
-            The transition rate singlePeriodIdx[i] -> singlePeriodIdx[j]
-            to the next period
-        backward : np.array of float
-            The transition rate singlePeriodIdx[i] -> singlePeriodIdx[j]
-            to the pervious period
+        transitions : np.array of float, dim = len(periodIdx)*len(periodIdx)
+            The transition rate from self.PeriodIdx[i] to self.PeriodIdx[j]
+        decayRates : np.array of float, dim = len(periodIdx)
+            Inverse of lifetimes
         flow : float
             The flow of carrier, in unit ps^-1 (carrier density normalize to 1)
         """
-        # construct periodic states
-        idxPeriod = len(self.singlePeriodIdx)
-
-        self.internal = np.zeros((idxPeriod, idxPeriod))
-        self.forward = np.zeros((idxPeriod, idxPeriod))
-        self.backward = np.zeros((idxPeriod, idxPeriod))
-        for i, lower in enumerate(self.singlePeriodIdx):
-            for j, upper in enumerate(self.singlePeriodIdx):
+        idxPeriod = len(self.periodIdx)
+        # p for cache for the periodic version
+        self._pLO = [np.zeros((idxPeriod, idxPeriod)) for _ in range(3)]
+        self._pIFR = [np.zeros((idxPeriod, idxPeriod)) for _ in range(3)]
+        self._pGamma = [np.zeros((idxPeriod, idxPeriod)) for _ in range(3)]
+        for i, lower in enumerate(self.periodIdx):
+            for j, upper in enumerate(self.periodIdx):
                 # keep this consistent with loMatrix etc
-                self.forward[j][i] = (
-                    self._lo_transition(lower, upper, 1)
-                    + self._ifr_transition(lower, upper, 1)[0])
-                self.backward[j][i] = (
-                    self._lo_transition(lower, upper, -1)
-                    + self._ifr_transition(lower, upper, -1)[0])
-                if lower != upper:
-                    self.internal[j][i] = (
-                        self._lo_transition(lower, upper, 0)
-                        + self._ifr_transition(lower, upper, 0)[0])
-        self.transitions = self.internal + self.forward + self.backward
-        self.lifetimes = np.sum(self.transitions, axis=0)
+                for s in ((1, -1) if lower == upper else (1, 0, -1)):
+                    self._pLO[s][j][i] = self._lo_transition(lower, upper, s)
+                    self._pIFR[s][j][i], gamma = (
+                        self._ifr_transition(lower, upper, s))
+                    if gamma > 0:
+                        self._pGamma[s][j][i] = self._pGamma[s][i][j] = gamma
+        forward = self._pLO[1] + self._pIFR[1]
+        backward = self._pLO[-1] + self._pIFR[-1]
+        internal = self._pLO[0] + self._pIFR[0]
+        self.transitions = internal + forward + backward
+        self.decayRates = np.sum(self.transitions, axis=0)
         self.population = null_space(
-            np.diag(-self.lifetimes) + self.transitions)
+            np.diag(-self.decayRates) + self.transitions)
         if self.population.shape[1] != 1:
             raise ValueError('More than one steady state found. ',
                              self.population.shape[1])
         self.population = self.population[:, 0].T
         self.population /= np.sum(self.population)
-        self.flow = np.sum((self.forward - self.backward) @ self.population)
+        if self.carrierLeak > 5E-2:
+            # TODO: use warning package
+            print("The structure seems highly leak or more period needed.")
+            print("    Most leaking (%.2f%%) unbounded state: %d" %
+                  max((self.population[n], state)
+                      for n, state in enumerate(self.periodIdx)
+                      if state in self.unBound))
+        self.flow = np.sum((forward - backward) @ self.population)
         # print("transition: ", self.transitions)
         # print("lifetimes: ", -1/transfer.diagonal())
         # print("population: ", self.population)
@@ -1296,32 +1376,34 @@ description : str
     def full_auto_gain_spectrum(self, wl: ScalerOrArray) -> ScalerOrArray:
         """Perform fully automatic calculation for the gain on wavelength(s).
         """
-        # TODO: wf -> population map
-        self.populate_x()
-        self.solve_whole()
-        self.period_recognize()
-        self.full_population()
         neff = self.effective_ridx(wl)
         de0 = h * c0 / (wl * 1E-6) / e0
         gain = 0
-        if self.carrierLeak > 5E-2:
-            print("The structure seems highly leak or more period needed.")
+        self.gainul = {}
         for i in range(len(self.periodIdx)):
             upper = self.periodIdx[i]
             for j in range(i+1, len(self.periodIdx)):
                 lower = self.periodIdx[j]
                 for shift in (-1, 0, 1):
-                    dipole = self._dipole(upper, lower, shift)
+                    dipole = self._dipole(upper, lower, shift) * 1E-8  # to cm
                     Eu = self.eigenEs[upper]
                     El = self.eigenEs[lower] - shift * self.Eshift
                     de = Eu - El
                     dpop = self.population[i] - self.population[j]
                     if de < 0:
                         de, dpop = -de, -dpop
-                    gamma = self.dephasing(upper, lower, shift)
-                    gain = gain + dpop * dipole**2 * gamma / (
-                            gamma**2 + (de-de0)**2)
-        gain *= e0**2*de0*self.sheet_density / (hbar*neff*c0*eps0)
+                    gamma = (self._pGamma[shift][j][i] +
+                             (self.decayRates[i] + self.decayRates[j])/2
+                             ) * 1E12 * hbar/e0
+                    gainul = dpop * dipole**2 * gamma/(gamma**2 + (de-de0)**2)
+                    # if np.max(np.abs(gainul)) > 4E-13:
+                    #     self.gainul[(upper, lower)] = gainul
+                    #     print(dpop * dipole**2, h*c0/(de*e0)*1E6, gamma/de,
+                    #           upper, lower, shift)
+                    gain = gain + gainul
+        # e0^2 / (hbar * c0 * eps0) is dimension 1.. 1E-8 makes unit cm^-1
+        gain *= e0**2*de0*self.sheet_density / (
+                hbar*neff*c0*eps0*self.periodL*1E-8)
         return gain
 
     def optimize_layer(self, n, upper, lower):
