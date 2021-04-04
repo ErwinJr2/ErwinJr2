@@ -531,6 +531,9 @@ def main(filename=None):
     form = MainWindow(fileName)
     form.show()
     splash.finish(form)
+    if sys.platform.startswith('win'):
+        # The default font for win is not consistent with the OS
+        app.setFont(QApplication.font("QMenu"))
     app.exec_()
 
 
