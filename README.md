@@ -73,10 +73,10 @@ pip install -r docs/requirements.txt
 - [X] Add a linear algebra solver
 - [ ] ?NEGF solver
 - [X] install.py update
-- [ ] remove unnecessary C lib
+- [X] remove unnecessary C lib
 - [X] Add IFR scattering
-- [ ] Add impurity scattering
-- [ ] Add finite temperature
+- [ ] Add impurity scattering (may be important for transport)
+- [ ] Add finite temperature  (to improve population distribution)
 - [X] Add gain spectrum
 - [ ] global optimizer for QCLayers
 - [ ] optimizer for optical stratum
