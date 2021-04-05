@@ -1758,7 +1758,7 @@ class QuantumTab(QWidget):
             wlFigure.show()
 
 
-class WLDialog (QDialog):
+class WLDialog(QDialog):
     def __init__(self, parent, wlMin, wlMax):
         super().__init__(parent)
         self.setModal(True)

@@ -613,4 +613,55 @@ class OptStrata(MaxwellLayer):
             beta, self.populateMtrl(xs), xs, Ey)
 
 
+def optimizeOptStrata(stratum: OptStrata, alphaM,
+                      toOptimize: List[int], maxLength: float,
+                      iter: int = 20, tol=0.05) -> float:
+    """Optimize strata with threshold gain as the minimize objective function
+    g_th = (alphaM + alphaW)/confinement, where the waveguide loss alphaW
+    and the confinement factor is a character of strata.
+    The optimization is done on layer indexed by elements in toOptimize,
+    and conditioned on total length to be smaller than maxLength.
+    Newton's method with an increasing penalty is used.
+
+    Returns
+    -------
+    float: The optimized threshold gain in cm^-1
+    """
+    assert(toOptimize)
+    assert(all(n > 0 and n < len(stratum.Ls)-1 for n in toOptimize))
+
+    def objective(penalty: float):
+        beta = stratum.boundModeTM()
+        gamma = stratum.confinementy(beta)
+        alphaW = 4*pi/(stratum.wl/1E4) * beta.imag  # cm^-1
+        length = sum(stratum.Ls[1:-1])
+        return (alphaM+alphaW)/gamma+penalty*max(0, length-maxLength)**2
+
+    penalty = 0.5
+    now = objective(penalty)
+    for n in range(iter):
+        changed = False
+        for n in toOptimize:
+            w = stratum.Ls[n]
+            step = 1E-5 * w
+            stratum.Ls[n] = w - step
+            newMinus = objective(penalty)
+            stratum.Ls[n] = w + step
+            newPlus = objective(penalty)
+            dif = (newPlus - newMinus)/2/step
+            ddif = (newPlus + newMinus - 2*now)/step**2
+            dw = -dif/ddif
+            if ddif < 0 or abs(dw) > 0.2*w:
+                dw = 0.2*w if dif < 0 else -0.2*w
+            elif abs(dw) < tol:
+                continue
+            changed = True
+            res = tol/5
+            stratum.Ls[n] = res*round((w + dw)/res)
+            now = objective(penalty)
+        if not changed and sum(stratum.Ls[1:-1]) <= maxLength+tol:
+            break
+        penalty *= 2
+    print('Finished with penalty: ', penalty)
+
 # vim: ts=4 sw=4 sts=4 expandtab
