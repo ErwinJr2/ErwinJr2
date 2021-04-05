@@ -76,10 +76,10 @@ pip install -r docs/requirements.txt
 - [X] remove unnecessary C lib
 - [X] Add IFR scattering
 - [ ] Add impurity scattering (may be important for transport)
-- [ ] Add finite temperature  (to improve population distribution)
+- [ ] Add finite temperature (to improve population distribution)
 - [X] Add gain spectrum
-- [ ] global optimizer for QCLayers
-- [ ] optimizer for optical stratum
+- [X] global optimizer for QCLayers
+- [X] optimizer for optical stratum
 - [ ] save to excel (to growth sheet)
 - [ ] Test case improve:
     - [ ] LO and IFR scattering results
