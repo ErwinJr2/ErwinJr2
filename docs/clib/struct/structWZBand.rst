@@ -1,4 +1,0 @@
-Struct WZBand
-=============
-
-.. doxygenstruct:: WZBand
