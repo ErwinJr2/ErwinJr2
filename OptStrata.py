@@ -191,7 +191,7 @@ class MaxwellLayer(object):
                 beta = max(self.indices.real)
                 beta = min(beta, 2.0*np.average(self.indices.real,
                            weights=self.Ls[1:-1]))
-        # # Minimization algo. for complex function zero searching
+        # # Minimization algorithm. for complex function zero searching
         # beta0 = newton(lambda beta:
         #                chiMTM(beta, wl, Ls, indices, index0, indexS).imag,
         #                x0=max(indices))
@@ -199,19 +199,19 @@ class MaxwellLayer(object):
         #                x[0] + 1j*x[1], wl, Ls, indices, index0, indexS))**2,
         #                x0 = [beta0+0.001, -1E-3], tol=1e-12, method="BFGS")
         # beta = res.x[0] + 1j*res.x[1]
-        # residule = abs(chiMTM(beta, wl, Ls, indices, index0, indexS))
+        # residual = abs(chiMTM(beta, wl, Ls, indices, index0, indexS))
         # print(res)
-        residule = self.chiMTM(beta)
+        residual = self.chiMTM(beta)
         betaDiff = beta
         t = 0
         dbeta = 1E-6
-        while abs(betaDiff) > 1E-5 and abs(residule) > 1E-10:
-            # print(beta, residule)
+        while abs(betaDiff) > 1E-5 and abs(residual) > 1E-10:
+            # print(beta, residual)
             t += 1
             fp = (self.chiMTM(beta+dbeta) - self.chiMTM(beta-dbeta))/(2*dbeta)
-            betaDiff = residule / fp
+            betaDiff = residual / fp
             beta = beta - betaDiff
-            residule = self.chiMTM(beta)
+            residual = self.chiMTM(beta)
             if t > 200:
                 raise TimeoutError("Doesn't converge")
                 break
@@ -325,20 +325,20 @@ class MaxwellLayer(object):
         n[xs >= lsum[-1]] = self.indexS
         return n
 
-    def confinementy(self, beta: complex, ars: List[np.ndarray],
+    def confinementy(self, beta: complex, actives: List[np.ndarray],
                      xs: typing.Optional[np.ndarray] = None,
                      Ey: typing.Optional[np.ndarray] = None) -> float:
         """Return the confinement factor corresponds to mode with effective
         refractive index beta. Assuming active only couple to E_y filed.
-        The active region is defined in `ars`. If xs and Ey is None, they will
-        be generated.
+        The active region is defined in `actives`. If xs and Ey is None, they
+        will be generated.
 
         Parameters
         ----------
         beta : complex
             The refractive index of the mode to calculate
 
-        ars : list(np.ndarray(bool))
+        actives : list(np.ndarray(bool))
             The list of active region for confinement factor
 
         xs : np.ndarray
@@ -359,7 +359,7 @@ class MaxwellLayer(object):
             Ey, _, _ = self.populateMode(beta, xs)
         confinement = 0
         nx = self.populateIndices(xs).real
-        for ar in ars:
+        for ar in actives:
             confinement += np.trapz(
                 nx[ar] * np.abs(self.Ey[ar])**2, xs[ar])
         confinement = beta.real * confinement / np.trapz(
