@@ -1391,13 +1391,15 @@ description : str
         self.current = self.flow * self.sheet_density * e0 * 1E9
         return res
 
-    def full_gain_spectrum(self, wl: ScalerOrArray) -> ScalerOrArray:
+    def full_gain_spectrum(self, wl: ScalerOrArray = None) -> ScalerOrArray:
         """Perform fully automatic calculation for the gain on wavelength(s).
         """
+        if wl is None:
+            wl = self.wl
         neff = self.effective_ridx(wl)
         de0 = h * c0 / (wl * 1E-6) / e0
         gain = 0
-        self.gainul = {}
+        # self.gainul = {}
         for i in range(len(self.periodIdx)):
             upper = self.periodIdx[i]
             for j in range(i+1, len(self.periodIdx)):
@@ -1429,12 +1431,15 @@ description : str
                 hbar*neff*c0*eps0*self.periodL*1E-8)
         return gain
 
-    def optimize_layer(self, n, upper, lower):
+    def optimize_layer(self, n: int, upper: int, lower: int, iter: int = 50):
         """Optimize FoM*Lorentzian for n-th layer thickness, assuming the state
         index does not change. optimization is performed by searching on the
         position resolution steps.
+
         Warning: This cannot specify a correct state if there are states
         index crossing.
+
+        TODO: Use period recognizer to improve the algorithm
         """
         Eu = self.eigenEs[upper]
         El = self.eigenEs[lower]
@@ -1463,7 +1468,7 @@ description : str
             return reduceFoM()
         FoMminus = newFoM(width - self.xres)
         FoMplus = newFoM(width + self.xres)
-        for _ in range(100):
+        for _ in range(iter):
             if FoMnow < FoMplus:
                 FoMminus = FoMnow
                 FoMnow = FoMplus
@@ -1480,6 +1485,58 @@ description : str
             print("\twidth=%.1f, FoM=%.5g" % (width, FoMnow))
         self.layerWidths[n] = width
         print("finished, width=%.1f, FoM=%.5g" % (width, FoMnow))
+
+    def _auto_gain(self):
+        self.populate_x()
+        self.solve_whole()
+        self.period_recognize()
+        self.full_population()
+        return self.full_gain_spectrum()
+
+    def optimize_global(self, iter: int = 50):
+        """A global optimization using gradient descent."""
+        layerNum = len(self.layerWidths)
+        now = self._auto_gain()
+        for n in range(iter):
+            changed = False
+            print("iteration {}:".format(n))
+            print("    initial gain: {}".format(now))
+            for n in range(layerNum):
+                w = self.layerWidths[n]
+                maxDiff = min(1, round(0.1*w/self.xres))
+                self.layerWidths[n] = w - self.xres
+                newMinus = self._auto_gain()
+                self.layerWidths[n] = w + self.xres
+                newPlus = self._auto_gain()
+                print(("   layer No.{}.. Width w={}, "
+                      "gain (0:{}, +:{}, -:{})").format(
+                      n, w, now, newPlus, newMinus))
+                if not (now > newMinus and now > newPlus):
+                    changed = True
+                    if now < newPlus and now < newMinus:
+                        dw = 1 if newPlus > newMinus else -1
+                    else:
+                        dif = (newPlus - newMinus)/2
+                        ddif = newPlus + newMinus - 2*now
+                        dw = -dif/ddif
+                        if ddif > 0 or abs(dw) > maxDiff:
+                            dw = maxDiff if dif > 0 else -maxDiff
+                        elif round(dw) == 0:
+                            dw = 1 if dw > 0 else -1
+                        else:
+                            dw = round(dw)
+                    self.layerWidths[n] = w + dw*self.xres
+                    print("    new width:", self.layerWidths[n])
+                    if dw == 1:
+                        now = newPlus
+                    elif dw == -1:
+                        now = newMinus
+                    else:
+                        now = self._auto_gain()
+            # TODO: optimize field
+            if not changed:
+                break
+        print('Finished')
 
 
 # vim: ts=4 sw=4 sts=4 expandtab

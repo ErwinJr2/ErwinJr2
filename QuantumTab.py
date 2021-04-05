@@ -59,6 +59,7 @@ def settingslot(fn):
 
 class CalculateHolder(QObject):
     finished = pyqtSignal()
+    succeed = pyqtSignal()
     failed = pyqtSignal(str)
     warning = pyqtSignal(str)
 
@@ -69,8 +70,10 @@ class CalculateHolder(QObject):
     def run(self):
         try:
             self.calc()
+            self.succeed.emit()
         except StateRecognizeError as e:
             self.warning.emit('Warning: ' + e.expression)
+            self.succeed.emit()
         except (IndexError, TypeError):
             self.failed.emit(traceback.format_exc())
         finally:
@@ -378,9 +381,11 @@ class QuantumTab(QWidget):
         self.deleteLayerButton.clicked.connect(self.delete_layer)
         layerBox.addWidget(self.deleteLayerButton, 0, 1)
         self.optimizeLayerButton = QPushButton("Optimize Layer")
-        self.optimizeLayerButton.clicked.connect(self.optimizeLayer)
+        self.optimizeLayerButton.clicked.connect(self.optimize_layer)
+        self.optimizeLayerButton.setEnabled(False)
         self.globalOptimizeButton = QPushButton("Global Optimize")
-        self.globalOptimizeButton.clicked.connect(self.globalOptimize)
+        self.globalOptimizeButton.clicked.connect(self.global_optimize)
+        self.globalOptimizeButton.setEnabled(False)
         layerBox.addWidget(self.optimizeLayerButton, 1, 0)
         layerBox.addWidget(self.globalOptimizeButton, 1, 1)
 
@@ -856,8 +861,28 @@ class QuantumTab(QWidget):
         # Trigger itemSelectionChanged SIGNAL and thus update_quantumCanvas
         self.dirty.emit()
 
+    def _optimize_layer(self, n, upper, lower):
+        self.qclayers.optimize_layer(n, upper, lower)
+        if self.solveType == 'basis':
+            self.qclayers.solve_basis()
+        else:
+            self.qclayers.solve_whole()
+        self.stateHolder = [upper, lower]
+        self.pairSelected = True
+        self._calcFoM()
+
+    def showOptmize(self, n=None):
+        self._update_layerTable()
+        if n is None:
+            self._updatePopulation()
+        else:
+            self.layerTable.setCurrentCell(n, 0)
+            # self.updateSelected()
+            self._updateFoM
+            self.dirty.emit()
+
     @pyqtSlot()
-    def optimizeLayer(self):
+    def optimize_layer(self):
         """SLOT connected to self.optimizeLayerButton.clicked()"""
         n = self.layerTable.currentRow()
         if self.qclayers.status == 'unsolved':
@@ -868,30 +893,34 @@ class QuantumTab(QWidget):
                                 "Select the layer to optimize.")
             return
         try:
-            Ei = self.qclayers.eigenEs[self.stateHolder[0]]
-            Ej = self.qclayers.eigenEs[self.stateHolder[1]]
-            if Ei > Ej:
-                upper = self.stateHolder[0]
-                lower = self.stateHolder[1]
-            else:
-                upper = self.stateHolder[1]
-                lower = self.stateHolder[0]
+            upper, lower = self.stateHolder
+            if self.qclayers.eigenEs[upper] < self.qclayers.eigenEs[lower]:
+                upper, lower = lower, upper
         except IndexError:
             QMessageBox.warning(self, ejError,
                                 "Select state pair to optimize.")
             return
-        # TODO
-        self.qclayers.optimize_layer(n, upper, lower)
-        self._update_layerTable()
-        self.layerTable.setCurrentCell(n, 0)
-        self.dirty.emit()
+        self.stateParamText.clear()
+        self.clear_WFs()
+        self._threadRun(lambda: self._optimize_layer(n, upper, lower),
+                        lambda: self.showOptmize(n))
+
+    def _global_optimize(self):
+        self.qclayers.optimize_global(1)
+        self._fullPopulation()
 
     @pyqtSlot()
-    def globalOptimize(self):
+    def global_optimize(self):
         """SLOT connect to self.globalOptimizeButton.clicked()"""
-        # TODO
-        QMessageBox.warning(self, ejError,
-                            "This feature has not yet implemented.")
+        message = ("This is an experimental feature "
+                   "the result may not be stable and may take a long time."
+                   "It's highly recommended to save the structure first.\n"
+                   "Do you want to proceed?"
+                   )
+        if not QMessageBox.question(self, ejWarning, message):
+            self.stateParamText.clear()
+            self.clear_WFs()
+            self._threadRun(self._global_optimize, self.showOptmize)
 
     @pyqtSlot(QTableWidgetItem)
     def layerTable_itemChanged(self, item):
@@ -1350,6 +1379,8 @@ class QuantumTab(QWidget):
         self.pairSelectButton.setEnabled(False)
         self.fullPopulationButton.setEnabled(False)
         self.gainSpecButton.setEnabled(False)
+        self.optimizeLayerButton.setEnabled(False)
+        self.globalOptimizeButton.setEnabled(False)
         self.update_quantumCanvas()
 
 # ===========================================================================
@@ -1471,7 +1502,7 @@ class QuantumTab(QWidget):
         self.calcThread.finished.connect(lambda: self.calcRepaint(False))
         # self.calcThread.finished.connect(self.thread.deleteLater)
         if postCalc is not None:
-            self.calcThread.finished.connect(postCalc)
+            self._worker.succeed.connect(postCalc)
         self.calcThread.start()
 
     def calcRepaint(self, is_doing):
@@ -1497,12 +1528,17 @@ class QuantumTab(QWidget):
             self.periodSet = set()
             raise e
 
+    def _solved(self):
+        self.optimizeLayerButton.setEnabled(True)
+        self.globalOptimizeButton.setEnabled(True)
+        self.update_quantumCanvas()
+
     @pyqtSlot()
     def solve_whole(self):  # solves whole structure
         """SLOT connected to solveWholeButton.clicked(): Whole solver """
         self.clear_WFs()
         self.solveType = 'whole'
-        self._threadRun(self._solve_whole, self.update_quantumCanvas)
+        self._threadRun(self._solve_whole, self._solved)
 
     def _solve_basis(self):
         self.qclayers.solve_basis()
@@ -1512,7 +1548,7 @@ class QuantumTab(QWidget):
         """SLOT connected to solveBasisButton.clicked(): Basis solver """
         self.clear_WFs()
         self.solveType = 'basis'
-        self._threadRun(self._solve_basis, self.update_quantumCanvas)
+        self._threadRun(self._solve_basis, self._solved)
 
     def state_pick(self, event):
         """Callback registered in plotControl when it's in pairselect mode.
