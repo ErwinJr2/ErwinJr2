@@ -554,7 +554,7 @@ class SchrodingerLayer(object):
         self.eigenEs = np.empty((0))
         self.psis = np.empty((0, self.xPoints.size))
         for n in range(0, len(startIdx)):
-            dCL = copy.deepcopy(self)
+            dCL = copy.copy(self)
             dCL._reset_for_basis(startIdx[n], endIdx[n])
             dCL.populate_x()
             dCL.solve_whole()
@@ -1111,6 +1111,24 @@ description : str
         if onedq is None:
             self.solver = 'matrix'
         self.update_strain()
+
+    def __copy__(self):
+        return QCLayers(
+            substrate=self.substrate, materials=copy.copy(self.materials),
+            moleFracs=copy.copy(self.moleFracs), xres=self.xres,
+            Eres=self.Eres, statePerRepeat=self.statePerRepeat,
+            layerWidths=copy.copy(self.layerWidths),
+            layerMtrls=copy.copy(self.layerMtrls),
+            layerDopings=copy.copy(self.layerDopings),
+            customIFR=self.customIFR,
+            mtrlIFRLambda=copy.copy(self.mtrlIFRLambda),
+            mtrlIFRDelta=copy.copy(self.mtrlIFRDelta),
+            ifrDelta=copy.copy(self.ifrDelta),
+            ifrLambda=copy.copy(self.ifrLambda),
+            layerARs=copy.copy(self.layerARs),
+            EField=self.EField, repeats=self.repeats, T=self.temperature,
+            solver=self.solver, description=self.description, wl=self.wl
+            )
 
     def _get_IFRList(self) -> Tuple[List[float], List[float]]:
         """Get IFR parameters for SchrodingerLayer. Should be called

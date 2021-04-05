@@ -23,7 +23,7 @@ matplotlib.use('Qt5Agg')
 config = {
     "PlotMargin": {'l': 0.9, 'r': 0.12, 'b': 0.6, 't': 0.09},
     "fontsize": 12,
-    "wfscale": 0.2,
+    "wfscale": 0.3,
     "modescale": 3,
     # This number not necessarily but is chosen to be consistent with the
     # default value of tol for QCLayers.periodRecognize as
@@ -275,12 +275,13 @@ class EJplotControl(NavigationToolbar2, QObject):
         selectedFilter = None
         for name, exts in sorted_filetypes:
             exts_list = " ".join(['*.%s' % ext for ext in exts])
-            filter = '%s (%s) ' % (name, exts_list)
+            filter = '%s (%s)' % (name, exts_list)
             #  filter = '(*.%s) %s' % (exts_list, name)
             if default_filetype in exts:
                 selectedFilter = filter
             filters.append(filter)
         filters = ';;'.join(filters)
+        print(filters, selectedFilter)
 
         fname, filter = QFileDialog.getSaveFileName(
             self.parent(), caption, filename, filters, selectedFilter)

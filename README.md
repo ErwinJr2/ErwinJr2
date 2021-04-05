@@ -85,6 +85,8 @@ pip install -r docs/requirements.txt
     - [ ] Consistency with and without C lib
     - [ ] Electron population check
 - [X] Documents
+- [ ] GUI indication of running computation
+- [ ] plot style to global settings
 - [X] Profile
 - [X] Travis CI automatic testing
 - [ ] upload to pip as a library

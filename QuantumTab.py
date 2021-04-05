@@ -1212,6 +1212,12 @@ class QuantumTab(QWidget):
 # =========================================================================
 # Quantum Tab Plotting and Plot Control
 # =========================================================================
+    def _scaled_wfs(self):
+        if self.plotType == "mode":
+            return self.qclayers.psis**2 * plotconfig["modescale"]
+        elif self.plotType == "wf":
+            return self.qclayers.psis * plotconfig["wfscale"]
+
     def update_quantumCanvas(self):
         """Update the canvas to show band diagram, and if states have been
         solved, draw the wavefunctions"""
@@ -1246,16 +1252,6 @@ class QuantumTab(QWidget):
                           self.layerSelected] else 1)
 
         if self.qclayers.status.startswith('solved'):
-            self.curveWF = []
-            if self.plotType == "mode":
-                self.wfs = self.qclayers.psis**2 * plotconfig["modescale"]
-            elif self.plotType == "wf":
-                self.wfs = self.qclayers.psis * plotconfig["wfscale"]
-            # filter almost zero part
-            starts = np.argmax(abs(self.wfs) > plotconfig["wf_almost_zero"],
-                               axis=1)
-            ends = np.argmax(abs(self.wfs[:, ::-1]) > plotconfig[
-                "wf_almost_zero"], axis=1)
             if self.qclayers.status == 'solved-full':
                 # Amin = np.min(self.qclayers.population)
                 self.qclayers.period_map_build()
@@ -1263,10 +1259,15 @@ class QuantumTab(QWidget):
                 vmax = np.ceil(np.max(self.qclayers.population)*10)/10
                 popMap = cm.ScalarMappable(
                     cmNorm(vmin=vmin, vmax=vmax), 'plasma')
+            self.curveWF = []
+            self.wfs = self._scaled_wfs()
+            # filter almost zero part
+            starts = np.argmax(abs(self.wfs) > plotconfig["wf_almost_zero"],
+                               axis=1)
+            ends = np.argmax(abs(self.wfs[:, ::-1]) > plotconfig[
+                "wf_almost_zero"], axis=1)
             for n in range(len(self.qclayers.eigenEs)):
                 # plot states
-                x = self.qclayers.xPoints[starts[n]:-ends[n]]
-                y = self.wfs[n, starts[n]:-ends[n]] + self.qclayers.eigenEs[n]
                 ls = '-'
                 if n in self.stateHolder:
                     color = 'k'
@@ -1290,11 +1291,12 @@ class QuantumTab(QWidget):
                                 ls = (0, (0.5, 0.5))
                         else:
                             lw = 0.5
+                x = self.qclayers.xPoints[starts[n]:-ends[n]]
+                y = self.wfs[n, starts[n]:-ends[n]] + self.qclayers.eigenEs[n]
                 curve, = axes.plot(x, y, lw=lw, ls=ls, color=color)
                 if self.fillPlot:
-                    axes.fill_between(
-                        x, y, self.qclayers.eigenEs[n],
-                        facecolor=color, alpha=self.fillPlot)
+                    axes.fill_between(x, y, self.qclayers.eigenEs[n],
+                                      facecolor=color, alpha=self.fillPlot)
                 self.curveWF.append(curve)
             if self.qclayers.status == 'solved-full':
                 colorbar_axes = axes.inset_axes([0.02, 0.01, 0.5, 0.02])
@@ -1358,21 +1360,28 @@ class QuantumTab(QWidget):
             "ErwinJr2 - Export Band Structure Image", filename, 'png')
 
     def export_band_data(self, fname):
-        np.savetxt(fname.split('.')[0] + '_CB' + '.csv',
-                   np.column_stack([self.qclayers.xPoints, self.qclayers.xVc]),
-                   delimiter=',')
+        fnameBase = fname.split('.')
+        fnameBase = ''.join(fnameBase[:-1]) if len(fnameBase) > 1 else fname
+        np.savetxt(fnameBase + '_CB' + '.csv', np.column_stack([
+            self.qclayers.xPoints, self.qclayers.xVc]), delimiter=',')
 
-        if self.qclayers.status == 'solved':
+        if self.qclayers.status.startswith('solved'):
             # otherwise band structure hasn't been solved yet
-            # TODO: make it consistent with plotting
-            xyPsiPsiEig = np.zeros(self.qclayers.psis.shape)
-            for q in range(len(self.qclayers.eigenEs)):
-                xyPsiPsiEig[:, q] = (self.qclayers.psis[:, q] +
-                                     self.qclayers.eigenEs[q])
-            np.savetxt(
-                fname.split('.')[0] + '_States' + '.csv',
-                np.column_stack([self.qclayers.xPoints, xyPsiPsiEig]),
-                delimiter=',')
+            np.savetxt(fnameBase + '_WFs' + '.csv', np.column_stack([
+                self.qclayers.xPoints, self.qclayers.psis.T]), delimiter=',')
+            ys = self._scaled_wfs().T + self.qclayers.eigenEs
+            np.savetxt(fnameBase + '.csv', np.column_stack([
+                self.qclayers.xPoints, ys]), delimiter=',')
+            np.savetxt(fnameBase + '_Es' + '.csv',
+                       self.qclayers.eigenEs, delimiter=',')
+            if self.qclayers.status == 'solved-full':
+                pop = np.array([
+                    self.qclayers.state_population(n)
+                    if self.qclayers.periodMap[n] is not None else np.NaN
+                    for n in range(len(self.qclayers.eigenEs))
+                ])
+                np.savetxt(fnameBase + '_population' + '.csv',
+                           pop, delimiter=',')
 
 # ===========================================================================
 # View Band Items
