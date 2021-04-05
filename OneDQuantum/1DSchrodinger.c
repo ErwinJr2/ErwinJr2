@@ -39,10 +39,12 @@ extern "C" {
  * @param[in] y0 value of y at \f$ x_0 \f$
  * @param[in] y1 value of y at \f$ x_0 + step \f$
  * @param[in] E energy, unit eV
- * @param[in] *V V[n] is the potential at \f$ x = x_0 + n \times step \f$
- * @param[in] *m m[n] is the effective mass at \f$ x = x_0 + n \times step \f$.
+ * @param[in] V V[n] is the potential at \f$ x = x_0 + n \times step \f$
+ * @param[in] m m[n] is the effective mass at \f$ x = x_0 + n \times step \f$.
  *               m is in unit m0 (free electron mass)
- * @param[out] *y (output) value of y at \f$ x = x_0 + n \times step \f$.
+ * @param[out] y (output) value of y at \f$ x = x_0 + n \times step \f$.
+ *
+ * @return psiend the last element of y
  */
 #ifndef MACOS
 inline
@@ -141,19 +143,19 @@ __declspec(dllexport)
  *
  * @param[in] step step size
  * @param[in] N number of steps
- * @param[in] *EigenEs list of eigen energies
+ * @param[in] EigenEs list of eigen energies
  * @param[in] EN number of eigen energies we consider
- * @param[in] *V V[n] is the potential at \f$ x = x_0 + n \times step \f$
- * @param[in] *m m[n] is the effective mass at \f$ x = x_0 + n \times step \f$,
+ * @param[in] V V[n] is the potential at \f$ x = x_0 + n \times step \f$
+ * @param[in] m m[n] is the effective mass at \f$ x = x_0 + n \times step \f$,
  *                in unit \f$ m_0 \f$ (free electron mass), used only when
  *                mat=Null
- * @param[in] *starts
- * @param[in] *ends wavefuntion limited to psi[starts[i]:ends[i]]
- * @param[in] *mat is a pointer to band structure, for updating
+ * @param[in] starts
+ * @param[in] ends wavefuntion limited to psi[starts[i]:ends[i]]
+ * @param[in] mat is a pointer to band structure, for updating
  *                effective mass according to energy and perform normalization.
  *                When it's NULL it means using constant mass with parabolic
  *                kinetic energy.
- * @param[out] *psis (output)
+ * @param[out] psis (output)
  *                   \f$ \psi + i N \times sizeof(double) \f$ is the
  *                   wavefunction with energy EigenEs[i].
  */
@@ -263,6 +265,7 @@ __declspec(dllexport)
  * @param[in] *mat is a pointer to band structure
  * @param[out] *EigenE (output) eigen energy
  *
+ * @return total number of eigen states found.
  */
 numpyint Solve1D(double step, numpyint N,
         const double *Es, numpyint EN,
@@ -397,7 +400,8 @@ __declspec(dllexport)
  * @param[in] N number of steps
  * @param[in] kl wavevector of LO phonon in unit m^-1. This is DIFFERENT than
  *            the step unit for convience to use kl.
- * @param[in] *psi_ij \f$\psi_i \psi_j\f$ wavefunction overlap
+ * @param[in] psi_ij \f$\psi_i \psi_j\f$ wavefunction overlap
+ *
  * @return    \f$I_{ij} = \int\mathrm dx\mathrm dy\, \psi_i(x)\psi_j(x)
  *             \exp\left[-k_l|x-y|\right]\psi_i(y)\psi_j(y) \f$
  */
@@ -447,11 +451,12 @@ __declspec(dllexport)
  *
  * @param[in] step step size in unit Angstrom
  * @param[in] N number of steps
- * @param[in] *kls wavevector of LO phonon between psi_i to psi_j's in unit m^-1
- * @param[in] *psi_i \f$\psi_i\f$ wavefunction i
- * @param[in] *psi_js psi_j = psi_js[n*N] \f$\psi_j\f$ wavefunction j
- * @param[in] *fjs the factor \f$f_j\f$ before \f$I_{ij}\f$ before sum
+ * @param[in] kls wavevector of LO phonon between psi_i to psi_j's in unit m^-1
+ * @param[in] psi_ijs psi_j = psi_js[n*N] \f$\psi_i\psi_j\f$ overlap between
+ *            \f$\psi_i\f$ and \f$\psi_j\f$ wavefunction
+ * @param[in] fjs the factor \f$f_j\f$ before \f$I_{ij}\f$ before sum
  * @param[in] Nj number of psi_j
+ *
  * @return    \f$\sum_j f_j I_{ij} =
  *             \sum_j f_j \int\mathrm dx\mathrm dy\, \psi_i(x)\psi_j(x)
  *             \exp\left[-k_l|x-y|\right]\psi_i(y)\psi_j(y) \f$
@@ -525,14 +530,14 @@ __declspec(dllexport)
  *
  * @param[in] step step size
  * @param[in] N number of steps
- * @param[in] *EigenEs list of eigen energies
+ * @param[in] EigenEs list of eigen energies
  * @param[in] EN number of eigen energies we consider
- * @param[in] *psis psis[n*N:(n+1)*N] is the wavefunction for EigenEs[n]
- * @param[in] *masses masses[n] is the x-y effective mass for psis[n]
+ * @param[in] psis psis[n*N:(n+1)*N] is the wavefunction for EigenEs[n]
+ * @param[in] masses masses[n] is the x-y effective mass for psis[n]
  * @param[in] Eshift the energy shift (period*field) between periods
  *                   should >= max(EigenEs) - min(EigenEs)
  * @param[in] xShift position translation in pixal between periods
- * @param[out] *loMatrix gamma[n,m] == loMatrix[EN*n+m] is the LO transition
+ * @param[out] loMatrix gamma[n,m] == loMatrix[EN*n+m] is the LO transition
  *                       rate between psis[n] and psis[m],
  *                       EigenEs[n] > EigenEs[m] (mod Eshift)
  */

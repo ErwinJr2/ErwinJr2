@@ -1,4 +1,0 @@
-Struct BAND
-===========
-
-.. doxygenstruct:: BAND

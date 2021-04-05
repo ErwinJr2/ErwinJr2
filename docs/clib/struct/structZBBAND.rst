@@ -1,4 +1,0 @@
-Struct ZBBAND
-=============
-
-.. doxygenstruct:: ZBBAND
