@@ -120,7 +120,8 @@ class MainWindow(QMainWindow):
                 target.addAction(action)
 
     def create_action(self, text, slot=None, shortcut=None, icon=None,
-                      tip=None, checkable=False, ischecked=False):
+                      tip=None, checkable=False, ischecked=False,
+                      settingSync=False):
         action = QAction(text, self)
         if icon:
             action.setIcon(QIcon("images/%s.png" % icon))
@@ -135,7 +136,20 @@ class MainWindow(QMainWindow):
             action.setCheckable(True)
         if ischecked:
             action.setChecked(True)
+        if settingSync:
+            assert(checkable)
+            assert(not ischecked)
+            action.triggered.connect(lambda: self.action_setting(text))
+            # initialize
+            if self.qsettings.value(text, False, type=bool):
+                action.setChecked(not ischecked)
+                if slot:
+                    slot()
         return action
+
+    def action_setting(self, name):
+        self.qsettings.setValue(
+            name, not self.qsettings.value(name, False, type=bool))
 
     def create_menu(self):
         self.menuBar().clear()
@@ -210,11 +224,11 @@ class MainWindow(QMainWindow):
         plotwf = self.create_action(
             "Plot Wave function",
             checkable=True, ischecked=self.qtab.plotType == 'wf',
-            slot=self.qtab.set_plotwf)
+            slot=self.qtab.set_plotwf, settingSync=True)
         plotFill = self.create_action(
             "Fill wave function curve",
             checkable=True, ischecked=self.qtab.fillPlot,
-            slot=self.qtab.set_fill)
+            slot=self.qtab.set_fill, settingSync=True)
         self.add_actions(self.view_menu, (VXBandAction,
                                           VLBandAction,
                                           LHBandAction,

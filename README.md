@@ -80,13 +80,15 @@ pip install -r docs/requirements.txt
 - [X] Add gain spectrum
 - [ ] global optimizer for QCLayers
 - [ ] optimizer for optical stratum
+- [ ] save to excel (to growth sheet)
 - [ ] Test case improve:
     - [ ] LO and IFR scattering results
     - [ ] Consistency with and without C lib
     - [ ] Electron population check
 - [X] Documents
 - [ ] GUI indication of running computation
-- [ ] plot style to global settings
+- [ ] EJcanvas.config to qt setting
+- [X] plot style to global settings
 - [X] Profile
 - [X] Travis CI automatic testing
 - [ ] upload to pip as a library
