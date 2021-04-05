@@ -78,7 +78,7 @@ class MaxwellLayer(object):
     index0 : complex
         The refractive index for the top layer
 
-    indexs : complex
+    indexS : complex
         The refractive index for the substrate layer
 
     Ls : list(float)
@@ -87,7 +87,7 @@ class MaxwellLayer(object):
     """
     wl: float
     index0: complex
-    indexs: complex
+    indexS: complex
     indices: np.ndarray
     Ls: List[complex]
 
@@ -95,7 +95,7 @@ class MaxwellLayer(object):
                  allIndex: List = [1.0, 1.0]):
         self.wl = wl
         self.index0 = allIndex[0]
-        self.indexs = allIndex[-1]
+        self.indexS = allIndex[-1]
         self.indices = np.array(allIndex[1:-1], dtype=np.complex128)
         self.Ls = (np.array(Ls) if len(Ls) == len(allIndex)
                    else np.array([1.0] + list(Ls) + [2.0]))
@@ -152,7 +152,7 @@ class MaxwellLayer(object):
         gamma0 = np.sqrt((1+0j)*self.index0**2 - beta**2)/self.index0**2
         if gamma0.imag < 0:
             gamma0 = -gamma0
-        gammas = np.sqrt((1+0j)*self.indexs**2 - beta**2)/self.indexs**2
+        gammas = np.sqrt((1+0j)*self.indexS**2 - beta**2)/self.indexS**2
         if gammas.imag < 0:
             gammas = -gammas
         m = self.transferTM(beta)
@@ -164,7 +164,7 @@ class MaxwellLayer(object):
         Solve for TM bounded mode near beta (as first guess in root finding)
         with frequency :math:`\\omega = c/\\text{wl}` on the stratum structure
         described with the thickness and index list;
-        top/substrate defined by index0 and indexs.
+        top/substrate defined by index0 and indexS.
         wl and Ls should be same unit
 
         Parameters
@@ -186,20 +186,20 @@ class MaxwellLayer(object):
         """
         if beta is None:
             if len(self.indices) == 0:
-                beta = 1.5*self.indexs
+                beta = 1.5*self.indexS
             else:
                 beta = max(self.indices.real)
                 beta = min(beta, 2.0*np.average(self.indices.real,
                            weights=self.Ls[1:-1]))
         # # Minimization algo. for complex function zero searching
         # beta0 = newton(lambda beta:
-        #                chiMTM(beta, wl, Ls, indices, index0, indexs).imag,
+        #                chiMTM(beta, wl, Ls, indices, index0, indexS).imag,
         #                x0=max(indices))
         # res = minimize(lambda x: abs(chiMTM(
-        #                x[0] + 1j*x[1], wl, Ls, indices, index0, indexs))**2,
+        #                x[0] + 1j*x[1], wl, Ls, indices, index0, indexS))**2,
         #                x0 = [beta0+0.001, -1E-3], tol=1e-12, method="BFGS")
         # beta = res.x[0] + 1j*res.x[1]
-        # residule = abs(chiMTM(beta, wl, Ls, indices, index0, indexs))
+        # residule = abs(chiMTM(beta, wl, Ls, indices, index0, indexS))
         # print(res)
         residule = self.chiMTM(beta)
         betaDiff = beta
@@ -286,14 +286,14 @@ class MaxwellLayer(object):
                                            self.indices[n]**2*Ez0))
 
         # last substrate
-        alphas = np.sqrt((1+0j)*self.indexs**2 - beta**2)
+        alphas = np.sqrt((1+0j)*self.indexS**2 - beta**2)
         if alphas.imag < 0:
             alphas = -alphas
-        gammas = alphas/self.indexs**2
+        gammas = alphas/self.indexS**2
         Hx[xs >= lsum[-1]] = Hx0 * exp(1j*alphas * k *
                                        (xs[xs >= lsum[-1]] - lsum[-1]))
         Ez[xs >= lsum[-1]] = gammas*Hx[xs >= lsum[-1]]
-        Ey[xs >= lsum[-1]] = -beta*Hx[xs >= lsum[-1]]/self.indexs**2
+        Ey[xs >= lsum[-1]] = -beta*Hx[xs >= lsum[-1]]/self.indexS**2
 
         scale = Ey[np.argmax(np.abs(Ey))]
         self.Hx = Hx/scale
@@ -322,7 +322,7 @@ class MaxwellLayer(object):
         else:
             n = np.empty(xs.shape, dtype=np.complex128)
         n[xs < 0] = self.index0
-        n[xs >= lsum[-1]] = self.indexs
+        n[xs >= lsum[-1]] = self.indexS
         return n
 
     def confinementy(self, beta: complex, ars: List[np.ndarray],
@@ -394,9 +394,9 @@ class MaxwellLayer_anisotropic(MaxwellLayer):
             n = np.empty(xs.shape, dtype=np.complex128)
             ny = np.empty(xs.shape, dtype=np.complex128)
         n[xs < 0] = self.index0
-        n[xs >= lsum[-1]] = self.indexs
+        n[xs >= lsum[-1]] = self.indexS
         ny[xs < 0] = self.index0
-        ny[xs >= lsum[-1]] = self.indexs
+        ny[xs >= lsum[-1]] = self.indexS
         return n, ny
 
 
@@ -549,13 +549,13 @@ class OptStrata(MaxwellLayer):
         index0 : complex
             Refractive index of the top (before Ls[0]) strata
 
-        indexs : complex
+        indexS : complex
             refractive index of the substrate (after Ls[-1])
         """
         self.indices = np.array(
             [self.indexOf(n) for n in range(len(self.materials))])
         self.index0 = self.indices[0]
-        self.indexs = self.indices[-1]
+        self.indexS = self.indices[-1]
         self.indices = self.indices[1:-1]
 
     def populateMtrl(self, xs, mtrlList=None):

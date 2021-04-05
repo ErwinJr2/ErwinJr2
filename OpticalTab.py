@@ -565,7 +565,7 @@ class OpticalTab(QWidget):
             if q == 0:
                 ridx = self.stratum.index0
             elif q == len(self.stratum.materials)-1:
-                ridx = self.stratum.indexs
+                ridx = self.stratum.indexS
             else:
                 ridx = self.stratum.indices[q-1]
             ridx = QTableWidgetItem("%.3f + %.3fi" % (ridx.real, ridx.imag))
