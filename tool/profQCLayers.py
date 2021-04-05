@@ -8,24 +8,17 @@ import io
 
 if __name__ == "__main__":
     cp = cProfile.Profile()
-
-    cp.enable()
     with open("../example/PQLiu.json") as f:
         qcl = SaveLoad.qclLoad(f)
-
-    qcl.layerSelected = 3
-    #  qcl.NonParabolic = False
-    qcl.populate_x()
-    qcl.solve_whole()
-    qcl.dipole(19, 15)
-    qcl.figure_of_merit(19, 15)
+    qcl.xres = 0.1
+    cp.enable()
+    qcl._auto_gain()
     cp.disable()
-
     cp.print_stats(sort="cumulative")
 
-    # s = io.StringIO()
-    # ps = pstats.Stats(cp, stream=s).sort_stats('cumulative')
-    # ps.print_stats()
+    s = io.StringIO()
+    ps = pstats.Stats(cp, stream=s).sort_stats('cumulative')
+    ps.print_stats()
 
-    # with open('profiling_0.txt', 'w+') as f:
-    #     f.write(s.getvalue())
+    with open('profiling_0.txt', 'w+') as f:
+        f.write(s.getvalue())
