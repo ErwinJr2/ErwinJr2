@@ -8,13 +8,7 @@ import os
 import sys
 import subprocess
 from subprocess import CalledProcessError
-if sys.platform.startswith('win'):
-    try:
-        import winshell  # type: ignore # ignore: unresolved-import
-    except ModuleNotFoundError:
-        print("winshell not installed. Cannot create shortcut!")
-
-verbose = False
+from create_shortcut import create_shortcut
 
 
 def build_clib(path, MSBuild=None):
@@ -25,8 +19,6 @@ def build_clib(path, MSBuild=None):
         make_cmd = [MSBuild, 'OneDQuantum.sln', '/p:Configuration=Release']
         makemp_cmd = [MSBuild, '1DSchrodinger.vcxproj',
                       '/p:Configuration=MP_Release']
-        # print('running cummand: ')
-        # print(' '.join(make_cmd))
     os.chdir(os.path.join(path, 'OneDQuantum'))
     print("Building C Lib")
     subprocess.check_call(make_cmd)
@@ -51,45 +43,6 @@ def build_doc(path):
         print("Building documents failed")
 
 
-def create_shortcut(path):
-    os.chdir(path)
-    if sys.platform.startswith('darwin'):
-        shortcut_path = os.path.join(os.environ["HOME"],
-                                     "Desktop", "ErwinJr2.app", "Contents")
-        subprocess.check_call(['mkdir', '-p', shortcut_path])
-        os.chdir(shortcut_path)
-        subprocess.check_call(['mkdir', 'MacOS'])
-        subprocess.check_call(['mkdir', 'Resources'])
-        subprocess.check_call(['cp', os.path.join(path, 'Info.plist'), './'])
-        subprocess.check_call([
-            'cp', os.path.join(path, 'images', 'EJicns.icns'), 'Resources/'])
-        shellcode = """#!/bin/bash\n"""
-        shellcode += "cd %s\n" % path
-        shellcode += "%s ErwinJr.pyw\n" % sys.executable
-        shellfile = 'MacOS/ErwinJr2'
-        with open(shellfile, 'w') as f:
-            f.write(shellcode)
-        subprocess.call(['chmod', '+x', shellfile])
-    if sys.platform.startswith('win'):
-        shortcut_path = os.path.join(os.path.expanduser('~'),
-                                     'Desktop', 'ErwinJr2.lnk')
-        batcode = """@SET "PATH=%s\"\n""" % os.environ['PATH']
-        batcode += "@echo off\n"
-        batcode += "cd %~dp0\n"
-        batcode += "start pythonw ErwinJr.pyw %1\n"
-        batfile = "ErwinJr2.bat"
-        with open(batfile, 'w') as f:
-            f.write(batcode)
-        with winshell.shortcut(shortcut_path) as link:
-            link.path = os.path.join(path, batfile)
-            link.description = "Shortcut to ErwinJr2"
-            link.icon_location = (os.path.join(path, 'images', 'EJico.ico'), 0)
-            link.working_directory = path
-            link.show_cmd = 'min'
-    else:
-        raise NotImplementedError("Operating system not supported.")
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Install ErwinJr2.')
     parser.add_argument('--msbuild',
@@ -107,10 +60,8 @@ if __name__ == "__main__":
                         help='Do not generate shortcuts on desktop.',
                         dest='shortcut', action='store_false',
                         default=argparse.SUPPRESS)
-    parser.add_argument('--verbose', '-v', action='count', default=0)
 
     args = parser.parse_args()
-    verbose = args.verbose > 0
 
     currentPath = os.path.dirname(os.path.abspath(__file__))
     build_clib(currentPath, args.msbuild)
@@ -130,6 +81,6 @@ if __name__ == "__main__":
         try:
             create_shortcut(currentPath)
         except (NotImplementedError, CalledProcessError):
-            print("Creat shortcut failed.")
+            print("Create shortcut failed.")
 
 # vim: ts=4 sw=4 sts=4 expandtab

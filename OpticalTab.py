@@ -1,6 +1,6 @@
 """
 This file defines the optical tab of ErwinJr, for simulation and optimization
-of 1D waveguiding
+of 1D waveguide
 """
 
 from functools import partial
@@ -11,12 +11,11 @@ from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt
 from PyQt5.QtGui import QPalette
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
                              QLabel, QComboBox, QGroupBox, QDoubleSpinBox,
-                             QSpinBox,
+                             QSpinBox, QCheckBox,
                              QPushButton, QTableWidget, QTableWidgetItem,
-                             QTextEdit, QMessageBox)
-from OptStrata import OptStrata, rIdx, Alloy, Dopable
+                             QTextEdit, QMessageBox, QDialog, QDialogButtonBox)
+from OptStrata import OptStrata, rIdx, Alloy, Dopable, optimizeOptStrata
 from EJcanvas import EJcanvas
-# from EJcanvas import config as canvasConfig
 from customQTClass import mtrlComboBox
 from versionAndName import ejError
 mtrlList = list(rIdx.keys()) + list(Alloy.keys())
@@ -66,7 +65,6 @@ class OpticalTab(QWidget):
     def __init__(self, stratum=None, parent=None):
         super(OpticalTab, self).__init__(parent)
         self.stratum = stratum if stratum else OptStrata(3.0)
-        # TODO: put gain as part of ridx?
         self.periods = {}
         self.ridgeLength = 3.0
         self.ridgeLoss = 0.0
@@ -114,9 +112,10 @@ class OpticalTab(QWidget):
         self.setLayout(opticalLayout)
         self.dirty.connect(self.update_xs)
         self.update_xs()
+        self.update_Loss()
 
     def _settingBox(self, width):
-        """Return a Qt Layout object containning all setting widgets"""
+        """Return a Qt Layout object containing all setting widgets"""
         settingBox = QVBoxLayout()
 
         settingBox.addWidget(QLabel('<b><center>Wavelength</center></b>'))
@@ -165,7 +164,7 @@ class OpticalTab(QWidget):
         self.fieldBox.setDecimals(1)
         self.fieldBox.setMaximum(500)
         mtrlLayout.addWidget(self.fieldBox, 8, 0)
-        mtrlLayout.addWidget(QLabel('<center>Gain Coef.</center>'), 7, 1)
+        mtrlLayout.addWidget(QLabel('<center>Gain Coeff.</center>'), 7, 1)
         self.gainCoeffBox = QDoubleSpinBox()
         self.gainCoeffBox.setSuffix(' cm/kA')
         self.gainCoeffBox.setEnabled(False)
@@ -193,7 +192,7 @@ class OpticalTab(QWidget):
         self.refBox = [None]*2
         for n in (0, 1):
             ridgeLayout.addWidget(QLabel(
-                "<center>Fecet%d</center>" % (n+1)), 0, n)
+                "<center>Facet%d</center>" % (n+1)), 0, n)
             self.facetBox[n] = QComboBox()
             self.facetBox[n].addItems(facetList)
             self.facetBox[n].setCurrentText(self.facet[n])
@@ -241,7 +240,7 @@ class OpticalTab(QWidget):
         # _settingBox end
 
     def _strataBox(self, width):
-        """Return a Qt Layout object containning all strata table widgets"""
+        """Return a Qt Layout object containing all strata table widgets"""
         strataBox = QGridLayout()
         strataBox.setSpacing(5)
         self.insertButton = QPushButton("Insert Strata")
@@ -265,6 +264,7 @@ class OpticalTab(QWidget):
         self.solveButton.clicked.connect(self.solve)
         self.optimizeButton = QPushButton("Optimize Strata")
         self.optimizeButton.clicked.connect(self.optimizeStrata)
+        self.optimizeButton.setEnabled(False)
         strataBox.addWidget(self.solveButton, 2, 0)
         strataBox.addWidget(self.optimizeButton, 2, 1)
         strataBox.addWidget(QLabel("Performance"), 3, 0, 1, 2)
@@ -378,6 +378,7 @@ class OpticalTab(QWidget):
         self.periodBox.setValue(Lp)
         self.gainCoeffBox.setValue(gaincoeff)
         self.update_customLength()
+        self.updateMtrl()
 
     def update_customLength(self):
         length = self.periodBox.value() * self.repeatBox.value() / 1E4  # to um
@@ -433,11 +434,10 @@ class OpticalTab(QWidget):
     def update_Loss(self):
         """Update the mirror loss, should be called whenever the facet
         settings are changed"""
-        # print(self.facetRefct(0), self.facetRefct(1))
         perRunLoss = self.facetRefct(1) * self.facetRefct(0)
-        self.alpham = -log(perRunLoss)/(2*self.ridgeLength/10)  # to cm-1
+        self.alphaM = -log(perRunLoss)/(2*self.ridgeLength/10)  # to cm-1
         self.mirrorLoss.setText(
-            "<center>%.1f cm<sup>-1</sup></center>" % self.alpham)
+            "<center>%.1f cm<sup>-1</sup></center>" % self.alphaM)
 
     @pyqtSlot()
     def strataTable_select(self):
@@ -467,7 +467,7 @@ class OpticalTab(QWidget):
                 self.strataTable_refresh()
                 return
             if column == 1:
-                # molefrac
+                # mole fraction
                 if value > 1:
                     QMessageBox.warning(
                         self, ejError, "Mole Fraction must be between 0 and 1")
@@ -567,7 +567,7 @@ class OpticalTab(QWidget):
             if q == 0:
                 ridx = self.stratum.index0
             elif q == len(self.stratum.materials)-1:
-                ridx = self.stratum.indexs
+                ridx = self.stratum.indexS
             else:
                 ridx = self.stratum.indices[q-1]
             ridx = QTableWidgetItem("%.3f + %.3fi" % (ridx.real, ridx.imag))
@@ -591,6 +591,7 @@ class OpticalTab(QWidget):
         """Update position vector for plotting and confinement factor integral,
         also as SLOT to self.dirty SGINAL"""
         self.beta = None
+        self.optimizeButton.setEnabled(False)
         self.stratum.updateIndices()
         self.strataTable_refresh()
         self.xs = np.linspace(-1, sum(self.stratum.Ls[1:]), 5000)
@@ -608,7 +609,7 @@ class OpticalTab(QWidget):
         confinement : float
             The confinement factor in unit 1 (percentage 100*confinement)
 
-        alphaw : float
+        alphaW : float
             The waveguide loss in unit cm-1
         """
         try:
@@ -620,10 +621,11 @@ class OpticalTab(QWidget):
         # TODO
         self.confinement = self.stratum.confinementy(
             self.beta, self.xs, self.Ey)
-        self.alphaw = 4*pi/(self.stratum.wl/1E4) * self.beta.imag  # cm^-1
+        self.alphaW = 4*pi/(self.stratum.wl/1E4) * self.beta.imag  # cm^-1
         self.update_canvas()
         self.update_Loss()
         self.update_info()
+        self.optimizeButton.setEnabled(True)
         return self.Ey
 
     def update_info(self):
@@ -633,11 +635,11 @@ class OpticalTab(QWidget):
             info += "Effective refractive index:\n"
             info += "  β = %.3f + (%.3g)i\n" % (self.beta.real, self.beta.imag)
             info += "Waveguide loss:\n"
-            info += "  α<sub>w</sub> = %.3f cm<sup>-1</sup>\n" % self.alphaw
+            info += "  α<sub>w</sub> = %.3f cm<sup>-1</sup>\n" % self.alphaW
             info += "Confinement factor: "
             info += "  Γ = %.1f%%\n" % (self.confinement * 100)
             info += "Threshold gain:\n"
-            gth = (self.alpham + self.alphaw)/self.confinement
+            gth = (self.alphaM + self.alphaW)/self.confinement
             info += " g<sub>th</sub> = %.1f cm<sup>-1</sup>\n" % gth
             try:
                 self.jth = gth / self.stratum.cstmGain["Active Core"]
@@ -682,8 +684,56 @@ class OpticalTab(QWidget):
 
     @pyqtSlot()
     def optimizeStrata(self):
-        # TODO
-        QMessageBox.warning(self, ejError,
-                            "Optimization is not yet implemented")
+        # TODO use threadRun in QuantumTab
+        # TODO: block the button before solve
+        nmax = len(self.stratum.Ls)-2
+        toOptimize, lmax, buttonRes = OptimizeInfoDialog(self, [
+            self.stratum.materials[q+1] not in self.stratum.cstmIndx
+            for q in range(nmax)], nmax, sum(self.stratum.Ls[1:-1])).exec()
+        if buttonRes:
+            optimizeOptStrata(self.stratum, self.alphaM, toOptimize, lmax)
+            self.strataTable_refresh()
+            self.solve()
+
+
+class OptimizeInfoDialog(QDialog):
+    def __init__(self, parent, optimizable, nmax, lmax):
+        super().__init__(parent)
+        self.setModal(True)
+        self.setWindowTitle('ErwinJr2: Optimize Optical Stratum')
+        mainLayout = QGridLayout()
+        mainLayout.addWidget(QLabel('Select the layer to optimize: '),
+                             0, 0, 1, nmax+1)
+        mainLayout.addWidget(QLabel('Layer:'), 1, 0, 1, 1)
+        self.checkBoxes = [QCheckBox() for _ in range(nmax)]
+        for n in range(nmax):
+            mainLayout.addWidget(QLabel(str(n+2)), 1, n+1)
+            mainLayout.addWidget(self.checkBoxes[n], 2, n+1)
+            if optimizable[n]:
+                self.checkBoxes[n].setChecked(True)
+            else:
+                self.checkBoxes[n].setEnabled(False)
+        lengthLayout = QHBoxLayout()
+        lengthLayout.addWidget(QLabel('Maximum Length: '))
+        self.lengthBox = QDoubleSpinBox()
+        self.lengthBox.setSuffix(' μm')
+        self.lengthBox.setRange(0.0, 20)
+        self.lengthBox.setSingleStep(0.1)
+        self.lengthBox.setDecimals(0.01)
+        self.lengthBox.setValue(lmax)
+        lengthLayout.addWidget(self.lengthBox)
+        mainLayout.addLayout(lengthLayout, 3, 0, 1, nmax+1)
+        buttonBox = QDialogButtonBox(
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal)
+        buttonBox.accepted.connect(self.accept)
+        buttonBox.rejected.connect(self.reject)
+        mainLayout.addWidget(buttonBox, 4, 0, 1, nmax+1)
+        self.setLayout(mainLayout)
+
+    def exec(self):
+        res = super().exec()
+        checked = [n for n, box in enumerate(self.checkBoxes)
+                   if box.isChecked()]
+        return checked, self.lengthBox.value(), res
 
 # vim: ts=4 sw=4 sts=4 expandtab

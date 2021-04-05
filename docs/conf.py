@@ -28,13 +28,13 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'ErwinJr2'
-copyright = '2020, Gmachl Group, Princeton'
-author = 'Ming Lyu, Yaofeng (Desmond) Zhong, Xiaowen Chen'
+copyright = '2021, Gmachl Group, Princeton'
+author = 'Ming Lyu'
 
 # The short X.Y version
-version = '1.1'
+version = '2.0'
 # The full version, including alpha/beta/rc tags
-release = '1.1 alpha'
+release = '2.0 alpha'
 
 
 # -- General configuration ---------------------------------------------------

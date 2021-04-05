@@ -23,9 +23,12 @@ matplotlib.use('Qt5Agg')
 config = {
     "PlotMargin": {'l': 0.9, 'r': 0.12, 'b': 0.6, 't': 0.09},
     "fontsize": 12,
-    "wfscale": 0.2,
+    "wfscale": 0.3,
     "modescale": 3,
-    "wf_almost_zero": 3e-4,
+    # This number not necessarily but is chosen to be consistent with the
+    # default value of tol for QCLayers.periodRecognize as
+    # wf_almost_zero / modescale = tol
+    "wf_almost_zero": 1.5e-4,
 }
 if sys.platform == 'win32':
     config["PlotMargin"] = {'l': 0.9, 'r': 0.12, 'b': 0.55, 't': 0.09}
@@ -130,7 +133,7 @@ class EJplotControl(NavigationToolbar2, QObject):
             'Left button pans, Right button zooms\n'
             'x/y fixes axis, CTRL fixes aspect',
             'move', 'pan'),
-            ('Zoom', 'Zoom to rectangle\nx/y fixes axis, CTRL fixes aspect',
+            ('Zoom', 'Zoom to rectangle \nx/y fixes axis, CTRL fixes aspect',
             'zoom_to_rect', 'zoom'),
             ('Subplots', 'Configure subplots', 'subplots',
                 'configure_subplots'),
@@ -149,20 +152,19 @@ class EJplotControl(NavigationToolbar2, QObject):
             raise TypeError("%s not supported." % callback)
 
     def set_custom(self, name, button, callback, cursor=cursors.HAND):
-        """cusomized callback action,
+        """customized callback action,
         s.t. this class manages the button's check status
         and its interaction with canvas.
-        Note that callback is called when clicke on canvas"""
+        Note that callback is called when clicked on canvas"""
         self._custom_active[name] = callback
         self._actions[name] = button
         self._custom_cursor[name] = cursor
         self._custom_mode = None
         self._custom_callBack = None
         button.setCheckable(True)
-        # TODO Can this function become a decorator?
 
     def _get_mode_name(self):
-        # This is a work around for backward compatiblity due to
+        # This is a work around for backward compatibility due to
         # https://github.com/matplotlib/matplotlib/pull/17135
         if self._custom_mode:
             return self._custom_mode
@@ -173,7 +175,7 @@ class EJplotControl(NavigationToolbar2, QObject):
         return name
 
     def _update_buttons_checked(self):
-        # sync button checkstates to match active mode
+        # sync button check-states to match active mode
         if 'pan' in self._actions:
             self._actions['pan'].setChecked(self._get_mode_name() == 'PAN')
         if 'zoom' in self._actions:
@@ -273,12 +275,13 @@ class EJplotControl(NavigationToolbar2, QObject):
         selectedFilter = None
         for name, exts in sorted_filetypes:
             exts_list = " ".join(['*.%s' % ext for ext in exts])
-            filter = '%s (%s) ' % (name, exts_list)
+            filter = '%s (%s)' % (name, exts_list)
             #  filter = '(*.%s) %s' % (exts_list, name)
             if default_filetype in exts:
                 selectedFilter = filter
             filters.append(filter)
         filters = ';;'.join(filters)
+        print(filters, selectedFilter)
 
         fname, filter = QFileDialog.getSaveFileName(
             self.parent(), caption, filename, filters, selectedFilter)

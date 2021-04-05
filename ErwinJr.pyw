@@ -1,21 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 
-# TODO:
-# Ctrl+z support
-# add status bar
-
 import os
 import sys
 import traceback
 from functools import partial
 
-from QCLayers import QCLayers
+from QCLayers import QCLayers, onedq
 from OptStrata import OptStrata
 import SaveLoad
 
-from PyQt5.QtCore import (QSettings, QFile, QUrl,
-                          QFileInfo, QVariant)
+from PyQt5.QtCore import QSettings, QFile, QUrl, QFileInfo, QVariant
 from PyQt5.QtGui import QIcon, QKeySequence, QDesktopServices, QPixmap
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTabWidget,
                              QAction, QMessageBox, QFileDialog,
@@ -37,7 +32,7 @@ class MainWindow(QMainWindow):
             self.qsettings.setValue("firstRun", False)
             if not fname:
                 firstRunBox = QMessageBox(
-                    QMessageBox.Question, 'EwrinJr2 ' + Version,
+                    QMessageBox.Question, 'ErwinJr2 ' + Version,
                     ("Welcome to ErwinJr2!\n"
                      "Since this is your first time running the program, "
                      "would you like to open an example or a blank file?"),
@@ -104,14 +99,8 @@ class MainWindow(QMainWindow):
         self.create_menu()
 
     def q2o(self):
-        # print(self.qtab.qclayers.wl,
-        #       self.qtab.qclayers.EField,
-        #       self.qtab.qclayers.gaincoef,
-        #       sum(self.qtab.qclayers.layerWidths))
-        wl = self.qtab.qclayers.wl
-        self.otab.setupActive(wl, self.qtab.qclayers.EField,
-                              self.qtab.qclayers.gaincoef,
-                              self.qtab.qclayers.effective_ridx(wl),
+        self.otab.setupActive(self.qtab.wavelength, self.qtab.qclayers.EField,
+                              self.qtab.gainCoeff, self.qtab.neff,
                               sum(self.qtab.qclayers.layerWidths))
         self.mainTabWidget.setCurrentIndex(1)
 
@@ -131,7 +120,8 @@ class MainWindow(QMainWindow):
                 target.addAction(action)
 
     def create_action(self, text, slot=None, shortcut=None, icon=None,
-                      tip=None, checkable=False, ischecked=False):
+                      tip=None, checkable=False, ischecked=False,
+                      settingSync=False):
         action = QAction(text, self)
         if icon:
             action.setIcon(QIcon("images/%s.png" % icon))
@@ -146,7 +136,20 @@ class MainWindow(QMainWindow):
             action.setCheckable(True)
         if ischecked:
             action.setChecked(True)
+        if settingSync:
+            assert(checkable)
+            assert(not ischecked)
+            action.triggered.connect(lambda: self.action_setting(text))
+            # initialize
+            if self.qsettings.value(text, False, type=bool):
+                action.setChecked(not ischecked)
+                if slot:
+                    slot()
         return action
+
+    def action_setting(self, name):
+        self.qsettings.setValue(
+            name, not self.qsettings.value(name, False, type=bool))
 
     def create_menu(self):
         self.menuBar().clear()
@@ -190,7 +193,7 @@ class MainWindow(QMainWindow):
         rotateLayerAction.setShortcut("Ctrl+T")
         solveARonly = self.create_action(
             "&Solve Active Only", checkable=True,
-            ischecked=self.qtab.qclayers.basisARonly,
+            ischecked=self.qtab.qclayers.basisAROnly,
             slot=self.qtab.ARonly)
         copyStructureAction = self.create_action(
             "&Copy Structure", slot=self.qtab.copy_structure,
@@ -218,25 +221,40 @@ class MainWindow(QMainWindow):
             "Split Off Valence Band",
             checkable=True, ischecked=self.qtab.plotSO,
             slot=self.qtab.view_SOBand)
-        PBoundAction = self.create_action(
-            "Show Periodic Energy Boundary",
-            checkable=True, ischecked=self.qtab.showPbound,
-            slot=self.qtab.view_PBound)
         plotwf = self.create_action(
             "Plot Wave function",
             checkable=True, ischecked=self.qtab.plotType == 'wf',
-            slot=self.qtab.set_plotwf)
+            slot=self.qtab.set_plotwf, settingSync=True)
         plotFill = self.create_action(
             "Fill wave function curve",
-            checkable=True, ischecked=self.qtab.fillplot,
-            slot=self.qtab.set_fill)
+            checkable=True, ischecked=self.qtab.fillPlot,
+            slot=self.qtab.set_fill, settingSync=True)
         self.add_actions(self.view_menu, (VXBandAction,
                                           VLBandAction,
                                           LHBandAction,
                                           SOBandAction,
-                                          PBoundAction,
                                           None,
                                           plotwf, plotFill))
+
+        # model menu
+        self.model_menu = self.menuBar().addMenu("&Model")
+        self.solverActions = {}
+        for solver in ("ODE", "matrix"):
+            self.solverActions[solver] = self.create_action(
+                solver, checkable=True,
+                ischecked=self.qtab.qclayers.solver == solver,
+                slot=partial(self.choose_solver, solver)
+            )
+        if onedq is None:
+            # C library does not exist
+            self.solverActions['ODE'].setEnabled(False)
+        solver_menu = self.model_menu.addMenu("Eigen Solver")
+        solver_menu.addActions(self.solverActions.values())
+        ifrAction = self.create_action(
+            "IFR scattering", checkable=True,
+            ischecked=self.qtab.qclayers.includeIFR,
+            slot=self.qtab.triggerIFR)
+        self.add_actions(self.model_menu, (None, ifrAction))
 
         # help menu
         self.help_menu = self.menuBar().addMenu("&Help")
@@ -295,7 +313,7 @@ class MainWindow(QMainWindow):
 
     def unsaveConfirm(self):
         """Confirm if unsaved data should be saved. This returns False if the
-        user canels the operation"""
+        user cancels the operation"""
         if self.dirty:
             reply = QMessageBox.question(
                 self, "ErwinJr2 " + Version + " - Unsaved Changes",
@@ -428,12 +446,28 @@ class MainWindow(QMainWindow):
 # Edit Menu Items
 # ===========================================================================
     def set_temperature(self):
-        nowTemp = self.qtab.qclayers.Temperature
+        nowTemp = self.qtab.qclayers.temperature
         newTemp, buttonResponse = QInputDialog.getDouble(
-            self, 'ErwinJr2 Input Dialog', 'Set Temperature',
+            self, 'ErwinJr2 Input Temperature', 'Set Temperature',
             value=nowTemp, min=0)
         if buttonResponse:
-            self.qtab.set_temperature(nowTemp)
+            self.qtab.set_temperature(newTemp)
+
+# ===========================================================================
+# Model Menu Items
+# ===========================================================================
+    def choose_solver(self, solver):
+        if solver not in ("matrix", "ODE"):
+            QMessageBox.warning(self, "Known solver: {}".format(solver)
+                                + traceback.format_exc())
+            return
+        if solver != self.qtab.qclayers.solver:
+            for action in self.solverActions.values():
+                action.setChecked(False)
+            self.solverActions[solver].setChecked(True)
+            self.qtab.triggerSolver(solver)
+            self.dirty = True
+            self.thingsChanged()
 
 # ===========================================================================
 # Help Menu Items
@@ -511,6 +545,9 @@ def main(filename=None):
     form = MainWindow(fileName)
     form.show()
     splash.finish(form)
+    if sys.platform.startswith('win'):
+        # The default font for win is not consistent with the OS
+        app.setFont(QApplication.font("QMenu"))
     app.exec_()
 
 

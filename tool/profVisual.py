@@ -13,7 +13,7 @@ from pycallgraph.output import GraphvizOutput
 if __name__ == "__main__":
 
     with PyCallGraph(output=GraphvizOutput()):
-        
+
         with open("../example/16um.json") as f:
             qcl = SaveLoad.qclLoad(f)
 
@@ -22,4 +22,4 @@ if __name__ == "__main__":
         qcl.populate_x()
         qcl.solve_whole()
         qcl.dipole(19, 15)
-        qcl.calc_FoM(19, 15)
+        qcl.figure_of_merit(19, 15)

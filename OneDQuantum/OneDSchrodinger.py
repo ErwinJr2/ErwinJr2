@@ -9,8 +9,7 @@ import os
 path = os.path.dirname(__file__)
 __all__ = ['cSimpleSolve1D', 'cSimpleFillPsi',
            'Band', 'cBandFillPsi', 'cBandSolve1D',
-           'cLOphononScatter', 'cLOtotal',
-           'cBandSolve1DBonded']
+           'cLOphononScatter', 'cLOtotal']
 
 
 def bindOpenMP(on: bool = True) -> typing.Tuple[CDLL, typing.Type[object]]:
@@ -36,23 +35,16 @@ def bindOpenMP(on: bool = True) -> typing.Tuple[CDLL, typing.Type[object]]:
                               POINTER(cBand), doubleArray]
     _clib.Solve1D.restype = c_int
 
-    _clib.Solve1DBonded.argtypes = [c_double, c_int, c_double, c_double,
-                                    c_double, doubleArray, c_int,
-                                    doubleArray, doubleArray,
-                                    POINTER(cBand), doubleArray]
-    _clib.Solve1DBonded.restype = c_int
-
     _clib.FillPsi.argtypes = [c_double, c_int, doubleArray, c_int,
                               doubleArray, doubleArray, doubleArray,
                               intArray, intArray, POINTER(cBand)]
     _clib.FillPsi.restype = None
 
-    _clib.LOphononScatter.argtypes = [c_double, c_int, c_double,
-                                      doubleArray, doubleArray]
+    _clib.LOphononScatter.argtypes = [c_double, c_int, c_double, doubleArray]
     _clib.LOphononScatter.restype = c_double
 
     _clib.LOtotal.argtypes = [c_double, c_int, doubleArray, doubleArray,
-                              doubleArray, doubleArray, c_int]
+                              doubleArray, c_int]
     _clib.LOtotal.restype = c_double
     return _clib, Band
 
@@ -149,37 +141,19 @@ def cBandFillPsi(step: float, EigenEs: np.ndarray, V: np.ndarray, band: Band,
     return psis.reshape((EigenEs.size, xmax-xmin))
 
 
-def cBandSolve1DBonded(step: float, Es: np.ndarray, Elower: float,
-                       Eupper: float, field: float, V: np.ndarray, band: Band,
-                       xmin: int = 0, xmax: typing.Optional[int] = None
-                       ) -> np.ndarray:
-    """
-    Find eigen energies using band mass.
-    bonded by [Elower-field*x, Eupper-field*x]
-    """
-    if not xmax:
-        xmax = V.size
-    EigenE = np.empty(Es.size)
-    EigenEN = _clib.Solve1DBonded(c_double(step), xmax-xmin, c_double(Elower),
-                                  c_double(Eupper), c_double(field),
-                                  Es, Es.size, V[xmin:xmax],
-                                  np.empty(0), band.c, EigenE)
-    return EigenE[:EigenEN]
-
-
-def cLOphononScatter(step: float, kl: float, psi_i: np.ndarray,
-                     psi_j: np.ndarray, xmin: int = 0,
+def cLOphononScatter(step: float, kl: float,
+                     psi_ij: np.ndarray, xmin: int = 0,
                      xmax: typing.Optional[int] = None) -> float:
     if not xmax:
-        xmax = psi_i.size
-    return _clib.LOphononScatter(c_double(step), xmax-xmin, c_double(kl),
-                                 psi_i, psi_j)
+        xmax = psi_ij.size
+    return _clib.LOphononScatter(c_double(step), xmax-xmin,
+                                 c_double(kl), psi_ij)
 
 
-def cLOtotal(step: float, kls: np.ndarray, psi_i: np.ndarray,
-             psi_js: np.ndarray, fjs: np.ndarray):
-    return _clib.LOtotal(c_double(step), len(psi_i), kls, psi_i,
-                         psi_js.flatten(), fjs, len(psi_js))
+def cLOtotal(step: float, kls: np.ndarray,
+             psi_ijs: np.ndarray, fjs: np.ndarray):
+    return _clib.LOtotal(c_double(step), psi_ijs.shape[1], kls,
+                         psi_ijs.flatten(), fjs, psi_ijs.shape[0])
 
 
 def isMP() -> bool:

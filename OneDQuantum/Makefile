@@ -1,4 +1,5 @@
-CFLAGS += -Ofast -Wall -fPIC #-D _DEBUG
+CFLAGS += -Ofast -Wall -fPIC
+# CFLAGS += -D _DEBUG
 # CC = icc
 # CFLAGS = -march=native -Ofast -gcc-name=gcc-6 -Wall
 OMPFLAGS = -fopenmp
@@ -24,16 +25,13 @@ endif
 .SECONDARY :
 
 
-all: 1DSchrodinger.$(EXT) 1DThermal.$(EXT) 1DMaxwell.$(EXT)
+all: 1DSchrodinger.$(EXT)
 MP:  1DSchrodinger_MP.$(EXT)
 
 1DSchrodinger_MP.$(EXT) : 1DSchrodinger_MP.o band.o fftautocorr.o
 	$(CC) -shared -fPIC $(OMPFLAGS) $^ -o $@ -lm $(LDFLAGS)
 
 1DSchrodinger.$(EXT) : 1DSchrodinger.o band.o fftautocorr.o
-	$(CC) -shared -fPIC $^ -o $@ -lm
-
-%.$(EXT) : %.o
 	$(CC) -shared -fPIC $^ -o $@ -lm
 
 1DSchrodinger.o : 1DSchrodinger.c science.h band.h fftautocorr/fftautocorr.h
@@ -45,10 +43,7 @@ MP:  1DSchrodinger_MP.$(EXT)
 fftautocorr.o : fftautocorr/fftautocorr.c fftautocorr/fftautocorr.h fftautocorr/factortable.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-%.o : %.c science.h
-	$(CC) $(CFLAGS) -c $< -o $@
-
 .PHONY : clean
 clean :
-	@$(RM) {1DSchrodinger,1DThermal,1DMaxwell,1DSchrodinger_MP}.{so,o,dll,dylib} band.o fftautocorr.o
+	@$(RM) {1DSchrodinger,1DSchrodinger_MP}.{so,o,dll,dylib} band.o fftautocorr.o
 

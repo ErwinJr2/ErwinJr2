@@ -5,12 +5,8 @@ General Structure
 -----------------
 
 All C library is intended to be compiled into dynamic link library (
-``.so`` for Linux, ``.dylib`` for MacOS and ``.dll`` for Windows). 
-
-:doc:`file/1DSchrodinger_8c` implements quantum physics related functions, 
-:doc:`file/1DMaxwell_8c`, is for Maxwell solvers (from electron density to 
-potentials) with zero in one side and symmetric boundary conditions. 
-:doc:`file/1DThermal_8c` solves thermal distributions. 
+``.so`` for Linux, ``.dylib`` for MacOS and ``.dll`` for Windows),
+which implements quantum physics related functions. 
 
 
 Band Structure 

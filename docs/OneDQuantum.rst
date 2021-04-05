@@ -11,7 +11,5 @@ equation solver in C.
    :maxdepth: 2
 
    OneDSchrodinger.rst
-   OneDMaxwell.rst
-   OneDThermal.rst
    bandpy.rst
    

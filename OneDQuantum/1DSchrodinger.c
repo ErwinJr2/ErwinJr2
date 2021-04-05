@@ -39,10 +39,12 @@ extern "C" {
  * @param[in] y0 value of y at \f$ x_0 \f$
  * @param[in] y1 value of y at \f$ x_0 + step \f$
  * @param[in] E energy, unit eV
- * @param[in] *V V[n] is the potential at \f$ x = x_0 + n \times step \f$
- * @param[in] *m m[n] is the effective mass at \f$ x = x_0 + n \times step \f$.
+ * @param[in] V V[n] is the potential at \f$ x = x_0 + n \times step \f$
+ * @param[in] m m[n] is the effective mass at \f$ x = x_0 + n \times step \f$.
  *               m is in unit m0 (free electron mass)
- * @param[out] *y (output) value of y at \f$ x = x_0 + n \times step \f$.
+ * @param[out] y (output) value of y at \f$ x = x_0 + n \times step \f$.
+ *
+ * @return psiend the last element of y
  */
 #ifndef MACOS
 inline
@@ -58,7 +60,7 @@ double numerov(double step, numpyint N, double y0, double y1,
                 fabs(m[n] - m[n-1])/step < 1E-5*m[n-1] ) {
         /* if(0){ */
             /* Numerov's method, step error O(step^6) */
-            /* is bad for m is in the middle of derivative TODO*/
+            /* is bad for m is in the middle of derivative */
             y[n+1] = (2 * y[n] * (1.0 - 5.0/12 * ( E - V[n]) * unit * m[n])
                     - y[n-1] * (1.0 + 1.0/12 * (E - V[n-1]) * unit * m[n-1]))
                 / (1.0 + 1.0/12 * (E - V[n+1]) * unit * m[n+1]);
@@ -141,19 +143,19 @@ __declspec(dllexport)
  *
  * @param[in] step step size
  * @param[in] N number of steps
- * @param[in] *EigenEs list of eigen energies
+ * @param[in] EigenEs list of eigen energies
  * @param[in] EN number of eigen energies we consider
- * @param[in] *V V[n] is the potential at \f$ x = x_0 + n \times step \f$
- * @param[in] *m m[n] is the effective mass at \f$ x = x_0 + n \times step \f$,
+ * @param[in] V V[n] is the potential at \f$ x = x_0 + n \times step \f$
+ * @param[in] m m[n] is the effective mass at \f$ x = x_0 + n \times step \f$,
  *                in unit \f$ m_0 \f$ (free electron mass), used only when
  *                mat=Null
- * @param[in] *starts
- * @param[in] *ends wavefuntion limited to psi[starts[i]:ends[i]]
- * @param[in] *mat is a pointer to band structure, for updating
+ * @param[in] starts
+ * @param[in] ends wavefuntion limited to psi[starts[i]:ends[i]]
+ * @param[in] mat is a pointer to band structure, for updating
  *                effective mass according to energy and perform normalization.
  *                When it's NULL it means using constant mass with parabolic
  *                kinetic energy.
- * @param[out] *psis (output)
+ * @param[out] psis (output)
  *                   \f$ \psi + i N \times sizeof(double) \f$ is the
  *                   wavefunction with energy EigenEs[i].
  */
@@ -263,6 +265,7 @@ __declspec(dllexport)
  * @param[in] *mat is a pointer to band structure
  * @param[out] *EigenE (output) eigen energy
  *
+ * @return total number of eigen states found.
  */
 numpyint Solve1D(double step, numpyint N,
         const double *Es, numpyint EN,
@@ -385,202 +388,43 @@ numpyint Solve1D(double step, numpyint N,
     return NofZeros;
 }
 
-#ifdef _WINDLL
-__declspec(dllexport)
-#endif
 
-/**
- * Bonded version of Solve1D()
- *
- * @param[in] step step size
- * @param[in] N number of steps: as a limit
- * @param[in] Elower: starting point of ode solver, Elower - x*field
- *                    should be smaller than V, and solve start with
- * @param[in] Eupper: ending point of ode solver, Eupper - x*field
- *                    should be larger than V, and solve start with
- * @param[in] field: field in unit kV/cm, for determing energy shift
- * @param[in] *Es initial search range of eigen energy
- * @param[in] EN number of eigen energy to find
- * @param[in] *V potential
- * @param[in] *m effective mass
- * @param[in] *mat is a pointer to band structure
- * @param[out] *EigenE (output) eigen energy
- *
- */
-numpyint Solve1DBonded(double step, numpyint N,
-        double Elower, double Eupper, double field,
-        const double *Es, numpyint EN,
-        const double *V, double *m, Band * const mat, double *EigenE) {
-    double *yend;
-    int NofZeros=0;
-    int length;
-    /* convert kV/cm to eV/pixal */
-    field *= ANG*step*1E5;
-    length = (int) ceil((Eupper - Elower)/field);
-#ifdef _DEBUG
-    if(mat != NULL) {
-        assert(N == mat->N);
-    }
-#endif
-    yend = (double *)malloc(EN * sizeof(double));
-#ifdef __MP
-    #ifdef _DEBUG
-    printf("Start a Solve1DPeriod with openMP.\n");
-    #endif
-    #pragma omp parallel
-#endif
-    {
-        int i;
-        double *y = (double *)malloc(N * sizeof(double));
-        double *mband;
-        if(mat != NULL) {
-            mband = (double *)malloc(N * sizeof(double));
-        }
-        else {
-            mband = m;
-        }
-#ifdef __MP
-    #ifdef _DEBUG
-        printf("    From thread %d out of %d\n",
-                omp_get_thread_num(), omp_get_num_threads());
-    #endif
-        #pragma omp for
-#endif
-        for(i=0; i < EN; i++) {
-            double E = Es[i];
-            int start = (int) floor((Elower - E)/field);
-            if(start < 0)
-                start = 0;
-            if(mat != NULL) {
-                BandUpdateM(mat, E, V, mband);
-            }
-            yend[i] = ode(step, start+length<=N ? length : N-start,
-                    0.0, Y_EPS, E, V+start, mband+start, y+start);
-        }
-
-#ifdef __MP
-        #pragma omp barrier
-        #pragma omp for ordered
-#endif
-        for(i=1; i<EN; i++) {
-            double E0, E1, E2;
-            double y0, y1, y2;
-            if(yend[i] == 0) {
-                E0 = Es[i];
-            }
-            else if(yend[i]*yend[i-1] < 0) {
-                /* Here secant method is used instead of Newton's
-                 * * because secant method is more stable, and since the
-                 * * extra yend evaluation introduced in discret derivative
-                 * * for Newton's method, secant method is still more efficient
-                 * * */
-                E1 = Es[i-1];
-                E2 = Es[i];
-                E0 = findZero(E2, yend[i], E1, yend[i-1]);
-#ifndef SIMPLE
-                int count=0;
-                int start = (int) floor((Elower - E0)/field);
-                if(start < 0)
-                    start = 0;
-                if(mat != NULL) {
-                    BandUpdateM(mat, E0, V, mband);
-                }
-                y0 = ode(step, start+length<=N ? length : N-start,
-                        0.0, Y_EPS, E0, V+start, mband+start, y+start);
-                y1 = yend[i-1];
-                y2 = yend[i];
-                /* Filter singular case */
-                if(fabs(y0) > fabs(yend[i]) || fabs(y0) > fabs(yend[i-1])){
-                    continue;
-                }
-                while(fabs(y0) > 1e-20 && fabs(E2-E1) > 1e-14 && count < 40){
-    #ifdef _DEBUG
-                    printf("    Iter No. %d, E0=%.8f, E1=%.8f, E2=%.8f, "
-                            "Delta=%g\n",
-                            count, E0, E1, E2, fabs(E2-E1));
-    #endif
-                    if(y0 * y1 < 0) {
-                        y2 = y0;
-                        E2 = E0;
-                    }
-                    else {
-                        y1 = y0;
-                        E1 = E0;
-                    }
-                    E0 = findZero(E1, y1, E2, y2);
-                    if(mat != NULL) {
-                        BandUpdateM(mat, E0, V, mband);
-                    }
-                    start = (int) floor((Elower - E0)/field);
-                    if(start < 0)
-                        start = 0;
-                    y0 = ode(step, start+length<=N ? length : N-start,
-                        0.0, Y_EPS, E0, V+start, mband+start, y+start);
-                    count++;
-                }
-    #ifdef _DEBUG
-                printf("After %d times secant iteration, E=%.8f Err=%e\n",
-                        count, E0, fabs(y0));
-    #endif
-#endif
-                }
-                else {
-                    continue;
-                }
-#ifdef __MP
-                #pragma omp ordered
-#endif
-                EigenE[NofZeros++] = E0;
-        }
-        free(y);
-        y = NULL;
-        if (mat != NULL) {
-            free(mband);
-            mband = NULL;
-        }
-    }
-
-    free(yend);
-    yend = NULL;
-    return NofZeros;
-}
-
-
-# define MINPSI 1E-5 /**< The min cutoff for integral of wavefunctions */
+# define MINPSI 1E-8 /**< The min cutoff for integral of wavefunctions */
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif
 /**
  * Calculate the LO phonon scattering rate
  *
- * @param[in] step step size
+ * @param[in] step step size in unit Angstrom
  * @param[in] N number of steps
- * @param[in] kl wavevector of LO phonon
- * @param[in] *psi_i \f$\psi_i\f$ wavefunction i
- * @param[in] *psi_j \f$\psi_j\f$ wavefunction j
+ * @param[in] kl wavevector of LO phonon in unit m^-1. This is DIFFERENT than
+ *            the step unit for convience to use kl.
+ * @param[in] psi_ij \f$\psi_i \psi_j\f$ wavefunction overlap
+ *
  * @return    \f$I_{ij} = \int\mathrm dx\mathrm dy\, \psi_i(x)\psi_j(x)
  *             \exp\left[-k_l|x-y|\right]\psi_i(y)\psi_j(y) \f$
  */
 double LOphononScatter(double step, numpyint N, double kl,
-        const double *psi_i, const double *psi_j) {
+        const double *psi_ij) {
     double Iij = 0;
     int i;
     double powerUnit = -kl*step*ANG;
     double *psiij;
     int start, end;
-    for(start = 0; start < N &&
-            (fabs(psi_i[start]) < MINPSI || fabs(psi_j[start]) < MINPSI);
-            start++);
-    for(end = N-1; end >= start  &&
-            (fabs(psi_i[end]) < MINPSI || fabs(psi_j[end]) < MINPSI);
-            end--);
-    if(start == end)
+    for(start = 0; start < N && fabs(psi_ij[start]) < MINPSI; start++);
+    for(end = N-1; end >= start  && fabs(psi_ij[end]) < MINPSI; end--);
+    #ifdef _DEBUG
+    printf("LO phonon scattering with start at %d, end at %d, length %d.\n",
+           start, end, N);
+    #endif
+    if(start >= end)
         return 0.0;
     end += 1;
     /* end - start is at least 1 */
     psiij = (double *)malloc(sizeof(double)*(end-start));
     for(i=start; i<end; i++) {
-        psiij[i-start] = psi_i[i] * psi_j[i];
+        psiij[i-start] = psi_ij[i];
     }
     end = end - start;
     if(autocorr(psiij, end) != 0) {
@@ -605,30 +449,23 @@ __declspec(dllexport)
 /**
  * Calculate sum LO phonon scattering rate from psi_i to all psi_j's
  *
- * @param[in] step step size
+ * @param[in] step step size in unit Angstrom
  * @param[in] N number of steps
- * @param[in] *kls wavevector of LO phonon between psi_i to psi_j's
- * @param[in] *psi_i \f$\psi_i\f$ wavefunction i
- * @param[in] *psi_js psi_j = psi_js[n*N] \f$\psi_j\f$ wavefunction j
- * @param[in] *fjs the factor \f$f_j\f$ before \f$I_{ij}\f$ before sum
+ * @param[in] kls wavevector of LO phonon between psi_i to psi_j's in unit m^-1
+ * @param[in] psi_ijs psi_j = psi_js[n*N] \f$\psi_i\psi_j\f$ overlap between
+ *            \f$\psi_i\f$ and \f$\psi_j\f$ wavefunction
+ * @param[in] fjs the factor \f$f_j\f$ before \f$I_{ij}\f$ before sum
  * @param[in] Nj number of psi_j
+ *
  * @return    \f$\sum_j f_j I_{ij} =
  *             \sum_j f_j \int\mathrm dx\mathrm dy\, \psi_i(x)\psi_j(x)
  *             \exp\left[-k_l|x-y|\right]\psi_i(y)\psi_j(y) \f$
  */
 double LOtotal(double step, numpyint N, const double *kls,
-        const double *psi_i, const double *psi_js, const double *fjs,
-        numpyint Nj) {
+        const double *psi_ijs, const double *fjs, numpyint Nj) {
     double Iij = 0;
-    int starti, endi;
     autocorr_plan plan;
-    for(starti = 0; starti < N && fabs(psi_i[starti]) < MINPSI; starti++);
-    for(endi = N-1; endi >= starti && fabs(psi_i[endi]) < MINPSI; endi--);
-    if(starti == endi)
-        return 0.0;
-    endi = endi - starti + 1;
-    psi_i += starti;
-    plan = make_autocorr_plan(endi);
+    plan = make_autocorr_plan(N);
 #ifdef __MP
     int failed = 0;
 #pragma omp parallel
@@ -642,15 +479,13 @@ double LOtotal(double step, numpyint N, const double *kls,
         #endif
         for(n = 0; n < Nj; n++) {
             #ifdef __MP
-            #ifdef _WINDLL
             if(failed)
-                break;
+                continue;
             #endif
-            #endif
-            const double *psi_j = psi_js + N*n + starti;
+            const double *psi_ij = psi_ijs + N*n;
             const double powerUnit = -kls[n]*step*ANG;
-            for(i = 0; i < endi; i++) {
-                psiij[i] = psi_i[i] * psi_j[i];
+            for(i = 0; i < N; i++) {
+                psiij[i] = psi_ij[i];
             }
             for(; i < mem_len(plan); i++) {
                 psiij[i] = 0.0;
@@ -663,8 +498,6 @@ double LOtotal(double step, numpyint N, const double *kls,
                 failed = 1;
                 #ifdef _WINDLL
                 break;
-                #else
-                #pragma omp cancel for
                 #endif
                 #else
                 free(psiij);
@@ -674,7 +507,7 @@ double LOtotal(double step, numpyint N, const double *kls,
                 #endif
             }
             Iij += fjs[n] * psiij[0]/2;
-            for(i = 1; i < endi; i++) {
+            for(i = 1; i < N; i++) {
                 Iij += fjs[n] * psiij[i] * exp(powerUnit*i);
             }
         }
@@ -687,31 +520,6 @@ double LOtotal(double step, numpyint N, const double *kls,
         return -1;
 #endif
     return 2*Iij * sq(step);
-}
-
-
-#ifdef _WINDLL
-__declspec(dllexport)
-#endif
-/**
- *
- * @param[in] step step size
- * @param[in] N number of steps
- * @param[in] *EigenEs list of eigen energies
- * @param[in] EN number of eigen energies we consider
- * @param[in] *psis psis[n*N:(n+1)*N] is the wavefunction for EigenEs[n]
- * @param[in] *masses masses[n] is the x-y effective mass for psis[n]
- * @param[in] Eshift the energy shift (period*field) between periods
- *                   should >= max(EigenEs) - min(EigenEs)
- * @param[in] xShift position translation in pixal between periods
- * @param[out] *loMatrix gamma[n,m] == loMatrix[EN*n+m] is the LO transition
- *                       rate between psis[n] and psis[m],
- *                       EigenEs[n] > EigenEs[m] (mod Eshift)
- */
-void LOMatrix(double step, numpyint N, const double *EigenEs, numpyint EN,
-        double *psis, const double *masses, double Eshift, numpyint xShift,
-        double *loMatrix){
-    /*TODO*/
 }
 
 

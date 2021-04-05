@@ -1,68 +1,91 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 from context import *  # type: ignore # noqa: F401, F403
-import SaveLoad
 import numpy as np
+import SaveLoad
 import unittest
 
 
-def plot_band(axes, qcLayers):
-    """ Plot potential (quantum barriers and wells) and other band parameters
-    of the layer scturecture on axes, assuming already populated"""
-    # for xv, conf in ((qcLayers.xVL, 'g--'),
-    #                  (qcLayers.xVX, 'm-.'),
-    #                  (qcLayers.xVLH, 'k'),
-    #                  (qcLayers.xVSO, 'r--')):
-    #     axes.plot(qcLayers.xPoints, xv, conf, linewidth=1)
-
-    fsize = 12
-    axes.set_xlabel('Position (Å)', fontsize=fsize)
-    axes.set_ylabel('Energy (eV)', fontsize=fsize)
-    axes.plot(qcLayers.xPoints, qcLayers.xVc, 'k', linewidth=1)
-
-    axes.plot(qcLayers.xPoints, qcLayers.xlayerSelected, 'b', linewidth=1)
-
-    if hasattr(qcLayers, 'eigenEs'):
-        for n in range(qcLayers.eigenEs.size):
-            axes.plot(qcLayers.xPoints,
-                      10*qcLayers.psis[n, :]**2 + qcLayers.eigenEs[n])
-
-
 class TestQCLayers(unittest.TestCase):
-    def test_solve_whole(self):
+    def test_solve_whole_matrix(self):
         with open("../example/PQLiu.json") as f:
             qcl = SaveLoad.qclLoad(f)
-
-        qcl.layerSelected = 3
-        qcl.NonParabolic = False
+        qcl.solver = 'matrix'
         qcl.populate_x()
         qcl.solve_whole()
-        # axes = plt.axes()
-        # plot_band(axes, qcl)
-        # plt.show()
+        qcl.period_recognize()
+        qcl.period_map_build()
+        self.assertAlmostEqual(qcl.eigenEs[41] - qcl.eigenEs[31], 0.26, 2)
+        for i, j in ((25, 41), (24, 40), (26, 42), (31, 49)):
+            self.assertEqual(qcl.periodMap[i][1], 1)
+            self.assertEqual(qcl.periodIdx[qcl.periodMap[i][0]], j)
+            np.testing.assert_almost_equal(
+                qcl.psi_overlap(44, j, 1), qcl.psi_overlap(44, i), decimal=6)
+            self.assertAlmostEqual(
+                qcl._dipole(44, j, 1), qcl._dipole(44, i), 3)
+            self.assertAlmostEqual(
+                qcl._lo_transition(44, j, 1), qcl._lo_transition(44, i), 4)
+            self.assertAlmostEqual(
+                qcl._ifr_transition(44, j, 1), qcl._ifr_transition(44, i), 5)
+        # Test overlapping
+        np.testing.assert_almost_equal(
+            qcl.psi_overlap(41, 49, 1), qcl.psi_overlap(41, 31), decimal=6)
 
-        np.testing.assert_equal(qcl.eigenEs.shape, (63,),
-                                'solve_whole eigenEs calculation wrong')
-        np.testing.assert_equal(qcl.psis.shape, (63, 1038),
-                                'solve_whole psis calculation wrong')
+    def test_solve_whole_ode(self):
+        with open("../example/PQLiu.json") as f:
+            qcl = SaveLoad.qclLoad(f)
+        qcl.solver = 'ODE'
+        qcl.populate_x()
+        qcl.solve_whole()
+        qcl.period_recognize()
+        qcl.period_map_build()
+        for i, j in ((21, 39), (14, 30), (15, 31)):
+            self.assertEqual(qcl.periodMap[i][1], 1)
+            self.assertEqual(qcl.periodIdx[qcl.periodMap[i][0]], j)
+            np.testing.assert_almost_equal(
+                qcl.psi_overlap(33, j, 1), qcl.psi_overlap(33, i), decimal=6)
+            self.assertAlmostEqual(
+                qcl._dipole(33, j, 1), qcl._dipole(33, i), 2)
 
     def test_solve_basis(self):
         with open("../example/PQLiu.json") as f:
             qcl = SaveLoad.qclLoad(f)
-
-        qcl.layerSelected = 3
-        qcl.NonParabolic = False
-        qcl.basisARonly = True
         qcl.populate_x()
         qcl.solve_basis()
-        # axes = plt.axes()
-        # plot_band(axes, qcl)
-        # plt.show()
+        self.assertAlmostEqual(qcl.eigenEs[32] - qcl.eigenEs[31], 0.27, 2)
+        self.assertEqual(qcl.eigenEs.shape, (96,))
+        self.assertEqual(qcl.psis.shape, (96, 1384))
 
-        np.testing.assert_equal(qcl.eigenEs.shape, (24,),
-                                'solve_basis eigenEs calculation wrong')
-        np.testing.assert_equal(qcl.psis.shape, (24, 1038),
-                                'solve_basis psis calculation wrong')
+    def test_cache_consistency(self):
+        with open("../example/PQLiu.json") as f:
+            qcl = SaveLoad.qclLoad(f)
+        qcl.includeIFR = True
+        qcl.mtrlIFRLambda = [5.0] * 2
+        qcl.mtrlIFRDelta = [5.0] * 2
+        qcl.repeats = 4
+        qcl.populate_x()
+        qcl.solve_whole()
+        self.assertFalse(hasattr(qcl, 'periodMap'))
+        self.assertEqual(qcl.status, 'solved')
+        taulo = qcl.lo_lifetime(33)
+        tauifr = qcl.ifr_lifetime(33)
+        tau = qcl.lifetime(33)
+        gamma = qcl.ifr_broadening(31, 21)
+        qcl.period_recognize()
+        qcl.period_map_build()
+        qcl.full_population()
+        self.assertEqual(qcl.status, 'solved-full')
+        self.assertTrue(hasattr(qcl, 'periodMap'))
+        # A different cache is used
+        self.assertNotEqual(taulo, qcl.lo_lifetime(33), 4)
+        self.assertNotEqual(tauifr, qcl.ifr_lifetime(33), 4)
+        self.assertNotEqual(tau, qcl.lifetime(33), 4)
+        self.assertNotEqual(gamma, qcl.ifr_broadening(39, 31), 9)
+        # But result should be approximately same
+        self.assertAlmostEqual(taulo, qcl.lo_lifetime(33), 4)
+        self.assertAlmostEqual(tauifr, qcl.ifr_lifetime(33), 4)
+        self.assertAlmostEqual(tau, qcl.lifetime(33), 4)
+        self.assertAlmostEqual(gamma, qcl.ifr_broadening(31, 21), 0)
 
 
 if __name__ == "__main__":

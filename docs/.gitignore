@@ -1,2 +1,4 @@
 _build/
 generated/
+clib/
+!clib/filelist.rst

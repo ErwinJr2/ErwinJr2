@@ -16,10 +16,10 @@ def firstGaAs():
         [0.7, 1.0, 1.55, 1.4, 1.4, 0.6])
     stratum.cstmIndx['Active'] = 3.21
     stratum.updateIndices()
-    # print("No doping", stratum.index0, stratum.indices, stratum.indexs)
+    # print("No doping", stratum.index0, stratum.indices, stratum.indexS)
     stratum.dopings = [0, 90, 6, 0.4, 0, 0.4, 6, 30]
     stratum.updateIndices()
-    print(stratum.index0, stratum.indices, stratum.indexs)
+    print(stratum.index0, stratum.indices, stratum.indexS)
     beta = stratum.boundModeTM()
     print(beta)
     print(4*pi/(wl*1E-4)*beta.imag)
@@ -45,8 +45,8 @@ def firstPlasmon():
     stratum.updateIndices()
     # print(stratum.indices[1])
     stratum.indices[2] += 0.1
-    # stratum.indexs += 0.2
-    print(stratum.index0, stratum.indices, stratum.indexs)
+    # stratum.indexS += 0.2
+    print(stratum.index0, stratum.indices, stratum.indexS)
     beta = stratum.boundModeTM()
     print(beta)
     print(4*pi/(wl*1E-4)*beta.imag)

@@ -16,12 +16,12 @@ help:
 
 .PHONY: help Makefile doxygen clean
 
-doxygen: 
+doxygen:
 	cd "$(DOXYGENDIR)"; \
 	doxygen
 
 clib: Makefile
-	breathe-apidoc -o $@ "$(DOXYGENXML)" 
+	breathe-apidoc -o $@ -T -g file "$(DOXYGENXML)"
 
 clib-bin: Makefile
 	cd "$(CLIBDIR)"; \

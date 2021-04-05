@@ -1,31 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
+from plotter import plot_band
 from context import *
 import SaveLoad
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot_band(axes, qcLayers):
-    """ Plot potential (quantum barriers and wells) and other band parameters
-    of the layer scturecture on axes, assuming already populated"""
-    # for xv, conf in ((qcLayers.xVL, 'g--'),
-    #                  (qcLayers.xVX, 'm-.'),
-    #                  (qcLayers.xVLH, 'k'),
-    #                  (qcLayers.xVSO, 'r--')):
-    #     axes.plot(qcLayers.xPoints, xv, conf, linewidth=1)
-
-    fsize = 12
-    axes.set_xlabel('Position (Å)', fontsize=fsize)
-    axes.set_ylabel('Energy (eV)', fontsize=fsize)
-    axes.plot(qcLayers.xPoints, qcLayers.xVc, 'k', linewidth=1)
-
-    axes.plot(qcLayers.xPoints, qcLayers.xlayerSelected, 'b', linewidth=1)
-
-    if hasattr(qcLayers, 'eigenEs'):
-        for n in range(qcLayers.eigenEs.size):
-            axes.plot(qcLayers.xPoints,
-                      qcLayers.psis[n, :] + qcLayers.eigenEs[n])
 
 
 if __name__ == "__main__":
@@ -36,8 +17,8 @@ if __name__ == "__main__":
     qcl.NonParabolic = False
     qcl.populate_x()
     qcl.solve_whole()
-    qcl.loTransition(5, 19)
-    qcl.loTransition(4, 18)
-    # axes = plt.axes()
-    # plot_band(axes, qcl)
+    qcl.lo_transition(5, 19)
+    qcl.lo_transition(4, 18)
+    axes = plt.axes()
+    plot_band(axes, qcl)
     plt.show()

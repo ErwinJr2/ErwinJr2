@@ -55,7 +55,8 @@ numpyint ZBupdateM(Band *mat, double Eq, const double *xVc, double *m) {
     return zbmat->N;
 }
 
-#define SQ(x) (x)*(x)
+#define SQ(x) (x)*(x)   /**< short for square of a function */
+/** @brief The normalization condition for Zincblende band. */
 double ZBNormalize(Band *mat, double Eq, const double *xVc,
                    double *psi, double xres) {
     ZBBand *zbmat = (ZBBand *) mat;
@@ -126,15 +127,19 @@ void ZBband_check(const Band *band, numpyint N, const double *xEg,
 }
 #endif
 
-/** @brief struct for Wurtzite band */
-typedef struct WZBand {
+/** @brief struct for Wurtzite band:
+ *
+ * This may not be necessary because it's still a 3 band model with F=0.
+ * It's here to demonstrate how new material can be added.
+*/
+typedef struct WZBAND {
     UpdateFunc updateM;       /**< Update effective mass */
     NormalizeFunc normalize;  /**< Normalize the wave function */
     numpyint N;               /**< Number of finite x positions */
     const double *xEg;    /**< Direct energy gap */
     const double *xEp;    /**< Matrix parameter */
     const double *xESO;   /**< Spin-orbit splitting */
-}WZBand;
+} WZBand;
 
 /** @brief  Update effective mass of a Wurtzite band semiconductor. Output N */
 numpyint WZupdateM(Band *mat, double Eq, const double *xVc, double *m) {
@@ -151,6 +156,7 @@ numpyint WZupdateM(Band *mat, double Eq, const double *xVc, double *m) {
     return wzmat->N;
 }
 
+/** @brief The normalization condition for Wurtzite band. */
 double WZNormalize(Band *mat, double Eq, const double *xVc,
                    double *psi, double xres) {
     ZBBand *zbmat = (ZBBand *) mat;
