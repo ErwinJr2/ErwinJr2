@@ -353,6 +353,7 @@ class MaxwellLayer(object):
         float:
             The confinement factor of the structure
         """
+        # TODO: an analytical version of it.
         if xs is None:
             xs = np.linspace(-3, sum(self.Ls[1:]), 5000)
         if Ey is None:
@@ -604,6 +605,10 @@ class OptStrata(MaxwellLayer):
         Ey : np.ndarray(complex)
             The field to integral on
         """
+        if xs is None:
+            xs = np.linspace(-3, sum(self.Ls[1:]), 5000)
+        if Ey is None:
+            Ey, _, _ = self.populateMode(beta, xs)
         return super(OptStrata, self).confinementy(
             beta, self.populateMtrl(xs), xs, Ey)
 
