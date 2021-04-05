@@ -527,31 +527,6 @@ double LOtotal(double step, numpyint N, const double *kls,
 __declspec(dllexport)
 #endif
 /**
- *
- * @param[in] step step size
- * @param[in] N number of steps
- * @param[in] EigenEs list of eigen energies
- * @param[in] EN number of eigen energies we consider
- * @param[in] psis psis[n*N:(n+1)*N] is the wavefunction for EigenEs[n]
- * @param[in] masses masses[n] is the x-y effective mass for psis[n]
- * @param[in] Eshift the energy shift (period*field) between periods
- *                   should >= max(EigenEs) - min(EigenEs)
- * @param[in] xShift position translation in pixal between periods
- * @param[out] loMatrix gamma[n,m] == loMatrix[EN*n+m] is the LO transition
- *                       rate between psis[n] and psis[m],
- *                       EigenEs[n] > EigenEs[m] (mod Eshift)
- */
-void LOMatrix(double step, numpyint N, const double *EigenEs, numpyint EN,
-        double *psis, const double *masses, double Eshift, numpyint xShift,
-        double *loMatrix){
-    /*TODO*/
-}
-
-
-#ifdef _WINDLL
-__declspec(dllexport)
-#endif
-/**
  * Checkpoint for python-C interface. Output 137.
  */
 numpyint invAlpha() {
