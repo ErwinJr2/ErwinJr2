@@ -113,40 +113,5 @@ class TestQuantumWell(unittest.TestCase):
         self.assertAlmostEqual(abs(qcLayers.dipole(1, 0)), 18.6, -1)
 
 
-def plot_debugger():
-    import matplotlib.pyplot as plt
-    layers = [300, 46, 10, 20, 10, 19, 300]
-    mtrls = [1, 0, 1, 0, 1, 0, 1]
-    singleWell = GaInAs_AlInAs_Layer(0.01, layers, mtrls)
-    singleWell.populate_x()
-    singleWell.solve_whole()
-    print(singleWell.eigenEs)
-    print(np.diff(singleWell.eigenEs))
-    print(singleWell.dipole(0, 1))
-
-    qcLayers = QCLayers(xres=0.01, layerWidths=layers,
-                        ifrDelta=50, ifrLambda=10,
-                        layerMtrls=mtrls, repeats=1, T=10.0)
-    qcLayers.populate_x()
-    qcLayers.solve_whole()
-    validate_ODE(qcLayers)
-    print(qcLayers.eigenEs)
-    print(np.diff(qcLayers.eigenEs))
-    print(qcLayers.dipole(0, 1))
-    print(1/qcLayers.ifr_transition(1, 0))
-    print(1/qcLayers.ifr_transition(2, 1))
-    print(1/qcLayers.ifr_transition(3, 2))
-
-    # qcLayers = singleWell
-    plt.xlabel('Position (Å)')
-    plt.ylabel('Energy (eV)')
-    plt.plot(qcLayers.xPoints, qcLayers.xVc, 'k', linewidth=1)
-    for n in range(qcLayers.eigenEs.size):
-        plt.plot(qcLayers.xPoints,
-                 10*qcLayers.psis[n, :] + qcLayers.eigenEs[n])
-    # plt.show()
-
-
 if __name__ == "__main__":
-    # unittest.main()
-    plot_debugger()
+    unittest.main()
