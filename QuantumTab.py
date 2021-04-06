@@ -23,8 +23,9 @@ from matplotlib import cm
 # from matplotlib.colors import LogNorm as cmNorm
 from matplotlib.colors import Normalize as cmNorm
 
-from QCLayers import (QCLayers, StateRecognizeError, QCMaterial,
-                      h, hbar, eps0, c0, e0)
+from QCLayers import (QCLayers, StateRecognizeError,
+                      optimize_layer, optimize_global,
+                      QCMaterial, h, hbar, eps0, c0, e0)
 from EJcanvas import EJcanvas, EJplotControl
 from EJcanvas import config as plotconfig
 
@@ -862,7 +863,7 @@ class QuantumTab(QWidget):
         self.dirty.emit()
 
     def _optimize_layer(self, n, upper, lower):
-        self.qclayers.optimize_layer(n, upper, lower)
+        optimize_layer(self.qclayers, n, upper, lower)
         if self.solveType == 'basis':
             self.qclayers.solve_basis()
         else:
@@ -896,7 +897,7 @@ class QuantumTab(QWidget):
             upper, lower = self.stateHolder
             if self.qclayers.eigenEs[upper] < self.qclayers.eigenEs[lower]:
                 upper, lower = lower, upper
-        except IndexError:
+        except ValueError:
             QMessageBox.warning(self, ejError,
                                 "Select state pair to optimize.")
             return
@@ -906,7 +907,7 @@ class QuantumTab(QWidget):
                         lambda: self.showOptmize(n))
 
     def _global_optimize(self):
-        self.qclayers.optimize_global(1)
+        optimize_global(self.qclayers)
         self._fullPopulation()
 
     @pyqtSlot()
@@ -917,7 +918,7 @@ class QuantumTab(QWidget):
                    "It's highly recommended to save the structure first.\n"
                    "Do you want to proceed?"
                    )
-        if not QMessageBox.question(self, ejWarning, message):
+        if QMessageBox.question(self, ejWarning, message) == QMessageBox.Yes:
             self.stateParamText.clear()
             self.clear_WFs()
             self._threadRun(self._global_optimize, self.showOptmize)

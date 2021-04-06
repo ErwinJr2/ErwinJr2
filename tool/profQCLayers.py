@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 from context import *  # type: ignore # noqa: F401, F403
+from QCLayers import auto_gain
 import SaveLoad
 import cProfile
 import pstats
@@ -12,7 +13,7 @@ if __name__ == "__main__":
         qcl = SaveLoad.qclLoad(f)
     qcl.xres = 0.1
     cp.enable()
-    qcl._auto_gain()
+    auto_gain(qcl)
     cp.disable()
     cp.print_stats(sort="cumulative")
 

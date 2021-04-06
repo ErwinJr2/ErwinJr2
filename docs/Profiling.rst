@@ -22,7 +22,7 @@ Current version with population and gain
 =========  =======  =======  =======  ======= ===============================================================
    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
 =========  =======  =======  =======  ======= ===============================================================
-      1    0.001    0.001    5.955    5.955   ./ErwinJr2/QCLayers.py:1489(_auto_gain)
+      1    0.001    0.001    5.955    5.955   ./ErwinJr2/QCLayers.py:1493(auto_gain)
       1    0.000    0.000    4.753    4.753   ./ErwinJr2/QCLayers.py:1386(full_population)
       1    0.024    0.024    4.753    4.753   ./ErwinJr2/QCLayers.py:921(full_population)
    3640    1.358    0.000    3.361    0.001   ./ErwinJr2/QCLayers.py:701(_ifr_transition)
