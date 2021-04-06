@@ -13,11 +13,23 @@ class TestMaterial(unittest.TestCase):
         Material.main("AlGaAs")
 
     def test_Alloy_AlGaAs(self):
-        algaas = Material.Alloy("AlGaAs", 0.0)  # so that is pure GaAs
+        algaas0 = Material.Alloy("AlGaAs", 0.0)  # so that is pure GaAs
+        algaas1 = Material.Alloy("AlGaAs", 1.0)  # so that is pure GaAs
+        algaas = Material.Alloy("AlGaAs", 0.33)  # so that is pure GaAs
         gaas = Material.Material("GaAs")
-        #  self.assertEqual(gaas.param.pop("Crystal"), "ZincBlende")
+        alas = Material.Material("AlAs")
         for key in gaas.param:
-            self.assertAlmostEqual(algaas.param[key], gaas.param[key])
+            self.assertAlmostEqual(algaas0.param[key], gaas.param[key])
+            self.assertAlmostEqual(algaas1.param[key], alas.param[key])
+            self.assertTrue(
+                (algaas0.param[key] <= algaas.param[key] <= algaas1.param[key])
+                or
+                (algaas1.param[key] <= algaas.param[key] <= algaas0.param[key])
+                or
+                # Equal with machine precision
+                (abs(algaas1.param[key]-algaas.param[key]) < 1E-18
+                 and abs(algaas0.param[key]-algaas.param[key]) < 1E-18)
+            )
 
     def test_zero_strain(self):
         gaas = Material.Material("GaAs")
