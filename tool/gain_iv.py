@@ -39,12 +39,15 @@ def iv(qcl):
         current[n] = qcl.current
     plt.plot(current, bias)
     plt.show()
+    return bias, current
 
 
 if __name__ == "__main__":
     # with open("../example/PQLiu.json") as f:
-    with open("../example/std8um.json") as f:
+    # with open("../example/std8um.json") as f:
+    with open("../example/new16umgaas-cladding.json") as f:
         qcl = SaveLoad.qclLoad(f)
 
-    gainSpec(qcl)
-    # iv(qcl)
+    # gainSpec(qcl)
+    bias, current = iv(qcl)
+    np.savetxt('iv_16.csv', np.column_stack([bias, current]), delimiter=',')
