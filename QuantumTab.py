@@ -40,7 +40,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLabel, QComboBox,
                              QDialog, QDialogButtonBox)
 from customQTClass import mtrlComboBox
 
-from Material import AParm
+from Material import AParam
 from versionAndName import ejError, ejWarning
 from darkDetect import isdark
 
@@ -581,7 +581,7 @@ class QuantumTab(QWidget):
         information. mtrlList is used for mtrl column in layerTable"""
         self.mtrlList = []
         for n, mtrl in enumerate(self.qclayers.materials):
-            name = AParm[mtrl]['name']
+            name = AParam[mtrl]['name']
             name = name.replace("1-x", str(1-self.qclayers.moleFracs[n]))
             name = name.replace("x", str(self.qclayers.moleFracs[n]))
             name = "#%d " % (n+1)  # + name
@@ -1057,7 +1057,7 @@ class QuantumTab(QWidget):
         self.mtrlTable.verticalHeader().hide()
         # TODO: material name support
 
-        possibleMtrl = tuple([AParm[m]['name'] for m in
+        possibleMtrl = tuple([AParam[m]['name'] for m in
                               QCMaterial[self.qclayers.substrate]])
         for n, mtrl in enumerate(self.qclayers.materials):
             color = self.mtrlcolors[n % len(self.mtrlcolors)]
@@ -1071,7 +1071,7 @@ class QuantumTab(QWidget):
             #  mtrlItem = QComboBox()
             mtrlItem = mtrlComboBox()
             mtrlItem.addItems(possibleMtrl)
-            mtrlItem.setCurrentText(AParm[mtrl]['name'])
+            mtrlItem.setCurrentText(AParam[mtrl]['name'])
             mtrlItem.currentIndexChanged.connect(
                 partial(self.mtrlTable_mtrlChanged, n))
             self.mtrlTable.setCellWidget(n, 1, mtrlItem)

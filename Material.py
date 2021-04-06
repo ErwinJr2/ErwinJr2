@@ -7,8 +7,8 @@ III/V semiconductor electron band. The module contains:
 
 * **Material** class;
 * **Alloy** class (inherited from Material class);
-* **MParm** dictionary, which stores constants for different materials
-* **AParm** dictionary, which stores constants for different alloys
+* **MParam** dictionary, which stores constants for different materials
+* **AParam** dictionary, which stores constants for different alloys
 """
 
 # ===========================================================================
@@ -59,28 +59,28 @@ class Material(object):
             Type of the material
         """
         self.name = Name
-        self.parm = MParm[self.name].copy()
-        self.type = self.parm.pop("Crystal")
+        self.param = MParam[self.name].copy()
+        self.type = self.param.pop("Crystal")
         self.set_temperature(Temperature)
 
     def set_temperature(self, Temperature):
         """
         Set temperature of the material and update related parameters:
-        lattice consant and band gap.
+        lattice constant and band gap.
 
         Yields
         ------
         T : int
             Updated temperature
-        parm : dict
+        param : dict
             lattice constant and band gap in this dictionary are updated
         """
         self.T = Temperature
-        for k in self.parm:
-            if k.endswith("lc") and k+"_T" in self.parm:
+        for k in self.param:
+            if k.endswith("lc") and k+"_T" in self.param:
                 # k is about lattice constant
-                self.parm[k] = (MParm[self.name][k] + (self.T - 300)
-                                * MParm[self.name][k+"_T"])
+                self.param[k] = (MParam[self.name][k] + (self.T - 300)
+                                 * MParam[self.name][k+"_T"])
         # Varshni correction to bandgap [4]
         # major assumption:
         #   Correction only to conduction band (no influence on VBO)
@@ -88,9 +88,9 @@ class Material(object):
         #   conduction band, part valence
         if VARSH:
             for pt in ('G', 'X', 'L'):
-                Varsh = -self.parm["al"+pt] * self.T**2 / (
-                    self.T + self.parm["be"+pt])
-                self.parm['Eg'+pt] = MParm[self.name]['Eg'+pt] + Varsh
+                Varsh = -self.param["al"+pt] * self.T**2 / (
+                    self.T + self.param["be"+pt])
+                self.param['Eg'+pt] = MParam[self.name]['Eg'+pt] + Varsh
 
     def set_strain(self, a_parallel):
         """
@@ -110,49 +110,49 @@ class Material(object):
             Lattice const. perpendicular to the layer plane
         eps_perp : float
             Strain tensor perpendicular to the layer plane
-        parm : dict
+        param : dict
             Update parameters' dependence on strain
         """
         # TODO: crystal with more than one lattice constant?
         # eps_parallel: strain tensor within/parallel to the layer plane
-        self.eps_parallel = a_parallel / self.parm["alc"] - 1
+        self.eps_parallel = a_parallel / self.param["alc"] - 1
         # self.a_perp: lattice const. perpendicular to the layer plane
         # Ask if MBE growers care about strain on monolayer thickness
-        self.a_perp = self.parm["alc"] * (1 - 2 * self.parm["c12"] /
-                                          self.parm["c11"] * self.eps_parallel)
+        self.a_perp = self.param["alc"] * (
+            1 - 2 * self.param["c12"] / self.param["c11"] * self.eps_parallel)
         # eps_perp: strain tensor perpendicular to the layer plane
-        self.eps_perp = self.a_perp / self.parm["alc"] - 1
+        self.eps_perp = self.a_perp / self.param["alc"] - 1
         if self.type == "ZincBlende":
-            Pec = (2 * self.eps_parallel + self.eps_perp) * self.parm["acG"]
-            Pev = (2 * self.eps_parallel + self.eps_perp) * self.parm["av"]
-            Qe = (- self.parm["b"] * (self.parm["c11"] + 2 * self.parm["c12"])
-                  / self.parm["c11"] * self.eps_parallel)
-            self.parm["EcG"] = (self.parm["VBO"] + self.parm["EgG"] + Pec
-                                - bandBaseln)
-            self.parm["EcL"] = (self.parm["VBO"] + self.parm["EgL"]
-                                + (2 * self.eps_parallel + self.eps_perp)
-                                * (self.parm["acL"] + self.parm["av"])
-                                - bandBaseln)
-            self.parm["EcX"] = (self.parm["VBO"] + self.parm["EgX"]
-                                + (2 * self.eps_parallel + self.eps_perp)
-                                * (self.parm["acX"] + self.parm["av"])
-                                + 2/3*self.parm["XiX"]*(
+            Pec = (2 * self.eps_parallel + self.eps_perp) * self.param["acG"]
+            Pev = (2 * self.eps_parallel + self.eps_perp) * self.param["av"]
+            Qe = (- self.param["b"] * (self.param["c11"] + 2*self.param["c12"])
+                  / self.param["c11"] * self.eps_parallel)
+            self.param["EcG"] = (self.param["VBO"] + self.param["EgG"] + Pec
+                                 - bandBaseln)
+            self.param["EcL"] = (self.param["VBO"] + self.param["EgL"]
+                                 + (2 * self.eps_parallel + self.eps_perp)
+                                 * (self.param["acL"] + self.param["av"])
+                                 - bandBaseln)
+            self.param["EcX"] = (self.param["VBO"] + self.param["EgX"]
+                                 + (2 * self.eps_parallel + self.eps_perp)
+                                 * (self.param["acX"] + self.param["av"])
+                                 + 2/3*self.param["XiX"]*(
                                     self.eps_perp - self.eps_parallel)
-                                - bandBaseln)
-            self.parm["ESO"] = sqrt(9 * Qe**2 + 2 * Qe * self.parm["DSO"] +
-                                    self.parm["DSO"]**2)
-            self.parm["EgLH"] = (self.parm["EgG"] + Pec + Pev - 1/2 * (
-                Qe - self.parm["DSO"] + self.parm["ESO"]))
-            self.parm["EgSO"] = (self.parm["EgG"] + Pec + Pev - 1/2 * (
-                Qe - self.parm["DSO"] - self.parm["ESO"]))
-            self.parm["EvLH"] = self.parm["EcG"] - self.parm["EgLH"]
-            self.parm["EvSO"] = self.parm["EcG"] - self.parm["EgSO"]
+                                 - bandBaseln)
+            self.param["ESO"] = sqrt(9 * Qe**2 + 2 * Qe * self.param["DSO"] +
+                                     self.param["DSO"]**2)
+            self.param["EgLH"] = (self.param["EgG"] + Pec + Pev - 1/2 * (
+                Qe - self.param["DSO"] + self.param["ESO"]))
+            self.param["EgSO"] = (self.param["EgG"] + Pec + Pev - 1/2 * (
+                Qe - self.param["DSO"] - self.param["ESO"]))
+            self.param["EvLH"] = self.param["EcG"] - self.param["EgLH"]
+            self.param["EvSO"] = self.param["EcG"] - self.param["EgSO"]
         else:
             print("Warning: the strain effect on {} is not implemented".format(
                 self.type
             ))
-            self.parm["EcG"] = (self.parm["VBO"] + self.parm["EgG"]
-                                - bandBaseln)
+            self.param["EcG"] = (self.param["VBO"] + self.param["EgG"]
+                                 - bandBaseln)
 
 
 class Alloy(Material):
@@ -164,14 +164,14 @@ class Alloy(Material):
     Name : str
         Name of the alloy
     x : float
-        The first composition's Mole fraction defined in AParm
+        The first composition's Mole fraction defined in AParam
     Temperature : int
         Temperature of the alloy
 
     """
     def __init__(self, Name, x, Temperature=300):
         self.name = Name
-        self.comp = AParm[self.name]["composition"]
+        self.comp = AParam[self.name]["composition"]
         self.A = Material(self.comp[0], Temperature)
         self.B = Material(self.comp[1], Temperature)
         assert(self.A.type == self.B.type)
@@ -204,42 +204,42 @@ class Alloy(Material):
         Parameters
         ----------
         x : float
-            The first composition's Mole fraction defined in AParm
+            The first composition's Mole fraction defined in AParam
 
         Yields
         ------
-        parm : dict
+        param : dict
             stores the parameter of the alloy
         """
         self.moleFrac = x
-        self.parm = {}
+        self.param = {}
 
         # For the Gamma band gap bowing in AlxGa1-xAs and AlxGa1-xSb
         # a linear or even a quadratic interpolation is not sufficient.
         # Here, the bowing parameter is not constant,
         # it depends on the alloy composition x.
         if self.name == 'AlGaAs':
-            AParm[self.name]['EgG'] = -0.127 + 1.310 * x
+            AParam[self.name]['EgG'] = -0.127 + 1.310 * x
         if self.name == 'AlGaSb':
-            AParm[self.name]['EgG'] = -0.044 + 1.22 * x
+            AParam[self.name]['EgG'] = -0.044 + 1.22 * x
 
-        for k in self.A.parm:
-            #  if not k in B.parm:
+        for k in self.A.param:
+            #  if not k in B.param:
             #      continue
-            self.parm[k] = (x * self.A.parm[k] + (1-x) * self.B.parm[k])
-            if BOWING and k in AParm[self.name]:
+            self.param[k] = (x * self.A.param[k] + (1-x) * self.B.param[k])
+            if BOWING and k in AParam[self.name]:
                 # Bowing parameters
-                self.parm[k] -= x * (1-x) * AParm[self.name][k]
+                self.param[k] -= x * (1-x) * AParam[self.name][k]
 
 
-MParm = {
+MParam = {
     # TODO: include Luttinger gamma
     "GaAs": {  # from Vurgaftman[0] unless specified
         "Crystal": "ZincBlende",
-        # Lattice constant and thermal expension
+        # Lattice constant and thermal expansion
         "alc": 5.65325,       # Angstrom, Ref[3] Table 2.6
         "alc_T": 3.88e-5,     # Angstrom / K
-        # Elestic stiffness constants
+        # Elastic stiffness constants
         'c11': 1221,   # GPa
         'c12': 566,    # GPa
         'EgG': 1.519,  # eV, band gap at Gamma at 0 K
@@ -250,12 +250,12 @@ MParm = {
         # Pikus-Bir interaction parameters: strain correction
         'acG': -7.17,  # eV
         'acL': -4.91,  # eV, NextNano DB
-        'acX': -0.16,  # eV, NaxtNano DB
+        'acX': -0.16,  # eV, NextNano DB
         'av': -1.16,   # eV, valence band deformation potential
         'b': -2.0,     # eV
         'XiG': 0,      # eV
-        'XiL': 6.5,    # eV, NaxtNano DB
-        'XiX': 14.26,  # eV, NaxtNano DB
+        'XiL': 6.5,    # eV, NextNano DB
+        'XiX': 14.26,  # eV, NextNano DB
         'me0': 0.067,  # m0, effective mass at Gamma
         # Kane model parameters for effective mass
         'Ep': 28.8,    # eV
@@ -267,8 +267,8 @@ MParm = {
         'beX': 204,         # K, Varshni beta at X
         'alL': 0.605e-3,    # K, Varshni alpha at L
         'beL': 204,         # K, Varshni beta at L
-        'epss': 12.9,       # static permitivity
-        'epsInf': 10.86,    # high-freq permitivity
+        'epss': 12.9,       # static permittivity
+        'epsInf': 10.86,    # high-frequency permittivity
         'hwLO': 35.3e-3     # LO phonon energy eV
     },
 
@@ -416,7 +416,7 @@ MParm = {
 
 }
 
-AParm = {
+AParam = {
     'InGaAs': {
         'EgG': 0.477, 'EgL': 0.33, 'EgX': 1.4, 'VBO': -0.38, 'DSO': 0.15,
         'acG': 2.61, 'acL': 2.61,  # NextNano DB
@@ -477,15 +477,15 @@ AParm = {
 
 def main(material):
     print("Looking for parameters of %s:" % material)
-    if material in AParm:
-        A, B = AParm[material]['composition']
+    if material in AParam:
+        A, B = AParam[material]['composition']
         print("Alloy with (%s)x(%s)1-x" % (A, B))
-        print("%s: " % A, MParm[A])
-        print("%s: " % B, MParm[B])
-        print("Bowing parameters:", AParm[material])
+        print("%s: " % A, MParam[A])
+        print("%s: " % B, MParam[B])
+        print("Bowing parameters:", AParam[material])
         return 0
-    elif material in MParm:
-        print(MParm[material])
+    elif material in MParam:
+        print(MParam[material])
         return 0
     else:
         print("Not found.")

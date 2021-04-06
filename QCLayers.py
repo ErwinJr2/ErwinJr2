@@ -1104,7 +1104,7 @@ description : str
                          layerWidths=layerWidths, layerARs=layerARs,
                          ifrDelta=ifrDelta, ifrLambda=ifrLambda,
                          EField=EField, repeats=repeats)
-        self.crystalType = Material.MParm[substrate]["Crystal"]
+        self.crystalType = Material.MParam[substrate]["Crystal"]
         self.subM = Material.Material(self.substrate, self.temperature)
         self.wl = wl
         self.solver = solver
@@ -1147,7 +1147,7 @@ description : str
     def update_strain(self):
         """Update strain for the materials. This should be called every time
         material parameters are updated."""
-        self.a_parallel = self.subM.parm['alc']
+        self.a_parallel = self.subM.param['alc']
         self.mtrlAlloys = [Material.Alloy(self.materials[idx],
                                           self.moleFracs[idx],
                                           self.temperature)
@@ -1213,7 +1213,7 @@ description : str
     def set_substrate(self, subs: str):
         if subs in QCMaterial:
             self.substrate = subs
-            self.crystalType = Material.MParm[subs]["Crystal"]
+            self.crystalType = Material.MParam[subs]["Crystal"]
             matlN = len(self.materials)
             self.materials = (QCMaterial[subs]*matlN)[0:matlN]
             self.update_strain()
@@ -1230,7 +1230,7 @@ description : str
         """Return the conduction band offset (difference between highest
         conduction band and lowest conduction band energy) of materials,
         in unit eV"""
-        ecgs = [alloy.parm['EcG'] for alloy in self.mtrlAlloys]
+        ecgs = [alloy.param['EcG'] for alloy in self.mtrlAlloys]
         return max(ecgs) - min(ecgs)
 
     @property
@@ -1245,10 +1245,10 @@ description : str
         return 100 * totalStrain / sum(self.layerWidths)
 
     def layerVc(self, n: int) -> float:
-        return self.mtrlAlloys[self.layerMtrls[n]].parm['EcG']
+        return self.mtrlAlloys[self.layerMtrls[n]].param['EcG']
 
     def layerMc(self, n: int) -> float:
-        return self.mtrlAlloys[self.layerMtrls[n]].parm['me0']
+        return self.mtrlAlloys[self.layerMtrls[n]].param['me0']
 
     def populate_material(self):
         """
@@ -1278,7 +1278,7 @@ description : str
                                  (self.xVX, 'EcX'), (self.xVL, 'EcL'),
                                  (xEg, 'EgLH'), (xESO, 'ESO'),
                                  (xEp, 'Ep'), (xF, 'F')):
-                    p[indices] = self.mtrlAlloys[self.layerMtrls[n]].parm[key]
+                    p[indices] = self.mtrlAlloys[self.layerMtrls[n]].param[key]
             self.bandParams = (xEg, xF, xEp, xESO)
 
             ExtField = self.xPoints * self.EField * EUNIT
@@ -1294,12 +1294,12 @@ description : str
             self.avghwLO = -1
             self.epsrho = 69.0
         else:
-            sumhwlo = sum(self.mtrlAlloys[self.layerMtrls[n]].parm['hwLO']
+            sumhwlo = sum(self.mtrlAlloys[self.layerMtrls[n]].param['hwLO']
                           * self.layerWidths[n]
                           for n in range(len(self.layerWidths)))
             self.avghwLO = sumhwlo / sum(self.layerWidths)
-            epsInf = np.array([a.parm["epsInf"] for a in self.mtrlAlloys])
-            epss = np.array([a.parm["epss"] for a in self.mtrlAlloys])
+            epsInf = np.array([a.param["epsInf"] for a in self.mtrlAlloys])
+            epss = np.array([a.param["epss"] for a in self.mtrlAlloys])
             epsrho = 1 / (1/epsInf - 1/epss)
             self.epsrho = (np.sum(epsrho[self.layerMtrls] * self.layerWidths)
                            / sum(self.layerWidths))
