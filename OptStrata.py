@@ -47,7 +47,7 @@ class MaxwellLayer(object):
         The refractive index for the substrate layer
 
     Ls : list(float)
-        Thickness of  stratum, same unit as wl. The first and last elements
+        Thickness of the stratum, same unit as wl. The first and last elements
         are for top and substrate and is not used for calculation
     """
     wl: float

@@ -15,9 +15,9 @@ class TestTransferMatrix(unittest.TestCase):
         wl = 632.8
         stratum = MaxwellLayer(wl, hs, indices)
         beta = stratum.boundModeTM(max(indices))
-        self.assertTrue(abs(beta - 1.620031) < 1e-6)
+        self.assertAlmostEqual(beta, 1.620031, 6)
 
-        xs = np.linspace(-500, 2500, 10000)
+        xs = np.linspace(-2000, 4000, 20000)
         n = stratum.populateIndices(xs)
         Ey, Hx, Ez = stratum.populateMode(beta, xs)
         # dHx/dy = i k n^2 Ez
@@ -28,6 +28,8 @@ class TestTransferMatrix(unittest.TestCase):
         lhs = 1j*2*np.pi/wl*n[1:-1]**2*(Ez[2:] - Ez[:-2])/(xs[2]-xs[0])
         rhs = -(n**2 - beta**2)*(2*np.pi/wl)**2*Hx
         np.testing.assert_almost_equal(lhs, rhs[1:-1], decimal=3)
+        self.assertAlmostEqual(Ez[0], 0, 5)
+        self.assertAlmostEqual(Ez[-1], 0, 5)
 
     def test_anisotropy(self):
         hs = np.array([500]*4)

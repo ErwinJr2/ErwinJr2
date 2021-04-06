@@ -27,6 +27,7 @@ script:
   - pytest -v test/testThreeBandMatrix.py
   - pytest -v test/testEffMass.py
   - pytest -v test/testQCLayers.py
+  - pytest -v test/testMaxwell.py
 jobs:
   include:
   # other OSs are only tested for compiling and MP
