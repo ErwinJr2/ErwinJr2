@@ -15,7 +15,6 @@ except OSError:
     onedq = None
     print('C library is not compiled. Features are limited.')
 import Material
-from OptStrata import rIdx
 import copy
 from typing import List, Tuple, Union
 
@@ -1368,8 +1367,8 @@ description : str
         """Return the effective refractive index for TM mode"""
         if sum(self.layerWidths) == 0:
             return 1.0
-        self.mtrlRIdx = [(m.moleFrac * rIdx[m.A.name](wl) +
-                          (1 - m.moleFrac) * rIdx[m.B.name](wl))
+        self.mtrlRIdx = [(m.moleFrac * Material.rIdx[m.A.name](wl) +
+                          (1 - m.moleFrac) * Material.rIdx[m.B.name](wl))
                          for m in self.mtrlAlloys]
         self.layerRIdx = np.array([self.mtrlRIdx[n] for n in self.layerMtrls])
         neff = np.average(1/self.layerRIdx**2, axis=0,

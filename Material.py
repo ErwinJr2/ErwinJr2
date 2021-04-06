@@ -29,6 +29,8 @@ III/V semiconductor electron band. The module contains:
 # from warnings import warn
 # TODO: add warning for problematic datas
 from numpy import sqrt
+# This is to separate legacy fitting
+from rFittings import AlGaAsIndex, SiNxIndex, SiO2Index
 
 # flags for what effect to include
 BOWING = True
@@ -490,6 +492,41 @@ def main(material):
     else:
         print("Not found.")
         return 1
+
+
+# refractive indices
+rIdx = {
+    # J. Appl. Phys., 94, 6447-6455 (2003)
+    # https://refractiveindex.info/?shelf=main&book=GaAs&page=Skauli
+    # 0.97um - 17um
+    "GaAs": lambda wl: sqrt(5.372514 + 5.466742/(1-(0.4431307/wl)**2)
+                            + 0.02429960/(1-(0.8746453/wl)**2)
+                            + 1.957522/(1-(36.9166/wl)**2)),
+    # J. Appl. Phys. 36, 1841-1844 (1965)
+    # https://refractiveindex.info/?shelf=main&book=InAs&page=Lorimor
+    # 3.7um - 31.3um
+    "InAs": lambda wl: sqrt(11.1 + 0.71/(1-(2.551/wl)**2)
+                            + 2.75/(1-(45.66/wl)**2)),
+    # Handbook of Optics, 2nd edition, Vol. 2. McGraw-Hill 1994
+    # https://refractiveindex.info/?shelf=main&book=InP&page=Pettit
+    # 0.95um - 10um
+    "InP": lambda wl: sqrt(7.255 + 2.316/(1-(0.6263/wl)**2)
+                           + 2.765/(1-(32.935/wl)**2)),
+    # J. Appl. Phys. 42, 3499-3500 (1971)
+    # https://refractiveindex.info/?shelf=main&book=AlAs&page=Fern
+    # 0.56um - 2.2um
+    "AlAs": lambda wl: sqrt(2.0792 + 6.0840/(1-(0.2822/wl)**2)
+                            + 1.9/(1-(27.62/wl)**2)),
+    "Au": lambda wl: (-0.1933-0.382j + (0.3321+6.8522j)*wl
+                      + (0.0938-0.1289j)*wl**2),
+    # from old ej
+    # "Au": lambda wl: (-0.1933-0.382j + (0.3321+6.8522j)*wl
+    #                   + (0.0938**2+0.1289**2*1j)*wl),
+    "AlxGa1-xAs": lambda wl, x: AlGaAsIndex(wl, x),
+    "SiNx": lambda wl: SiNxIndex(wl),
+    "SiO2": lambda wl: SiO2Index(wl),
+    "Air": lambda wl: 1
+}
 
 
 if __name__ == "__main__":
