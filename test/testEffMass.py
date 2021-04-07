@@ -12,7 +12,7 @@ import unittest
 
 
 class GaAs_Layer(SchrodingerLayer):
-    """Sadely the parameters given in PhysRevB.50.8663 is not complete"""
+    """Sadly the parameters given in PhysRevB.50.8663 is not complete"""
     def __init__(self, xres, layerWidths):
         # fixed offset 0.51 eV
         super().__init__(xres, layerWidths=layerWidths,

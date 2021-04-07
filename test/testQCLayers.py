@@ -13,6 +13,8 @@ class TestQCLayers(unittest.TestCase):
         qcl.solver = 'matrix'
         qcl.populate_x()
         qcl.solve_whole()
+        # 0.264 is approximately 4.7um
+        self.assertAlmostEqual(qcl.eigenEs[41] - qcl.eigenEs[31], 0.264, 2)
         qcl.period_recognize()
         qcl.period_map_build()
         self.assertAlmostEqual(qcl.eigenEs[41] - qcl.eigenEs[31], 0.26, 2)
@@ -37,6 +39,8 @@ class TestQCLayers(unittest.TestCase):
         qcl.solver = 'ODE'
         qcl.populate_x()
         qcl.solve_whole()
+        # 0.264 is approximately 4.7um
+        self.assertAlmostEqual(qcl.eigenEs[31] - qcl.eigenEs[21], 0.264, 2)
         qcl.period_recognize()
         qcl.period_map_build()
         for i, j in ((21, 39), (14, 30), (15, 31)):
