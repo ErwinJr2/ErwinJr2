@@ -217,14 +217,12 @@ class SchrodingerLayer(object):
         self.status = 'unsolved'
 
     def invert_layer(self):
-        """Notice that invert layer may result in different definition of IFR
-        parameters"""
         self.layerWidths = self.layerWidths[::-1]
         self._layerVc = self._layerVc[::-1]
         self._layerMc = self._layerMc[::-1]
         self.layerARs = self.layerARs[::-1]
-        self.ifrDelta = self.ifrDelta[::-1]
-        self.ifrLambda = self.ifrLambda[::-1]
+        self.ifrDelta = self.ifrDelta[:-1:-1] + [self.ifrDelta[-1]]
+        self.ifrLambda = self.ifrLambda[:-1:-1] + [self.ifrLambda[-1]]
         self.status = 'unsolved'
 
     def populate_x(self):
