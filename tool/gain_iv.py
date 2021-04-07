@@ -49,5 +49,10 @@ if __name__ == "__main__":
         qcl = SaveLoad.qclLoad(f)
 
     # gainSpec(qcl)
-    bias, current = iv(qcl)
-    np.savetxt('iv_16.csv', np.column_stack([bias, current]), delimiter=',')
+    # bias, current = iv(qcl)
+    # np.savetxt('iv_4.csv', np.column_stack([bias, current]), delimiter=',')
+    data = np.loadtxt('iv_8.csv', delimiter=',')
+    bias = data[:, 0]
+    current = data[:, 1]
+    plt.plot(current, bias)
+    plt.show()
