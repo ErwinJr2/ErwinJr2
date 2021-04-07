@@ -216,6 +216,17 @@ class SchrodingerLayer(object):
         self.ifrLambda.insert(n, ifrLambda)
         self.status = 'unsolved'
 
+    def invert_layer(self):
+        """Notice that invert layer may result in different definition of IFR
+        parameters"""
+        self.layerWidths = self.layerWidths[::-1]
+        self._layerVc = self._layerVc[::-1]
+        self._layerMc = self._layerMc[::-1]
+        self.layerARs = self.layerARs[::-1]
+        self.ifrDelta = self.ifrDelta[::-1]
+        self.ifrLambda = self.ifrLambda[::-1]
+        self.status = 'unsolved'
+
     def populate_x(self):
         """Calculate the properties in terms of position
 
@@ -1208,6 +1219,13 @@ description : str
         super().del_layer(n)
         for layerList in (self.layerMtrls, self.layerDopings):
             layerList.pop(n)
+
+    def invert_layer(self):
+        super().invert_layer()
+        self.layerMtrls = self.layerMtrls[::-1]
+        self.layerDopings = self.layerDopings[::-1]
+        if not self.customIFR:
+            self.ifrDelta, self.ifrLambda = self._get_IFRList()
 
     def set_substrate(self, subs: str):
         if subs in QCMaterial:

@@ -1032,6 +1032,20 @@ class QuantumTab(QWidget):
         self.dirty.emit()
 
     @pyqtSlot()
+    def invert_layer(self):
+        """Invert the order of the layers"""
+        self.clear_WFs()
+        self.qclayers.invert_layer()
+        self.qclayers.populate_x()
+        self._update_layerTable()
+        row = self.layerTable.currentRow()
+        if row >= 0 and row < len(self.layerWidths):
+            self.layerTable.setCurrentCell(
+                len(self.qclayers.layerWidths)-1-row, 0)
+        self.update_quantumCanvas()
+        self.dirty.emit()
+
+    @pyqtSlot()
     def ARonly(self):
         self.qclayers.basisAROnly = not self.qclayers.basisAROnly
         self.clear_WFs()

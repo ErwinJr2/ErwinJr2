@@ -91,6 +91,20 @@ class TestQCLayers(unittest.TestCase):
         self.assertAlmostEqual(tau, qcl.lifetime(33), 4)
         self.assertAlmostEqual(gamma, qcl.ifr_broadening(31, 21), 0)
 
+    def test_revert_layer(self):
+        with open("../example/PQLiu.json") as f:
+            qcl = SaveLoad.qclLoad(f)
+        qcl.solver = 'matrix'
+        qcl.repeats = 2
+        qcl.xres = 0.02
+        qcl.populate_x()
+        e1 = qcl.solve_whole() - np.min(qcl.xVc)
+        qcl.invert_layer()
+        qcl.EField = -qcl.EField
+        qcl.populate_x()
+        e2 = qcl.solve_whole() - np.min(qcl.xVc)
+        np.testing.assert_almost_equal(e1, e2, decimal=3)
+
 
 if __name__ == "__main__":
     unittest.main()

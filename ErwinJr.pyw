@@ -191,6 +191,9 @@ class MainWindow(QMainWindow):
             "&Rotate Layer Table", slot=self.qtab.rotate_layer,
             tip="Move zeroth layer to first layer")
         rotateLayerAction.setShortcut("Ctrl+T")
+        invertLayerAction = self.create_action(
+            "&Invert Layer Table", slot=self.qtab.invert_layer,
+            tip="Invert the layer order")
         solveARonly = self.create_action(
             "&Solve Active Only", checkable=True,
             ischecked=self.qtab.qclayers.basisAROnly,
@@ -199,7 +202,8 @@ class MainWindow(QMainWindow):
             "&Copy Structure", slot=self.qtab.copy_structure,
             tip="Copy Layer Structure to Clipboard")
         self.add_actions(self.edit_menu, (temperatureAction,
-                                          rotateLayerAction, None,
+                                          rotateLayerAction,
+                                          invertLayerAction, None,
                                           solveARonly, None,
                                           copyStructureAction))
 
