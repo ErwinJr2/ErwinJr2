@@ -52,7 +52,8 @@ setup(
         'ErwinJr2': [
             'images/*.png', 'images/*.ico', 'images/*.icns',
             'example/*'
-        ]
+        ],
+        'ErwinJr2.OneDQuantum': ['*.so', '*.dll', '*.dylib']
     },
     cmdclass={
         'install': EJBuildBinaryCMD,
