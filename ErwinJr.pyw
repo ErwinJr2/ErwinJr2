@@ -477,7 +477,7 @@ class MainWindow(QMainWindow):
 # Help Menu Items
 # ===========================================================================
     def on_about(self):
-        msg = """ErwinJr2 1.0 Authors
+        msg = """ErwinJr2 2.0 and 1.0 Authors
 
         * Ming Lyu
             minglyu@princeton.edu
