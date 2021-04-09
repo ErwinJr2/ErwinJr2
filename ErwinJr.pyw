@@ -261,9 +261,11 @@ class MainWindow(QMainWindow):
         self.add_actions(self.model_menu, (None, ifrAction))
 
         # help menu
+        # MacOS automatically remove the about item...
+        aboutText = ("&Who write this?" if sys.platform.startswith('darwin')
+                     else "&About")
         self.help_menu = self.menuBar().addMenu("&Help")
-        about_action = self.create_action("&About",
-                                          slot=self.on_about)
+        about_action = self.create_action(aboutText, slot=self.on_about)
         licenses_action = self.create_action("&License",
                                              slot=self.on_licenses)
         tutorialAction = self.create_action("&Documents", shortcut='F1',
