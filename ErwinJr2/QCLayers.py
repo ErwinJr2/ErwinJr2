@@ -10,11 +10,11 @@ from scipy.linalg import null_space
 import scipy.sparse as sparse
 import scipy.sparse.linalg as splg
 try:
-    import OneDQuantum as onedq
+    from . import OneDQuantum as onedq
 except OSError:
     onedq = None
     print('C library is not compiled. Features are limited.')
-import Material
+from . import Material
 import copy
 from typing import List, Tuple, Union
 

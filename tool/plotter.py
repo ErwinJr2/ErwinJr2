@@ -2,11 +2,11 @@
 # -*- coding:utf-8 -*-
 from context import *  # type: ignore # noqa: F401, F403
 import numpy as np
-import SaveLoad
 import matplotlib.pyplot as plt
+from ErwinJr2 import QCLayers, SaveLoad
 
 
-def plot_band(axes, qcLayers):
+def plot_band(axes, qcLayers: QCLayers):
     """ Plot potential (quantum barriers and wells) and other band parameters
     of the layer scturecture on axes, assuming already populated"""
 

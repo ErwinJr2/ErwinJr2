@@ -2,8 +2,8 @@
 This file defines functions to save and load JSON files from ErwinJr
 """
 
-from QCLayers import QCLayers
-from OptStrata import OptStrata
+from .QCLayers import QCLayers
+from .OptStrata import OptStrata
 from collections import defaultdict
 import json
 import typing

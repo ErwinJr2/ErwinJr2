@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 from context import *  # type: ignore # noqa: F401, F403
 import unittest
-import Material
+from ErwinJr2 import Material
 
 
 class TestMaterial(unittest.TestCase):

@@ -4,7 +4,7 @@ import context   # type: ignore # noqa: F401
 import numpy as np
 from numpy import pi
 import matplotlib.pyplot as plt
-from OptStrata import OptStrata
+from ErwinJr2 import OptStrata
 
 
 def firstGaAs():
@@ -54,7 +54,7 @@ def firstPlasmon():
     xs = np.linspace(-0.5, 6, 1000)
     n = stratum.populateIndices(xs)
     Ey, Hx, Ez = stratum.populateMode(beta, xs)
-    print(stratum.confinement(beta, xs, Ey)*100)
+    print(stratum.confinementy(beta, xs, Ey)*100)
     plt.plot(xs, n.real, label="n")
     plt.plot(xs, n.imag, label="k")
     plt.plot(xs, abs(Ey)**2, label="Field")

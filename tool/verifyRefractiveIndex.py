@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-from context import *
-from Material import rIdx
+from context import *  # type: ignore # noqa: F401, F403
+from ErwinJr2.Material import rIdx
 import numpy as np
-from numpy import sqrt
 import matplotlib.pyplot as plt
 
 

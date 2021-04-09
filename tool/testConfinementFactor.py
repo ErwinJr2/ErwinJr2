@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-import context
+import context  # type: ignore # noqa: F401, F403
 import numpy as np
 from numpy import sqrt, pi, abs
 import matplotlib.pyplot as plt
-from OptStrata import MaxwellLayer, MaxwellLayer_anisotropic
+from ErwinJr2.OptStrata import MaxwellLayer, MaxwellLayer_anisotropic
 
 
 def firstGaAs():

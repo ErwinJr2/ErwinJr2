@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-from context import *
-import SaveLoad
+from context import *  # type: ignore # noqa: F401, F403
+from ErwinJr2 import SaveLoad
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     with open("../example/new16umgaas-cladding.json") as f:
         qcl = SaveLoad.qclLoad(f)
 
-    # gainSpec(qcl)
+    gainSpec(qcl)
     # bias, current = iv(qcl)
     # np.savetxt('iv_4.csv', np.column_stack([bias, current]), delimiter=',')
     data = np.loadtxt('iv_8.csv', delimiter=',')

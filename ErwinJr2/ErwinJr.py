@@ -6,9 +6,9 @@ import sys
 import traceback
 from functools import partial
 
-from QCLayers import QCLayers, onedq
-from OptStrata import OptStrata
-import SaveLoad
+from .QCLayers import QCLayers, onedq
+from .OptStrata import OptStrata
+from . import SaveLoad
 
 from PyQt5.QtCore import QSettings, QFile, QUrl, QFileInfo, QVariant
 from PyQt5.QtGui import QIcon, QKeySequence, QDesktopServices, QPixmap
@@ -16,10 +16,10 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QTabWidget,
                              QAction, QMessageBox, QFileDialog,
                              QInputDialog, QSplashScreen)
 
-from QuantumTab import QuantumTab
-from OpticalTab import OpticalTab
+from .QuantumTab import QuantumTab
+from .OpticalTab import OpticalTab
 
-from versionAndName import Version
+from .versionAndName import Version
 
 
 class MainWindow(QMainWindow):
@@ -535,7 +535,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             QDesktopServices.openUrl(QUrl("https://erwinjr2.readthedocs.io/"))
 
 
-def main(filename=None):
+def main(fileName=None):
     app = QApplication(sys.argv)
     app.setOrganizationName("ErwinJr")
     app.setOrganizationDomain("princetonuniversity.github.io/ErwinJr2")

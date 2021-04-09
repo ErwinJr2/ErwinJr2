@@ -23,11 +23,11 @@ from matplotlib import cm
 # from matplotlib.colors import LogNorm as cmNorm
 from matplotlib.colors import Normalize as cmNorm
 
-from QCLayers import (QCLayers, StateRecognizeError,
-                      optimize_layer, optimize_global,
-                      QCMaterial, h, hbar, eps0, c0, e0)
-from EJcanvas import EJcanvas, EJplotControl
-from EJcanvas import config as plotconfig
+from .QCLayers import (QCLayers, StateRecognizeError,
+                       optimize_layer, optimize_global,
+                       QCMaterial, h, hbar, eps0, c0, e0)
+from .EJcanvas import EJcanvas, EJplotControl
+from .EJcanvas import config as plotconfig
 
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QObject, QThread, Qt
 from PyQt5.QtGui import QPalette, QColor
@@ -38,11 +38,11 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLabel, QComboBox,
                              QTableWidget, QTableWidgetItem,
                              QApplication, QMessageBox,
                              QDialog, QDialogButtonBox)
-from customQTClass import mtrlComboBox
+from .customQTClass import mtrlComboBox
 
-from Material import AParam
-from versionAndName import ejError, ejWarning
-from darkDetect import isdark
+from .Material import AParam
+from .versionAndName import ejError, ejWarning
+from .darkDetect import isdark
 
 
 # TODO: this may not be necessary by better designer

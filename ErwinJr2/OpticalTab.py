@@ -14,10 +14,10 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
                              QSpinBox, QCheckBox,
                              QPushButton, QTableWidget, QTableWidgetItem,
                              QTextEdit, QMessageBox, QDialog, QDialogButtonBox)
-from OptStrata import OptStrata, rIdx, Alloy, Dopable, optimizeOptStrata
-from EJcanvas import EJcanvas
-from customQTClass import mtrlComboBox
-from versionAndName import ejError
+from .OptStrata import OptStrata, rIdx, Alloy, Dopable, optimizeOptStrata
+from .EJcanvas import EJcanvas
+from .customQTClass import mtrlComboBox
+from .versionAndName import ejError
 mtrlList = list(rIdx.keys()) + list(Alloy.keys())
 facetList = ('cleaved', 'perfect AR', 'perfect HR', 'custom')
 

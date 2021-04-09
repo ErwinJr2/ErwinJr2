@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 from context import *  # type: ignore # noqa: F401, F403
-from QCLayers import QCLayers
+from ErwinJr2.QCLayers import QCLayers
 import numpy as np
 import unittest
 

@@ -1,4 +1,4 @@
-"""This file defined customed Qt widgets for ErwinJr"""
+"""This file defined customized Qt widgets for ErwinJr"""
 from PyQt5.QtWidgets import QComboBox, QFrame
 
 

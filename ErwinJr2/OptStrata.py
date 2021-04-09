@@ -5,7 +5,7 @@ transfer matrix method
 
 import numpy as np
 from numpy import sqrt, exp, pi, sin, cos, sinc
-from Material import rIdx, MParam
+from .Material import rIdx, MParam
 from collections import defaultdict
 import typing
 from typing import List
