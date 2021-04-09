@@ -4,7 +4,7 @@
 Make `python -m ErwinJr` an alias for running `ErwinJr`.
 """
 
-from ErwinJr2 import main
+from ErwinJr2.ErwinJr import main
 
 __main__ = main
 
