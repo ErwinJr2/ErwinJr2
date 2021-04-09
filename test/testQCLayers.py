@@ -8,7 +8,7 @@ import unittest
 
 class TestQCLayers(unittest.TestCase):
     def test_solve_whole_matrix(self):
-        with open("../example/PQLiu.json") as f:
+        with open("../ErwinJr2/example/PQLiu.json") as f:
             qcl = SaveLoad.qclLoad(f)
         qcl.solver = 'matrix'
         qcl.populate_x()
@@ -34,7 +34,7 @@ class TestQCLayers(unittest.TestCase):
             qcl.psi_overlap(41, 49, 1), qcl.psi_overlap(41, 31), decimal=6)
 
     def test_solve_whole_ode(self):
-        with open("../example/PQLiu.json") as f:
+        with open("../ErwinJr2/example/PQLiu.json") as f:
             qcl = SaveLoad.qclLoad(f)
         qcl.solver = 'ODE'
         qcl.populate_x()
@@ -52,7 +52,7 @@ class TestQCLayers(unittest.TestCase):
                 qcl._dipole(33, j, 1), qcl._dipole(33, i), 2)
 
     def test_solve_basis(self):
-        with open("../example/PQLiu.json") as f:
+        with open("../ErwinJr2/example/PQLiu.json") as f:
             qcl = SaveLoad.qclLoad(f)
         qcl.populate_x()
         qcl.solve_basis()
@@ -61,7 +61,7 @@ class TestQCLayers(unittest.TestCase):
         self.assertEqual(qcl.psis.shape, (96, 1384))
 
     def test_cache_consistency(self):
-        with open("../example/PQLiu.json") as f:
+        with open("../ErwinJr2/example/PQLiu.json") as f:
             qcl = SaveLoad.qclLoad(f)
         qcl.includeIFR = True
         qcl.mtrlIFRLambda = [5.0] * 2
@@ -92,7 +92,7 @@ class TestQCLayers(unittest.TestCase):
         self.assertAlmostEqual(gamma, qcl.ifr_broadening(31, 21), 0)
 
     def test_revert_layer(self):
-        with open("../example/PQLiu.json") as f:
+        with open("../ErwinJr2/example/PQLiu.json") as f:
             qcl = SaveLoad.qclLoad(f)
         qcl.solver = 'matrix'
         qcl.repeats = 2
