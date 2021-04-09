@@ -12,7 +12,7 @@ The following block of code is profiled by :py:mod:`cProfile`:
 
 where *PQLiu.json* is the following file:
 
-.. literalinclude:: ../example/PQLiu.json
+.. literalinclude:: ../ErwinJr2/example/PQLiu.json
    :language: json
 
 

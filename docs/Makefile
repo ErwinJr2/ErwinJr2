@@ -6,9 +6,9 @@ SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
-DOXYGENDIR    = ../OneDQuantum/docs
-DOXYGENXML    = ../OneDQuantum/docs/xml
-CLIBDIR       = ../OneDQuantum
+DOXYGENDIR    = ../ErwinJr2/OneDQuantum/docs
+DOXYGENXML    = ../ErwinJr2/OneDQuantum/docs/xml
+CLIBDIR       = ../ErwinJr2/OneDQuantum
 
 # Put it first so that "make" without argument is like "make help".
 help:

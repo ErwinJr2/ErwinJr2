@@ -29,8 +29,11 @@ __pycache__/
 *.xdv
 
 ## doxygen gnerated file for C code
-example
+OneDQuantum/docs/html/
+OneDQuantum/docs/xml/
+OneDQuantum/docs/latex/
+example/*
+!example/PQLiu*
 ErwinJr2.bat
 
 .DS_Store
-.vscode/*

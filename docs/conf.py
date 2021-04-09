@@ -19,10 +19,10 @@ import subprocess
 # generate doxygen files
 read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
 if read_the_docs_build:
-    subprocess.call('cd ../OneDQuantum; make', shell=True)
-    subprocess.call('cd ../OneDQuantum/docs; doxygen', shell=True)
+    subprocess.call('cd ../ErwinJr2/OneDQuantum; make', shell=True)
+    subprocess.call('cd ../ErwinJr2/OneDQuantum/docs; doxygen', shell=True)
 
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../ErwinJr2'))
 
 
 # -- Project information -----------------------------------------------------
@@ -58,7 +58,7 @@ extensions = [
     'sphinxcontrib.bibtex',
     'breathe',
 ]
-breathe_projects = {"OneDQuantum": "../OneDQuantum/docs/xml/"}
+breathe_projects = {"OneDQuantum": "../ErwinJr2/OneDQuantum/docs/xml/"}
 breathe_default_project = "OneDQuantum"
 breathe_domain_by_extension = {"h": "c", "c": "c"}
 autosummary_generate = True

@@ -19,7 +19,7 @@ def build_clib(path, MSBuild=None):
         make_cmd = [MSBuild, 'OneDQuantum.sln', '/p:Configuration=Release']
         makemp_cmd = [MSBuild, '1DSchrodinger.vcxproj',
                       '/p:Configuration=MP_Release']
-    os.chdir(os.path.join(path, 'OneDQuantum'))
+    os.chdir(os.path.join(path, 'ErwinJr2/OneDQuantum'))
     print("Building C Lib")
     subprocess.check_call(make_cmd)
     try:
