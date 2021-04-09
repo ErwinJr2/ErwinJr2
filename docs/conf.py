@@ -22,7 +22,7 @@ if read_the_docs_build:
     subprocess.call('cd ../ErwinJr2/OneDQuantum; make', shell=True)
     subprocess.call('cd ../ErwinJr2/OneDQuantum/docs; doxygen', shell=True)
 
-sys.path.insert(0, os.path.abspath('../ErwinJr2'))
+sys.path.insert(0, os.path.abspath('..'))
 
 
 # -- Project information -----------------------------------------------------

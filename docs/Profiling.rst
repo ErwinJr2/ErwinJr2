@@ -90,7 +90,7 @@ listed in the following table.
      1885    0.001    0.000    0.001    0.000 QCLayers.py:173(<genexpr>)
 =========  =======  =======  =======  ======= ===============================================================
 
-.. currentmodule:: QCLayers
+.. currentmodule:: ErwinJr2.QCLayers
 
 
 

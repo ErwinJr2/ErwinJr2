@@ -2,9 +2,9 @@ Python Interface of C code
 =============================
 
 We provide a Python interface of the one-dimensional Schrodinger
-equation solver in C. 
+equation solver in C.
 
-.. currentmodule:: OneDQuantum
+.. currentmodule:: ErwinJr2.OneDQuantum
 .. autosummary::
 
 .. toctree::
@@ -12,4 +12,4 @@ equation solver in C.
 
    OneDSchrodinger.rst
    bandpy.rst
-   
+

@@ -7,7 +7,7 @@ layers and optical waveguide.
 The save and load functions is independently functioning as the `SaveLoad`
 module.
 
-.. automodule:: SaveLoad
+.. automodule:: ErwinJr2.SaveLoad
    :members:
 
 

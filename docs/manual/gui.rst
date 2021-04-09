@@ -1,6 +1,6 @@
 Graphical User Interface Guide
 ===================================
-.. currentmodule:: QCLayers
+.. currentmodule:: ErwinJr2.QCLayers
 
 The GUI starting program is defined in ``ErwinJr.pyw``. The software can be start by
 ``python ErwinJr.pyw [filename]`` (``[filename]`` means optional arguments for

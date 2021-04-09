@@ -5,10 +5,10 @@ This module contains `QCLayers` class.
 
 QCLayers.QCLayers class
 -----------------------
-.. currentmodule:: QCLayers
-.. autoclass:: SchrodingerLayer
+.. currentmodule:: ErwinJr2.QCLayers
+.. autoclass:: ErwinJr2.SchrodingerLayer
    :members:
-.. autoclass:: QCLayers
+.. autoclass:: ErwinJr2.QCLayers
    :members:
 
 
@@ -26,7 +26,6 @@ states and wave functions. A sample *json* file is can be found
        qcl = SaveLoad.qclLoad(f)
 
    qcl.layerSelected = 3
-   qcl.NonParabolic = False
    qcl.populate_x()
    qcl.solve_whole()
    qcl.dipole(19, 15)
