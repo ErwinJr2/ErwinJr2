@@ -895,7 +895,7 @@ class SchrodingerLayer(object):
                                       'Try increase repeats.')
         return self.periodIdx
 
-    def period_map_build(self, tol: float = 5E-5, etol: float = 1E-3
+    def period_map_build(self, tol: float = 3E-2, etol: float = 1E-3
                          ) -> List[Tuple[int, int]]:
         """Map states to self.singlePeriodIdx, self.periodMap[n] is a tuple of
         (state index in self.singlePeriodIdx, shift of period(s) or
@@ -917,7 +917,9 @@ class SchrodingerLayer(object):
                     if sE > en_shifted + etol:
                         break
                     sState = self.periodIdx[n]
-                    if np.average((psi_shifted - self.psis[sState])**2) < tol:
+                    wfDiff = np.trapz((psi_shifted - self.psis[sState])**2)
+                    wfDiff *= self.xres
+                    if wfDiff < tol:
                         # effective an L2 norm here, tested better than
                         # L1 or L-max norm
                         self.periodMap[state] = (n, shift)
