@@ -8,7 +8,7 @@ import os
 import sys
 import subprocess
 from subprocess import CalledProcessError
-from create_shortcut import create_shortcut
+from ErwinJr2.create_shortcut import create_shortcut
 
 
 def build_clib(path, MSBuild=None):

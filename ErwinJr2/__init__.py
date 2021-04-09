@@ -2,7 +2,10 @@
 # -*- coding:utf-8 -*-
 from .QCLayers import QCLayers, SchrodingerLayer
 from .OptStrata import OptStrata, MaxwellLayer
-from . import OneDQuantum
+try:
+    from . import OneDQuantum
+except OSError:
+    OneDQuantum = None
 
 __all__ = (QCLayers, SchrodingerLayer, OptStrata, MaxwellLayer,
            OneDQuantum)
