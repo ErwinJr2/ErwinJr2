@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 
-from setuptools import setup
+from setuptools import setup, find_packages
 from setuptools.command.install import install
 import os
 import sys
@@ -47,7 +47,7 @@ setup(
     license="GPL-3.0",
     url='https://princetonuniversity.github.io/ErwinJr2',
     description='A Quantum Well Device Design Tool',
-    packages=['ErwinJr'],
+    packages=find_packages(),
     package_data={
         'ErwinJr2': [
             'images/*.png', 'images/*.ico', 'images/*.icns',
