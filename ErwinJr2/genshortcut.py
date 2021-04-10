@@ -24,7 +24,9 @@ def create_shortcut(shortcut_path=None):
         subprocess.check_call(['cp', os.path.join(path, 'Info.plist'), './'])
         subprocess.check_call([
             'cp', os.path.join(path, 'images', 'EJicns.icns'), 'Resources/'])
-        shellcode = """#!/bin/bash\n"""
+        shellcode = "#!/bin/bash\n"
+        if os.environ.get('PYTHONPATH'):
+            shellcode += "export PYTHONPATH=%s\n" % os.environ['PYTHONPATH']
         shellcode += "%s -m ErwinJr2\n" % sys.executable
         shellfile = 'MacOS/ErwinJr2'
         with open(shellfile, 'w') as f:
@@ -35,6 +37,8 @@ def create_shortcut(shortcut_path=None):
             shortcut_path = os.path.join(os.path.expanduser('~'), 'Desktop')
         link_path = os.path.join(shortcut_path, 'ErwinJr2.lnk')
         batcode = """@SET "PATH=%s\"\n""" % os.environ['PATH']
+        if os.environ.get('PYTHONPATH'):
+            batcode += """@SET "PYTHONPATH=%s\"\n""" % os.environ['PYTHONPATH']
         # batcode += "@echo off\n"
         # batcode += "cd %~dp0\n"
         batcode += "start pythonw -m ErwinJr2 %1\n"
