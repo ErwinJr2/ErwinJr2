@@ -4,11 +4,20 @@
 Make `python -m ErwinJr` an alias for running `ErwinJr`.
 """
 
+import os
+import sys
 from ErwinJr2.ErwinJr import main
 
-__main__ = main
+
+def __main__():
+    try:
+        fileName = os.path.abspath(sys.argv[1])
+    except IndexError:
+        fileName = None
+    main(fileName)
+
 
 if __name__ == "__main__":
-    main()
+    __main__()
 
 # vim: ts=4 sw=4 sts=4 expandtab

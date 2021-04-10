@@ -46,12 +46,12 @@ setup(
     author_email='minglyu@princeton.edu',
     license="GPL-3.0",
     url='https://princetonuniversity.github.io/ErwinJr2',
-    description='A Quantum Well Device Design Tool',
+    description='A Quantum Cascade Laser Design Tool',
     packages=find_packages(),
     package_data={
         'ErwinJr2': [
-            'images/*.png', 'images/*.ico', 'images/*.icns',
-            'example/*'
+            'images/*.png', 'images/*.ico', 'images/*.icns', 'example/*',
+            'Info.plist'
         ],
         'ErwinJr2.OneDQuantum': ['*.so', '*.dll', '*.dylib']
     },
@@ -76,8 +76,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'ErwinJr = ErwinJr2.__main__:main [GUI]',
-            'ErwinJr-creatshortcut = ErwinJr2.create_shortcut:create_shortcut'
+            'ErwinJr = ErwinJr2.__main__:__main__ [GUI]',
+            'ErwinJr-genshortcut = ErwinJr2.genshortcut:create_shortcut [GUI]'
         ]
     }
 )

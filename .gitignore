@@ -17,6 +17,9 @@ VSCache/
 __pycache__/
 *.pyc
 
+ErwinJr2.egg-info/
+build/
+
 ## compiled files from docs
 *.aux
 *.pdf
@@ -28,7 +31,6 @@ __pycache__/
 *.synctex.gz
 *.xdv
 
-## doxygen gnerated file for C code
 example
 ErwinJr2.bat
 
