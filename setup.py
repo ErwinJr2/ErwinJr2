@@ -7,6 +7,7 @@ from setuptools.command.develop import develop
 from wheel.bdist_wheel import bdist_wheel
 import os
 import subprocess
+import warnings
 
 
 def build_clib():
@@ -17,25 +18,25 @@ def build_clib():
     # compile binary
     MSBuild = os.environ.get('MSBUILD')
     if MSBuild is not None:
-        make_cmd = [MSBuild, 'OneDQuantum.sln', '/p:Configuration=Release']
-        makemp_cmd = [MSBuild, '1DSchrodinger.vcxproj',
-                      '/p:Configuration=MP_Release']
+        sln = 'OneDQuantum.sln'
+        makeCMD = [MSBuild, sln, '/p:Configuration=Release']
+        makeCMD_MP = [MSBuild, sln, '/p:Configuration=MP_Release']
     else:
-        make_cmd = ['make']
-        makemp_cmd = ['make', 'MP']
+        makeCMD = ['make']
+        makeCMD_MP = ['make', 'MP']
     try:
-        print('call ', make_cmd)
-        subprocess.check_call(make_cmd)
+        print('call ', makeCMD)
+        subprocess.check_call(makeCMD)
     except subprocess.CalledProcessError:
-        print("Warning: Exit without compiling the C library. "
-              "Features are limited.")
+        warnings.warn("Warning: Exit without compiling the C library. "
+                      "Features are limited.")
         os.chdir(cwd)
         return
     try:
-        print('call ', makemp_cmd)
-        subprocess.check_call(makemp_cmd)
+        print('call ', makeCMD_MP)
+        subprocess.check_call(makeCMD_MP)
     except subprocess.CalledProcessError:
-        print("Warning: openMP not supported")
+        warnings.warn("Warning: openMP not supported")
     os.chdir(cwd)
 
 
