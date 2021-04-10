@@ -61,7 +61,7 @@ If you haven't installed xcode, run the following command:
 
 .. code-block:: bash
 
-   xcode-select —install
+   xcode-select —-install
 
 It is recommended to have ``openMP`` installed for the best performance.
 For MacOS specifically, the default ``gcc`` is a alias to the native ``clang``,
