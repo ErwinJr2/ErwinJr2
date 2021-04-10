@@ -79,13 +79,14 @@ jobs:
     script:
       - export PATH=$MSBUILD_PATH:$PATH
       - echo $PATH
-      - cd ErwinJr2/OneDQuantum
-      - msbuild.exe OneDQuantum.sln //p:Configuration=Release
-      - msbuild.exe OneDQuantum.sln //p:Configuration=MP_Release
-      - cd ..
-      # - python install.py --msbuild=msbuild.exe --nodocs --noshortcut
-      - ls OneDQuantum
-      - cd ../test
+      - export MSBUILD=msbuild.exe
+      # - cd ErwinJr2/OneDQuantum
+      # - msbuild.exe OneDQuantum.sln //p:Configuration=Release
+      # - msbuild.exe OneDQuantum.sln //p:Configuration=MP_Release
+      # - cd ..
+      - python setup.py install
+      - ls ErwinJr2/OneDQuantum
+      - cd test
       - python SimpleSchrodinger.py
       - python SimpleSchrodinger.py MP
       - pytest -v testQuantumWell.py
