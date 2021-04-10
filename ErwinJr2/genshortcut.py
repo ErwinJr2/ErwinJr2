@@ -72,7 +72,7 @@ def linux_shortcut(basePath, shortcut_path):
             os.path.expanduser('~'), '.local', 'share', 'applications')
     app_path = os.path.join(shortcut_path, 'ErwinJr2.desktop')
     icon_path = os.path.join(basePath, 'images', 'EJpng256.png')
-    app = linux_app.format(icon_path)
+    app = linux_app.format(icon=icon_path)
     with open(app_path, 'w') as f:
         f.write(app)
     subprocess.call(['chmod', '+x', app_path])

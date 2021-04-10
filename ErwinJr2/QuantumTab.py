@@ -202,7 +202,7 @@ class QuantumTab(QWidget):
         elif sys.platform.startswith('linux'):
             settingBoxWidth = 150
             layerBoxWidth = 250
-            solveBoxWidth = 175
+            solveBoxWidth = 185
         else:
             QMessageBox.warning(self, ejWarning,
                                 'Platform %s not tested.' % sys.platform)

@@ -20,7 +20,7 @@ Make sure you have the latest version of `setuptools` installed
 
 .. code-block:: bash
 
-   python -m pip install setuptools --upgrade
+   python -m pip install setuptools, wheel --upgrade
 
 If you are not installing the software on a remote server, you may also want to
 install ``PyQt5`` for GUI support:
