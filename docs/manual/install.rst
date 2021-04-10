@@ -1,71 +1,138 @@
-Installation Guide for OneDQ
-=============================
+Installation Guide for ErwinJr2
+================================
 
 Tge software is available as source code in Github:
 https://github.com/CareF/ErwinJr2 .
-You can directly donwload as a zip file, or using `git` to clone the
+You can directly donwload as a zip file, or using ``git clone`` to clone the
 repository, which helps to get further updates.
 
-The software is a portable software, but it still requires an
-installation procedure to build C library and documents before
-use. All installation process is included in ``install.py`` file.
+The software is designed to be portable, but it recommended to install so that
+it compiles the C library and register with the Python environment.
 
-The script ``install.py`` do the following things:
+Prepare the environment
+------------------------
 
-1. Compile the C library for :mod:`OneDQuantum`
-2. Tries the OpenMP version. The software is fully functional without OpenMP.
-3. (Optional) Build the documentation locally
-4. (Optional) Create a shortcut on desktop
-
-The dependence packages are listed in `requirements.txt`. For windows users
-specifically `winshell` is also required to create a desktop shortcut.
-
-Install under Windows
------------------------
-
-To install under Windows, Python is required; a C compiler is optional but
-recommended. For the Python environment, |anaconda|_ is the easiest solution
-under Windows; for the C compiler, |vs|_ is supported together with GNU gcc.
-Using GNU gcc and make is, however, tricky on Windows. |MinGW|_ may be an option
-but it's hard to install. Let me know if you have a neat solution.
-
-If you don't have a C compiler, you may try the binary release_, and extract
-the dll files in the zip file to `OneDQuantum/`
-
-.. _release: https://github.com/CareF/ErwinJr2/releases
-
-For |vs|_ project file is provided as ``OneDQuantum/OneDQuantum.sln``.
-Automatic script in ``install.py`` requires ``msbuild=<path to MSBuild>``
-arguments to specify |MSBuild|_.
-
-The precedure to install the software is in the Anaconda Prompt, go to the
-directory of ErwinJr2, run the following command
+The software is based on Python (>=3.6) and uses ``setuptools`` for installation.
+For the Python distributions, it is recommended to use |anaconda|_
+for Windows and |homebrew|_ installed Python for MacOS. After installing,
+Make sure you have the latest version of `setuptools` installed
+(`python` may be `python3` depending on your platform):
 
 .. code-block:: bash
 
-   pip install -r requirements.txt
-   pip install winshell
-   python install.py --msbuild="PATH to MSBuild.exe"
+   python -m pip install setuptools --upgrade
 
-Install under MacOS and Linux
--------------------------------
+If you are not installing the software on a remote server, you may also want to
+install ``PyQt5`` for GUI support:
 
 .. code-block:: bash
 
-   pip3 install -r requirements.txt
-   python install.py
+   python -m pip install pyqt5
 
-For MacOS specifically, to enable multi-processing with ``OpenMP``, ``gcc`` is
-recommended but not provided in MacOS by default. If you have gcc installed via
-for example homebrew, than you may replace the second command with the
-following:
+The software requires some compiled components for best performance.
+The default compiler depends on GNU ``gcc`` and ``make``, and optionally ``openMP``.
+These compiling environment depends on the Operating System.
+
+
+Windows
+<<<<<<<<
+
+For Windows the support for GNU compilers may not be easy, but we can use |vs|_
+instead. To do so, set the ``MSBUILD`` environment variable to the corresponding
+directory for example:
+
+.. code-block::
+
+   set MSBUILD=C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe
+
+Note that the ``C:\Program Files (x86)\...`` path depends on where you install
+Visual Studio on your computer (See more in |MSBuild|_).
+With the environment variable the following command should be able to call
+Visual Studio for the compilation.
 
 .. code-block:: bash
 
-   CC=gcc-10 python install.py
+   python setup.py install
+
+MacOS
+<<<<<<<<
+
+If you haven't installed xcode, run the following command:
+
+.. code-block:: bash
+
+   xcode-select —install
+
+It is recommended to have ``openMP`` installed for the best performance.
+For MacOS specifically, the default ``gcc`` is a alias to the native ``clang``,
+we recommend install via |homebrew|_ for ``gcc`` before install
+
+.. code-block:: bash
+
+   brew install gcc
+
+and use ``gcc`` as the compiler by
+
+.. code-block:: bash
+
+   CC=gcc-10 python setup.py install
+
+where ``gcc-10`` is the current latest version by depending on your install
+it may be other number.
+
+
+Linux
+<<<<<<<
+
+By default most Linux distributions have necessary dev-tools installed, but
+``openMP`` is not necessarily so. If you are using Linux I'm sure you will be
+able to install packages via corresponding package management tools :)
+
+To install the software, at the code directory, run
+
+.. code-block:: bash
+
+   python setup.py install
+
+If you don't have full control of your system, add ``--user`` by the end to
+install the software in user directory.
+
+
+Run the software
+------------------
+
+After installation, you can start the software by ``ErwinJr`` command or
+
+.. code-block:: bash
+
+   python -m ErwinJr2
+
+To create a shortcut on desktop, run
+
+.. code-block:: bash
+
+   ErwinJr-genshortcut
+
+
+Build local documentation
+--------------------------
+
+The software will look for this online document.
+but if you want to build your local version, you need doxygen and:
+
+.. code-block:: bash
+
+   cd docs
+   python -m install -r requirements.txt
+   make html
+
+
 
 .. |MSBuild| replace:: ``MSBuild``
 .. _MSBuild: https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild
+
+.. |homebrew| replace:: ``homebrew``
+.. _homebrew: https://brew.sh/
 
 .. |anaconda| replace:: ``Anaconda``
 .. _anaconda: https://www.anaconda.com/
@@ -75,3 +142,7 @@ following:
 
 .. |MinGW| replace:: ``MinGW``
 .. _MinGW: https://www.mingw.org/
+
+
+.. todo::
+   pip install and developer mode install

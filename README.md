@@ -1,4 +1,4 @@
-1D Quantum solver for Quantum Cascade Laser simulation
+A software for Quantum Cascade Laser design and simulation
 ================
 
 master:
@@ -8,71 +8,103 @@ dev:
 
 ![Main Window Screenshot](./docs/figures/mainwindow.png)
 
-This is a extendable Python/C program for 1D quantum problem and Quantum Cascade Laser simulation.
-
-`OneDQuantum` is a C lib for 1D quantum problem, with python interface.
-
 In the following a simple installation guide is included. A more comprehensive
 documents can be found [here](https://erwinjr2.readthedocs.io/)
 
 
 Installation
 ---------------
-The software is based on Python3, and dependent packages are listed in
-`requirements.txt`:
-`doxygen` and `OpenMP` are optional. For Windows users Visual Studio as compiler
-is also supported.
+The software is based on Python (>=3.6) and uses `setuptools` for installation.
+Make sure you have the latest version of `setuptools` installed
+(`python` may be `python3` depending on your platform.):
 
-The software requires some compilation to be installed.
-To compile, run the Python script `install.py`.
+```bash
+python -m pip install setuptools --upgrade
+```
+
+If you are not installing the software on a remote server, you may also want to
+install `PyQt5` for GUI support:
+
+```bash
+python -m pip install pyqt5
+```
+
+To install the software, at the code directory, run
+
+```bash
+python setup.py install
+```
+
+If you don't have full control of your system, add `--user` by the end to
+install the software in user directory.
+
+After installation, you can start the software by `ErwinJr` command or
+
+```bash
+python -m ErwinJr2
+```
+
+To create a shortcut on desktop, run
+
+```
+ErwinJr-genshortcut
+```
 
 ### Windows ###
-Anaconda with `numpy`, `scipy` and `matplotlib` is the recommended Python
-distribution. To create shortcut on windows, `winshell` is also necessary.
-Compiling with Visual Studio and gcc are both supported. Visual Studio project
-file and standard `Makefile` are both provided.
-To install, start Anaconda Prompt and
-go to the directory of ErwinJr2, run the following command:
-
+The software requires some compiled components for best performance. The
+default compiler depends on GNU `gcc` and `make`, which may not be supported
+on Windows. To use [Visual Studio](https://visualstudio.microsoft.com/),
+set the `MSBUILD` environment variable to the corresponding directory for
+example:
 ```
-pip install -r requirements.txt
-pip install winshell
-python install.py --msbuild=[PATH to MSBuild.exe]
+set MSBUILD=C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe
 ```
-where `--msbuild=[PATH to MSBuild.exe]` is when using Visual Studio to compile
-the C code, `[PATH to MSBuild.exe]` will be Visual Studio version dependent,
-for example `'C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe'`.
-For gcc user it's not necessary.
+Note that the `C:\Program Files (x86)\...` path depends on where you install
+Visual Studio on your computer. With the environment variable `setup.py` should
+be able to call Visual Studio for the compilation.
 
 ### Linux and MacOS ###
+By default most Linux distributions have necessary dev-tools installed but for
+MacOS if you haven't installed xcode, run the following command"
+
+```bash
+xcode-select —install
 ```
-pip3 install -r requirements.txt
-python install.py
+
+It is recommended to have `openMP` installed for the best performance.
+For MacOS specifically, the default `gcc` is a alias to the native `clang`,
+we recommend install via [homebrew](https://brew.sh/) for `gcc` and `openMP`
+before install
+
+```bash
+brew install gcc
 ```
-For MacOS specifically, to enable multi-processing with `OpenMP`, `gcc` is
-required. By default `gcc` in MacOS command line is actually `clang`, and to
-call real `gcc` we need to specify the version number, so
-the second command needs to be,
+
+and use `gcc` as the compiler by
+
 ```
-CC=gcc-10 python install.py
+CC=gcc-10 python setup.py install
 ```
-or to modify the `OneDQuantum/Makefile` to include the `OpenMP`
-library for `clang`.
+
+where `gcc-10` is the current latest version by depending on your install
+it may be other number.
 
 ### Build local documentation ###
-During the installation you will be asked if you want to build local
-documentation. It's optional but if you choose yes, dependencies for building
-`sphinx` documentation is required: run the following command before
-`install.py` script.
-```
-pip install -r docs/requirements.txt
+The software will look for the [online document](https://erwinjr2.readthedocs.io/)
+but if you want to build your local version, you need doxygen and:
+
+```bash
+cd docs
+python -m install -r requirements.txt
+make html
 ```
 
 ## TODO list
 - [X] OpenMP support
 - [X] Add a linear algebra solver
 - [ ] ?NEGF solver
-- [X] install.py update
+- [ ] upload to pip
+- [ ] register to OS
 - [X] remove unnecessary C lib
 - [X] Add IFR scattering
 - [ ] Add impurity scattering (may be important for transport)

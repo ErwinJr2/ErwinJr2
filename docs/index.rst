@@ -7,13 +7,13 @@ Welcome to ErwinJr2's documentation!
 =====================================
 
 ErwinJr2 is a cross-platform software for modeling quantum problems in 1D semiconductor
-super lattices. It is specifically optimized for Quantum Cascade Laser (QCL) simulation, 
+super lattices. It is specifically optimized for Quantum Cascade Laser (QCL) simulation,
 but coded in a way that's easy to use for general problems about static state in finite
-and periodic quantum wells. 
+and periodic quantum wells.
 
-See `Github <https://github.com/CareF/ErwinJr2/>`_ for the source code. 
+See `Github <https://github.com/CareF/ErwinJr2/>`_ for the source code.
 
-.. figure:: figures/mainwindow.png
+.. figure:: figures/qtab.png
 
    Screenshot of ErwinJr2
 

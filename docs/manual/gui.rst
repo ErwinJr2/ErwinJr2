@@ -1,16 +1,19 @@
 Graphical User Interface Guide
 ===================================
-.. currentmodule:: ErwinJr2.QCLayers
+.. currentmodule:: ErwinJr2
 
-The GUI starting program is defined in ``ErwinJr.pyw``. The software can be start by
-``python ErwinJr.pyw [filename]`` (``[filename]`` means optional arguments for
-the saved design file), or optionally if you have run the
-``install.py`` script, a link should have been created on the desktop.
-It's mostly a GUI wrapper of :py:class:`QCLayers` with a plotting canvas.
+The GUI starting program is defined in ``ErwinJr.py``, which includes two
+tabs: the quantum tab and the optical tab.
+The quantum tab is mostly a GUI wrapper of :py:class:`QCLayers` with a plotting canvas,
+while the optical tab is for :py:class:`OptStrata`
 
-.. figure:: ../figures/mainwindow.png
 
-   A screenshot of the ErwinJr.pyw GUI.
+Quantum Tab
+============
+
+.. figure:: ../figures/qtab.png
+
+   A screenshot of the ErwinJr.py quantum tab.
 
 The interface includes 4 columns:
 
@@ -72,5 +75,5 @@ temperature setting and advanced table settings are in `Edit` menu;
 options to choose what is included in the plot is listed in `View` menu.
 
 .. todo::
-   desktop shortcut and register to system
+   The Optical Tab
 
