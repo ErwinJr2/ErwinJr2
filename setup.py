@@ -4,12 +4,14 @@
 from setuptools import setup, find_packages
 from setuptools.command.install import install
 from setuptools.command.develop import develop
+from wheel.bdist_wheel import bdist_wheel
 import os
 import subprocess
 
 
 def build_clib():
     cwd = os.getcwd()
+    print(cwd)
     path = os.path.dirname(os.path.abspath(__file__))
     # compile binary
     MSBuild = os.environ.get('MSBUILD')
@@ -35,18 +37,25 @@ def build_clib():
     os.chdir(cwd)
 
 
+class EJBdistCMD(bdist_wheel):
+    def run(self):
+        print("Building binary for ErwinJr2.")
+        build_clib()
+        super().run()
+
+
 class EJInstallCMD(install):
     def run(self):
         print("Building binary for ErwinJr2.")
         build_clib()
-        install.run(self)
+        super().run()
 
 
 class EJDevelopCMD(develop):
     def run(self):
         print("Building binary for ErwinJr2. (Develop)")
         build_clib()
-        install.run(self)
+        super().run()
 
 
 long_description = """
@@ -56,7 +65,7 @@ at Princeton University, Gmachl group.
 
 setup(
     name='ErwinJr2',
-    version='2.0.0',
+    version='2.0.6',
     author='Ming Lyu',
     author_email='minglyu@princeton.edu',
     license="GPL-3.0",
@@ -67,12 +76,17 @@ setup(
     packages=find_packages(),
     package_data={
         'ErwinJr2': [
-            'images/*.png', 'images/*.ico', 'images/*.icns', 'example/*',
+            'images/*.png', 'images/*.ico', 'images/*.icns',
+            'example/PQLiu.json',
             'Info.plist'
         ],
-        'ErwinJr2.OneDQuantum': ['*.so', '*.dll', '*.dylib']
+        'ErwinJr2.OneDQuantum': [
+            'Makefile', '*.c', '*.h', 'fftautocorr/*.c', 'fftautocorr/*.h',
+            '*.so', '*.dll', '*.dylib'
+        ]
     },
     cmdclass={
+        'bdist_wheel': EJBdistCMD,
         'install': EJInstallCMD,
         'develop': EJDevelopCMD
     },

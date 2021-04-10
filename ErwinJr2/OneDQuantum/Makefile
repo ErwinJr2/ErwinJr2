@@ -40,6 +40,9 @@ MP:  1DSchrodinger_MP.$(EXT)
 1DSchrodinger_MP.o : 1DSchrodinger.c science.h band.h fftautocorr/fftautocorr.h
 	$(CC) $(CFLAGS) -D __MP $(OMPFLAGS) -c $< -o $@
 
+band.o : band.c band.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
 fftautocorr.o : fftautocorr/fftautocorr.c fftautocorr/fftautocorr.h fftautocorr/factortable.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
