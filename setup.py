@@ -11,8 +11,9 @@ import subprocess
 
 def build_clib():
     cwd = os.getcwd()
-    print(cwd)
-    path = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        'ErwinJr2', 'OneDQuantum')
+    os.chdir(path)
     # compile binary
     MSBuild = os.environ.get('MSBUILD')
     if MSBuild is not None:
@@ -22,38 +23,39 @@ def build_clib():
     else:
         make_cmd = ['make']
         makemp_cmd = ['make', 'MP']
-    os.chdir(os.path.join(path, 'ErwinJr2/OneDQuantum'))
     try:
+        print('call ', make_cmd)
         subprocess.check_call(make_cmd)
     except subprocess.CalledProcessError:
-        print("Exit without compiling the C library. "
+        print("Warning: Exit without compiling the C library. "
               "Features are limited.")
         os.chdir(cwd)
         return
     try:
+        print('call ', makemp_cmd)
         subprocess.check_call(makemp_cmd)
     except subprocess.CalledProcessError:
-        print("openMP not supported")
+        print("Warning: openMP not supported")
     os.chdir(cwd)
 
 
 class EJBdistCMD(bdist_wheel):
     def run(self):
-        print("Building binary for ErwinJr2.")
+        print("Building binary for ErwinJr2. (bdist_wheel)")
         build_clib()
         super().run()
 
 
 class EJInstallCMD(install):
     def run(self):
-        print("Building binary for ErwinJr2.")
+        print("Building binary for ErwinJr2. (install)")
         build_clib()
         super().run()
 
 
 class EJDevelopCMD(develop):
     def run(self):
-        print("Building binary for ErwinJr2. (Develop)")
+        print("Building binary for ErwinJr2. (develop)")
         build_clib()
         super().run()
 
@@ -65,7 +67,7 @@ at Princeton University, Gmachl group.
 
 setup(
     name='ErwinJr2',
-    version='2.0.6',
+    version='2.0.0',
     author='Ming Lyu',
     author_email='minglyu@princeton.edu',
     license="GPL-3.0",
@@ -81,7 +83,8 @@ setup(
             'Info.plist'
         ],
         'ErwinJr2.OneDQuantum': [
-            'Makefile', '*.c', '*.h', 'fftautocorr/*.c', 'fftautocorr/*.h',
+            'Makefile', '*.sln', '*.vcxproj',
+            '*.c', '*.h', 'fftautocorr/*.c', 'fftautocorr/*.h',
             '*.so', '*.dll', '*.dylib'
         ]
     },

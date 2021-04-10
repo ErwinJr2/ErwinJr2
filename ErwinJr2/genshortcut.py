@@ -35,9 +35,9 @@ def create_shortcut(shortcut_path=None):
             shortcut_path = os.path.join(os.path.expanduser('~'), 'Desktop')
         link_path = os.path.join(shortcut_path, 'ErwinJr2.lnk')
         batcode = """@SET "PATH=%s\"\n""" % os.environ['PATH']
-        batcode += "@echo off\n"
-        batcode += "cd %~dp0\n"
-        batcode += "start pythonw ErwinJr.py %1\n"
+        # batcode += "@echo off\n"
+        # batcode += "cd %~dp0\n"
+        batcode += "start pythonw -m ErwinJr2 %1\n"
         batfile = "ErwinJr2.bat"
         with open(batfile, 'w') as f:
             f.write(batcode)

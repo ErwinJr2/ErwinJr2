@@ -22,6 +22,9 @@ from .OpticalTab import OpticalTab
 from .versionAndName import Version
 
 
+basePath = os.path.dirname(os.path.abspath(__file__))
+
+
 class MainWindow(QMainWindow):
     def __init__(self, fname=None, parent=None):
         super(MainWindow, self).__init__(parent)
@@ -124,7 +127,8 @@ class MainWindow(QMainWindow):
                       settingSync=False):
         action = QAction(text, self)
         if icon:
-            action.setIcon(QIcon("images/%s.png" % icon))
+            action.setIcon(QIcon(
+                os.path.join(basePath, 'images', '%s.png' % icon)))
         if shortcut:
             action.setShortcut(shortcut)
         if tip:
@@ -540,10 +544,10 @@ def main(fileName=None):
     app.setOrganizationName("ErwinJr")
     app.setOrganizationDomain("princetonuniversity.github.io/ErwinJr2")
     app.setApplicationName("ErwinJr2")
-    app.setWindowIcon(QIcon('images/EJpng256.png'))
+    app.setWindowIcon(QIcon(os.path.join(basePath, 'images', 'EJpng256.png')))
 
     # Create and display the splash screen
-    splash_pix = QPixmap('images/splash.png')
+    splash_pix = QPixmap(os.path.join(basePath, 'images', 'splash.png'))
     splash = QSplashScreen(splash_pix)
     splash.setMask(splash_pix.mask())
     splash.show()
@@ -558,7 +562,6 @@ def main(fileName=None):
 
 
 if __name__ == "__main__":
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
     # this block handles a filename passed in by command line
     try:
         fileName = os.path.abspath(sys.argv[1])
