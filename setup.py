@@ -76,8 +76,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'erwinjr = ErwinJr2:main [GUI]',
-            'erwinjr-creatshortcut = ErwinJr2.create_shortcut:create_shortcut'
+            'ErwinJr = ErwinJr2.__main__:main [GUI]',
+            'ErwinJr-creatshortcut = ErwinJr2.create_shortcut:create_shortcut'
         ]
     }
 )
