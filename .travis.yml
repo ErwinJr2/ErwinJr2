@@ -18,7 +18,7 @@ addons:
 install:
   - pip3 install --upgrade pip
   - pip3 install numpy scipy matplotlib sphinx sphinx_rtd_theme sphinxcontrib-bibtex breathe pytest
-  - python3 install.py --docs --noshortcut
+  - python3 setup.py install
 script:
   - pytest -v test/SimpleSchrodinger.py
   - python3 test/SimpleSchrodinger.py MP
