@@ -43,7 +43,7 @@ jobs:
     osx_image: xcode11.5
     language: shell       # 'language: python' is an error on Travis CI macOS
     before_install:
-      - brew install llvm gcc
+      - brew install llvm
     env:
       - CC=gcc-10 OMP_NUM_THREADS=4
   - name: MacOS with Clang
