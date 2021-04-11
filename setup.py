@@ -4,8 +4,7 @@
 from setuptools import setup, find_packages
 from setuptools.command.install import install
 from setuptools.command.develop import develop
-from wheel.bdist_wheel import bdist_wheel
-from distutils.util import get_platform
+from wheel.bdist_wheel import bdist_wheel, get_platform
 import os
 import subprocess
 import warnings
@@ -59,7 +58,7 @@ class EJBdistCMD(bdist_wheel):
     def finalize_options(self):
         super().finalize_options()
         self.plat_name_supplied = True
-        self.plat_name = get_platform()
+        self.plat_name = get_platform(self.bdist_dir)
 
 
 class EJInstallCMD(install):
