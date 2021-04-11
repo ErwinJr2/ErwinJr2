@@ -17,7 +17,7 @@ addons:
       - graphviz
 install:
   - pip3 install --upgrade pip
-  - pip3 install numpy scipy pyqt5 matplotlib sphinx sphinx_rtd_theme sphinxcontrib-bibtex breathe pytest
+  - pip3 install numpy scipy pyqt5 matplotlib pytest
   - python3 setup.py install
 script:
   - pytest -v test/SimpleSchrodinger.py
@@ -34,8 +34,6 @@ jobs:
     os: osx
     osx_image: xcode11.5
     language: shell       # 'language: python' is an error on Travis CI macOS
-    before_install:
-      - brew install doxygen
     env:
       - OMP_NUM_THREADS=4
     script:
@@ -44,32 +42,24 @@ jobs:
     os: osx
     osx_image: xcode11.5
     language: shell       # 'language: python' is an error on Travis CI macOS
-    before_install:
-      - brew install doxygen llvm
     env:
       - CC=gcc-10 OMP_NUM_THREADS=4
-    script:
-      - python3 test/SimpleSchrodinger.py MP
-      - pytest -v test/testQuantumWell.py
   - name: MacOS with Clang
     os: osx
     osx_image: xcode11.5
     language: shell       # 'language: python' is an error on Travis CI macOS
     before_install:
-      - brew install doxygen llvm
+      - brew install llvm
     env:
       - CC=/usr/local/opt/llvm/bin/clang OMP_NUM_THREADS=4
-    script:
-      - python3 test/SimpleSchrodinger.py MP
-      - pytest -v test/testQuantumWell.py
     deploy:
       provider: pypi
       username: __token__
       password:
         secure: WggsTyGkBcRS+cB/5OAahu+IBp/cz/7FAKy7ZqhHhvqrpiHv2JSFbzZiqBIHVu7wJPJzVQfuJDVH0fvr7Twprpk4NvzcEF3U01mD1FBklPwzIcYiZnd01D5cXeA8gAoD4VjG8ialRSgRGwzBm8QR2xEDBeo3MWSxb3CG4vYyd1CUOqON0EeRRY3I9ETCYVJoModaJBQvwGcTufBlDhQk/6KjRw6ssq9S+nDrF/WLzsuPVUVPfGr9If88KDJLjm0qejXDKRK9JHLdEXK4gUSD4lKWf8rBvrd6+cnSbp57616eHQZsgBx/TA+2Wp3nA7GJk03g8q/NN+B/IYkmeaWehfB520dlctjvQytzw4btnqTkT1zJbSHVJZXS78p1R/UywBJ3d1WQy9GtkgtH6IR79fColY3XYPX9B3u1+iTJQ3wSwMEKvsJ7cJKUgcxwixSfaFlDKJEVd8SnjzDwmzwhjT7VYMU76KPcnguS0pi89pjsYd/IgNWl8JU5LVOrsZ1TPLMxn6Uf339tJkAcIy/DPjKIOmaxEpuVFjXDiqkKBnVtYDqyKZnFyz09ovFsn5rm/WuuR1UoeNdLivOq81f2zO1AKlj6TnoZ8WfzVuSiqjvRuo6p6LSnw0EEUBYLOjDsL+Dqvh98N4xr64XGjAl0YkD9wXgsUyYDn3rljEEF3WQ=
       on:
-        branches: dev
-      distributions: "bdist_wheel"
+        branch: dev
+      distributions: "sdist bdist_wheel"
       skip_cleanup: true
       skip_existing: true
       server: https://testpypi.python.org/pypi
@@ -79,31 +69,31 @@ jobs:
     before_install:
       - choco install python --version 3.8.0
       - python -m pip install --upgrade pip
+      - pip3 install wheel
+      - pip3 install numpy scipy pyqt5 matplotlib pytest
+      - python setup.py install
     env:
       - PATH=/c/Python38:/c/Python38/Scripts:$PATH MSBUILD_PATH="/C/Program Files (x86)/Microsoft Visual Studio/2017/BuildTools/MSBuild/15.0/Bin"
-    install:
-      - pip3 install --upgrade pip
-      - pip3 install wheel
-      - pip3 install numpy scipy winshell pyqt5 matplotlib pytest
-    script:
+    before_script:
       - export PATH=$MSBUILD_PATH:$PATH
       - echo $PATH
       - export MSBUILD=msbuild.exe
       - python setup.py install
       - ls ErwinJr2/OneDQuantum
+    script:
       - cd test
       - python SimpleSchrodinger.py
       - python SimpleSchrodinger.py MP
       - pytest -v testQuantumWell.py
+      - pytest -v testQCLayers.py
     deploy:
-      deploy:
-        # https://github.com/travis-ci/dpl/issues/1009
-        provider: script
-        secure: "IQjHX5VHW8INSfwCiN0oDPocO6K890uMBz/aTglGW7v7/nW+70cxYs8HcToRm3puMCRw9SA+nqV8Gsx23Moz8uyhIrearF2sGQRh6rAM2s4bSKQ9eUwLF/x8N4jxRBbhd0k/9P60t9p3mA9BdUQhvhQxPbsIduBTA2+xgzRK7XR6Z2OnnXMGkK3mlmiT9YsW2uu7X8/WkQlKyA5qmpugeEUNKhPEh6lyLT91XYrSCyvmEhr7xXRr5M40Ra8lmX8k6pgW+vnnXk5ETzKPM9CKjDb0QLCkavoGqOwCBg9VUW4bmRslvfD+buOwX9HpMzq2XdIb/t/0tkzk7Bj1Lk/jUNtTdlzBpwo1qLuPdUD6cylrRzfJbkotXUtXuyVuV2AzQXR2Knx/WiJAUf3/H84ncrQgllMXDDzpCPz4RS+Wfgr+ZjBibe3QR/NmzM6QrokhlO0Ua8kbJYDqPbd6WSBw5BGPx9xCAx+1F3BqI9sMymtYn8OxNOQRU8MjiNBkPR1cml7chEk3BU5ixDbBYPyhfCJ7+idBZv0GaVdYI7wjJ/j1+EBo1PeCPLR1b7iR2UjrgiqH+ExAFNSHXVCokg4YohxLW1FntRaGRipwPAH5/vDnsr2hBXoebdG5INvTuPm9kaF/dc8nABtvLEntIw/ATWokivgU+R9whKvY71bzkIw="
-        script:
-          - python setup.py bdist_wheel
-          - python -m twine upload --repository testpypi dist/* --username __token__ --password "$PYPI_PASSWORD"
-        skip_cleanup: true
-        # skip_existing: true
-        on:
-          branches: dev
+      # https://github.com/travis-ci/dpl/issues/1009
+      provider: script
+      secure: "IQjHX5VHW8INSfwCiN0oDPocO6K890uMBz/aTglGW7v7/nW+70cxYs8HcToRm3puMCRw9SA+nqV8Gsx23Moz8uyhIrearF2sGQRh6rAM2s4bSKQ9eUwLF/x8N4jxRBbhd0k/9P60t9p3mA9BdUQhvhQxPbsIduBTA2+xgzRK7XR6Z2OnnXMGkK3mlmiT9YsW2uu7X8/WkQlKyA5qmpugeEUNKhPEh6lyLT91XYrSCyvmEhr7xXRr5M40Ra8lmX8k6pgW+vnnXk5ETzKPM9CKjDb0QLCkavoGqOwCBg9VUW4bmRslvfD+buOwX9HpMzq2XdIb/t/0tkzk7Bj1Lk/jUNtTdlzBpwo1qLuPdUD6cylrRzfJbkotXUtXuyVuV2AzQXR2Knx/WiJAUf3/H84ncrQgllMXDDzpCPz4RS+Wfgr+ZjBibe3QR/NmzM6QrokhlO0Ua8kbJYDqPbd6WSBw5BGPx9xCAx+1F3BqI9sMymtYn8OxNOQRU8MjiNBkPR1cml7chEk3BU5ixDbBYPyhfCJ7+idBZv0GaVdYI7wjJ/j1+EBo1PeCPLR1b7iR2UjrgiqH+ExAFNSHXVCokg4YohxLW1FntRaGRipwPAH5/vDnsr2hBXoebdG5INvTuPm9kaF/dc8nABtvLEntIw/ATWokivgU+R9whKvY71bzkIw="
+      script:
+        - python setup.py bdist_wheel
+        - python -m twine upload --repository testpypi dist/* --username __token__ --password "$PYPI_PASSWORD"
+      skip_cleanup: true
+      # skip_existing: true
+      on:
+        branch: dev
