@@ -82,15 +82,14 @@ jobs:
       - python setup.py install
       - ls ErwinJr2/OneDQuantum
     script:
-      - cd test
-      - python SimpleSchrodinger.py
-      - python SimpleSchrodinger.py MP
-      - pytest -v testQuantumWell.py
-      - pytest -v testQCLayers.py
+      - python test/SimpleSchrodinger.py
+      - python test/SimpleSchrodinger.py MP
+      - pytest -v test/testQuantumWell.py
+      - pytest -v test/testQCLayers.py
     deploy:
       # https://github.com/travis-ci/dpl/issues/1009
       provider: script
-      script: bash ./.travis/deploy.sh
+      script: bash .travis/deploy-win.sh
       cleanup: false
       # skip_existing: true
       on:
