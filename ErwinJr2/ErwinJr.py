@@ -10,7 +10,8 @@ from .QCLayers import QCLayers, onedq
 from .OptStrata import OptStrata
 from . import SaveLoad
 
-from PyQt5.QtCore import QSettings, QFile, QUrl, QFileInfo, QVariant
+from PyQt5.QtCore import (QSettings, QFile, QDir, QUrl, QFileInfo, QVariant,
+                          QStandardPaths)
 from PyQt5.QtGui import QIcon, QKeySequence, QDesktopServices, QPixmap
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTabWidget,
                              QAction, QMessageBox, QFileDialog,
@@ -23,6 +24,9 @@ from .versionAndName import Version
 
 
 basePath = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_FILE_DIR = os.path.join(
+    QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation),
+    'QCLDesign')
 
 
 class MainWindow(QMainWindow):
@@ -44,7 +48,15 @@ class MainWindow(QMainWindow):
                 firstRunBox.addButton("Example File", QMessageBox.YesRole)
                 ansr = firstRunBox.exec_()
                 if ansr:
-                    fname = './example/PQLiu.json'
+                    if not QDir(DEFAULT_FILE_DIR).exists():
+                        os.makedirs(DEFAULT_FILE_DIR)
+                    fname = os.path.join(DEFAULT_FILE_DIR, 'PQLiu.json')
+                    if not QFile(fname).exists():
+                        example = os.path.join(
+                            basePath, 'example', 'PQLiu.json')
+                        with open(example, 'r') as fin:
+                            with open(fname, 'w') as fout:
+                                fout.write(fin.read())
         elif not fname:
             # Load last file
             fname = self.qsettings.value("LastFile", None)
@@ -532,7 +544,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                           copyright.strip())
 
     def on_tutorial(self):
-        path = "../docs/_build/html/index.html"
+        path = os.path.join(
+            os.path.dirname(basePath), 'docs', '_build', 'html', 'index.html')
         if os.path.exists(path):
             QDesktopServices.openUrl(QUrl("file://" + os.path.abspath(path)))
         else:
