@@ -42,6 +42,8 @@ jobs:
     os: osx
     osx_image: xcode11.5
     language: shell       # 'language: python' is an error on Travis CI macOS
+    before_install:
+      - brew install llvm gcc
     env:
       - CC=gcc-10 OMP_NUM_THREADS=4
   - name: MacOS with Clang
@@ -60,21 +62,20 @@ jobs:
       on:
         branch: dev
       distributions: "sdist bdist_wheel"
-      skip_cleanup: true
+      cleanup: false
       skip_existing: true
       server: https://testpypi.python.org/pypi
   - name: Windows
     os: windows
     language: cpp
-    before_install:
+    env:
+      - PATH=/c/Python38:/c/Python38/Scripts:$PATH MSBUILD_PATH="/C/Program Files (x86)/Microsoft Visual Studio/2017/BuildTools/MSBuild/15.0/Bin"
+      - secure: "IQjHX5VHW8INSfwCiN0oDPocO6K890uMBz/aTglGW7v7/nW+70cxYs8HcToRm3puMCRw9SA+nqV8Gsx23Moz8uyhIrearF2sGQRh6rAM2s4bSKQ9eUwLF/x8N4jxRBbhd0k/9P60t9p3mA9BdUQhvhQxPbsIduBTA2+xgzRK7XR6Z2OnnXMGkK3mlmiT9YsW2uu7X8/WkQlKyA5qmpugeEUNKhPEh6lyLT91XYrSCyvmEhr7xXRr5M40Ra8lmX8k6pgW+vnnXk5ETzKPM9CKjDb0QLCkavoGqOwCBg9VUW4bmRslvfD+buOwX9HpMzq2XdIb/t/0tkzk7Bj1Lk/jUNtTdlzBpwo1qLuPdUD6cylrRzfJbkotXUtXuyVuV2AzQXR2Knx/WiJAUf3/H84ncrQgllMXDDzpCPz4RS+Wfgr+ZjBibe3QR/NmzM6QrokhlO0Ua8kbJYDqPbd6WSBw5BGPx9xCAx+1F3BqI9sMymtYn8OxNOQRU8MjiNBkPR1cml7chEk3BU5ixDbBYPyhfCJ7+idBZv0GaVdYI7wjJ/j1+EBo1PeCPLR1b7iR2UjrgiqH+ExAFNSHXVCokg4YohxLW1FntRaGRipwPAH5/vDnsr2hBXoebdG5INvTuPm9kaF/dc8nABtvLEntIw/ATWokivgU+R9whKvY71bzkIw="
+    install:
       - choco install python --version 3.8.0
       - python -m pip install --upgrade pip
       - pip3 install wheel
       - pip3 install numpy scipy pyqt5 matplotlib pytest
-      - python setup.py install
-    env:
-      - PATH=/c/Python38:/c/Python38/Scripts:$PATH MSBUILD_PATH="/C/Program Files (x86)/Microsoft Visual Studio/2017/BuildTools/MSBuild/15.0/Bin"
-    before_script:
       - export PATH=$MSBUILD_PATH:$PATH
       - echo $PATH
       - export MSBUILD=msbuild.exe
@@ -89,11 +90,8 @@ jobs:
     deploy:
       # https://github.com/travis-ci/dpl/issues/1009
       provider: script
-      secure: "IQjHX5VHW8INSfwCiN0oDPocO6K890uMBz/aTglGW7v7/nW+70cxYs8HcToRm3puMCRw9SA+nqV8Gsx23Moz8uyhIrearF2sGQRh6rAM2s4bSKQ9eUwLF/x8N4jxRBbhd0k/9P60t9p3mA9BdUQhvhQxPbsIduBTA2+xgzRK7XR6Z2OnnXMGkK3mlmiT9YsW2uu7X8/WkQlKyA5qmpugeEUNKhPEh6lyLT91XYrSCyvmEhr7xXRr5M40Ra8lmX8k6pgW+vnnXk5ETzKPM9CKjDb0QLCkavoGqOwCBg9VUW4bmRslvfD+buOwX9HpMzq2XdIb/t/0tkzk7Bj1Lk/jUNtTdlzBpwo1qLuPdUD6cylrRzfJbkotXUtXuyVuV2AzQXR2Knx/WiJAUf3/H84ncrQgllMXDDzpCPz4RS+Wfgr+ZjBibe3QR/NmzM6QrokhlO0Ua8kbJYDqPbd6WSBw5BGPx9xCAx+1F3BqI9sMymtYn8OxNOQRU8MjiNBkPR1cml7chEk3BU5ixDbBYPyhfCJ7+idBZv0GaVdYI7wjJ/j1+EBo1PeCPLR1b7iR2UjrgiqH+ExAFNSHXVCokg4YohxLW1FntRaGRipwPAH5/vDnsr2hBXoebdG5INvTuPm9kaF/dc8nABtvLEntIw/ATWokivgU+R9whKvY71bzkIw="
-      script:
-        - python setup.py bdist_wheel
-        - python -m twine upload --repository testpypi dist/* --username __token__ --password "$PYPI_PASSWORD"
-      skip_cleanup: true
+      script: bash ./.travis/deploy.sh
+      cleanup: false
       # skip_existing: true
       on:
         branch: dev
