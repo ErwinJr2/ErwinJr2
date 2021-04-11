@@ -5,6 +5,7 @@ from setuptools import setup, find_packages
 from setuptools.command.install import install
 from setuptools.command.develop import develop
 from wheel.bdist_wheel import bdist_wheel
+from distutils.util import get_platform
 import os
 import subprocess
 import warnings
@@ -55,6 +56,11 @@ class EJBdistCMD(bdist_wheel):
         build_clib()
         super().run()
 
+    def finalize_options(self):
+        super().finalize_options()
+        self.plat_name_supplied = True
+        self.plat_name = get_platform()
+
 
 class EJInstallCMD(install):
     def run(self):
@@ -77,7 +83,7 @@ at Princeton University, Gmachl group.
 
 setup(
     name='ErwinJr2',
-    version='2.0.0',
+    version='2.0.9',
     author='Ming Lyu',
     author_email='minglyu@princeton.edu',
     license="GPL-3.0",
