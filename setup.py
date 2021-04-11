@@ -10,7 +10,14 @@ import subprocess
 import warnings
 
 
+_built = False
+
+
 def build_clib():
+    global _built
+    if _built:
+        return
+    _built = True
     cwd = os.getcwd()
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                         'ErwinJr2', 'OneDQuantum')
@@ -42,6 +49,8 @@ def build_clib():
 
 class EJBdistCMD(bdist_wheel):
     def run(self):
+        # This is a hack s.t. the only way to let pip call build and use the
+        # result
         print("Building binary for ErwinJr2. (bdist_wheel)")
         build_clib()
         super().run()
