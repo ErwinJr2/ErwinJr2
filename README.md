@@ -6,7 +6,7 @@ master:
 dev:
 [![dev Build Status](https://travis-ci.com/CareF/ErwinJr2.svg?branch=dev)](https://travis-ci.com/CareF/ErwinJr2)
 
-![Main Window Screenshot](./docs/figures/mainwindow.png)
+![Main Window Screenshot](./docs/figures/qtab.png)
 
 In the following a simple installation guide is included. A more comprehensive
 documents can be found [here](https://erwinjr2.readthedocs.io/)
