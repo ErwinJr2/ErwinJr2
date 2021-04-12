@@ -18,6 +18,7 @@ def build_clib():
     if _built:
         return
     _built = True
+    print("Building binary for ErwinJr2.")
     cwd = os.getcwd()
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                         'ErwinJr2', 'OneDQuantum')
@@ -51,7 +52,6 @@ class EJBdistCMD(bdist_wheel):
     def run(self):
         # This is a hack s.t. the only way to let pip call build and use the
         # result
-        print("Building binary for ErwinJr2. (bdist_wheel)")
         build_clib()
         super().run()
 
@@ -63,14 +63,12 @@ class EJBdistCMD(bdist_wheel):
 
 class EJInstallCMD(install):
     def run(self):
-        print("Building binary for ErwinJr2. (install)")
         build_clib()
         super().run()
 
 
 class EJDevelopCMD(develop):
     def run(self):
-        print("Building binary for ErwinJr2. (develop)")
         build_clib()
         super().run()
 
@@ -78,6 +76,8 @@ class EJDevelopCMD(develop):
 long_description = """
 This is a Quantum Cascade Laser (QCL) modeling and design software produced
 at Princeton University, Gmachl group.
+
+See https://erwinjr2.readthedocs.io/ for details.
 """
 
 setup(
