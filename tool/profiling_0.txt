@@ -1,0 +1,175 @@
+         1967959 function calls (1948653 primitive calls) in 6.377 seconds
+
+   Ordered by: cumulative time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.001    0.001    6.377    6.377 /Users/lm/ErwinJr2/QCLayers.py:1493(auto_gain)
+        1    0.000    0.000    5.092    5.092 /Users/lm/ErwinJr2/QCLayers.py:1386(full_population)
+        1    0.027    0.027    5.092    5.092 /Users/lm/ErwinJr2/QCLayers.py:921(full_population)
+     3640    1.458    0.000    3.602    0.001 /Users/lm/ErwinJr2/QCLayers.py:701(_ifr_transition)
+158717/139411    0.078    0.000    1.688    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+    14428    0.016    0.000    1.647    0.000 /Users/lm/ErwinJr2/QCLayers.py:433(psi_overlap)
+    14436    0.339    0.000    1.631    0.000 {built-in method builtins.sum}
+     3640    0.042    0.000    1.462    0.000 /Users/lm/ErwinJr2/QCLayers.py:621(_lo_transition)
+    57712    0.317    0.000    1.292    0.000 /Users/lm/ErwinJr2/QCLayers.py:437(<genexpr>)
+    45069    0.097    0.000    1.084    0.000 /Users/lm/ErwinJr2/QCLayers.py:273(_shift_psi)
+    12164    0.013    0.000    0.987    0.000 <__array_function__ internals>:2(interp)
+    12164    0.017    0.000    0.963    0.000 /usr/local/lib/python3.9/site-packages/numpy/lib/function_base.py:1289(interp)
+    12164    0.917    0.000    0.917    0.000 {built-in method numpy.core._multiarray_umath.interp}
+     1754    0.838    0.000    0.858    0.000 /Users/lm/ErwinJr2/OneDQuantum/OneDSchrodinger.py:144(cLOphononScatter)
+        1    0.018    0.018    0.734    0.734 /Users/lm/ErwinJr2/QCLayers.py:1394(full_gain_spectrum)
+     1785    0.085    0.000    0.711    0.000 /Users/lm/ErwinJr2/QCLayers.py:587(_dipole)
+        1    0.002    0.002    0.538    0.538 /Users/lm/ErwinJr2/QCLayers.py:322(solve_whole)
+        1    0.044    0.044    0.536    0.536 /Users/lm/ErwinJr2/QCLayers.py:344(_solve_whole_ode)
+        1    0.487    0.487    0.487    0.487 /Users/lm/ErwinJr2/OneDQuantum/OneDSchrodinger.py:101(cBandSolve1D)
+   343980    0.388    0.000    0.388    0.000 /Users/lm/ErwinJr2/QCLayers.py:732(interpZ)
+   116482    0.064    0.000    0.388    0.000 <__array_function__ internals>:2(argmax)
+     3570    0.305    0.000    0.305    0.000 /Users/lm/ErwinJr2/QCLayers.py:993(_xBandMassInv)
+     7179    0.005    0.000    0.266    0.000 <__array_function__ internals>:2(trapz)
+   116482    0.058    0.000    0.260    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/fromnumeric.py:1114(argmax)
+     7179    0.180    0.000    0.253    0.000 /usr/local/lib/python3.9/site-packages/numpy/lib/function_base.py:4006(trapz)
+   116483    0.064    0.000    0.202    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/fromnumeric.py:52(_wrapfunc)
+     3570    0.002    0.000    0.150    0.000 <__array_function__ internals>:2(gradient)
+     3570    0.109    0.000    0.140    0.000 /usr/local/lib/python3.9/site-packages/numpy/lib/function_base.py:802(gradient)
+   116482    0.118    0.000    0.118    0.000 {method 'argmax' of 'numpy.ndarray' objects}
+     7181    0.005    0.000    0.068    0.000 {method 'sum' of 'numpy.ndarray' objects}
+   232976    0.065    0.000    0.065    0.000 /Users/lm/ErwinJr2/QCLayers.py:1247(layerVc)
+     7181    0.003    0.000    0.063    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/_methods.py:45(_sum)
+     7210    0.060    0.000    0.060    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+    12164    0.006    0.000    0.022    0.000 <__array_function__ internals>:2(iscomplexobj)
+   116491    0.020    0.000    0.020    0.000 {built-in method builtins.getattr}
+   124085    0.016    0.000    0.016    0.000 {built-in method builtins.len}
+   116482    0.016    0.000    0.016    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/fromnumeric.py:1110(_argmax_dispatcher)
+     1768    0.010    0.000    0.013    0.000 /usr/local/lib/python3.9/site-packages/numpy/ctypeslib.py:178(from_param)
+     3570    0.002    0.000    0.012    0.000 <__array_function__ internals>:2(ndim)
+    15736    0.005    0.000    0.011    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/_asarray.py:14(asarray)
+    12164    0.008    0.000    0.010    0.000 /usr/local/lib/python3.9/site-packages/numpy/lib/type_check.py:279(iscomplexobj)
+    26492    0.010    0.000    0.010    0.000 {built-in method numpy.array}
+     3570    0.004    0.000    0.009    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/numerictypes.py:360(issubdtype)
+     3570    0.005    0.000    0.009    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/fromnumeric.py:3075(ndim)
+    10752    0.003    0.000    0.007    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/_asarray.py:86(asanyarray)
+     1768    0.001    0.000    0.007    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/_internal.py:344(_as_parameter_)
+        1    0.006    0.006    0.006    0.006 /Users/lm/ErwinJr2/QCLayers.py:855(period_recognize)
+     3570    0.003    0.000    0.006    0.000 <__array_function__ internals>:2(empty_like)
+     1768    0.001    0.000    0.006    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/_internal.py:266(data_as)
+     1785    0.005    0.000    0.005    0.000 /Users/lm/ErwinJr2/QCLayers.py:832(dephasing)
+     7140    0.003    0.000    0.005    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/numerictypes.py:286(issubclass_)
+        1    0.005    0.005    0.005    0.005 /Users/lm/ErwinJr2/OneDQuantum/OneDSchrodinger.py:115(cBandFillPsi)
+        1    0.000    0.000    0.005    0.005 /Users/lm/ErwinJr2/QCLayers.py:220(populate_x)
+     1768    0.004    0.000    0.004    0.000 /usr/local/Cellar/python@3.9/3.9.2_1/Frameworks/Python.framework/Versions/3.9/lib/python3.9/ctypes/__init__.py:509(cast)
+    22875    0.004    0.000    0.004    0.000 {built-in method builtins.issubclass}
+     1768    0.003    0.000    0.003    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/_internal.py:249(__init__)
+    12164    0.002    0.000    0.002    0.000 /usr/local/lib/python3.9/site-packages/numpy/lib/function_base.py:1285(_interp_dispatcher)
+    12164    0.002    0.000    0.002    0.000 /usr/local/lib/python3.9/site-packages/numpy/lib/type_check.py:206(_is_type_dispatcher)
+     7140    0.002    0.000    0.002    0.000 /usr/local/lib/python3.9/site-packages/numpy/lib/function_base.py:797(_gradient_dispatcher)
+     7179    0.001    0.000    0.001    0.000 /usr/local/lib/python3.9/site-packages/numpy/lib/function_base.py:4002(_trapz_dispatcher)
+        1    0.001    0.001    0.001    0.001 /Users/lm/ErwinJr2/QCLayers.py:1253(populate_material)
+        2    0.001    0.001    0.001    0.001 {built-in method builtins.max}
+        1    0.001    0.001    0.001    0.001 {built-in method builtins.min}
+       16    0.001    0.000    0.001    0.000 /Users/lm/ErwinJr2/QCLayers.py:244(<listcomp>)
+        1    0.000    0.000    0.001    0.001 /Users/lm/ErwinJr2/QCLayers.py:304(_reset_cache)
+        1    0.000    0.000    0.001    0.001 /usr/local/lib/python3.9/site-packages/scipy/linalg/decomp_svd.py:330(null_space)
+     3570    0.001    0.000    0.001    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/multiarray.py:75(empty_like)
+     3572    0.001    0.000    0.001    0.000 {method 'append' of 'list' objects}
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/scipy/linalg/decomp_svd.py:13(svd)
+     3570    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/fromnumeric.py:3071(_ndim_dispatcher)
+        1    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/QCLayers.py:312(reset_IFR_cache)
+        1    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/QCLayers.py:317(<listcomp>)
+     1778    0.000    0.000    0.000    0.000 {built-in method builtins.isinstance}
+       12    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/fromnumeric.py:70(_wrapreduction)
+        1    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/QCLayers.py:306(<listcomp>)
+        1    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/QCLayers.py:308(<listcomp>)
+        1    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/QCLayers.py:315(<listcomp>)
+        1    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/QCLayers.py:1367(effective_ridx)
+        5    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(sum)
+        4    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(amax)
+       13    0.000    0.000    0.000    0.000 {built-in method numpy.zeros}
+        5    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/fromnumeric.py:2105(sum)
+        1    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/OneDQuantum/band.py:25(__init__)
+        4    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/fromnumeric.py:2589(amax)
+        1    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/OneDQuantum/band.py:86(cZBband_new)
+       18    0.000    0.000    0.000    0.000 {built-in method numpy.empty}
+        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(average)
+        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(broadcast_to)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/lib/function_base.py:280(average)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/numeric.py:144(ones)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/scipy/linalg/lapack.py:982(_compute_lwork)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/lib/stride_tricks.py:141(broadcast_to)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/lib/stride_tricks.py:114(_broadcast_to)
+        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(copyto)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/scipy/_lib/_util.py:216(_asarray_validated)
+        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(cumsum)
+        3    0.000    0.000    0.000    0.000 {built-in method numpy.arange}
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/scipy/linalg/blas.py:382(getter)
+        2    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(amin)
+        2    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/fromnumeric.py:2714(amin)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/scipy/linalg/lapack.py:886(get_lapack_funcs)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/fromnumeric.py:2418(cumsum)
+        1    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/QCLayers.py:981(carrierLeak)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/scipy/linalg/blas.py:324(_get_funcs)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/fromnumeric.py:39(_wrapit)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/lib/function_base.py:422(asarray_chkfinite)
+        2    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/QCLayers.py:1379(sheet_density)
+        1    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/QCLayers.py:944(<listcomp>)
+        1    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/QCLayers.py:945(<listcomp>)
+        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(diag)
+        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(any)
+       24    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/QCLayers.py:983(<genexpr>)
+        1    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/OneDQuantum/band.py:37(__del__)
+        1    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/QCLayers.py:1371(<listcomp>)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/lib/twodim_base.py:214(diag)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/fromnumeric.py:2249(any)
+        1    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/QCLayers.py:943(<listcomp>)
+        1    0.000    0.000    0.000    0.000 {method 'all' of 'numpy.ndarray' objects}
+        1    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/OneDQuantum/band.py:93(cZBband_free)
+       34    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/QCLayers.py:1383(<genexpr>)
+       17    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/QCLayers.py:1297(<genexpr>)
+        1    0.000    0.000    0.000    0.000 {method 'cumsum' of 'numpy.ndarray' objects}
+       12    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/fromnumeric.py:71(<dictcomp>)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/scipy/linalg/blas.py:259(find_best_blas_type)
+        2    0.000    0.000    0.000    0.000 {method 'reshape' of 'numpy.ndarray' objects}
+        1    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/QCLayers.py:1133(_get_IFRList)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/_methods.py:56(_all)
+        1    0.000    0.000    0.000    0.000 {method 'any' of 'numpy.generic' objects}
+       23    0.000    0.000    0.000    0.000 {method 'add' of 'set' objects}
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/lib/function_base.py:244(iterable)
+        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(result_type)
+        2    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/OptStrata.py:24(<lambda>)
+       16    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/QCLayers.py:1250(layerMc)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/_methods.py:53(_any)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/scipy/linalg/lapack.py:1017(_check_work_float)
+        7    0.000    0.000    0.000    0.000 {method 'get' of 'dict' objects}
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/getlimits.py:366(__new__)
+        1    0.000    0.000    0.000    0.000 {built-in method builtins.any}
+       12    0.000    0.000    0.000    0.000 {method 'items' of 'dict' objects}
+        1    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/QCLayers.py:1138(<listcomp>)
+        1    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/QCLayers.py:1142(<listcomp>)
+        1    0.000    0.000    0.000    0.000 {method 'startswith' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/OptStrata.py:18(<lambda>)
+        1    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/QCLayers.py:1374(<listcomp>)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/ma/core.py:6374(isMaskedArray)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/scipy/sparse/base.py:1205(isspmatrix)
+        5    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/fromnumeric.py:2100(_sum_dispatcher)
+        1    0.000    0.000    0.000    0.000 {method 'tolist' of 'numpy.ndarray' objects}
+        1    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/OptStrata.py:34(<lambda>)
+        4    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/fromnumeric.py:2584(_amax_dispatcher)
+        3    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/lib/stride_tricks.py:119(<genexpr>)
+        1    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/QCLayers.py:1301(<listcomp>)
+        1    0.000    0.000    0.000    0.000 {method 'conj' of 'numpy.ndarray' objects}
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/scipy/linalg/misc.py:182(_datacopied)
+        1    0.000    0.000    0.000    0.000 {built-in method builtins.iter}
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/lib/stride_tricks.py:24(_maybe_view_as_subclass)
+        1    0.000    0.000    0.000    0.000 /Users/lm/ErwinJr2/QCLayers.py:1302(<listcomp>)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/fromnumeric.py:2414(_cumsum_dispatcher)
+        2    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/fromnumeric.py:2709(_amin_dispatcher)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/lib/stride_tricks.py:137(_broadcast_to_dispatcher)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/lib/function_base.py:276(_average_dispatcher)
+        1    0.000    0.000    0.000    0.000 {method '__exit__' of 'numpy.nditer' objects}
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/multiarray.py:634(result_type)
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/multiarray.py:1043(copyto)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/lib/twodim_base.py:210(_diag_dispatcher)
+        1    0.000    0.000    0.000    0.000 /usr/local/lib/python3.9/site-packages/numpy/core/fromnumeric.py:2245(_any_dispatcher)
+        1    0.000    0.000    0.000    0.000 {built-in method builtins.abs}
+
+

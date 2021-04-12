@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding:utf-8 -*-
 import numpy as np
 from ctypes import c_void_p, c_int, c_double, POINTER, Structure, CDLL
 from typing import Callable, Union

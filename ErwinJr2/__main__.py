@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 """
 Make `python -m ErwinJr` an alias for running `ErwinJr`.
