@@ -1,0 +1,21 @@
+2.1.0
+---------------------------------------------------------------
+- `setuptools` as the installation process
+- `pip install` support
+- Optmize for cross-platform behavior
+
+
+2.0
+---------------------------------------------------------------
+- Interface roughness
+- Electron population
+- Early version of optimization
+
+
+1.0
+---------------------------------------------------------------
+A working demo with most of the features.
+
+0.x
+---------------------------------------------------------------
+Starting of the project with some quantum solver.

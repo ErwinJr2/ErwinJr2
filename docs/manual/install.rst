@@ -1,22 +1,59 @@
 Installation Guide for ErwinJr2
 ================================
 
-Tge software is available as source code in Github:
+The software is based on Python (>=3.6).
+For the Python distributions, it is recommended to use |anaconda|_
+for Windows and |homebrew|_ installed Python3 for MacOS.
+In the page the `python` command may be `python3` depending on your platform.
+
+Simple Installation
+---------------------
+
+In most cases you can have the software out-of-box from ``pip``, assuming you
+already have ``python`` installed.
+Fist to make sure you have the latest ``pip`` installed:
+
+.. code-block:: bash
+
+   python -m pip install pip --upgrade
+
+Than install ``ErwinJr2`` by:
+
+.. code-block:: bash
+
+   python -m pip install ErwinJr2
+
+Now you can start the software via
+
+.. code-block:: bash
+
+   ErwinJr
+
+or if you want to, you can create a shortcut on the desktop via
+
+.. code-block:: bash
+
+   ErwinJr-genshortcut
+
+For reasonably new versions of Windows or MacOS with x86_64 CPU, the compiled
+library is provided via ``pip`` installation. For Linux or other platform, it
+should be compiled automatically if ``gcc`` and ``make`` are provided.
+Otherwise if the compiled library may not work,
+you may see ``C library is not compiled. Features are limited.`` when starting
+the software from command line.
+
+If you are a developer and want to compile the software locally, the following
+is a beginers guide.
+The software is available as source code in Github:
 https://github.com/CareF/ErwinJr2 .
 You can directly donwload as a zip file, or using ``git clone`` to clone the
 repository, which helps to get further updates.
 
-The software is designed to be portable, but it recommended to install so that
-it compiles the C library and register with the Python environment.
-
 Prepare the environment
 ------------------------
 
-The software is based on Python (>=3.6) and uses ``setuptools`` for installation.
-For the Python distributions, it is recommended to use |anaconda|_
-for Windows and |homebrew|_ installed Python for MacOS. After installing,
-Make sure you have the latest version of `setuptools` installed
-(`python` may be `python3` depending on your platform):
+The software uses ``setuptools`` for installation.
+Make sure you have the latest version of `setuptools` installed:
 
 .. code-block:: bash
 
@@ -112,6 +149,27 @@ To create a shortcut on desktop, run
 .. code-block:: bash
 
    ErwinJr-genshortcut
+
+
+Run the software without installation
+--------------------------------------
+
+Sometimes you may want to run the software without install it to the Python
+package directory, especially if you want to change the source code. You can
+manually build the C library by
+
+.. code-block:: bash
+
+   cd [PATH_TO_THE_CODE]/ErwinJr2/OneDQuantum
+   make
+   make MP
+
+And run the software via
+
+.. code-block:: bash
+
+   cd [PATH_TO_THE_CODE]
+   PYTHONPATH=[PATH_TO_THE_CODE] python ErwinJr2
 
 
 Build local documentation

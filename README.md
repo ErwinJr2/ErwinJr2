@@ -15,89 +15,41 @@ documents can be found [here](https://erwinjr2.readthedocs.io/)
 Installation
 ---------------
 The software is based on Python (>=3.6) and uses `setuptools` for installation.
-Make sure you have the latest version of `setuptools` installed
-(`python` may be `python3` depending on your platform.):
+The easiest way to install the software is via `pip` the Python package manager.
+
+Fist to make sure you have the latest `pip` installed (depending on your
+environment, `python` maybe `python3`):
 
 ```bash
-python -m pip install setuptools --upgrade
+python -m pip install pip --upgrade
 ```
 
-If you are not installing the software on a remote server, you may also want to
-install `PyQt5` for GUI support:
+Than install `ErwinJr2` by:
 
 ```bash
-python -m pip install pyqt5
+python -m pip install ErwinJr2
 ```
 
-To install the software, at the code directory, run
+Now you can start the software via
 
 ```bash
-python setup.py install
+ErwinJr
 ```
 
-If you don't have full control of your system, add `--user` by the end to
-install the software in user directory.
-
-After installation, you can start the software by `ErwinJr` command or
+or if you want to, you can create a shortcut on the desktop via
 
 ```bash
-python -m ErwinJr2
-```
-
-To create a shortcut on desktop, run
-
-```
 ErwinJr-genshortcut
 ```
 
-### Windows ###
-The software requires some compiled components for best performance. The
-default compiler depends on GNU `gcc` and `make`, which may not be supported
-on Windows. To use [Visual Studio](https://visualstudio.microsoft.com/),
-set the `MSBUILD` environment variable to the corresponding directory for
-example:
-```
-set MSBUILD=C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe
-```
-Note that the `C:\Program Files (x86)\...` path depends on where you install
-Visual Studio on your computer. With the environment variable `setup.py` should
-be able to call Visual Studio for the compilation.
+For reasonably new versions of Windows, MacOS with x86_64 CPU or Linux this
+should work out of box. For other platform the compiled library may not work,
+you may see `C library is not compiled. Features are limited.` warning if
+that happens. In that case, refer to
+[The Documents](https://erwinjr2.readthedocs.io/en/latest/manual/install.html)
+for more detail about how to install it from source code and compile the
+library locally.
 
-### Linux and MacOS ###
-By default most Linux distributions have necessary dev-tools installed but for
-MacOS if you haven't installed xcode, run the following command"
-
-```bash
-xcode-select —install
-```
-
-It is recommended to have `openMP` installed for the best performance.
-For MacOS specifically, the default `gcc` is a alias to the native `clang`,
-we recommend install via [homebrew](https://brew.sh/) for `gcc` and `openMP`
-before install
-
-```bash
-brew install gcc
-```
-
-and use `gcc` as the compiler by
-
-```
-CC=gcc-10 python setup.py install
-```
-
-where `gcc-10` is the current latest version by depending on your install
-it may be other number.
-
-### Build local documentation ###
-The software will look for the [online document](https://erwinjr2.readthedocs.io/)
-but if you want to build your local version, you need doxygen and:
-
-```bash
-cd docs
-python -m install -r requirements.txt
-make html
-```
 
 ## TODO list
 - [X] OpenMP support
