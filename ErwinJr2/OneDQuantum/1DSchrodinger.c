@@ -42,7 +42,7 @@ extern "C" {
  * @param[in] V V[n] is the potential at \f$ x = x_0 + n \times step \f$
  * @param[in] m m[n] is the effective mass at \f$ x = x_0 + n \times step \f$.
  *               m is in unit m0 (free electron mass)
- * @param[out] y (output) value of y at \f$ x = x_0 + n \times step \f$.
+ * @param[out] y value of y at \f$ x = x_0 + n \times step \f$.
  *
  * @return psiend the last element of y
  */
@@ -155,9 +155,8 @@ __declspec(dllexport)
  *                effective mass according to energy and perform normalization.
  *                When it's NULL it means using constant mass with parabolic
  *                kinetic energy.
- * @param[out] psis (output)
- *                   \f$ \psi + i N \times sizeof(double) \f$ is the
- *                   wavefunction with energy EigenEs[i].
+ * @param[out] psis \f$ \psi + i N \times sizeof(double) \f$ is the
+ *                  wavefunction with energy EigenEs[i].
  */
 void FillPsi(double step, numpyint N, const double *EigenEs,
         numpyint EN, const double *V, double *m, double *psis,
@@ -258,12 +257,12 @@ __declspec(dllexport)
  *
  * @param[in] step step size
  * @param[in] N number of steps
- * @param[in] *Es initial search range of eigen energy
+ * @param[in] Es initial search range of eigen energy
  * @param[in] EN number of eigen energy to find
- * @param[in] *V potential
- * @param[in] *m effective mass
- * @param[in] *mat is a pointer to band structure
- * @param[out] *EigenE (output) eigen energy
+ * @param[in] V potential
+ * @param[in] m effective mass
+ * @param[in] mat is a pointer to band structure
+ * @param[out] EigenE eigen energy
  *
  * @return total number of eigen states found.
  */
