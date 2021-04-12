@@ -82,7 +82,7 @@ at Princeton University, Gmachl group.
 
 setup(
     name='ErwinJr2',
-    version='2.0.9-1',
+    version='2.0.10',
     author='Ming Lyu',
     author_email='minglyu@princeton.edu',
     license="GPL-3.0",
