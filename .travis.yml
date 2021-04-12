@@ -40,16 +40,20 @@ jobs:
     os: osx
     osx_image: xcode11.5
     language: shell       # 'language: python' is an error on Travis CI macOS
-    before_install:
-      - brew install llvm
+    addons:
+      homebrew:
+        packages:
+          - llvm
     env:
       - CC=gcc-10 OMP_NUM_THREADS=4
   - name: MacOS with Clang
     os: osx
     osx_image: xcode11.5
     language: shell       # 'language: python' is an error on Travis CI macOS
-    before_install:
-      - brew install llvm
+    addons:
+      homebrew:
+        packages:
+          - llvm
     env:
       - CC=/usr/local/opt/llvm/bin/clang OMP_NUM_THREADS=4
   - name: Windows
@@ -98,8 +102,11 @@ jobs:
     os: osx
     osx_image: xcode11.5
     language: shell
+    addons:
+      homebrew:
+        packages:
+          - llvm
     before_install:
-      - brew install llvm
       - pip3 install setuptools wheel twine
     env:
       - CC=/usr/local/opt/llvm/bin/clang PYEXE=python3
