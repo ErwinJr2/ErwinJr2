@@ -2,9 +2,9 @@ A software for Quantum Cascade Laser design and simulation
 ================
 
 master:
-[![master Build Status](https://travis-ci.com/CareF/ErwinJr2.svg?branch=master)](https://travis-ci.org/CareF/ErwinJr2)
+[![master Build Status](https://travis-ci.com/CareF/ErwinJr2.svg?branch=master)](https://travis-ci.com/CareF/ErwinJr2)
 dev:
-[![dev Build Status](https://travis-ci.com/CareF/ErwinJr2.svg?branch=dev)](https://travis-ci.org/CareF/ErwinJr2)
+[![dev Build Status](https://travis-ci.com/CareF/ErwinJr2.svg?branch=dev)](https://travis-ci.com/CareF/ErwinJr2)
 
 ![Main Window Screenshot](./docs/figures/mainwindow.png)
 
