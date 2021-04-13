@@ -44,9 +44,9 @@ jobs:
       homebrew:
         packages:
           - llvm
-          - gcc
+          - gcc@9
     env:
-      - CC=gcc-10 OMP_NUM_THREADS=4
+      - CC=gcc-9 OMP_NUM_THREADS=4
   - name: MacOS with Clang
     os: osx
     osx_image: xcode11.5
