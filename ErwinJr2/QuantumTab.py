@@ -18,10 +18,6 @@ from numpy import sqrt
 from functools import partial, wraps
 # figure is and should be used for gain spectrum plot only!
 from matplotlib.pyplot import figure
-from matplotlib import cm
-# the normalization used for state population
-# from matplotlib.colors import LogNorm as cmNorm
-from matplotlib.colors import Normalize as cmNorm
 
 from .QCLayers import (QCLayers, StateRecognizeError,
                        optimize_layer, optimize_global,
@@ -43,6 +39,7 @@ from .customQTClass import mtrlComboBox
 from .Material import AParam
 from .versionAndName import ejError, ejWarning
 from .darkDetect import isdark
+from .QCPlotter import plotPotential, scaleWF, plotWF
 
 
 # TODO: this may not be necessary by better designer
@@ -98,7 +95,6 @@ class QuantumTab(QWidget):
                     index is defined in qclayers
         pairSelected: Boolean flag for if a pair of states is selected
         --- plot flags ---
-        solveType: 'basis' or 'whole', decide different kinds of solving
         !plotVX, !plotVL, !plotLH, !plotSO: show X point of conduction band
                                             (L point, LH band, SO band)
 
@@ -175,7 +171,6 @@ class QuantumTab(QWidget):
                                      for rgb in mtrlcolors_RGB])
 
         self.updating = False
-        self.solveType = None
         self.plotVX = False
         self.plotVL = False
         self.plotLH = False
@@ -864,10 +859,7 @@ class QuantumTab(QWidget):
 
     def _optimize_layer(self, n, upper, lower):
         optimize_layer(self.qclayers, n, upper, lower)
-        if self.solveType == 'basis':
-            self.qclayers.solve_basis()
-        else:
-            self.qclayers.solve_whole()
+        self.qclayers.solve_whole()
         self.stateHolder = [upper, lower]
         self.pairSelected = True
         self._calcFoM()
@@ -1256,12 +1248,6 @@ class QuantumTab(QWidget):
 # =========================================================================
 # Quantum Tab Plotting and Plot Control
 # =========================================================================
-    def _scaled_wfs(self):
-        if self.plotType == "mode":
-            return self.qclayers.psis**2 * plotconfig["modescale"]
-        elif self.plotType == "wf":
-            return self.qclayers.psis * plotconfig["wfscale"]
-
     def update_quantumCanvas(self):
         """Update the canvas to show band diagram, and if states have been
         solved, draw the wavefunctions"""
@@ -1272,21 +1258,9 @@ class QuantumTab(QWidget):
             xmin = xmax = ymin = ymax = None
         self.quantumCanvas.clear()
         axes = self.quantumCanvas.axes
-        axes.plot(self.qclayers.xPoints, self.qclayers.xVc, 'k', linewidth=1)
+        plotPotential(axes, self.qclayers, self.plotVL, self.plotVX,
+                      self.plotLH, self.plotSO)
 
-        # plot Conduction Band L-Valley/X-Valley, Light Hole Valence Band and
-        # Spin-Orbit coupling Valence Band
-        for bandFlag, xv, conf in (
-                (self.plotVL, self.qclayers.xVL, 'g--'),
-                (self.plotVX, self.qclayers.xVX, 'm-.'),
-                (self.plotLH, self.qclayers.xVLH, 'k--'),
-                (self.plotSO, self.qclayers.xVSO, 'r--')):
-            if bandFlag:
-                axes.plot(self.qclayers.xPoints, xv, conf, linewidth=1)
-
-        # highlight selected layer & make AR layers bold
-        ARVc = np.ma.masked_where(~self.qclayers.xARs, self.qclayers.xVc)
-        axes.plot(self.qclayers.xPoints, ARVc, 'k', linewidth=1.5)
         if self.layerSelected is not None:
             selectedVc = np.ma.masked_where(
                 self.qclayers.xLayerMask(self.layerSelected),
@@ -1295,64 +1269,17 @@ class QuantumTab(QWidget):
                       linewidth=1.5 if self.qclayers.layerARs[
                           self.layerSelected] else 1)
 
-        if self.qclayers.status.startswith('solved'):
-            if self.qclayers.status == 'solved-full':
-                # Amin = np.min(self.qclayers.population)
-                self.qclayers.period_map_build()
-                vmin = 0
-                vmax = np.ceil(np.max(self.qclayers.population)*10)/10
-                popMap = cm.ScalarMappable(
-                    cmNorm(vmin=vmin, vmax=vmax), 'plasma')
-            self.curveWF = []
-            self.wfs = self._scaled_wfs()
-            # filter almost zero part
-            starts = np.argmax(abs(self.wfs) > plotconfig["wf_almost_zero"],
-                               axis=1)
-            ends = np.argmax(abs(self.wfs[:, ::-1]) > plotconfig[
-                "wf_almost_zero"], axis=1)
-            for n in range(len(self.qclayers.eigenEs)):
-                # plot states
-                ls = '-'
-                if n in self.stateHolder:
-                    color = 'k'
-                    lw = 2
-                else:
-                    if self.qclayers.status == 'solved-full':
-                        if self.qclayers.periodMap[n] is not None:
-                            color = popMap.to_rgba(
-                                self.qclayers.state_population(n))
-                        else:
-                            color = 'g'
-                    else:
-                        color = self.colors[n % len(self.colors)]
-                    if self.solveType == 'basis':
-                        lw = 1.5
-                    else:
-                        if n in self.periodSet:
-                            # lw = 1 if n in self.qclayers.unBound else 1.5
-                            lw = 1.5
-                            if n in self.qclayers.unBound:
-                                ls = (0, (0.5, 0.5))
-                        else:
-                            lw = 0.5
-                x = self.qclayers.xPoints[starts[n]:-ends[n]]
-                y = self.wfs[n, starts[n]:-ends[n]] + self.qclayers.eigenEs[n]
-                curve, = axes.plot(x, y, lw=lw, ls=ls, color=color)
-                if self.fillPlot:
-                    axes.fill_between(x, y, self.qclayers.eigenEs[n],
-                                      facecolor=color, alpha=self.fillPlot)
-                self.curveWF.append(curve)
-            if self.qclayers.status == 'solved-full':
-                colorbar_axes = axes.inset_axes([0.02, 0.01, 0.5, 0.02])
-                self.quantumCanvas.figure.colorbar(
-                    popMap, cax=colorbar_axes, orientation='horizontal',
-                    label='electron population')
-                colorbar_axes.xaxis.set_ticks_position('top')
-                colorbar_axes.xaxis.set_label_position('top')
+        if self.qclayers.status in ('basis', 'solved', 'solved-full'):
+            self.wfs = plotWF(axes, self.qclayers, self.plotType,
+                              self.fillPlot, self.stateHolder)
 
         if xmin is not None:
             axes.set_xlim(xmin, xmax)
             axes.set_ylim(ymin, ymax)
+        else:
+            ymin, ymax = axes.get_ylim()
+            if ymax - ymin < 0.4:
+                axes.set_ylim(ymin-0.2, ymax+0.2)
         self.quantumCanvas.draw()
 
     @pyqtSlot(bool)
@@ -1415,7 +1342,7 @@ class QuantumTab(QWidget):
             # otherwise band structure hasn't been solved yet
             np.savetxt(fnameBase + '_WFs' + '.csv', np.column_stack([
                 self.qclayers.xPoints, self.qclayers.psis.T]), delimiter=',')
-            ys = self._scaled_wfs().T + self.qclayers.eigenEs
+            ys = scaleWF(self.qclayers, self.plotType).T+self.qclayers.eigenEs
             np.savetxt(fnameBase + '.csv', np.column_stack([
                 self.qclayers.xPoints, ys]), delimiter=',')
             np.savetxt(fnameBase + '_Es' + '.csv',
@@ -1531,7 +1458,7 @@ class QuantumTab(QWidget):
         if self.pairSelected:
             self.FoMButton.setEnabled(not is_doing)
             self.FoMButton.repaint()
-        if self.solveType == 'whole':
+        if self.qclayers.status.startswith('solved'):
             self.fullPopulationButton.setEnabled(not is_doing)
             self.fullPopulationButton.repaint()
 
@@ -1552,7 +1479,6 @@ class QuantumTab(QWidget):
     def solve_whole(self):  # solves whole structure
         """SLOT connected to solveWholeButton.clicked(): Whole solver """
         self.clear_WFs()
-        self.solveType = 'whole'
         self._threadRun(self._solve_whole, self._solved)
 
     def _solve_basis(self):
@@ -1562,8 +1488,7 @@ class QuantumTab(QWidget):
     def solve_basis(self):  # solves structure with basis
         """SLOT connected to solveBasisButton.clicked(): Basis solver """
         self.clear_WFs()
-        self.solveType = 'basis'
-        self._threadRun(self._solve_basis, self._solved)
+        self._threadRun(self._solve_basis, self.update_quantumCanvas)
 
     def state_pick(self, event):
         """Callback registered in plotControl when it's in pairselect mode.
@@ -1642,7 +1567,7 @@ class QuantumTab(QWidget):
         self.de = self.qclayers.eigenEs[upper] - self.qclayers.eigenEs[lower]
         self.wavelength = h * c0 / (e0 * self.de) * 1e6  # um
 
-        if self.solveType is None:
+        if self.qclayers.status == 'unsolved':
             self.FoMButton.setEnabled(False)
             self.pairString = ''
         else:

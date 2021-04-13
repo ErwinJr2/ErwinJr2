@@ -36,6 +36,7 @@ See `Github <https://github.com/CareF/ErwinJr2/>`_ for the source code.
    other
    Profiling
    QCLayers
+   QCPlotter
    OptStrata
    Material
    SaveLoad

@@ -1,3 +1,7 @@
+2.2.0
+---------------------------------------------------------------
+- Plotting for QCL is now seperated from GUI in QCPlotter module.
+
 2.1.1
 ---------------------------------------------------------------
 - bug fix for zero length QCLayers

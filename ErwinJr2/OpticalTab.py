@@ -98,10 +98,10 @@ class OpticalTab(QWidget):
         figureBox = QVBoxLayout()
         self.optCanvas = EJcanvas(xlabel='Position $x$ (μm)',
                                   ylabel='Refractive index $n$')
-        self.ridxAxis = self.optCanvas.axes
-        self.modeAxis = self.ridxAxis.twinx()
-        self.modeAxis.set_frame_on(False)
-        self.modeAxis.get_yaxis().set_visible(False)
+        self.rIdxAxes = self.optCanvas.axes
+        self.modeAxes = self.rIdxAxes.twinx()
+        self.modeAxes.set_frame_on(False)
+        self.modeAxes.get_yaxis().set_visible(False)
         # self.modeAxis = self.ridxAxis
         # self.modeAxis.set_ylabel("TM Mode $E_y$ (a.u.)", color='C0',
         #                          fontsize=canvasConfig["fontsize"])
@@ -651,21 +651,21 @@ class OpticalTab(QWidget):
 
     def update_canvas(self):
         """Update figure in optCanvas"""
-        self.ridxAxis.clear()
-        self.modeAxis.clear()
+        self.rIdxAxes.clear()
+        self.modeAxes.clear()
         nx = self.stratum.populateIndices(self.xs)
-        self.ridxAxis.plot(self.xs, nx.real, 'k', lw=1)
-        self.ridxAxis.set_xlabel('Position (μm)')
-        self.ridxAxis.set_ylabel('Mode Intensity (a.u.) or Refractive Index')
+        self.rIdxAxes.plot(self.xs, nx.real, 'k', lw=1)
+        self.rIdxAxes.set_xlabel('Position (μm)')
+        self.rIdxAxes.set_ylabel('Mode Intensity (a.u.) or Refractive Index')
         if self.redActive:
             for ar in self.stratum.populateIndices(self.xs):
-                self.ridxAxis.plot(self.xs[ar], nx.real[ar], 'r', lw=2)
+                self.rIdxAxes.plot(self.xs[ar], nx.real[ar], 'r', lw=2)
         if np.max(nx.real) > 5:
-            self.ridxAxis.set_ylim(top=5)
+            self.rIdxAxes.set_ylim(top=5)
         if self.plotImag:
-            self.ridxAxis.plot(self.xs, nx.imag, 'orange', lw=1)
+            self.rIdxAxes.plot(self.xs, nx.imag, 'orange', lw=1)
             if np.max(nx.imag) > 5:
-                self.ridxAxis.set_ylim(top=5)
+                self.rIdxAxes.set_ylim(top=5)
         # plot select strata
         if self.select is not None:
             if self.select == 0:
@@ -676,9 +676,9 @@ class OpticalTab(QWidget):
                 lsum = sum(self.stratum.Ls[1:self.select])
                 idx = (self.xs >= lsum) & (
                     self.xs < lsum+self.stratum.Ls[self.select])
-            self.ridxAxis.plot(self.xs[idx], nx.real[idx], 'b', lw=1.5)
+            self.rIdxAxes.plot(self.xs[idx], nx.real[idx], 'b', lw=1.5)
         if self.beta is not None:
-            self.modeAxis.plot(self.xs, np.abs(self.Ey)**2, color='C0')
+            self.modeAxes.plot(self.xs, np.abs(self.Ey)**2, color='C0')
         # self.optCanvas.figure.tight_layout()
         self.optCanvas.draw()
 

@@ -181,7 +181,7 @@ class MainWindow(QMainWindow):
             "&Save", shortcut="Ctrl+S", slot=self.fileSave,
             tip="Save ErwinJr2 file", icon="filesave")
         saveAsFileAction = self.create_action(
-            "S&ave As", shortcut="Ctrl+W", slot=self.fileSaveAs,
+            "S&ave As", shortcut="Ctrl+Alt+S", slot=self.fileSaveAs,
             tip="Save ErwinJr2 file as", icon="filesaveas")
         exportQuantumCanvasAction = self.create_action(
             "Export Band Diagram Image", slot=self.exportBandDiagram,
@@ -190,7 +190,7 @@ class MainWindow(QMainWindow):
             "Export Band Diagram Data", slot=self.export_band_diagram_data,
             tip="Export Band Diagram Data")
         quit_action = self.create_action(
-            "&Quit", slot=self.close, shortcut="Ctrl+Q",
+            "&Quit", slot=self.close, shortcut="Ctrl+W",
             tip="Close the application", icon="filequit")
         self.fileMenuActions = (
             newFileAction, openFileAction, saveFileAction, saveAsFileAction,

@@ -119,6 +119,7 @@ class SchrodingerLayer(object):
 
     status : str
         - "unsolved" meaning the structure is not solved yet.
+        - "basis" meaning the eigen problem is solved for basis
         - "solved" meaning the eigen problem is solved.
         - "solved-full" meaning the population distribution is known.
     """
@@ -249,7 +250,6 @@ class SchrodingerLayer(object):
         self.xLayerNums = np.empty(N, dtype=int)
         self.xVc = np.empty(N)
         self.xMc = np.empty(N)
-        self.xARs = np.empty(N, dtype=bool)
 
         for n in range(len(self.layerWidths)):
             indices = np.logical_or.reduce([
@@ -259,7 +259,6 @@ class SchrodingerLayer(object):
             self.xLayerNums[indices] = n
             self.xVc[indices] = self.layerVc(n)
             self.xMc[indices] = self.layerMc(n)
-            self.xARs[indices] = self.layerARs[n]
         if self.crystalType != 'simple':
             self.populate_material()
 
@@ -579,7 +578,7 @@ class SchrodingerLayer(object):
             self.eigenEs = np.concatenate((self.eigenEs, eigenEs))
             self.psis = np.concatenate((self.psis, psis))
         self._reset_cache()
-        self.status = 'solved'
+        self.status = 'basis'
         return self.eigenEs
 
     def _reset_for_basis(self, start: int, end: int):
@@ -951,6 +950,7 @@ class SchrodingerLayer(object):
         flow : float
             The flow of carrier, in unit ps^-1 (carrier density normalize to 1)
         """
+        assert(self.status.startswith('solved'))
         idxPeriod = len(self.periodIdx)
         # p for cache for the periodic version
         self._pLO = [np.zeros((idxPeriod, idxPeriod)) for _ in range(3)]
