@@ -243,6 +243,9 @@ class SchrodingerLayer(object):
         self.periodL = layerCumSum[-1]
         self.xPoints = np.arange(0, self.periodL*self.repeats, self.xres)
         N = self.xPoints.size
+        if N == 0:
+            self.xPoints = np.array([0])
+            N = 1
         self.xLayerNums = np.empty(N, dtype=int)
         self.xVc = np.empty(N)
         self.xMc = np.empty(N)
@@ -260,7 +263,7 @@ class SchrodingerLayer(object):
         if self.crystalType != 'simple':
             self.populate_material()
 
-        self.offset = max(self.xVc) - min(self.xVc)
+        self.offset = np.max(self.xVc) - np.min(self.xVc)
         self.xVField = self.xPoints * self.EField * EUNIT
         self.xVc -= self.xVField
 

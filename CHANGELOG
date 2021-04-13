@@ -1,9 +1,12 @@
+2.1.1
+---------------------------------------------------------------
+- bug fix for zero length QCLayers
+
 2.1.0
 ---------------------------------------------------------------
 - `setuptools` as the installation process
 - `pip install` support
 - Optmize for cross-platform behavior
-
 
 2.0
 ---------------------------------------------------------------
