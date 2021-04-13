@@ -4,6 +4,7 @@ This contains the plotter functions for QCLayers
 from typing import Iterable, Union
 import numpy as np
 from matplotlib.axes import Axes
+from matplotlib.pyplot import gca
 from matplotlib import cm
 # the normalization used for state population
 # from matplotlib.colors import LogNorm as cmNorm
@@ -27,17 +28,17 @@ config = {
 }  #: The configuration dictionary for plotting.
 
 
-def plotPotential(axes: Axes, qcl: QCLayers,
+def plotPotential(qcl: QCLayers, axes: Axes = None,
                   plotVL: bool = False, plotVX: bool = False,
                   plotLH: bool = False, plotSO: bool = False):
     """Plot the potentials of qcl.
 
     Parameters
     ----------
-    axes :
-        The axes to plot the figure on.
     qcl :
         The QCLayers to plot
+    axes :
+        The axes to plot the figure on.
     plotVL, plotVX, plotLH, plotSO :
         flags wether to plot L-point, X-point, LH band, SO band
 
@@ -46,6 +47,8 @@ def plotPotential(axes: Axes, qcl: QCLayers,
     A list of plotted data
 
     """
+    if axes is None:
+        axes = gca()
     ys = [qcl.xVc]
     axes.plot(qcl.xPoints, qcl.xVc, 'k', linewidth=1)
     # highlight selected layer & make AR layers bold
@@ -89,16 +92,14 @@ def scaleWF(qcl: QCLayers, plotType: str = 'mode'):
         raise ValueError('Undefined wavefunction time ', plotType)
 
 
-def plotWF(axes: Axes, qcl: QCLayers, plotType: str = 'mode',
+def plotWF(qcl: QCLayers, plotType: str = 'mode',
            fillPlot: Union[bool, float] = False,
-           pickedStates: Iterable = set()):
+           pickedStates: Iterable = set(), axes: Axes = None):
     r"""Plot the wavefunctions of qcl.
     The wavefunctions are scaled by :func:`scaleWF`.
 
     Parameters
     ----------
-    axes :
-        The axes to plot the figure on.
     qcl :
         The QCLayers to plot
     plotType :
@@ -110,12 +111,16 @@ def plotWF(axes: Axes, qcl: QCLayers, plotType: str = 'mode',
         the transparency of the fill color.
     pickedStates :
         A set of state indices that should be plotted in thick black color.
+    axes :
+        The axes to plot the figure on.
 
     Returns
     -------
     A list of plotted data
 
     """
+    if axes is None:
+        axes = gca()
     colors = config['wf_colors']
     wfs = scaleWF(qcl, plotType)
     # filter almost zero part

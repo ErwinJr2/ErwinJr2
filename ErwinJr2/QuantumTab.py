@@ -1258,7 +1258,7 @@ class QuantumTab(QWidget):
             xmin = xmax = ymin = ymax = None
         self.quantumCanvas.clear()
         axes = self.quantumCanvas.axes
-        plotPotential(axes, self.qclayers, self.plotVL, self.plotVX,
+        plotPotential(self.qclayers, axes, self.plotVL, self.plotVX,
                       self.plotLH, self.plotSO)
 
         if self.layerSelected is not None:
@@ -1270,8 +1270,9 @@ class QuantumTab(QWidget):
                           self.layerSelected] else 1)
 
         if self.qclayers.status in ('basis', 'solved', 'solved-full'):
-            self.wfs = plotWF(axes, self.qclayers, self.plotType,
-                              self.fillPlot, self.stateHolder)
+            self.wfs = plotWF(self.qclayers, self.plotType,
+                              self.fillPlot, self.stateHolder,
+                              axes=axes)
 
         if xmin is not None:
             axes.set_xlim(xmin, xmax)
