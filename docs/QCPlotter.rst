@@ -23,7 +23,7 @@ states and wave functions. A sample *json* file is can be found
     from ErwinJr2.QCPlotter import plotPotential, plotWF
     import matplotlib.pyplot as plt
 
-    with open("../ErwinJr2/example/PQLiu.json") as f:
+    with open("../ErwinJr2/example/PQLiu.json", 'r') as f:
         qcl = SaveLoad.qclLoad(f)
 
     qcl.populate_x()
