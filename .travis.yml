@@ -44,9 +44,10 @@ jobs:
       homebrew:
         packages:
           - llvm
-          - gcc@9
+          - gcc@10
+        update: true
     env:
-      - CC=gcc-9 OMP_NUM_THREADS=4
+      - CC=gcc-10 OMP_NUM_THREADS=4
   - name: MacOS with Clang
     os: osx
     osx_image: xcode11.5
@@ -55,6 +56,7 @@ jobs:
       homebrew:
         packages:
           - llvm
+        update: true
     env:
       - CC=/usr/local/opt/llvm/bin/clang OMP_NUM_THREADS=4
   - name: Windows
@@ -107,6 +109,7 @@ jobs:
       homebrew:
         packages:
           - llvm
+        update: true
     before_install:
       - pip3 install setuptools wheel twine
     env:
