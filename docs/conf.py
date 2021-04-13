@@ -58,6 +58,7 @@ extensions = [
     'sphinxcontrib.bibtex',
     'sphinx_autodoc_typehints',
     'breathe',
+    'matplotlib.sphinxext.plot_directive',
 ]
 breathe_projects = {"OneDQuantum": "../ErwinJr2/OneDQuantum/docs/xml/"}
 breathe_default_project = "OneDQuantum"
