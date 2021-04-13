@@ -44,6 +44,7 @@ jobs:
       homebrew:
         packages:
           - llvm
+          - gcc
     env:
       - CC=gcc-10 OMP_NUM_THREADS=4
   - name: MacOS with Clang
