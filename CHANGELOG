@@ -9,6 +9,7 @@
 ---------------------------------------------------------------
 - Interface roughness
 - Electron population
+- Matrix based eigen solver for the three band model
 - Early version of optimization
 
 
