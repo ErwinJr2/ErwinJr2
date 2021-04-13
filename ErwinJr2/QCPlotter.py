@@ -24,7 +24,7 @@ config = {
                   (0.725, 0.321, 0.623), (0.411, 0.741, 0.270),
                   (0.078, 0.078, 0.078), (0.431, 0.803, 0.870),
                   (0.223, 0.321, 0.643))
-}
+}  #: The configuration dictionary for plotting.
 
 
 def plotPotential(axes: Axes, qcl: QCLayers,

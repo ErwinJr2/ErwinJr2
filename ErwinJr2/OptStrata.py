@@ -1,8 +1,3 @@
-"""
-This file defined the Stratum class for confined optical mode in 1D using
-transfer matrix method
-"""
-
 import numpy as np
 from numpy import sqrt, exp, pi, sin, cos, sinc
 from .Material import rIdx, MParam
@@ -32,21 +27,21 @@ class MaxwellLayer(object):
 
     Parameters
     ----------
-    wl : float
+    wl :
         Wavelength in vacuum to guide in the stratum
 
-    indices : list(complex)
+    indices :
         The Refractive indices of the layers except for the top and the
         substrate. The substrate and the top layer is not part of the list
         because they decides the boundary condition for the solver.
 
-    index0 : complex
+    index0 :
         The refractive index for the top layer
 
-    indexS : complex
+    indexS :
         The refractive index for the substrate layer
 
-    Ls : list(float)
+    Ls :
         Thickness of the stratum, same unit as wl. The first and last elements
         are for top and substrate and is not used for calculation
     """

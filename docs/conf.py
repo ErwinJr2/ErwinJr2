@@ -56,6 +56,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.napoleon',
     'sphinxcontrib.bibtex',
+    'sphinx_autodoc_typehints',
     'breathe',
 ]
 breathe_projects = {"OneDQuantum": "../ErwinJr2/OneDQuantum/docs/xml/"}

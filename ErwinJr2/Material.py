@@ -47,12 +47,12 @@ class Material(object):
 
     Parameters
     ----------
-    Name : str
+    Name :
         Name of material
-    Temperature : int
+    Temperature :
         Temperature of the material
     """
-    def __init__(self, Name, Temperature=300):
+    def __init__(self, Name: str, Temperature: float = 300):
         """
 
         Yields
@@ -65,14 +65,14 @@ class Material(object):
         self.type = self.param.pop("Crystal")
         self.set_temperature(Temperature)
 
-    def set_temperature(self, Temperature):
+    def set_temperature(self, Temperature: float):
         """
         Set temperature of the material and update related parameters:
         lattice constant and band gap.
 
         Yields
         ------
-        T : int
+        T : float
             Updated temperature
         param : dict
             lattice constant and band gap in this dictionary are updated
@@ -94,14 +94,14 @@ class Material(object):
                     self.T + self.param["be"+pt])
                 self.param['Eg'+pt] = MParam[self.name]['Eg'+pt] + Varsh
 
-    def set_strain(self, a_parallel):
+    def set_strain(self, a_parallel: float):
         """
         Update parameters' dependence on strain, according to Pikus-Bir
         interaction.
 
         Parameters
         ----------
-        a_parallel : float
+        a_parallel :
             lattice constant of the substrate
 
         Yields
@@ -163,15 +163,14 @@ class Alloy(Material):
 
     Parameters
     ----------
-    Name : str
+    Name :
         Name of the alloy
-    x : float
+    x :
         The first composition's Mole fraction defined in AParam
-    Temperature : int
+    Temperature :
         Temperature of the alloy
-
     """
-    def __init__(self, Name, x, Temperature=300):
+    def __init__(self, Name: str, x: float, Temperature: float = 300):
         self.name = Name
         self.comp = AParam[self.name]["composition"]
         self.A = Material(self.comp[0], Temperature)
@@ -182,7 +181,7 @@ class Alloy(Material):
         self.moleFrac = x
         self.set_temperature(Temperature)
 
-    def set_temperature(self, Temperature):
+    def set_temperature(self, Temperature: float):
         """
         Set temperature of the alloy and update related parameters,
         lattice consant and band gap, by updating the temperature of the
@@ -199,13 +198,13 @@ class Alloy(Material):
         self.B.set_temperature(self.T)
         self.set_molefrac(self.moleFrac)
 
-    def set_molefrac(self, x):
+    def set_molefrac(self, x: float):
         """
         Update parameters of the alloy with Mole fraction x
 
         Parameters
         ----------
-        x : float
+        x :
             The first composition's Mole fraction defined in AParam
 
         Yields

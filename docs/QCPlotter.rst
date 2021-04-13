@@ -3,12 +3,10 @@ QCPlotter module
 
 This module contains functions to plot :class:`ErwinJr2.QCLayers`
 
-QCLayers.QCLayers class
------------------------
-.. currentmodule:: ErwinJr2.QCPlotter
-.. autofunction:: plotPotential
-.. autofunction:: scaleWF
-.. autofunction:: plotWF
+.. automodule:: ErwinJr2.QCPlotter
+    :members:
+    :show-inheritance:
+
 
 
 Example

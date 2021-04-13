@@ -1,20 +1,31 @@
 OptStrata module
 =================
 
-This module contains `MaxwellLayer` and `OptStrata` classes.
+.. currentmodule:: ErwinJr2.OptStrata
+
+This module contains :class:`MaxwellLayer` and :class:`OptStrata` classes.
 The physics model can be seen in :doc:`manual/physics_optics`
 
-`MaxwellLayer` is a transfer matrix solver for 1D optical stabs,
-`OptStrata` is a wrapper of `MaxwellLayer` with material information coded.
+:class:`MaxwellLayer` is a transfer matrix solver for 1D optical stabs,
+:class:`OptStrata` is a wrapper of :class:`MaxwellLayer` with material information coded.
 
-OptStrata classes
+OptStrata class
 -----------------------
-.. currentmodule:: ErwinJr2.OptStrata
-.. autoclass:: ErwinJr2.MaxwellLayer
-    :members:
-.. autoclass:: ErwinJr2.OptStrata
+.. autoclass:: OptStrata
     :members:
 
+MaxwellLayer class
+-----------------------
+.. autoclass:: MaxwellLayer
+    :members:
+
+
+Others
+---------------
+.. automodule:: ErwinJr2.OptStrata
+   :members:
+   :show-inheritance:
+   :exclude-members: OptStrata, MaxwellLayer
 
 Example
 -------

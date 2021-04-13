@@ -69,7 +69,8 @@ library locally.
     - [ ] LO and IFR scattering results
     - [ ] Consistency with and without C lib
     - [ ] Electron population check
-- [X] Documents
+- [ ] Documents
+    - [ ] make type hint consistent
 - [ ] GUI indication of running computation
 - [ ] EJcanvas.config to qt setting
 - [X] plot style to global settings

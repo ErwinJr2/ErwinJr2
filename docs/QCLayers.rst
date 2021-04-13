@@ -1,16 +1,33 @@
 QCLayers module
 ===============
 
-This module contains `QCLayers` class.
-
-QCLayers.QCLayers class
------------------------
 .. currentmodule:: ErwinJr2.QCLayers
-.. autoclass:: ErwinJr2.SchrodingerLayer
-   :members:
-.. autoclass:: ErwinJr2.QCLayers
+
+This module contains :class:`QCLayers` and :class:`SchrodingerLayer` classes.
+The physics model can be seen in :doc:`manual/physics_quantum`
+
+:class:`SchrodingerLayer` is a Schrodinger solver together with transition
+properties evaluation,
+:class:`QCLayers` is a wrapper of :class:`SchrodingerLayer` with material
+information coded.
+
+QCLayers class
+---------------
+.. autoclass:: QCLayers
    :members:
 
+SchrodingerLayer class
+-----------------------
+.. autoclass:: SchrodingerLayer
+   :members:
+
+
+Others
+---------------
+.. automodule:: ErwinJr2.QCLayers
+   :members:
+   :show-inheritance:
+   :exclude-members: QCLayers, SchrodingerLayer
 
 Example
 -------

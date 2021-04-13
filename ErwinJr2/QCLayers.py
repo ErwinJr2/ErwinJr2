@@ -1,6 +1,3 @@
-"""
-This file defines the QCLayer class for simulating QC structure
-"""
 import numpy as np
 from numpy import sqrt, pi, exp
 from numpy import fft
@@ -19,8 +16,8 @@ import copy
 from typing import List, Tuple, Union
 
 EUNIT = 1e-5    # E field unit from kV/cm to V/Angstrom
-BASISPAD = 100  # padding barrier for basis solver, unit Angstrom
-INV_INF = 1e-20  # for infinite small decay rate (ns-1)
+BASISPAD = 100  #: padding barrier for basis solver, unit Angstrom
+INV_INF = 1e-20  #: for infinite small decay rate (ns-1)
 # used for typing as either an array or a float number
 ScalerOrArray = Union[float, np.ndarray]
 
@@ -28,7 +25,7 @@ QCMaterial = {
     "InP":  ["InGaAs", "AlInAs"],
     "GaAs": ["AlGaAs"],
     "GaSb": ["InAsSb", "AlGaSb"]
-}
+}  #: supported substrate/material set
 
 
 class StateRecognizeError(Exception):
@@ -44,87 +41,87 @@ class StateRecognizeError(Exception):
 
 
 class SchrodingerLayer(object):
-    """Class for layer structure for Schrodinger solver using different
-    Eigen solver.
+    """Class for layer structure for Schrodinger solver.
 
     This is used as the base class of :class:`.QCLayers` for separation of
     material property and the solver.
 
-    Parameters
-    ----------
-    xres : float
-        Position resolution, in Armstrong
-    Eres : float
-        Energy resolution, in meV.
-        This number being too large may results in miss of some states while
-        this being too small will make a long computation time.
-        The parameter does not mean the accuracy of the eigen energy. It's
-        required for algorithm reasons because of lack of a universal global
-        root finding
-    statePerRepeat : int
-        Number of states per repeat, used for calculating matrixEigenCount
+Parameters
+----------
+xres :
+    Position resolution, in Armstrong
+Eres :
+    Energy resolution, in meV.
+    This number being too large may results in miss of some states while
+    this being too small will make a long computation time.
+    The parameter does not mean the accuracy of the eigen energy. It's
+    required for algorithm reasons because of lack of a universal global
+    root finding.
+statePerRepeat :
+    Number of states per repeat, used for calculating matrixEigenCount
 
-    layerWidths : list of float, len = No. of layers
-        Width of each layer, in unit angstrom
-    layerVc : list of float, len = No. of layers
-        The conduction band offset of each layer, in unit eV
-    layerMc : list of float, len = No. of layers
-        The conduction band effective mass of each layer, in unit m0
-        the free space electron mass
-    layerARs : list of bool, len = No. of layers
-        Binaries indicating if the layer is active(True) or not(False),
-        only affects basis solver
+layerWidths :
+    Width of each layer, in angstrom. len = No. of layers
+layerVc :
+    The conduction band offset of each layer, in unit eV, len = No. of layers
+layerMc :
+    The conduction band effective mass of each layer, in unit m0,
+    the free space electron mass, len = No. of layers
+layerARs :
+    Binaries indicating if the layer is active(True) or not(False),
+    only affects basis solver, len = No. of layers
 
-    ifrDelta : List of float, len = No. of layers
-        The standard deviation of the interface roughness for the interface at
-        layer n and layer n+1, in unit angstrom.
-        Default zero
-    ifrLambda : List of float, len = No. of layers
-        The correlation length of the interface roughness for the interface at
-        layer n and layer n+1, in unit angstrom.
-        Default zero
-    avghwLO : float
-        The average LO phonon energy in unit eV.
-        This value is used for LO phonon scattering calculation.
-    epsrho : float
-        The effective relative permittivity for LO phonon.
-        1/epsrho = 1/(epsilon for high frequency) - 1/(epsilon for static)
-        The value is used for LO phonon scattering calculation.
+ifrDelta :
+    The standard deviation of the interface roughness for the interface at
+    layer n and layer n+1, in unit angstrom, len = No. of layers.
+    Default zero
+ifrLambda :
+    The correlation length of the interface roughness for the interface at
+    layer n and layer n+1, in unit angstrom, len = No. of layers.
+    Default zero
+avghwLO :
+    The average LO phonon energy in unit eV.
+    This value is used for LO phonon scattering calculation.
+epsrho :
+    The effective relative permittivity for LO phonon.
+    1/epsrho = 1/(epsilon for high frequency) - 1/(epsilon for static)
+    The value is used for LO phonon scattering calculation.
 
-    EField : float
-        External (static) electrical field, in kV/cm = 1e5 V/m
-    repeats : int
-        Number of repeat times for the given structure
+EField :
+    External (static) electrical field, in kV/cm = 1e5 V/m
+repeats :
+    Number of repeat times for the given structure
 
-    crystalType : str
-        Default being "simple", meaning a simple parabolic effective mass is
-        used for the calculation. For setting other than "simple",
-        `populate_material` should be implemented.
+crystalType :
+    Default being "simple", meaning a simple parabolic effective mass is
+    used for the calculation. For setting other than "simple",
+    `populate_material` should be implemented.
 
-    basisAROnly : bool
-        For basis solver if only the Active Region (AR) should be solved.
-    basisARInjector : bool
-        For basis solver if there should be separator between AR->Injector
-    basisInjectorAR : bool
-        For basis solver if there should be separator between Injector->AR
+basisAROnly :
+    For basis solver if only the Active Region (AR) should be solved.
+basisARInjector :
+    For basis solver if there should be separator between AR->Injector
+basisInjectorAR :
+    For basis solver if there should be separator between Injector->AR
 
-    solver : str
-        The solver used for the eigen problem: 'ODE' or 'matrix'.
-        By default 'ODE' if C library exists, 'matrix' is a full back.
-    includeIFR : bool
-        Weather to include IFR scattering for performance estimation.
-    matrixEigenCount : int
-        The number of eigen pairs to calculate in the 'matrix' solver.
-        It would be very expensive to calculate all of them.
+solver :
+    The solver used for the eigen problem: 'ODE' or 'matrix'.
+    By default 'ODE' if C library exists, 'matrix' is a full back.
+includeIFR :
+    Weather to include IFR scattering for performance estimation.
+matrixEigenCount :
+    The number of eigen pairs to calculate in the 'matrix' solver.
+    It would be very expensive to calculate all of them.
 
-    status : str
-        - "unsolved" meaning the structure is not solved yet.
-        - "basis" meaning the eigen problem is solved for basis
-        - "solved" meaning the eigen problem is solved.
-        - "solved-full" meaning the population distribution is known.
+status :
+    - 'unsolved' meaning the structure is not solved yet.
+    - 'basis' meaning the eigen problem is solved for basis
+    - 'solved' meaning the eigen problem is solved.
+    - 'solved-full' meaning the population distribution is known.
     """
     xres: float
     Eres: float
+    statePerRepeat: int
     layerWidths: List[float]
     _layerVc: List[float]
     _layerMc: List[float]
@@ -1034,52 +1031,86 @@ substrate : str
     GaSb      InAs\ :sub:`y`\ Sb\ :sub:`1-y`   Al\ :sub:`x`\ Ga\ :sub:`1-x`\ Sb
     ========= ================================ ================================
 
-materials : list of str, len >= 2
-    Name of alloys
-moleFrac : list of float, len = Mp. of materials
-    mole fraction for each possible layer material,
-xres : float
+materials :
+    Name of alloys for the heterostructure materials, len >= 2
+moleFrac :
+    mole fraction for each possible layer material, len = Mp. of materials
+xres :
     Position resolution, in Armstrong
-Eres : float
+Eres :
     Energy resolution, in meV.
     This number being too large may results in miss of some states while
     this being too small will make a long computation time.
     The parameter does not mean the accuracy of the eigen energy. It's
     required for algorithm reasons because of lack of a universal global
     root finding.
-wl : float
-    The wavelength for the design, in unit um, for book keeping and
-    optimization, but doesn't go into quantum solver
+statePerRepeat :
+    Number of states per repeat, used for calculating matrixEigenCount
+wl :
+    The wavelength for the design, in unit um, gain spectrum and optimization,
+    but doesn't go into quantum solver
 
-layerWidths : list of float, len = No. of layers
-    Width of each layer, in angstrom
-layerMtrls : list of int, len = No. of layers
-    Label of materials, depending on substrate
-layerDopings : list of float, len = No. of layers
-    Doping per volume in unit 1e17 cm-3
-layerARs : list of bool, len = No. of layers
+layerWidths :
+    Width of each layer, in angstrom. len = No. of layers
+layerMtrls :
+    Label of materials, depending on substrate. len = No. of layers
+layerDopings :
+    Doping per volume in unit 1e17 cm-3. len = No. of layers
+layerARs :
     Binaries indicating if the layer is active(True) or not(False),
-    only affects basis solver
+    only affects basis solver. len = No. of layers
 
-customIFR : bool
+customIFR :
     Wether to use a customized IFR parameter rather than a material determined
     parameter.
-mtrlIFRLambda : list of float, len = No. of materials
-    The interface roughness lambda after materials[n]
-mtrlIFRDelta : list of float, len = No. of materials
-    The interface roughness delta after materials[n]
+mtrlIFRLambda :
+    The interface roughness lambda after materials[n], len = No. of materials
+mtrlIFRDelta :
+    The interface roughness delta after materials[n], len = No. of materials
 
-EField : float
+EField :
     External (static) electrical field, in kV/cm = 1e5 V/m
-repeats : int
+repeats :
     Number of repeat times for the given structure
-T : float
+T :
     Temperature of the device, affecting material property
-Solver : str
-    Name of solver
-description : str
-    Description of the data
+
+basisAROnly :
+    For basis solver if only the Active Region (AR) should be solved.
+basisARInjector :
+    For basis solver if there should be separator between AR->Injector
+basisInjectorAR :
+    For basis solver if there should be separator between Injector->AR
+
+solver :
+    The solver used for the eigen problem: 'ODE' or 'matrix'.
+    By default 'ODE' if C library exists, 'matrix' is a full back.
+includeIFR :
+    Weather to include IFR scattering for performance estimation.
+matrixEigenCount :
+    The number of eigen pairs to calculate in the 'matrix' solver.
+    It would be very expensive to calculate all of them.
+
+status :
+    - 'unsolved' meaning the structure is not solved yet.
+    - 'basis' meaning the eigen problem is solved for basis
+    - 'solved' meaning the eigen problem is solved.
+    - 'solved-full' meaning the population distribution is known.
+
+description :
+    Description of the data. For book-keeping purposes.
     """
+    materials: List[str]
+    moleFrac: List[float]
+    wl: float
+    layerMtrls: List[int]
+    layerDopings: List[float]
+    customIFR: bool
+    mtrlIFRLambda: List[float]
+    mtrlIFRDelta: List[float]
+    T: float
+    description: str
+
     def __init__(self, substrate="InP", materials=["InGaAs", "AlInAs"],
                  moleFracs=[0.53, 0.52], xres=0.5, Eres=0.5, statePerRepeat=20,
                  layerWidths=[10.0], layerMtrls=None, layerDopings=None,
@@ -1338,8 +1369,7 @@ description : str
 
         Parameters
         ----------
-        upper : int
-        lower : int
+        upper, lower :
             define the transition from upper to lower
 
         Return
