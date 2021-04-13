@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-
+from context import *  # type: ignore # noqa: F401, F403
 from ErwinJr2 import SaveLoad
 from ErwinJr2.QCPlotter import plotPotential, plotWF
 import matplotlib.pyplot as plt

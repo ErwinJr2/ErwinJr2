@@ -18,6 +18,7 @@ config = {
     # default value of tol for QCLayers.periodRecognize as
     # wf_almost_zero / modescale = tol
     "wf_almost_zero": 1.5e-4,
+    "default_lw": 1.0,
     "wf_colors": ((0.584, 0.450, 0.701), (0.431, 0.486, 0.745),
                   (0.576, 0.694, 0.517), (0.682, 0.780, 0.321),
                   (0.501, 0.501, 0.509), (0.854, 0.741, 0.247),
@@ -50,12 +51,12 @@ def plotPotential(qcl: QCLayers, axes: Axes = None,
     if axes is None:
         axes = gca()
     ys = [qcl.xVc]
-    axes.plot(qcl.xPoints, qcl.xVc, 'k', linewidth=1)
+    axes.plot(qcl.xPoints, qcl.xVc, 'k', linewidth=config['default_lw'])
     # highlight selected layer & make AR layers bold
     xNonARs = np.bitwise_and.reduce(
         [qcl.xLayerMask(n) for n, ar in enumerate(qcl.layerARs) if ar])
     xARVc = np.ma.masked_where(xNonARs, qcl.xVc)
-    axes.plot(qcl.xPoints, xARVc, 'k', linewidth=1.5)
+    axes.plot(qcl.xPoints, xARVc, 'k', linewidth=config['default_lw']+0.5)
     # plot Conduction Band L-Valley/X-Valley, Light Hole Valence Band and
     # Spin-Orbit coupling Valence Band
     for flag, xv, conf in (
@@ -94,7 +95,9 @@ def scaleWF(qcl: QCLayers, plotType: str = 'mode'):
 
 def plotWF(qcl: QCLayers, plotType: str = 'mode',
            fillPlot: Union[bool, float] = False,
-           pickedStates: Iterable = set(), axes: Axes = None):
+           pickedStates: Iterable = set(),
+           showPeriod: bool = True,
+           axes: Axes = None):
     r"""Plot the wavefunctions of qcl.
     The wavefunctions are scaled by :func:`scaleWF`.
 
@@ -111,6 +114,8 @@ def plotWF(qcl: QCLayers, plotType: str = 'mode',
         the transparency of the fill color.
     pickedStates :
         A set of state indices that should be plotted in thick black color.
+    showPeriod :
+        Flag to whether emphasis the recognized period of wavefunctions.
     axes :
         The axes to plot the figure on.
 
@@ -126,8 +131,11 @@ def plotWF(qcl: QCLayers, plotType: str = 'mode',
     # filter almost zero part
     starts = np.argmax(abs(wfs) > config["wf_almost_zero"], axis=1)
     ends = np.argmax(abs(wfs[:, ::-1]) > config["wf_almost_zero"], axis=1)
-    qcl.period_recognize()
-    if qcl.status == 'solved-full':
+    showPop = False
+    if showPeriod:
+        qcl.period_recognize()
+        showPop = qcl.status == 'solved-full'
+    if showPop:
         qcl.period_map_build()
         vmin = 0
         vmax = np.ceil(np.max(qcl.population)*10)/10
@@ -137,9 +145,9 @@ def plotWF(qcl: QCLayers, plotType: str = 'mode',
         ls = '-'
         if n in pickedStates:
             color = 'k'
-            lw = 2
+            lw = config['default_lw']*2
         else:
-            if qcl.status == 'solved-full':
+            if showPop:
                 if qcl.periodMap[n] is not None:
                     color = popMap.to_rgba(
                         qcl.state_population(n))
@@ -148,22 +156,22 @@ def plotWF(qcl: QCLayers, plotType: str = 'mode',
             else:
                 color = colors[n % len(colors)]
             if qcl.status == 'basis':
-                lw = 1.5
+                lw = config['default_lw']
             else:
-                if n in qcl.periodIdx:
+                if showPeriod and n in qcl.periodIdx:
                     # lw = 1 if n in qcl.unBound else 1.5
-                    lw = 1.5
+                    lw = config['default_lw']
                     if n in qcl.unBound:
                         ls = (0, (0.5, 0.5))
                 else:
-                    lw = 0.5
+                    lw = config['default_lw']/2
         x = qcl.xPoints[starts[n]:-ends[n]]
         y = wfs[n, starts[n]:-ends[n]] + qcl.eigenEs[n]
         axes.plot(x, y, lw=lw, ls=ls, color=color)
         if fillPlot:
             axes.fill_between(x, y, qcl.eigenEs[n],
                               facecolor=color, alpha=fillPlot)
-    if qcl.status == 'solved-full':
+    if showPop:
         colorbar_axes = axes.inset_axes([0.02, 0.01, 0.5, 0.02])
         axes.figure.colorbar(
             popMap, cax=colorbar_axes, orientation='horizontal',
