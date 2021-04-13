@@ -1802,5 +1802,3 @@ class WLDialog(QDialog):
     def exec(self):
         res = super().exec()
         return self.wlMinBox.value(), self.wlMaxBox.value(), res
-
-# vim: ts=4 sw=4 sts=4 expandtab

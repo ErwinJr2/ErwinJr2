@@ -735,5 +735,3 @@ class OptimizeInfoDialog(QDialog):
         checked = [n for n, box in enumerate(self.checkBoxes)
                    if box.isChecked()]
         return checked, self.lengthBox.value(), res
-
-# vim: ts=4 sw=4 sts=4 expandtab

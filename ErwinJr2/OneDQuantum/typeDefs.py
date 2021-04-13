@@ -8,5 +8,3 @@ doubleMatrix = np.ctypeslib.ndpointer(dtype=np.float64,
                                       ndim=2, flags="C_CONTIGUOUS")
 intArray = np.ctypeslib.ndpointer(
     dtype=np.int32, ndim=1, flags="C_CONTIGUOUS")
-
-# vim: ts=4 sw=4 sts=4 expandtab

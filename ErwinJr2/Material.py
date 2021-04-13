@@ -534,5 +534,3 @@ if __name__ == "__main__":
     for material in sys.argv[1:]:
         main(material)
         print("")
-
-# vim: ts=4 sw=4 sts=4 expandtab

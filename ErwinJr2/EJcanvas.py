@@ -293,5 +293,3 @@ class EJplotControl(NavigationToolbar2, QObject):
                 QMessageBox.critical(
                     self.parent(), "Error saving band diagram",
                     e, QMessageBox.Ok, QMessageBox.NoButton)
-
-# vim: ts=4 sw=4 sts=4 expandtab

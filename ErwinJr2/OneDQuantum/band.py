@@ -92,5 +92,3 @@ def init(clib: CDLL) -> Union[
         return clib.ZBband_free(zbband)
 
     return cBandUpdateM, cZBband_new, cZBband_free
-
-# vim: ts=4 sw=4 sts=4 expandtab

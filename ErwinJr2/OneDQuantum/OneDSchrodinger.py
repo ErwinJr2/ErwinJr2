@@ -164,5 +164,3 @@ if __name__ == "__main__":
     print(_clib.invAlpha())
     if isMP():
         print("Woo! OpenMP is loaded!")
-
-# vim: ts=4 sw=4 sts=4 expandtab

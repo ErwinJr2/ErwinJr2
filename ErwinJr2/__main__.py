@@ -19,5 +19,3 @@ def __main__():
 
 if __name__ == "__main__":
     __main__()
-
-# vim: ts=4 sw=4 sts=4 expandtab

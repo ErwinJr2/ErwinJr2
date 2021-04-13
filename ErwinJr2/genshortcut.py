@@ -99,5 +99,3 @@ def create_shortcut(shortcut_path=None):
 
 if __name__ == "__main__":
     create_shortcut()
-
-# vim: ts=4 sw=4 sts=4 expandtab

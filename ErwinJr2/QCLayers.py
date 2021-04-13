@@ -1559,6 +1559,3 @@ def optimize_global(qcl: QCLayers, iter: int = 50):
         if not changed:
             break
     print('Finished')
-
-
-# vim: ts=4 sw=4 sts=4 expandtab

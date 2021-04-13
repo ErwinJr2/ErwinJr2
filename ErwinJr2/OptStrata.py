@@ -628,5 +628,3 @@ def optimizeOptStrata(stratum: OptStrata, alphaM,
             break
         penalty *= 2
     print('Finished with penalty: ', penalty)
-
-# vim: ts=4 sw=4 sts=4 expandtab

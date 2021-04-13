@@ -238,5 +238,3 @@ def EJSaveJSON(fhandle: typing.TextIO, qclayers: QCLayers,
                                            s.dopings, list(s.Ls), s.mobilities,
                                            s_cstmtrl)]
     fhandle.write(JSONTemplate % tuple(parameters))
-
-# vim: ts=4 sw=4 sts=4 expandtab
