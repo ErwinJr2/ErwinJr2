@@ -81,7 +81,7 @@ def scaleWF(qcl: QCLayers, plotType: str = 'mode'):
 
     Returns
     -------
-    The scaled
+    The scaled wavefunction.
 
     """
     if plotType == "mode":
