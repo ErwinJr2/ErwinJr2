@@ -32,9 +32,9 @@ copyright = '2021, Gmachl Group, Princeton'
 author = 'Ming Lyu'
 
 # The short X.Y version
-version = '2.0'
+from ErwinJr2.versionAndName import Version as version
 # The full version, including alpha/beta/rc tags
-release = '2.0 alpha'
+release = version + ' beta'
 
 
 # -- General configuration ---------------------------------------------------
