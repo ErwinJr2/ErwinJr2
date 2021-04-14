@@ -63,7 +63,7 @@ def plotPotential(qcl: QCLayers, axes: Axes = None,
                 (plotVL, qcl.xVL, 'g--'), (plotVX, qcl.xVX, 'm-.'),
                 (plotLH, qcl.xVLH, 'k--'), (plotSO, qcl.xVSO, 'r--')):
         if flag:
-            axes.plot(qcl.xPoints, xv, conf, linewidth=1)
+            axes.plot(qcl.xPoints, xv, conf, linewidth=config['default_lw'])
         ys.append(xv)
     return ys
 
