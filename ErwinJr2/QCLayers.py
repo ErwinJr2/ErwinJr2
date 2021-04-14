@@ -1033,7 +1033,7 @@ substrate : str
 
 materials :
     Name of alloys for the heterostructure materials, len >= 2
-moleFrac :
+moleFracs :
     mole fraction for each possible layer material, len = Mp. of materials
 xres :
     Position resolution, in Armstrong
@@ -1101,7 +1101,7 @@ description :
     Description of the data. For book-keeping purposes.
     """
     materials: List[str]
-    moleFrac: List[float]
+    moleFracs: List[float]
     wl: float
     layerMtrls: List[int]
     layerDopings: List[float]
