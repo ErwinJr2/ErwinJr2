@@ -987,6 +987,7 @@ class QuantumTab(QWidget):
         self.layerTable.setCurrentCell(row, column)
         self.qclayers.populate_x()
         self.update_mtrl_info()
+        self.update_quantumCanvas()
         self.dirty.emit()
 
     @pyqtSlot()

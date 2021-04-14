@@ -1223,11 +1223,16 @@ description :
         self.mtrlAlloys[n] = Material.Alloy(mtrl, moleFrac, self.temperature)
         self.mtrlAlloys[n].set_strain(self.a_parallel)
 
-    def add_mtrl(self, mtrl: str = None, moleFrac: float = None):
+    def add_mtrl(self, mtrl: str = None, moleFrac: float = None,
+                 IFRLambda: float = None, IFRDelta: float = None):
         """Add a new material possibility"""
         self.materials.append(mtrl if mtrl else
                               QCMaterial[self.substrate][0])
         self.moleFracs.append(moleFrac if moleFrac else 0.0)
+        self.mtrlIFRLambda.append(IFRLambda if IFRLambda else
+                                  self.mtrlIFRLambda[-1])
+        self.mtrlIFRDelta.append(IFRDelta if IFRDelta else
+                                 self.mtrlIFRDelta[-1])
         self.mtrlAlloys.append(Material.Alloy(
             self.materials[-1], self.moleFracs[-1], self.temperature))
         self.mtrlAlloys[-1].set_strain(self.a_parallel)
