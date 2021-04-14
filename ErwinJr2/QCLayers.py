@@ -1154,7 +1154,7 @@ description :
         self.solver = solver
         if onedq is None:
             self.solver = 'matrix'
-        self.update_strain()
+        self.update_mtrls()
 
     def __copy__(self):
         return QCLayers(
@@ -1188,15 +1188,25 @@ description :
             ifrLambda = [0.0] * len(self.layerMtrls)
         return ifrDelta, ifrLambda
 
-    def update_strain(self):
-        """Update strain for the materials. This should be called every time
-        material parameters are updated."""
+    def update_mtrls(self):
+        """Update properties for the materials.
+        This should be called every time the material parameters are changed
+        directly via `materials`, `moleFracs` or `temperature`.
+
+        Yield
+        -----
+        a_parallel : float
+            The parallel crystal constant of the structure, determined by the
+            substrate material.
+
+        mtrlAlloys : List[Material.Alloy]
+            list of the Alloy objects for processing material properties.
+        """
         self.a_parallel = self.subM.param['alc']
         self.mtrlAlloys = [Material.Alloy(self.materials[idx],
                                           self.moleFracs[idx],
                                           self.temperature)
                            for idx in range(len(self.materials))]
-
         for al in self.mtrlAlloys:
             al.set_strain(self.a_parallel)
 
@@ -1223,9 +1233,10 @@ description :
         self.mtrlAlloys[-1].set_strain(self.a_parallel)
 
     def del_mtrl(self, n: int):
-        """Delete materials labeled n. All layers of this material will
-        become previous materials[n-1 if n >0 else 1].  There should be
-        at least two materials otherwise there will be error"""
+        """Delete materials labeled n.
+        All layers of this material will become previous
+        `materials[n-1 if n >0 else 1]`.  There should be at least two
+        materials otherwise there will be error."""
         if len(self.materials) <= 2:
             raise ValueError("There should be at least 2 materials")
         self.materials.pop(n)
@@ -1267,14 +1278,14 @@ description :
             self.crystalType = Material.MParam[subs]["Crystal"]
             matlN = len(self.materials)
             self.materials = (QCMaterial[subs]*matlN)[0:matlN]
-            self.update_strain()
+            self.update_mtrls()
         else:
             raise TypeError("Substrate %s not supported" % subs)
 
     def set_temperature(self, T: float):
         self.temperature = T
         self.subM.set_temperature(T)
-        self.update_strain()
+        self.update_mtrls()
 
     @property
     def mtrlOffset(self) -> float:
