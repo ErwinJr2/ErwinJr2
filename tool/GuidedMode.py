@@ -13,9 +13,7 @@ def firstGaAs():
         wl,
         ['Air', 'GaAs', 'AlGaAs', 'GaAs', 'Active', 'GaAs', 'AlGaAs', 'GaAs'],
         [0, 0, 0.9, 0, 0, 0, 0.9, 0], [0, 0, 0, 0, 0, 0, 0, 0],
-        [0.7, 1.0, 1.55, 1.4, 1.4, 0.6])
-    stratum.cstmIndx['Active'] = 3.21
-    stratum.updateIndices()
+        [0.7, 1.0, 1.55, 1.4, 1.4, 0.6], cstmIndx={'Active': 3.21})
     # print("No doping", stratum.index0, stratum.indices, stratum.indexS)
     stratum.dopings = [0, 90, 6, 0.4, 0, 0.4, 6, 30]
     stratum.updateIndices()
@@ -39,10 +37,8 @@ def firstPlasmon():
     hs = np.array([0.1, 25*(31+24)/1000, 0.7])
     stratum = OptStrata(
         wl, ['Air', 'Pt', 'Active', 'InGaAs', 'InP'],
-        [0, 0, 0, 0.53, 0], [0, 0, 0, 0.6, 2], hs)
-    stratum.cstmIndx['Pt'] = 3.85+49.2j
-    stratum.cstmIndx['Active'] = 3.38
-    stratum.updateIndices()
+        [0, 0, 0, 0.53, 0], [0, 0, 0, 0.6, 2], hs,
+        cstmIndx={'Pt': 3.85+49.2j, 'Active': 3.38})
     # print(stratum.indices[1])
     stratum.indices[2] += 0.1
     # stratum.indexS += 0.2

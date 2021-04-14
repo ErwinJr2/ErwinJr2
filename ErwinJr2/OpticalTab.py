@@ -592,7 +592,7 @@ class OpticalTab(QWidget):
         also as SLOT to self.dirty SGINAL"""
         self.beta = None
         self.optimizeButton.setEnabled(False)
-        self.stratum.updateIndices()
+        # self.stratum.updateIndices()
         self.strataTable_refresh()
         self.xs = np.linspace(-1, sum(self.stratum.Ls[1:]), 5000)
         self.update_canvas()
@@ -658,7 +658,7 @@ class OpticalTab(QWidget):
         self.rIdxAxes.set_xlabel('Position (μm)')
         self.rIdxAxes.set_ylabel('Mode Intensity (a.u.) or Refractive Index')
         if self.redActive:
-            for ar in self.stratum.populateIndices(self.xs):
+            for ar in self.stratum.populateMtrl(self.xs):
                 self.rIdxAxes.plot(self.xs[ar], nx.real[ar], 'r', lw=2)
         if np.max(nx.real) > 5:
             self.rIdxAxes.set_ylim(top=5)
@@ -681,6 +681,11 @@ class OpticalTab(QWidget):
             self.modeAxes.plot(self.xs, np.abs(self.Ey)**2, color='C0')
         # self.optCanvas.figure.tight_layout()
         self.optCanvas.draw()
+
+    @pyqtSlot()
+    def view_redActive(self):
+        self.redActive = not self.redActive
+        self.update_canvas()
 
     @pyqtSlot()
     def optimizeStrata(self):

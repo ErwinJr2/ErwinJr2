@@ -425,6 +425,7 @@ class OptStrata(MaxwellLayer):
         self.cstmIndx = cstmIndx
         self.cstmPrd = cstmPrd
         self.cstmGain = cstmGain
+        self.updateIndices()
 
     def __str__(self):
         return "\n".join(("wavelength: %f" % self.wl,

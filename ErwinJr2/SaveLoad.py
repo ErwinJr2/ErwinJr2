@@ -34,6 +34,31 @@ def qclLoad(fhandle: typing.TextIO) -> QCLayers:
     return parseQcl(ldict)
 
 
+def optLoad(fhandle: typing.TextIO) -> OptStrata:
+    """
+    Load OptStrata from a json file
+
+    Parameters
+    ----------
+    fhandle : file handle
+        file handle of a json file to read in
+
+    Returns
+    -------
+    strata : OptStrata.OptStrata
+        The OptStrata class described in the json file
+
+    Examples
+    --------
+    >>> import SaveLoad
+    >>> with open("path/to/file.json") as f:
+    >>>     strata = SaveLoad.optLoad(f)
+
+    """
+    ldict = json.load(fhandle)
+    return parseStrata(ldict)
+
+
 def loadBoth(fhandle: typing.TextIO) -> typing.Union[QCLayers, OptStrata]:
     """
     Load QCLayers and OptStrata from a json file

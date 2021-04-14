@@ -112,6 +112,7 @@ class MainWindow(QMainWindow):
         self.qtab.toOpticsButton.clicked.connect(self.q2o)
         self.otab.fieldBox.setValue(self.qtab.qclayers.EField)
         self.create_menu()
+        self.mainTabWidget.currentChanged.connect(self.create_menu)
 
     def q2o(self):
         self.otab.setupActive(self.qtab.wavelength, self.qtab.qclayers.EField,
@@ -153,11 +154,10 @@ class MainWindow(QMainWindow):
         if ischecked:
             action.setChecked(True)
         if settingSync:
-            assert(checkable)
-            assert(not ischecked)
+            assert checkable
             action.triggered.connect(lambda: self.action_setting(text))
             # initialize
-            if self.qsettings.value(text, False, type=bool):
+            if self.qsettings.value(text, ischecked, type=bool) != ischecked:
                 action.setChecked(not ischecked)
                 if slot:
                     slot()
@@ -167,7 +167,7 @@ class MainWindow(QMainWindow):
         self.qsettings.setValue(
             name, not self.qsettings.value(name, False, type=bool))
 
-    def create_menu(self):
+    def create_menu(self, tabIndex=0):
         self.menuBar().clear()
         # file menu
         self.file_menu = self.menuBar().addMenu("&File")
@@ -200,81 +200,89 @@ class MainWindow(QMainWindow):
         self.file_menu.aboutToShow.connect(self.updateFileMenu)
 
         # edit menu
-        self.edit_menu = self.menuBar().addMenu("&Edit")
-        temperatureAction = self.create_action(
-            "&Temperature", slot=self.set_temperature, tip="Set temperature")
-        rotateLayerAction = self.create_action(
-            "&Rotate Layer Table", slot=self.qtab.rotate_layer,
-            tip="Move zeroth layer to first layer")
-        rotateLayerAction.setShortcut("Ctrl+T")
-        invertLayerAction = self.create_action(
-            "&Invert Layer Table", slot=self.qtab.invert_layer,
-            tip="Invert the layer order")
-        solveARonly = self.create_action(
-            "&Solve Active Only", checkable=True,
-            ischecked=self.qtab.qclayers.basisAROnly,
-            slot=self.qtab.ARonly)
-        copyStructureAction = self.create_action(
-            "&Copy Structure", slot=self.qtab.copy_structure,
-            tip="Copy Layer Structure to Clipboard")
-        self.add_actions(self.edit_menu, (temperatureAction,
-                                          rotateLayerAction,
-                                          invertLayerAction, None,
-                                          solveARonly, None,
-                                          copyStructureAction))
+        if tabIndex == 0:
+            self.edit_menu = self.menuBar().addMenu("&Edit")
+            temperatureAction = self.create_action(
+                "&Temperature", slot=self.set_temperature,
+                tip="Set temperature")
+            rotateLayerAction = self.create_action(
+                "&Rotate Layer Table", slot=self.qtab.rotate_layer,
+                tip="Move zeroth layer to first layer")
+            rotateLayerAction.setShortcut("Ctrl+T")
+            invertLayerAction = self.create_action(
+                "&Invert Layer Table", slot=self.qtab.invert_layer,
+                tip="Invert the layer order")
+            solveARonly = self.create_action(
+                "&Solve Active Only", checkable=True,
+                ischecked=self.qtab.qclayers.basisAROnly,
+                slot=self.qtab.ARonly)
+            copyStructureAction = self.create_action(
+                "&Copy Structure", slot=self.qtab.copy_structure,
+                tip="Copy Layer Structure to Clipboard")
+            self.add_actions(self.edit_menu, (temperatureAction,
+                                              rotateLayerAction,
+                                              invertLayerAction, None,
+                                              solveARonly, None,
+                                              copyStructureAction))
 
         # view menu
         self.view_menu = self.menuBar().addMenu("&View")
-        VXBandAction = self.create_action(
-            "X Valley Conduction Band", checkable=True,
-            ischecked=self.qtab.plotVX,
-            slot=self.qtab.view_VXBand)
-        VLBandAction = self.create_action(
-            "L Valley Conduction Band",
-            checkable=True, ischecked=self.qtab.plotVL,
-            slot=self.qtab.view_VLBand)
-        LHBandAction = self.create_action(
-            "Light Hole Valence Band",
-            checkable=True, ischecked=self.qtab.plotLH,
-            slot=self.qtab.view_LHBand)
-        SOBandAction = self.create_action(
-            "Split Off Valence Band",
-            checkable=True, ischecked=self.qtab.plotSO,
-            slot=self.qtab.view_SOBand)
-        plotwf = self.create_action(
-            "Plot Wave function",
-            checkable=True, ischecked=self.qtab.plotType == 'wf',
-            slot=self.qtab.set_plotwf, settingSync=True)
-        plotFill = self.create_action(
-            "Fill wave function curve",
-            checkable=True, ischecked=self.qtab.fillPlot,
-            slot=self.qtab.set_fill, settingSync=True)
-        self.add_actions(self.view_menu, (VXBandAction,
-                                          VLBandAction,
-                                          LHBandAction,
-                                          SOBandAction,
-                                          None,
-                                          plotwf, plotFill))
+        if tabIndex == 0:
+            VXBandAction = self.create_action(
+                "X Valley Conduction Band", checkable=True,
+                ischecked=self.qtab.plotVX,
+                slot=self.qtab.view_VXBand)
+            VLBandAction = self.create_action(
+                "L Valley Conduction Band",
+                checkable=True, ischecked=self.qtab.plotVL,
+                slot=self.qtab.view_VLBand)
+            LHBandAction = self.create_action(
+                "Light Hole Valence Band",
+                checkable=True, ischecked=self.qtab.plotLH,
+                slot=self.qtab.view_LHBand)
+            SOBandAction = self.create_action(
+                "Split Off Valence Band",
+                checkable=True, ischecked=self.qtab.plotSO,
+                slot=self.qtab.view_SOBand)
+            plotwf = self.create_action(
+                "Plot Wave function",
+                checkable=True, ischecked=self.qtab.plotType == 'wf',
+                slot=self.qtab.set_plotwf, settingSync=True)
+            plotFill = self.create_action(
+                "Fill wave function curve",
+                checkable=True, ischecked=bool(self.qtab.fillPlot),
+                slot=self.qtab.set_fill, settingSync=True)
+            self.add_actions(self.view_menu, (VXBandAction, VLBandAction,
+                                              LHBandAction, SOBandAction,
+                                              None, plotwf, plotFill,
+                                              ))
+        else:
+            opticalActiceAction = self.create_action(
+                "Optical: Show Active Core",
+                checkable=True, ischecked=self.otab.redActive,
+                slot=self.otab.view_redActive, settingSync=True)
+            self.add_actions(self.view_menu, (opticalActiceAction, ))
 
-        # model menu
-        self.model_menu = self.menuBar().addMenu("&Model")
-        self.solverActions = {}
-        for solver in ("ODE", "matrix"):
-            self.solverActions[solver] = self.create_action(
-                solver, checkable=True,
-                ischecked=self.qtab.qclayers.solver == solver,
-                slot=partial(self.choose_solver, solver)
-            )
-        if onedq is None:
-            # C library does not exist
-            self.solverActions['ODE'].setEnabled(False)
-        solver_menu = self.model_menu.addMenu("Eigen Solver")
-        solver_menu.addActions(self.solverActions.values())
-        ifrAction = self.create_action(
-            "IFR scattering", checkable=True,
-            ischecked=self.qtab.qclayers.includeIFR,
-            slot=self.qtab.triggerIFR)
-        self.add_actions(self.model_menu, (None, ifrAction))
+        if tabIndex == 0:
+            # model menu
+            self.model_menu = self.menuBar().addMenu("&Model")
+            self.solverActions = {}
+            for solver in ("ODE", "matrix"):
+                self.solverActions[solver] = self.create_action(
+                    solver, checkable=True,
+                    ischecked=self.qtab.qclayers.solver == solver,
+                    slot=partial(self.choose_solver, solver)
+                )
+            if onedq is None:
+                # C library does not exist
+                self.solverActions['ODE'].setEnabled(False)
+            solver_menu = self.model_menu.addMenu("Eigen Solver")
+            solver_menu.addActions(self.solverActions.values())
+            ifrAction = self.create_action(
+                "IFR scattering", checkable=True,
+                ischecked=self.qtab.qclayers.includeIFR,
+                slot=self.qtab.triggerIFR)
+            self.add_actions(self.model_menu, (None, ifrAction))
 
         # help menu
         # MacOS automatically remove the about item...
