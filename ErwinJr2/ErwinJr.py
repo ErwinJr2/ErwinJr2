@@ -557,7 +557,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         if os.path.exists(path):
             QDesktopServices.openUrl(QUrl("file://" + os.path.abspath(path)))
         else:
-            QDesktopServices.openUrl(QUrl("https://erwinjr2.readthedocs.io/"))
+            QDesktopServices.openUrl(
+                QUrl("https://erwinjr2.readthedocs.io/en/stable/"))
 
 
 def main(fileName=None):

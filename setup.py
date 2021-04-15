@@ -82,7 +82,7 @@ See https://erwinjr2.readthedocs.io/ for details.
 
 setup(
     name='ErwinJr2',
-    version='2.2.0',
+    version='2.2.1',
     author='Ming Lyu',
     author_email='minglyu@princeton.edu',
     license="GPL-3.0",
