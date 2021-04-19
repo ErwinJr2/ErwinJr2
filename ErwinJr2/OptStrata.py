@@ -409,19 +409,23 @@ class OptStrata(MaxwellLayer):
         the gain coefficient. The variable is only for book keeping and is
         not used for any calculation.
     """
-    def __init__(self, wl=3.0, materials=['Air', 'InP'], moleFracs=[0.0, 0.0],
-                 dopings=[0.0, 0.0], Ls=[1.0, 1.0], mobilities=None,
+    def __init__(self, wl=3.0, materials=['Air', 'InP'], moleFracs=None,
+                 dopings=None, Ls=[1.0, 1.0], mobilities=None,
                  cstmIndx=dict(), cstmPrd=defaultdict(float),
                  cstmGain=defaultdict(float)):
         super(OptStrata, self).__init__(wl)
+        N = len(materials)
         self.materials = list(AlloyNick[m] if m in AlloyNick else m
                               for m in materials)
-        self.moleFracs = list(moleFracs)
-        self.dopings = list(dopings)
+        self.moleFracs = list(moleFracs) if moleFracs else [0.0] * N
+        self.dopings = list(dopings) if dopings else [0.0] * N
         self.Ls = (np.array(Ls) if len(Ls) == len(materials)
                    else np.array([1.0] + list(Ls) + [2.0]))
         self.mobilities = ([None]*len(materials)
                            if mobilities is None else mobilities)
+        assert len(self.moleFracs) == N
+        assert len(self.dopings) == N
+        assert len(self.Ls) == N
         self.cstmIndx = cstmIndx
         self.cstmPrd = cstmPrd
         self.cstmGain = cstmGain
