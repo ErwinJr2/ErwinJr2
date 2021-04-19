@@ -1697,6 +1697,8 @@ class QuantumTab(QWidget):
             axes.axhline(0, ls='--', lw=0.5)
             axes.set_xlabel('Wavelength (μm)')
             axes.set_ylabel('Gain (cm$^{-1}$)')
+            if axes.get_ylim()[0] < -150:
+                axes.set_ylim(bottom=-150)
             wlFigure.show()
 
 
