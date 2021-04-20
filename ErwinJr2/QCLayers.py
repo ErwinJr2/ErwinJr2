@@ -872,6 +872,7 @@ status :
         unBound : set of int
             includes index of states that are not well bounded.
         """
+        # TODO: try look from the low energy side
         periodIdx = self.periodL / self.xres
         psisq = np.abs(self.psis)**2
         self.starts = np.argmax(psisq > tol, axis=1)

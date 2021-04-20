@@ -200,7 +200,3 @@ but if you want to build your local version, you need doxygen and:
 
 .. |MinGW| replace:: ``MinGW``
 .. _MinGW: https://www.mingw.org/
-
-
-.. todo::
-   pip install and developer mode install
