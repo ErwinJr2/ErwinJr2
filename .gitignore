@@ -20,6 +20,7 @@ __pycache__/
 ErwinJr2.egg-info/
 build/
 dist/
+Makefile
 
 ## compiled files from docs
 *.aux
