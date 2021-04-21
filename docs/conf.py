@@ -32,7 +32,7 @@ copyright = '2021, Gmachl Group, Princeton'
 author = 'Ming Lyu'
 
 # The short X.Y version
-from ErwinJr2.versionAndName import Version as version
+from ErwinJr2.versionAndName import Version as version  # type: ignore # noqa: E402, E501
 # The full version, including alpha/beta/rc tags
 release = version + ' beta'
 
@@ -66,6 +66,7 @@ breathe_domain_by_extension = {"h": "c", "c": "c"}
 autosummary_generate = True
 napoleon_use_rtype = False
 bibtex_bibfiles = ['manual/quantum_refs.bib', 'manual/optic_refs.bib']
+html_favicon = '../ErwinJr2/images/EJico.ico'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

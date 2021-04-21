@@ -20,7 +20,7 @@ of Hermiticity for spatial dependent mass.
 
 We solve the 1D Schrodinger's equation numerically. Our
 method combines the Newton's method that searches for eigenvalues :math:`E`
-and the Numerov's method that solves for the corresponding eigenfunction
+and the RK4 method that solves for the corresponding eigenfunction
 :math:`\psi(x)` given any specific :math:`E`.
 
 Shooting Algorithm for Eigen-problem
@@ -28,7 +28,7 @@ Shooting Algorithm for Eigen-problem
 
 #. Initialize with a range for eigen energies.
 #. For each possible eigen energy, solve for the wavefunction using the
-   Numerov's method for second order differential equations (if the mass is constant,
+   RK4 method for second order differential equations (if the mass is constant,
    otherwise Euler's method), and check whether the solution satisfies boundary condition.
    If so, the energy is an eigen energy.
 #. Use secant's method to find eigen energy. Newton's method is not chosen
@@ -39,9 +39,6 @@ Shooting Algorithm for Eigen-problem
    almost degenerate. When running the software and seeing missing of state, it is
    recommended to change the global field slightly and/or rotate the layer design and
    try again.
-
-An example of solving simple Schrodinger equation can be found
-:ref:`here<example_schrodinger>`.
 
 Effective Mass in Band
 ----------------------
