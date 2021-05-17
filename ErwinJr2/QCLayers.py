@@ -1557,12 +1557,24 @@ def optimize_layer(qcl: QCLayers, n: int, upper: int, lower: int,
     return FoMnow
 
 
-def auto_gain(qcl: QCLayers):
+def auto_gain(qcl: QCLayers, wls: ScalerOrArray = None):
+    """Perform automatic gain calculation from newly loaded a qcl object.
+
+    This is equivalent to
+
+    .. code-block:: python
+
+        qcl.populate_x()
+        qcl.solve_whole()
+        qcl.period_recognize()
+        qcl.full_population()
+        result = qcl.full_gain_spectrum(wls)
+    """
     qcl.populate_x()
     qcl.solve_whole()
     qcl.period_recognize()
     qcl.full_population()
-    return qcl.full_gain_spectrum()
+    return qcl.full_gain_spectrum(wls)
 
 
 def optimize_global(qcl: QCLayers, iter: int = 50):

@@ -219,8 +219,8 @@ IFRSettings = """{
         }"""
 
 
-def EJSaveJSON(fhandle: typing.TextIO, qclayers: QCLayers,
-               optstratum: OptStrata):
+def EJSaveJSON(fhandle: typing.TextIO, qclayers: QCLayers = None,
+               optstratum: OptStrata = None):
     """Save QCLayers and OptStratum as a json file
 
     Parameters
@@ -232,6 +232,12 @@ def EJSaveJSON(fhandle: typing.TextIO, qclayers: QCLayers,
     optstratum : OptStrata.OptStratum
         The OptStratum class to be saved
     """
+    if optstratum is None and qclayers is None:
+        raise TypeError("Nothing to save")
+    if optstratum is None:
+        optstratum = OptStrata()
+    if qclayers is None:
+        qclayers = QCLayers()
     if not (isinstance(qclayers, QCLayers)
             and isinstance(optstratum, OptStrata)):
         raise TypeError("qclSave: Nothing to save.."

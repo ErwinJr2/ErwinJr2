@@ -2,6 +2,7 @@
 # -*- coding:utf-8 -*-
 from context import *  # type: ignore # noqa: F401, F403
 from ErwinJr2 import SaveLoad
+from ErwinJr2.OptStrata import OptStrata
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -10,9 +11,23 @@ matplotlib.rcParams.update({'font.size': 12})
 with open("../ErwinJr2/example/PQLiu.json", 'r') as f:
     strata = SaveLoad.optLoad(f)
 
+strata = OptStrata(
+    wl=8.0,
+    materials=[
+        "Air", "InP", "InP", "InP", "InP", "InxGa1-xAs", "Active Core",
+        "InxGa1-xAs", "InP", "InP"],
+    moleFracs=[0.0, 0.0, 0.0, 0.0, 0.0, 0.53, 0.53, 0.53, 0.53, 0.0],
+    dopings=[0.0, 1000.0, 80.0, 2.0, 1.0, 0.5, 0, 0.5, 0, 0.0],
+    Ls=[1.0, 0.01, 0.35, 0.5, 2.5, 0.5, 2.0895, 0.5, 5.0, 1.0],
+    # the properties for the active core
+    cstmIndx={"Active Core": 3.28+0j},
+    cstmPrd={"Active Core": [597.0, 35]},
+    cstmGain={"Active Core": 39.6}
+)
+
+beta = strata.boundModeTM()
 xs = np.linspace(-1, sum(strata.Ls[1:]), 5000)
 nx = strata.populateIndices(xs)
-beta = strata.boundModeTM()
 Ey, _, _ = strata.populateMode(beta, xs)
 print("beta = ", beta)
 print("confinement: ", strata.confinementy(beta, xs, Ey))

@@ -28,15 +28,16 @@ The interface includes 4 columns:
 +---------------------+-----------------------------------------------------------+
 | Position resolution | Finite-element grid size                                  |
 +---------------------+-----------------------------------------------------------+
-| Energy resolution   | | Scan size for eigen solve root finder.                  |
+| Energy resolution   | | Scan size for the eigen-solver root finder.             |
 |                     | | It only shows when the ODE solver is selected.          |
-|                     | | This should be smaller than smallest energy difference. |
+|                     | | This should be smaller than the smallest energy         |
+|                     | | difference.                                             |
 |                     | | If this is too small it's possible to lose some states  |
 +---------------------+-----------------------------------------------------------+
 | No of States        | | Determines the number of states to solve for.           |
 | Per Period          | | It only shows when the matrix solver is selected.       |
 |                     | | This should be large enough to cover the range of       |
-|                     |   interest.                                               |
+|                     | | interest                                                |
 +---------------------+-----------------------------------------------------------+
 | Repeats             | Number of the whole structure                             |
 +---------------------+-----------------------------------------------------------+
@@ -46,17 +47,17 @@ The interface includes 4 columns:
 | Basis Divisions     | Defined for basis solver.                                 |
 |                     | See :py:meth:`QCLayers.solve_basis`                       |
 +---------------------+-----------------------------------------------------------+
-| Period info         | Calculate total length and doping density                 |
+| Period info         | Calculate the total length and doping density             |
 +---------------------+-----------------------------------------------------------+
 
 +---------------------+-----------------------------------------------------------+
 |                 layerBox                                                        |
 +=====================+===========================================================+
-| Layer Buttons       | Insert above layer and delete selected layer              |
+| Layer Buttons       | Insert above a layer or delete the selected layer         |
 +---------------------+-----------------------------------------------------------+
 | Optimize Buttons    | Start optimizing.                                         |
 |                     |                                                           |
-|                     | - ``Optmize Layer`` only optimize the selected layer on   |
+|                     | - ``Optimize Layer`` only optimize the selected layer on  |
 |                     |   the selected FoM;                                       |
 |                     | - ``Global Optimize`` tries to optimize global gain.      |
 |                     | - The feature is experimental.                            |
@@ -83,9 +84,11 @@ The interface includes 4 columns:
 |                     | - The material BEFORE the interface determines the IFR    |
 +---------------------+-----------------------------------------------------------+
 | Plot control        | - Layer Select: select layer in Layer Table by clicking   |
-|                     | - Zoom: in with right button of mouse, out with left      |
-|                     | - Pan: move with mouse                                    |
-|                     | - Reset: make the plot back to default position           |
+|                     | - Zoom: in with the right button of the mouse, out with   |
+|                     |   the left                                                |
+|                     | - Pan: move with the mouse                                |
+|                     | - Reset: make the plot back to the default position and   |
+|                     |   scale                                                   |
 |                     | - Clear: remove all wavefunctions                         |
 +---------------------+-----------------------------------------------------------+
 | Calculation box     | - Pair Select: start to pick states by mouse              |
@@ -102,17 +105,17 @@ The plot canvas
 ~~~~~~~~~~~~~~~
 
 The black lines (or blue line if a well is selected) are the conduction band
-bottom or the potential.
+bottom of the potential.
 The states are the colored curve but thick black if selected.
 Other symmetry points in the band and the plot
 style of the wavefunctions can be changed from ``View`` in the menu bar.
-States that is thick in line is the selected set of a single period of states.
+States that are thick in line are the selected set of a single period of states.
 This selected set is used to calculate the electron population distribution.
-States that are dashed lines are considered not well bounded.
+States that are dashed lines are considered not well-bounded.
 
 Export of the figure and data, save and load actions are embedded into ``File`` menu;
 temperature setting and advanced table settings are in ``Edit`` menu;
-options to choose what is included in the plot is listed in ``View`` menu.
+options to choose what is included in the plot are listed in ``View`` menu.
 
 Optics Tab
 -----------
@@ -130,7 +133,7 @@ The interface includes 3 columns:
 | Wavelength          | Can be transferred from quantum tab but not necessarily   |
 |                     | the same                                                  |
 +---------------------+-----------------------------------------------------------+
-| Material Block      | Defines the customized material. For pure GUI user it     |
+| Material Block      | Defines the customized material. For pure GUI users, it   |
 |                     | defines `Active Core` transferred from quantum tab        |
 |                     |                                                           |
 |                     | - index: the effective refractive index of the material   |
@@ -152,17 +155,17 @@ The interface includes 3 columns:
 |                     |                                                           |
 |                     | - At least an `Active Core` needs to be present.          |
 |                     | - The first and the last layers are environment and       |
-|                     |   substrate that is not meant to changed                  |
+|                     |   substrate that is not meant to be changed               |
 +---------------------+-----------------------------------------------------------+
 | Solving Block       | | Solve for the first bounded mode and show its character |
-|                     | | The optimizing is performed for lowest threshold,       |
-|                     |   restricted on total width of selected layers in the pop |
-|                     |   up window.                                              |
+|                     | | The optimizing is performed for the lowest threshold,   |
+|                     |   restricted to the total width of selected layers in the |
+|                     |   pop-up window.                                          |
 +---------------------+-----------------------------------------------------------+
 
 The plot canvas
 ~~~~~~~~~~~~~~~
 
-Black line and orange lines are the real and imaginary part of the refractive
+The black line and orange lines are the real and imaginary parts of the refractive
 index, respectively. The active core can be red based on the selection in
 `View` menu.

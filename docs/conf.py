@@ -67,6 +67,7 @@ autosummary_generate = True
 napoleon_use_rtype = False
 bibtex_bibfiles = ['manual/quantum_refs.bib', 'manual/optic_refs.bib']
 html_favicon = '../ErwinJr2/images/EJico.ico'
+plot_formats = [('png', 300)]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

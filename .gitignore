@@ -33,7 +33,7 @@ Makefile
 *.synctex.gz
 *.xdv
 
-example
+example/*
 ErwinJr2.bat
 
 .DS_Store

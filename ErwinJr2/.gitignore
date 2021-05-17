@@ -34,6 +34,7 @@ OneDQuantum/docs/xml/
 OneDQuantum/docs/latex/
 example/*
 !example/PQLiu*
+!example/std8um.json
 ErwinJr2.bat
 
 .DS_Store

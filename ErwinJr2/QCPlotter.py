@@ -172,7 +172,7 @@ def plotWF(qcl: QCLayers, plotType: str = 'mode',
             axes.fill_between(x, y, qcl.eigenEs[n],
                               facecolor=color, alpha=fillPlot)
     if showPop:
-        colorbar_axes = axes.inset_axes([0.02, 0.01, 0.5, 0.02])
+        colorbar_axes = axes.inset_axes([0.03, 0.01, 0.5, 0.02])
         axes.figure.colorbar(
             popMap, cax=colorbar_axes, orientation='horizontal',
             label='electron population')
