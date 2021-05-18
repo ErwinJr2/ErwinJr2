@@ -533,11 +533,9 @@ With contributions from:
     def on_licenses(self):
         copyright = """
 ErwinJr2 is a simulation program for quantum semiconductor lasers.
-Copyright (C) 2017 Ming Lyu
-Copyright (C) 2012 Kale J. Franz, PhD
+Copyright (C) 2021 Ming Lyu
 
-A portion of this code is Copyright (c) 2011, California Institute of
-Technology ("Caltech"). U.S. Government sponsorship acknowledged.
+The software inherits some design from ErwinJr, which is a work by Kale Franz.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

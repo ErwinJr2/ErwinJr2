@@ -19,7 +19,8 @@ supports it.
 
 About QCLs
 ----------
-Quantum cascade lasers (QCLs) are semiconductor lasers that emit light
+Quantum cascade lasers (QCLs) are semiconductor
+r lasers that emit light
 through inter-subband transitions.
 These lasers consist of periodic series of thin
 layers of various semiconductor materials which create one-dimensional
@@ -48,19 +49,3 @@ Models and Formulas
 The physics model and formulas used in the software are discussed in
 :doc:`physics`
 
-
-History
---------
-The current version is written by Ming from Princeton University, Gmachl group,
-as part of his PhD thesis work.
-
-The early versions of the software started as a quantum well eigen-solver using
-the shooting algorithm, developed with QBASIC at Bell Labs in the early 1990s.
-Ref.~\cite{PhysRevB.50.8663} is one of the early works with the solver.
-It was then translated into C with some modern modifications
-at Princeton in the 2000s by Dr. Daniel Wasserman,
-when the name `ErwinJr` was introduced.
-Later it was improved by Dr. Kale Franz
-who implemented an early version of the GUI software with Python2 and
-`Qwt` as the plotting library, as well as a MATLAB-based version.
-It was then collaboratively improved by Dr. Yu Song.
