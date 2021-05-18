@@ -8,6 +8,14 @@ keep this branch a relatively stable branch and only merge in new codes
 when they are reliable. The ``dev`` branch is intended to be the
 developing branch for a single maintainer.
 
+For the version number, we suggest the three-part version number convention:
+[major version.minor version.patch]. For example, version 2.1.0 means major
+version 2, minor version 1, and patch 0. Major version should increase when
+there are large updates or a change of old APIs; minor version should increase
+when there are new features; patch number increases when it's a bug fix.
+To tag a version, it is done on the GitHub repository webpage, so that new
+versions will trigger a release and the following deployment.
+
 The software requires optionally a compiled C library. For users installing the
 software directly from `The Python Package Index <https://pypi.org/project/ErwinJr2/>`_ (PyPI) via ``pip``
 command, Python will first check if a compiled binary file (called ``wheel``)

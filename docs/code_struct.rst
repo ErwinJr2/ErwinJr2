@@ -71,10 +71,5 @@ solution file defined in ``OneDQuantum.sln`` and
 so that the software behaves the same under Linux/macOS and under Windows.
 
 For the Python code, the project complies with the PEP8 code style,
-and for the C code, the project complies K\&R style. For the version number,
-we suggest the three-part version number convention:
-[major version.minor version.patch]. For example, version 2.1.0 means major
-version 2, minor version 1, and patch 0. Major version should increase when
-there are large updates or a change of old APIs; minor version should increase
-when there are new features; patch number increases when it's a bug fix.
+and for the C code, the project complies K\&R style.
 
