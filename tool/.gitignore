@@ -1,3 +1,5 @@
 p_*
 *.csv
 *.txt
+*.png
+*.json
