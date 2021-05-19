@@ -2,9 +2,9 @@ A software for Quantum Cascade Laser design and simulation
 ================
 
 master:
-[![master Build Status](https://travis-ci.com/CareF/ErwinJr2.svg?branch=master)](https://travis-ci.com/CareF/ErwinJr2)
+[![master Build Status](https://travis-ci.com/PrincetonUniversity/ErwinJr2.svg?branch=master)](https://travis-ci.com/PrincetonUniversity/ErwinJr2)
 dev:
-[![dev Build Status](https://travis-ci.com/CareF/ErwinJr2.svg?branch=dev)](https://travis-ci.com/CareF/ErwinJr2)
+[![dev Build Status](https://travis-ci.com/PrincetonUniversity/ErwinJr2.svg?branch=dev)](https://travis-ci.com/PrincetonUniversity/ErwinJr2)
 
 ![Main Window Screenshot](./docs/figures/qtab.png)
 
@@ -55,8 +55,8 @@ library locally.
 - [X] OpenMP support
 - [X] Add a linear algebra solver
 - [ ] ?NEGF solver
-- [ ] upload to pip
-- [ ] register to OS
+- [X] upload to pip
+- [X] register to OS
 - [X] remove unnecessary C lib
 - [X] Add IFR scattering
 - [ ] Add impurity scattering (may be important for transport)

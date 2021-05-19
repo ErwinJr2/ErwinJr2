@@ -46,7 +46,7 @@ the software from the command line.
 If you are a developer and want to compile the software locally, the following
 is a beginner's guide.
 The software is available as source code in Github:
-https://github.com/CareF/ErwinJr2 .
+https://github.com/PrincetonUniversity/ErwinJr2 .
 You can directly download as a zip file, or using ``git clone`` to clone the
 repository, which helps to get further updates.
 
