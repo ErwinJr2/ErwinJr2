@@ -82,7 +82,9 @@ See https://erwinjr2.readthedocs.io/ for details.
 
 setup(
     name='ErwinJr2',
-    version='2.2.1',
+    # Important! keep Version consistent for major and minor with
+    # versionAndName.py as well as the release tag on GitHub
+    version='2.2.3',
     author='Ming Lyu',
     author_email='minglyu@princeton.edu',
     license="GPL-3.0",
