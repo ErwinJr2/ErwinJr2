@@ -6,7 +6,7 @@ master:
 dev:
 [![dev Build Status](https://travis-ci.com/ErwinJr2/ErwinJr2.svg?branch=dev)](https://travis-ci.com/PrincetonUniversity/ErwinJr2)
 doc:
-[![Documentation Status](https://readthedocs.org/projects/erwinjr2/badge/?version=dev)](https://erwinjr2.readthedocs.io/en/latest/?badge=dev)
+[![Documentation Status](https://readthedocs.org/projects/erwinjr2/badge/?version=dev)](https://erwinjr2.readthedocs.io/en/dev/?badge=dev)
 
 
 ![Main Window Screenshot](./docs/figures/qtab.png)
