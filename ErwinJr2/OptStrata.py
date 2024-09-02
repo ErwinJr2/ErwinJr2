@@ -592,8 +592,8 @@ def optimizeOptStrata(stratum: OptStrata, alphaM,
     -------
     float: The optimized threshold gain in cm^-1
     """
-    assert(toOptimize)
-    assert(all(n > 0 and n < len(stratum.Ls)-1 for n in toOptimize))
+    assert toOptimize
+    assert all(n > 0 and n < len(stratum.Ls)-1 for n in toOptimize)
 
     def objective(penalty: float):
         beta = stratum.boundModeTM()

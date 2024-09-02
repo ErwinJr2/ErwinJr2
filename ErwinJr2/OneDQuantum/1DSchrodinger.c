@@ -165,7 +165,7 @@ void FillPsi(double step, numpyint N, const double *EigenEs,
     int i;
 #ifdef _DEBUG
     if(mat != NULL) {
-        assert(N == mat->N);
+        assert N == mat->N;
     }
 #endif
 #ifdef __MP
@@ -275,7 +275,7 @@ numpyint Solve1D(double step, numpyint N,
     int i;
 #ifdef _DEBUG
     if(mat != NULL) {
-        assert(N == mat->N);
+        assert N == mat->N;
     }
 #endif
     yend = (double *)malloc(EN * sizeof(double));

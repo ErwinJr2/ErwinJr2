@@ -4,7 +4,8 @@
 from setuptools import setup, find_packages
 from setuptools.command.install import install
 from setuptools.command.develop import develop
-from wheel.bdist_wheel import bdist_wheel, get_platform
+# import wheel.bdist_wheel as bdist_wheel
+# from wheel.bdist_wheel import bdist_wheel, get_platform
 import os
 import subprocess
 import warnings
@@ -48,17 +49,17 @@ def build_clib():
     os.chdir(cwd)
 
 
-class EJBdistCMD(bdist_wheel):
-    def run(self):
-        # This is a hack s.t. the only way to let pip call build and use the
-        # result
-        build_clib()
-        super().run()
+# class EJBdistCMD(bdist_wheel.bdist_wheel):
+#     def run(self):
+#         # This is a hack s.t. the only way to let pip call build and use the
+#         # result
+#         build_clib()
+#         super().run()
 
-    def finalize_options(self):
-        super().finalize_options()
-        self.plat_name_supplied = True
-        self.plat_name = get_platform(self.bdist_dir)
+#     def finalize_options(self):
+#         super().finalize_options()
+#         self.plat_name_supplied = True
+#         self.plat_name = get_platform(self.bdist_dir)
 
 
 class EJInstallCMD(install):
@@ -106,7 +107,7 @@ setup(
         ]
     },
     cmdclass={
-        'bdist_wheel': EJBdistCMD,
+        # 'bdist_wheel': EJBdistCMD,
         'install': EJInstallCMD,
         'develop': EJDevelopCMD
     },

@@ -1,3 +1,4 @@
+# flake8: noqa
 """
 This script contains some external fitting/theoretical functions for
 refractive indices

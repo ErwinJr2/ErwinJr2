@@ -1,0 +1,6 @@
+[flake8]
+exclude = 
+    .git,
+    __pycache__,
+    ErwinJr2/rFittings.py,
+    .venv

@@ -79,7 +79,7 @@ def linux_shortcut(basePath, shortcut_path):
     try:
         desktop_path = subprocess.check_output(['xdg-user-dir', 'DESKTOP'])
         desktop_path = desktop_path.decode().split()[0]
-        assert(os.path.isdir(desktop_path))
+        assert os.path.isdir(desktop_path)
         subprocess.call(['cp', app_path, desktop_path])
     except (FileNotFoundError, IndexError, AssertionError):
         print('Desktop directory not found.')

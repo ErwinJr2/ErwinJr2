@@ -20,6 +20,9 @@ __pycache__/
 ErwinJr2.egg-info/
 build/
 dist/
+/.venv
+/junit
+/.coverage
 Makefile
 
 ## compiled files from docs

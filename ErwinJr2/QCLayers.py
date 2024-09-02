@@ -7,7 +7,7 @@ from scipy.linalg import null_space
 import scipy.sparse as sparse
 import scipy.sparse.linalg as splg
 try:
-    from . import OneDQuantum as onedq
+    from .OneDQuantum import OneDSchrodinger as onedq
 except OSError:
     onedq = None
     print('C library is not compiled. Features are limited.')
@@ -157,7 +157,7 @@ status :
         self.xres = xres
         self.Eres = Eres
         self.statePerRepeat = statePerRepeat
-        assert(isinstance(layerWidths, list))
+        assert isinstance(layerWidths, list)
         self.layerWidths = layerWidths
         N = len(layerWidths)
         self._layerVc = layerVc if layerVc is not None else [0.0]*N
@@ -465,7 +465,7 @@ status :
             Upper banded form of the matrix for the banded solver, as
             used in scipy.linalg.eig_banded
         """
-        assert(self.crystalType == 'ZincBlende')
+        assert self.crystalType == 'ZincBlende'
         kunit = hbar**2/(2*e0*m0*(1E-10*self.xres)**2)
         N = len(self.xPoints)
         xEg, xF, xEp, xESO = self.bandParams
@@ -644,7 +644,7 @@ status :
                 exp(-kl*self.xPoints*1E-10)*convpsi)
         # C implementation
         else:
-            Iij = onedq.OneDSchrodinger.cLOphononScatter(
+            Iij = onedq.cLOphononScatter(
                 self.xres, kl, self.psi_overlap(upper, lower, shift))
         return (ml * e0**2 * self.avghwLO * e0 / hbar * Iij
                 / (4 * hbar**2 * self.epsrho * eps0 * kl)) / 1e12  # unit ps^-1
@@ -702,7 +702,7 @@ status :
         fjs = (mjs * e0**2 * self.avghwLO * e0 / hbar
                / (4 * hbar**2 * self.epsrho * eps0 * kls))
         psi_ijs = np.array([self.psi_overlap(state, idx) for idx in idxs])
-        Iijtotal = onedq.OneDSchrodinger.cLOtotal(self.xres, kls, psi_ijs, fjs)
+        Iijtotal = onedq.cLOtotal(self.xres, kls, psi_ijs, fjs)
         return 1e12 / Iijtotal if Iijtotal > 0 else 1E20
 
     def _ifr_transition(self, upper: int, lower: int, shift: int = 0
@@ -763,7 +763,7 @@ status :
         period, it's calculated via translation of the wavefunction, otherwise
         it's calculated based on row self.psis
         """
-        assert(self.includeIFR)
+        assert self.includeIFR
         if self.status == 'solved-full':
             try:
                 pu, ushift = self.periodMap[upper]
@@ -791,7 +791,7 @@ status :
         period, it's calculated via translation of the wavefunction, otherwise
         it's calculated based on row self.psis
         """
-        assert(self.includeIFR)
+        assert self.includeIFR
         if self.status == 'solved-full':
             try:
                 return 1/sum(np.sum(self._pIFR[n][:, self.periodMap[state][0]])
@@ -948,7 +948,7 @@ status :
         flow : float
             The flow of carrier, in unit ps^-1 (carrier density normalize to 1)
         """
-        assert(self.status.startswith('solved'))
+        assert self.status.startswith('solved')
         idxPeriod = len(self.periodIdx)
         # p for cache for the periodic version
         self._pLO = [np.zeros((idxPeriod, idxPeriod)) for _ in range(3)]
@@ -1119,13 +1119,13 @@ description :
                  ifrDelta=None, ifrLambda=None,
                  layerARs=None, EField=0, repeats=3, T=300.0, solver="ODE",
                  description="", wl=3.0):
-        assert(isinstance(layerWidths, list))
-        assert(isinstance(materials, list))
-        assert(isinstance(moleFracs, list))
+        assert isinstance(layerWidths, list)
+        assert isinstance(materials, list)
+        assert isinstance(moleFracs, list)
         N = len(layerWidths)
         M = len(materials)
-        assert(M >= 1)
-        assert(len(moleFracs) == M)
+        assert M >= 1
+        assert len(moleFracs) == M
         self.substrate = substrate
         self.materials = materials
         self.moleFracs = moleFracs
@@ -1135,9 +1135,9 @@ description :
         self.customIFR = customIFR
         if not customIFR:
             if isinstance(mtrlIFRDelta, list):
-                assert(len(mtrlIFRDelta) == M)
-                assert(isinstance(mtrlIFRLambda, list))
-                assert(len(mtrlIFRLambda) == M)
+                assert len(mtrlIFRDelta) == M
+                assert isinstance(mtrlIFRLambda, list)
+                assert len(mtrlIFRLambda) == M
                 self.mtrlIFRDelta = mtrlIFRDelta
                 self.mtrlIFRLambda = mtrlIFRLambda
             else:
@@ -1178,7 +1178,7 @@ description :
     def _get_IFRList(self) -> Tuple[List[float], List[float]]:
         """Get IFR parameters for SchrodingerLayer. Should be called
         every time the material list changes."""
-        assert(not self.customIFR)
+        assert not self.customIFR
         if self.mtrlIFRDelta is not None:
             ifrDelta = [self.mtrlIFRDelta[m] for m in self.layerMtrls]
         else:

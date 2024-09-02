@@ -17,7 +17,7 @@ def bindOpenMP(on: bool = True) -> typing.Tuple[CDLL, typing.Type[object]]:
     set OpenMP. Default = True
     """
     global _clib
-    if(on):
+    if on:
         _clib = np.ctypeslib.load_library('1DSchrodinger_MP', path)
     else:
         _clib = np.ctypeslib.load_library('1DSchrodinger', path)

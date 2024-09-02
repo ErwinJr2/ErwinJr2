@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 from context import *  # type: ignore # noqa: F401, F403
-from ErwinJr2.OneDQuantum import (OneDSchrodinger, cSimpleSolve1D,
-                                  cSimpleFillPsi)
+from ErwinJr2.OneDQuantum import OneDSchrodinger
+from ErwinJr2.OneDQuantum.OneDSchrodinger import cSimpleSolve1D, cSimpleFillPsi
 import numpy as np
 import unittest
 from scipy.constants import hbar, e, m_e, pi

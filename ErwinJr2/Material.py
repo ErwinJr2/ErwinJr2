@@ -175,7 +175,7 @@ class Alloy(Material):
         self.comp = AParam[self.name]["composition"]
         self.A = Material(self.comp[0], Temperature)
         self.B = Material(self.comp[1], Temperature)
-        assert(self.A.type == self.B.type)
+        assert self.A.type == self.B.type
         self.type = self.A.type
         # so alloy is A_x B_(1-x)
         self.moleFrac = x

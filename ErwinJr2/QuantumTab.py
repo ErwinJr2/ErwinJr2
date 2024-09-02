@@ -1112,10 +1112,10 @@ class QuantumTab(QWidget):
             self.ifrLambdaBox.setEnabled(False)
             # button to remove custom
         if self.ifrDefBox.isChecked():
-            assert(all(x == self.qclayers.mtrlIFRDelta[0]
-                       for x in self.qclayers.mtrlIFRDelta[1:]))
-            assert(all(x == self.qclayers.mtrlIFRLambda[0]
-                       for x in self.qclayers.mtrlIFRLambda[1:]))
+            assert all(x == self.qclayers.mtrlIFRDelta[0]
+                       for x in self.qclayers.mtrlIFRDelta[1:])
+            assert all(x == self.qclayers.mtrlIFRLambda[0]
+                       for x in self.qclayers.mtrlIFRLambda[1:])
             self.ifrDeltaBox.setValue(self.qclayers.mtrlIFRDelta[0])
             self.ifrLambdaBox.setValue(self.qclayers.mtrlIFRLambda[0])
         else:
@@ -1162,7 +1162,7 @@ class QuantumTab(QWidget):
             # change "x" or mole fraction
             try:
                 mf = float(item.text())
-                assert(mf <= 1)
+                assert mf <= 1
                 self.qclayers.set_mtrl(row, moleFrac=int(100*mf)/100)
             except (ValueError, AssertionError):
                 # Input is not a number or is larger than 1
@@ -1432,7 +1432,7 @@ class QuantumTab(QWidget):
         freeze."""
         # TODO: block all change
         self.calcRepaint(True)
-        assert(not self.calcThread.isRunning())
+        assert not self.calcThread.isRunning()
         self._worker = CalculateHolder(calc)
         self._worker.moveToThread(self.calcThread)
         self.calcThread.started.connect(self._worker.run)
