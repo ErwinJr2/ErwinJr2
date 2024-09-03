@@ -2,9 +2,9 @@ A software for Quantum Cascade Laser design and simulation
 ================
 
 master:
-[![master Build Status](https://travis-ci.com/ErwinJr2/ErwinJr2.svg?branch=master)](https://travis-ci.com/PrincetonUniversity/ErwinJr2)
+![master Build Status](https://github.com/ErwinJr2/ErwinJr2/actions/workflows/python-app.yml/badge.svg)
 dev:
-[![dev Build Status](https://travis-ci.com/ErwinJr2/ErwinJr2.svg?branch=dev)](https://travis-ci.com/PrincetonUniversity/ErwinJr2)
+![dev Build Status](https://github.com/ErwinJr2/ErwinJr2/actions/workflows/python-app.yml/badge.svg?branch=dev)
 doc:
 [![Documentation Status](https://readthedocs.org/projects/erwinjr2/badge/?version=latest)](https://erwinjr2.readthedocs.io/en/latest/?badge=latest)
 
