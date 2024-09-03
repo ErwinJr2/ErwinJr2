@@ -49,4 +49,3 @@ fftautocorr.o : fftautocorr/fftautocorr.c fftautocorr/fftautocorr.h fftautocorr/
 .PHONY : clean
 clean :
 	@$(RM) {1DSchrodinger,1DSchrodinger_MP}.{so,o,dll,dylib} band.o fftautocorr.o
-

@@ -551,4 +551,3 @@ int isMP() {
 #ifdef __cplusplus
 }
 #endif
-

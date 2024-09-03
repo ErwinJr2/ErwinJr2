@@ -1,8 +1,8 @@
 /*
  * Intigration test for fftautocorr, compared with FFTW and pocketfft
- * 
+ *
  *  Copyright (C) 2020 CareF
- *  \author CareF 
+ *  \author CareF
  *  Licensed under a 3-clause BSD style license - see LICENSE.md
  */
 
@@ -134,13 +134,13 @@ int testAgainst(int N) {
 int main(int argc, char *argv[]) {
     int Ls[] = {
         7,
-        1<<22, 
+        1<<22,
         14348907, /* = 3^15 */
         9765625,  /* = 5^10 */
         5764801,  /* = 7^8 */
         4561727,  /* prime */
         295245/2, /* padded to odd 295245 */
-        // INT_MAX/4, 
+        // INT_MAX/4,
     };
     size_t n = sizeof(Ls)/sizeof(Ls[0]);
     for(int i = 0; i < n; ++i) {

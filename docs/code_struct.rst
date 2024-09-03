@@ -72,4 +72,3 @@ so that the software behaves the same under Linux/macOS and under Windows.
 
 For the Python code, the project complies with the PEP8 code style,
 and for the C code, the project complies K\&R style.
-

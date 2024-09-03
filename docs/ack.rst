@@ -35,4 +35,3 @@ Later it was improved by Dr. Kale Franz
 who implemented an early version of the GUI software with Python2 and
 `Qwt` as the plotting library, as well as a MATLAB-based version.
 It was then collaboratively improved by Dr. Yu Song.
-

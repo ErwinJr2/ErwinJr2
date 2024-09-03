@@ -48,4 +48,3 @@ Models and Formulas
 --------------------
 The physics model and formulas used in the software are discussed in
 :doc:`physics`
-

@@ -12,4 +12,3 @@ equation solver in C.
 
    OneDSchrodinger.rst
    bandpy.rst
-

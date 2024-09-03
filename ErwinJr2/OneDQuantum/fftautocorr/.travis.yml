@@ -7,7 +7,7 @@ addons:
             - fftw3
             - fftw3-dev
             - doxygen
-            - doxygen-doc 
+            - doxygen-doc
             - doxygen-latex
             - doxygen-gui
             - graphviz

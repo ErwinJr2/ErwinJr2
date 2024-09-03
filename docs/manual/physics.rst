@@ -8,4 +8,3 @@ The following provides a rough introduction.
 
    physics_quantum.rst
    physics_optics.rst
-
