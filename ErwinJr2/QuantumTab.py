@@ -27,15 +27,16 @@ from PyQt5.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog,
                              QPushButton, QSizePolicy, QSpinBox, QTableWidget,
                              QTableWidgetItem, QTextEdit, QVBoxLayout, QWidget)
 
-from .customQTClass import mtrlComboBox
-from .darkDetect import isdark
-from .EJcanvas import EJcanvas, EJplotControl
-from .EJcanvas import config as plotconfig
-from .Material import AParam
-from .QCLayers import (QCLayers, QCMaterial, StateRecognizeError, c0, e0, eps0,
-                       h, hbar, optimize_global, optimize_layer)
-from .QCPlotter import plotPotential, plotWF, scaleWF
-from .versionAndName import ejError, ejWarning
+from ErwinJr2.customQTClass import mtrlComboBox
+from ErwinJr2.darkDetect import isdark
+from ErwinJr2.EJcanvas import EJcanvas, EJplotControl
+from ErwinJr2.EJcanvas import config as plotconfig
+from ErwinJr2.Material import AParam
+from ErwinJr2.QCLayers import (QCLayers, QCMaterial, StateRecognizeError, c0,
+                               e0, eps0, h, hbar, optimize_global,
+                               optimize_layer)
+from ErwinJr2.QCPlotter import plotPotential, plotWF, scaleWF
+from ErwinJr2.versionAndName import ejError, ejWarning
 
 
 # TODO: this may not be necessary by better designer

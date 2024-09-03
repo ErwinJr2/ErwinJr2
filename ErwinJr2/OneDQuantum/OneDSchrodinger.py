@@ -6,8 +6,8 @@ from ctypes import CDLL, POINTER, c_double, c_int
 
 import numpy as np
 
-from . import band as _bd
-from .typeDefs import doubleArray, floatOrArray, intArray
+from ErwinJr2.OneDQuantum import band as _bd
+from ErwinJr2.OneDQuantum.typeDefs import doubleArray, floatOrArray, intArray
 
 path = os.path.dirname(__file__)
 __all__ = ['cSimpleSolve1D', 'cSimpleFillPsi',
@@ -27,7 +27,7 @@ def bindOpenMP(on: bool = True) -> typing.Tuple[CDLL, typing.Type[object]]:
 
     _bd.init(_clib)
     global Band
-    from .band import Band, cBand
+    from ErwinJr2.OneDQuantum.band import Band, cBand
 
     #  _clib.Numerov.argtypes = [c_double, c_int, c_double, c_double,
     #                            c_double, _doubleArray, _doubleArray,

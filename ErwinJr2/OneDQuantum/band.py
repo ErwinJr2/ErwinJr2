@@ -4,7 +4,7 @@ from typing import Callable, Union
 import numpy as np
 
 __all__ = ['Band', 'cBandUpdateM', 'cBandNormalize']
-from .typeDefs import doubleArray
+from ErwinJr2.OneDQuantum.typeDefs import doubleArray
 
 
 class cBand(Structure):

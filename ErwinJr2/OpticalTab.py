@@ -16,10 +16,11 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
                              QSpinBox, QTableWidget, QTableWidgetItem,
                              QTextEdit, QVBoxLayout, QWidget)
 
-from .customQTClass import mtrlComboBox
-from .EJcanvas import EJcanvas
-from .OptStrata import Alloy, Dopable, OptStrata, optimizeOptStrata, rIdx
-from .versionAndName import ejError
+from ErwinJr2.customQTClass import mtrlComboBox
+from ErwinJr2.EJcanvas import EJcanvas
+from ErwinJr2.OptStrata import (Alloy, Dopable, OptStrata, optimizeOptStrata,
+                                rIdx)
+from ErwinJr2.versionAndName import ejError
 
 mtrlList = list(rIdx.keys()) + list(Alloy.keys())
 facetList = ('cleaved', 'perfect AR', 'perfect HR', 'custom')

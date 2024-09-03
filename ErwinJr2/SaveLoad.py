@@ -6,8 +6,8 @@ import json
 import typing
 from collections import defaultdict
 
-from .OptStrata import OptStrata
-from .QCLayers import QCLayers
+from ErwinJr2.OptStrata import OptStrata
+from ErwinJr2.QCLayers import QCLayers
 
 
 def qclLoad(fhandle: typing.TextIO) -> QCLayers:

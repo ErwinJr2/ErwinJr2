@@ -11,14 +11,14 @@ from scipy.constants import hbar as hbar
 from scipy.linalg import null_space
 
 try:
-    from .OneDQuantum import OneDSchrodinger as onedq
+    from ErwinJr2.OneDQuantum import OneDSchrodinger as onedq
 except OSError:
     onedq = None
     print('C library is not compiled. Features are limited.')
 import copy
 from typing import List, Tuple, Union
 
-from . import Material
+from ErwinJr2 import Material
 
 EUNIT = 1e-5    # E field unit from kV/cm to V/Angstrom
 BASISPAD = 100  #: padding barrier for basis solver, unit Angstrom

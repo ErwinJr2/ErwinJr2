@@ -31,7 +31,7 @@ III/V semiconductor electron band. The module contains:
 from numpy import sqrt
 
 # This is to separate legacy fitting
-from .rFittings import AlGaAsIndex, SiNxIndex, SiO2Index
+from ErwinJr2.rFittings import AlGaAsIndex, SiNxIndex, SiO2Index
 
 # flags for what effect to include
 BOWING = True

@@ -1,4 +1,4 @@
-from . import OneDSchrodinger
+from ErwinJr2.OneDQuantum import OneDSchrodinger
 
 __all__ = (OneDSchrodinger.__all__
            + ['OneDSchrodinger'])

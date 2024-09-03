@@ -1,8 +1,8 @@
-from .OptStrata import MaxwellLayer, OptStrata
-from .QCLayers import QCLayers, SchrodingerLayer
+from ErwinJr2.OptStrata import MaxwellLayer, OptStrata
+from ErwinJr2.QCLayers import QCLayers, SchrodingerLayer
 
 try:
-    from . import OneDQuantum
+    from ErwinJr2 import OneDQuantum
 except OSError:
     OneDQuantum = None
 

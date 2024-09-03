@@ -13,12 +13,12 @@ from PyQt5.QtWidgets import (QAction, QApplication, QFileDialog, QInputDialog,
                              QMainWindow, QMessageBox, QSplashScreen,
                              QTabWidget)
 
-from . import SaveLoad
-from .OpticalTab import OpticalTab
-from .OptStrata import OptStrata
-from .QCLayers import QCLayers, onedq
-from .QuantumTab import QuantumTab
-from .versionAndName import Version
+from ErwinJr2 import SaveLoad
+from ErwinJr2.OpticalTab import OpticalTab
+from ErwinJr2.OptStrata import OptStrata
+from ErwinJr2.QCLayers import QCLayers, onedq
+from ErwinJr2.QuantumTab import QuantumTab
+from ErwinJr2.versionAndName import Version
 
 basePath = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_FILE_DIR = os.path.join(

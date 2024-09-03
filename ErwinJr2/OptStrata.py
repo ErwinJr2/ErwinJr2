@@ -5,7 +5,7 @@ from typing import List
 import numpy as np
 from numpy import cos, exp, pi, sin, sinc, sqrt
 
-from .Material import MParam, rIdx
+from ErwinJr2.Material import MParam, rIdx
 
 # Effective mass in unit of free electron mass.
 EffectiveMass = {mtrl: MParam[mtrl]['me0']
