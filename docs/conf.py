@@ -152,7 +152,6 @@ latex_elements = {
     'papersize': 'letterpaper',
     'pointsize': '11pt',
     'figure_align': 'htbp',
-    'preamble': '',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
