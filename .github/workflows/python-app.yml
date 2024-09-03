@@ -1,7 +1,7 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
-name: Python application
+name: Build
 
 on:
   push:
@@ -12,17 +12,24 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
-
+  unit-test:
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      id: python
+      uses: actions/setup-python@v5.2.0
       with:
-        python-version: "3.10"
+        python-version: ${{ matrix.python-version }}
+        check-latest: true
     - name: Build C Libs
       run: |
         cd ErwinJr2/OneDQuantum
@@ -37,3 +44,4 @@ jobs:
     - name: Test with pytest
       run: |
         pytest -v --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html test/*
+        python3 test/SimpleSchrodinger.py
