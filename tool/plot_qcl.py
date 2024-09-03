@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-from context import *  # type: ignore # noqa: F401, F403
 from ErwinJr2 import SaveLoad
 from ErwinJr2.QCPlotter import plotPotential, plotWF
 from ErwinJr2.QCLayers import QCLayers
 import matplotlib.pyplot as plt
+import os
 
-with open("../ErwinJr2/example/PQLiu.json") as f:
+_REPO_ROOT = os.path.dirname(os.path.dirname(__file__))
+_TEST_SAMPLE_FILE = os.path.join(_REPO_ROOT, "ErwinJr2/example/PQLiu.json")
+
+with open(_TEST_SAMPLE_FILE) as f:
     qcl = SaveLoad.qclLoad(f)
 
 qcl = QCLayers(

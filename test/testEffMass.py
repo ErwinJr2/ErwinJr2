@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-from context import *  # type: ignore # noqa: F401, F403
 from ErwinJr2 import SchrodingerLayer
 import numpy as np
 from scipy.constants import e as e0, hbar as hbar, electron_mass as m0

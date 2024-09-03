@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-from context import *  # type: ignore # noqa: F401, F403
 from QCLayers import auto_gain
 import SaveLoad
 import cProfile

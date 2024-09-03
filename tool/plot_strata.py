@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-from context import *  # type: ignore # noqa: F401, F403
 from ErwinJr2 import SaveLoad
 from ErwinJr2.OptStrata import OptStrata
 import numpy as np

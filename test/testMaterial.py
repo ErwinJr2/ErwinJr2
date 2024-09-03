@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-from context import *  # type: ignore # noqa: F401, F403
 import unittest
 from ErwinJr2 import Material
 
