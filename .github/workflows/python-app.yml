@@ -30,7 +30,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
         check-latest: true
-    - name: Build C Libs
+    - name: Build C Libs  # this may duplicate with pip install -e .
       run: |
         cd ErwinJr2/OneDQuantum
         make
@@ -43,5 +43,6 @@ jobs:
       run: flake8 ErwinJr2/ --count --show-source --statistics
     - name: Test with pytest
       run: |
+        pip install -e .
         pytest -v --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html test/*
         python3 test/SimpleSchrodinger.py
