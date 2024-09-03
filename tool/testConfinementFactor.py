@@ -32,18 +32,18 @@ def firstGaAs():
     # plt.plot(xs, np.angle(Ey)/np.pi, label="phase")
 
     ac = ((xs >= sum(hs[:3])) & (xs <= sum(hs[:4])))
-    Gamma = beta * np.trapz(nn[ac] * (Ey[ac]**2 - Ez[ac]**2), xs[ac])/(
-                np.trapz((nn*Ey)**2, xs))
+    Gamma = beta * np.trapezoid(nn[ac] * (Ey[ac]**2 - Ez[ac]**2), xs[ac])/(
+                np.trapezoid((nn*Ey)**2, xs))
     Gamma = Gamma.real
-    Gamma0 = beta * np.trapz(nn[ac] * Ey[ac]**2, xs[ac])/(
-                 np.trapz((nn*Ey)**2, xs))
+    Gamma0 = beta * np.trapezoid(nn[ac] * Ey[ac]**2, xs[ac])/(
+                 np.trapezoid((nn*Ey)**2, xs))
     Gamma0 = Gamma0.real
-    Gamma1 = beta.real * np.trapz(nn[ac].real * abs(Ey[ac])**2, xs[ac])/(
-        np.trapz(abs(nn.real*Ey)**2, xs))
-    Gamma2 = np.trapz(nn[ac].real * abs(Ey[ac])**2, xs[ac])/(
-        np.trapz(nn.real * np.abs(Ey)**2, xs))
-    Gamma3 = np.trapz(abs(Ey[ac])**2, xs[ac])/(
-        np.trapz(np.abs(Ey)**2+np.abs(Ez)**2, xs))
+    Gamma1 = beta.real * np.trapezoid(nn[ac].real * abs(Ey[ac])**2, xs[ac])/(
+        np.trapezoid(abs(nn.real*Ey)**2, xs))
+    Gamma2 = np.trapezoid(nn[ac].real * abs(Ey[ac])**2, xs[ac])/(
+        np.trapezoid(nn.real * np.abs(Ey)**2, xs))
+    Gamma3 = np.trapezoid(abs(Ey[ac])**2, xs[ac])/(
+        np.trapezoid(np.abs(Ey)**2+np.abs(Ez)**2, xs))
 
     chis = np.linspace(0, 2, 100)
     g0 = 2*pi/(wl*1E-4*3.21)*chis
@@ -112,12 +112,12 @@ def findOutOfPhase():
     # ac1 = ((xs >= sum(hs[:3])) & (xs <= sum(hs[:4])))
     # ac2 = ((xs >= sum(hs[:5])) & (xs <= sum(hs[:6])))
 
-    Gamma0 = beta * sum(np.trapz(nn[ac] * Ey[ac]**2, xs[ac])
+    Gamma0 = beta * sum(np.trapezoid(nn[ac] * Ey[ac]**2, xs[ac])
                         for ac in acs)/(
-                 np.trapz((nn*Ey)**2, xs))
-    Gamma1 = beta.real * sum(np.trapz(nn[ac].real * abs(Ey[ac])**2, xs[ac])
+                 np.trapezoid((nn*Ey)**2, xs))
+    Gamma1 = beta.real * sum(np.trapezoid(nn[ac].real * abs(Ey[ac])**2, xs[ac])
                              for ac in acs)/(
-        np.trapz(abs(nn.real*Ey)**2, xs))
+        np.trapezoid(abs(nn.real*Ey)**2, xs))
     print(Gamma0, Gamma1)
 
     plt.plot(xs, nn.real, label="n")

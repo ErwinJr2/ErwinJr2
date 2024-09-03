@@ -606,14 +606,14 @@ status :
             xInvMc_l = self._xBandMassInv(El)
             # Eq.(8) in PhysRevB.50.8663, with more precise mass
             # m_j comes from the density of states of transition final state
-            z = np.trapz(psi_u * xInvMc_l * np.gradient(psi_l) -
-                         np.gradient(psi_u) * xInvMc_u * psi_l)
+            z = np.trapezoid(psi_u * xInvMc_l * np.gradient(psi_l) -
+                             np.gradient(psi_u) * xInvMc_u * psi_l)
             z *= hbar**2 / (2*(El-Eu)*e0*m0) / (1E-10)**2  # Angstrom
         elif self.solver == 'matrix' and self.crystalType == 'ZincBlende':
             # In principle this and above is equivalent, and numerically
             # approximately the same as tested in unit tests.
             # The above is remained for legacy reasons.
-            z = self.xres * np.trapz(
+            z = self.xres * np.trapezoid(
                 self.psi_overlap(upper, lower, shift) * self.xPoints)
         else:
             raise NotImplementedError(
@@ -634,13 +634,13 @@ status :
             # LO phonon scattering doesn't happen
             return INV_INF
         psi_l_sq = self.psi_overlap(lower, lower)
-        ml = m0 * np.trapz(self.xMc * psi_l_sq) * self.xres
+        ml = m0 * np.trapezoid(self.xMc * psi_l_sq) * self.xres
         kl = sqrt(2 * ml / hbar**2 * (Eu - El - self.avghwLO) * e0)
         N = self.xPoints.size
         if onedq is None:
             convpsi = fft.irfft(np.abs(fft.rfft(
                 self.psi_overlap(upper, lower, shift), 2*N))**2)[:N]
-            Iij = 2*self.xres**2*np.trapz(
+            Iij = 2*self.xres**2*np.trapezoid(
                 exp(-kl*self.xPoints*1E-10)*convpsi)
         # C implementation
         else:
@@ -697,7 +697,7 @@ status :
         Ejs = self.eigenEs[idxs]
         idxs, = idxs.nonzero()
         psi_js_sq = np.array([self.psi_overlap(idx, idx) for idx in idxs])
-        mjs = m0 * np.trapz(self.xMc * psi_js_sq, axis=1) * self.xres
+        mjs = m0 * np.trapezoid(self.xMc * psi_js_sq, axis=1) * self.xres
         kls = sqrt(2 * mjs / hbar**2 * (Ei - Ejs - self.avghwLO) * e0)
         fjs = (mjs * e0**2 * self.avghwLO * e0 / hbar
                / (4 * hbar**2 * self.epsrho * eps0 * kls))
@@ -715,8 +715,8 @@ status :
         El = self.eigenEs[lower] - shift * self.Eshift
         if Eu < El:
             return INV_INF, -1
-        mu = m0 * np.trapz(self.xMc * psi_usq) * self.xres
-        ml = m0 * np.trapz(self.xMc * psi_lsq) * self.xres
+        mu = m0 * np.trapezoid(self.xMc * psi_usq) * self.xres
+        ml = m0 * np.trapezoid(self.xMc * psi_lsq) * self.xres
         kl = sqrt(2 * ml / hbar**2 * (Eu-El) * e0)
         tauInv = 0
         gamma = 0
@@ -917,7 +917,7 @@ status :
                     if sE > en_shifted + etol:
                         break
                     sState = self.periodIdx[n]
-                    wfDiff = np.trapz((psi_shifted - self.psis[sState])**2)
+                    wfDiff = np.trapezoid((psi_shifted - self.psis[sState])**2)
                     wfDiff *= self.xres
                     if wfDiff < tol:
                         # effective an L2 norm here, tested better than

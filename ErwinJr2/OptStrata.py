@@ -321,9 +321,9 @@ class MaxwellLayer(object):
         confinement = 0
         nx = self.populateIndices(xs).real
         for ar in actives:
-            confinement += np.trapz(
+            confinement += np.trapezoid(
                 nx[ar] * np.abs(self.Ey[ar])**2, xs[ar])
-        confinement = beta.real * confinement / np.trapz(
+        confinement = beta.real * confinement / np.trapezoid(
             (nx * np.abs(Ey))**2, xs)
         return confinement
 
