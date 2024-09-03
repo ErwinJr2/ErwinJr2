@@ -1,6 +1,8 @@
-import numpy as np
-from ctypes import c_void_p, c_int, c_double, POINTER, Structure, CDLL
+from ctypes import CDLL, POINTER, Structure, c_double, c_int, c_void_p
 from typing import Callable, Union
+
+import numpy as np
+
 __all__ = ['Band', 'cBandUpdateM', 'cBandNormalize']
 from .typeDefs import doubleArray
 

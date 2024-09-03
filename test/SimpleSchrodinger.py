@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-from ErwinJr2.OneDQuantum import OneDSchrodinger
-from ErwinJr2.OneDQuantum.OneDSchrodinger import cSimpleSolve1D, cSimpleFillPsi
-import numpy as np
 import unittest
-from scipy.constants import hbar, e, m_e, pi
-from scipy.special import airy, ai_zeros
+
+import numpy as np
+from scipy.constants import e, hbar, m_e, pi
+from scipy.special import ai_zeros, airy
+
+from ErwinJr2.OneDQuantum import OneDSchrodinger
+from ErwinJr2.OneDQuantum.OneDSchrodinger import cSimpleFillPsi, cSimpleSolve1D
 
 ANG = 1E-10
 # test precision

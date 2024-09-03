@@ -3,21 +3,24 @@ This file defines the optical tab of ErwinJr, for simulation and optimization
 of 1D waveguide
 """
 
-from functools import partial
 import sys
+from functools import partial
+
 import numpy as np
 from numpy import log, pi
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt
+from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QPalette
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
-                             QLabel, QComboBox, QGroupBox, QDoubleSpinBox,
-                             QSpinBox, QCheckBox,
-                             QPushButton, QTableWidget, QTableWidgetItem,
-                             QTextEdit, QMessageBox, QDialog, QDialogButtonBox)
-from .OptStrata import OptStrata, rIdx, Alloy, Dopable, optimizeOptStrata
-from .EJcanvas import EJcanvas
+from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
+                             QDoubleSpinBox, QGridLayout, QGroupBox,
+                             QHBoxLayout, QLabel, QMessageBox, QPushButton,
+                             QSpinBox, QTableWidget, QTableWidgetItem,
+                             QTextEdit, QVBoxLayout, QWidget)
+
 from .customQTClass import mtrlComboBox
+from .EJcanvas import EJcanvas
+from .OptStrata import Alloy, Dopable, OptStrata, optimizeOptStrata, rIdx
 from .versionAndName import ejError
+
 mtrlList = list(rIdx.keys()) + list(Alloy.keys())
 facetList = ('cleaved', 'perfect AR', 'perfect HR', 'custom')
 

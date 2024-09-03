@@ -31,8 +31,8 @@ This file provides a detection of dark mode for MacOS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # © 2020 GitHub, Inc.
 
-import sys
 import platform
+import sys
 
 isdark = False
 

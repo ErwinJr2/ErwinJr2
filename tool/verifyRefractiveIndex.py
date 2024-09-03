@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-from ErwinJr2.Material import rIdx
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+
+from ErwinJr2.Material import rIdx
 
 
 def testGaAs():

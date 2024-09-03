@@ -1,9 +1,11 @@
-import numpy as np
-from numpy import sqrt, exp, pi, sin, cos, sinc
-from .Material import rIdx, MParam
-from collections import defaultdict
 import typing
+from collections import defaultdict
 from typing import List
+
+import numpy as np
+from numpy import cos, exp, pi, sin, sinc, sqrt
+
+from .Material import MParam, rIdx
 
 # Effective mass in unit of free electron mass.
 EffectiveMass = {mtrl: MParam[mtrl]['me0']

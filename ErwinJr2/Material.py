@@ -29,6 +29,7 @@ III/V semiconductor electron band. The module contains:
 # from warnings import warn
 # TODO: add warning for problematic datas
 from numpy import sqrt
+
 # This is to separate legacy fitting
 from .rFittings import AlGaAsIndex, SiNxIndex, SiO2Index
 

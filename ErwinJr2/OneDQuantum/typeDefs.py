@@ -1,4 +1,5 @@
 import typing
+
 import numpy as np
 
 floatOrArray = typing.Union[float, np.ndarray]

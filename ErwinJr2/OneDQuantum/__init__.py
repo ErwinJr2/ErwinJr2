@@ -1,4 +1,5 @@
 from . import OneDSchrodinger
+
 __all__ = (OneDSchrodinger.__all__
            + ['OneDSchrodinger'])
 

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
+import matplotlib.pyplot as plt
 import numpy as np
 from numpy import pi
-import matplotlib.pyplot as plt
+
 from ErwinJr2 import OptStrata
 
 

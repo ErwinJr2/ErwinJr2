@@ -12,6 +12,7 @@ Running this script is part of pre-compilation. See Makefile for details.
 """
 
 import os
+
 import numpy as np
 
 

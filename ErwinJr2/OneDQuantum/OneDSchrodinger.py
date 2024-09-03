@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-import numpy as np
-from ctypes import c_int, c_double, POINTER, CDLL
-import typing
-from . import band as _bd
-from .typeDefs import doubleArray, intArray, floatOrArray
 import os
+import typing
+from ctypes import CDLL, POINTER, c_double, c_int
+
+import numpy as np
+
+from . import band as _bd
+from .typeDefs import doubleArray, floatOrArray, intArray
+
 path = os.path.dirname(__file__)
 __all__ = ['cSimpleSolve1D', 'cSimpleFillPsi',
            'Band', 'cBandFillPsi', 'cBandSolve1D',
@@ -24,7 +27,8 @@ def bindOpenMP(on: bool = True) -> typing.Tuple[CDLL, typing.Type[object]]:
 
     _bd.init(_clib)
     global Band
-    from .band import cBand, Band
+    from .band import Band, cBand
+
     #  _clib.Numerov.argtypes = [c_double, c_int, c_double, c_double,
     #                            c_double, _doubleArray, _doubleArray,
     #                            _doubleArray]

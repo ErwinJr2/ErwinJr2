@@ -6,22 +6,19 @@ import sys
 import traceback
 from functools import partial
 
-from .QCLayers import QCLayers, onedq
-from .OptStrata import OptStrata
+from PyQt5.QtCore import (QDir, QFile, QFileInfo, QSettings, QStandardPaths,
+                          QUrl, QVariant)
+from PyQt5.QtGui import QDesktopServices, QIcon, QKeySequence, QPixmap
+from PyQt5.QtWidgets import (QAction, QApplication, QFileDialog, QInputDialog,
+                             QMainWindow, QMessageBox, QSplashScreen,
+                             QTabWidget)
+
 from . import SaveLoad
-
-from PyQt5.QtCore import (QSettings, QFile, QDir, QUrl, QFileInfo, QVariant,
-                          QStandardPaths)
-from PyQt5.QtGui import QIcon, QKeySequence, QDesktopServices, QPixmap
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QTabWidget,
-                             QAction, QMessageBox, QFileDialog,
-                             QInputDialog, QSplashScreen)
-
-from .QuantumTab import QuantumTab
 from .OpticalTab import OpticalTab
-
+from .OptStrata import OptStrata
+from .QCLayers import QCLayers, onedq
+from .QuantumTab import QuantumTab
 from .versionAndName import Version
-
 
 basePath = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_FILE_DIR = os.path.join(

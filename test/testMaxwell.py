@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-from ErwinJr2.OptStrata import MaxwellLayer, MaxwellLayer_anisotropic
-import numpy as np
 import unittest
+
+import numpy as np
+
+from ErwinJr2.OptStrata import MaxwellLayer, MaxwellLayer_anisotropic
 
 
 class TestTransferMatrix(unittest.TestCase):

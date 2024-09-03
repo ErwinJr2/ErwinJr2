@@ -2,23 +2,22 @@
 This file defines class for plotting figures in ErwinJr
 """
 
-import numpy as np
+import json
 import os
+import sys
+from warnings import warn
 
 import matplotlib
-from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg as
-                                                FigureCanvas)
+import numpy as np
+from matplotlib.backend_bases import NavigationToolbar2, cursors
 from matplotlib.backends.backend_qt5 import cursord  # , NavigationToolbar2QT
-from matplotlib.backend_bases import (NavigationToolbar2, cursors)
+from matplotlib.backends.backend_qt5agg import \
+    FigureCanvasQTAgg as FigureCanvas
 # import matplotlib.backends.qt_editor.figureoptions as figureoptions
 from matplotlib.figure import Figure
-
 from PyQt5.QtCore import QObject, Signal
-from PyQt5.QtWidgets import QSizePolicy, QMessageBox, QFileDialog
+from PyQt5.QtWidgets import QFileDialog, QMessageBox, QSizePolicy
 
-import sys
-import json
-from warnings import warn
 matplotlib.use('Qt5Agg')
 config = {
     "PlotMargin": {'l': 0.9, 'r': 0.12, 'b': 0.6, 't': 0.09},

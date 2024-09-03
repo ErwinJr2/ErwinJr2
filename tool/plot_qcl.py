@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-from ErwinJr2 import SaveLoad
-from ErwinJr2.QCPlotter import plotPotential, plotWF
-from ErwinJr2.QCLayers import QCLayers
-import matplotlib.pyplot as plt
 import os
+
+import matplotlib.pyplot as plt
+
+from ErwinJr2 import SaveLoad
+from ErwinJr2.QCLayers import QCLayers
+from ErwinJr2.QCPlotter import plotPotential, plotWF
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(__file__))
 _TEST_SAMPLE_FILE = os.path.join(_REPO_ROOT, "ErwinJr2/example/PQLiu.json")

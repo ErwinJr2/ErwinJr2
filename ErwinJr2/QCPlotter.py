@@ -2,13 +2,15 @@
 This contains the plotter functions for QCLayers
 """
 from typing import Iterable, Union
+
 import numpy as np
-from matplotlib.axes import Axes
-from matplotlib.pyplot import gca
 from matplotlib import cm
+from matplotlib.axes import Axes
 # the normalization used for state population
 # from matplotlib.colors import LogNorm as cmNorm
 from matplotlib.colors import Normalize as cmNorm
+from matplotlib.pyplot import gca
+
 from .QCLayers import QCLayers
 
 config = {

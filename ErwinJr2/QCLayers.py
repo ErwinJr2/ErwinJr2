@@ -1,19 +1,24 @@
 import numpy as np
-from numpy import sqrt, pi, exp
-from numpy import fft
-from scipy.constants import (e as e0, epsilon_0 as eps0, h as h,
-                             hbar as hbar, electron_mass as m0, c as c0)
-from scipy.linalg import null_space
 import scipy.sparse as sparse
 import scipy.sparse.linalg as splg
+from numpy import exp, fft, pi, sqrt
+from scipy.constants import c as c0
+from scipy.constants import e as e0
+from scipy.constants import electron_mass as m0
+from scipy.constants import epsilon_0 as eps0
+from scipy.constants import h as h
+from scipy.constants import hbar as hbar
+from scipy.linalg import null_space
+
 try:
     from .OneDQuantum import OneDSchrodinger as onedq
 except OSError:
     onedq = None
     print('C library is not compiled. Features are limited.')
-from . import Material
 import copy
 from typing import List, Tuple, Union
+
+from . import Material
 
 EUNIT = 1e-5    # E field unit from kV/cm to V/Angstrom
 BASISPAD = 100  #: padding barrier for basis solver, unit Angstrom

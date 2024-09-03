@@ -13,8 +13,8 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
-import sys
 import subprocess
+import sys
 
 # generate doxygen files
 read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
@@ -32,7 +32,9 @@ copyright = '2021, Gmachl Group, Princeton'
 author = 'Ming Lyu'
 
 # The short X.Y version
-from ErwinJr2.versionAndName import Version as version  # type: ignore # noqa: E402, E501
+from ErwinJr2.versionAndName import \
+    Version as version  # type: ignore # noqa: E402, E501
+
 # The full version, including alpha/beta/rc tags
 release = version + ' beta'
 

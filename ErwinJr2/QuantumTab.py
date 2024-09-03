@@ -13,33 +13,29 @@ and scattering
 
 import sys
 import traceback
-import numpy as np
-from numpy import sqrt
 from functools import partial, wraps
+
+import numpy as np
 # figure is and should be used for gain spectrum plot only!
 from matplotlib.pyplot import figure
+from numpy import sqrt
+from PyQt5.QtCore import QObject, Qt, QThread, pyqtSignal, pyqtSlot
+from PyQt5.QtGui import QColor, QPalette
+from PyQt5.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog,
+                             QDialogButtonBox, QDoubleSpinBox, QGridLayout,
+                             QGroupBox, QHBoxLayout, QLabel, QMessageBox,
+                             QPushButton, QSizePolicy, QSpinBox, QTableWidget,
+                             QTableWidgetItem, QTextEdit, QVBoxLayout, QWidget)
 
-from .QCLayers import (QCLayers, StateRecognizeError,
-                       optimize_layer, optimize_global,
-                       QCMaterial, h, hbar, eps0, c0, e0)
+from .customQTClass import mtrlComboBox
+from .darkDetect import isdark
 from .EJcanvas import EJcanvas, EJplotControl
 from .EJcanvas import config as plotconfig
-
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, QObject, QThread, Qt
-from PyQt5.QtGui import QPalette, QColor
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLabel, QComboBox,
-                             QSpinBox, QDoubleSpinBox, QGroupBox,
-                             QCheckBox, QTextEdit, QSizePolicy,
-                             QGridLayout, QHBoxLayout, QPushButton,
-                             QTableWidget, QTableWidgetItem,
-                             QApplication, QMessageBox,
-                             QDialog, QDialogButtonBox)
-from .customQTClass import mtrlComboBox
-
 from .Material import AParam
+from .QCLayers import (QCLayers, QCMaterial, StateRecognizeError, c0, e0, eps0,
+                       h, hbar, optimize_global, optimize_layer)
+from .QCPlotter import plotPotential, plotWF, scaleWF
 from .versionAndName import ejError, ejWarning
-from .darkDetect import isdark
-from .QCPlotter import plotPotential, scaleWF, plotWF
 
 
 # TODO: this may not be necessary by better designer

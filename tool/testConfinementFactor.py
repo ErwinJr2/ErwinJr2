@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-import numpy as np
-from numpy import sqrt, pi, abs
 import matplotlib.pyplot as plt
+import numpy as np
+from numpy import abs, pi, sqrt
+
 from ErwinJr2.OptStrata import MaxwellLayer, MaxwellLayer_anisotropic
 
 

@@ -6,6 +6,7 @@ Make `python -m ErwinJr` an alias for running `ErwinJr`.
 
 import os
 import sys
+
 from ErwinJr2.ErwinJr import main
 
 

@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-from ErwinJr2 import SchrodingerLayer
+import unittest
+
 import numpy as np
-from scipy.constants import e as e0, hbar as hbar, electron_mass as m0
 import scipy.sparse as sparse
 import scipy.sparse.linalg as splg
-import unittest
+from scipy.constants import e as e0
+from scipy.constants import electron_mass as m0
+from scipy.constants import hbar as hbar
+
+from ErwinJr2 import SchrodingerLayer
 
 """This unit test is to compare simulation with PhysRevB.50.8663"""
 

@@ -2,11 +2,12 @@
 This file defines functions to save and load JSON files from ErwinJr
 """
 
-from .QCLayers import QCLayers
-from .OptStrata import OptStrata
-from collections import defaultdict
 import json
 import typing
+from collections import defaultdict
+
+from .OptStrata import OptStrata
+from .QCLayers import QCLayers
 
 
 def qclLoad(fhandle: typing.TextIO) -> QCLayers:

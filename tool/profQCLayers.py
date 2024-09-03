@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-from QCLayers import auto_gain
-import SaveLoad
 import cProfile
-import pstats
 import io
+import pstats
+
+import SaveLoad
+from QCLayers import auto_gain
 
 if __name__ == "__main__":
     cp = cProfile.Profile()

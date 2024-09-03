@@ -2,8 +2,9 @@
 # -*- coding:utf-8 -*-
 
 import os
-import sys
 import subprocess
+import sys
+
 if sys.platform.startswith('win'):
     import winshell  # type: ignore # ignore: unresolved-import
 

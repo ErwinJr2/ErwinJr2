@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-from ErwinJr2.QCLayers import QCLayers
-import numpy as np
 import unittest
+
+import numpy as np
+
+from ErwinJr2.QCLayers import QCLayers
 
 """This unit test is to compare simulation with PhysRevB.50.8663"""
 

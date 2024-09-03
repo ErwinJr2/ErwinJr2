@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 
-from setuptools import setup, find_packages
-from setuptools.command.install import install
-from setuptools.command.develop import develop
 # import wheel.bdist_wheel as bdist_wheel
 # from wheel.bdist_wheel import bdist_wheel, get_platform
 import os
 import subprocess
 import warnings
 
+from setuptools import find_packages, setup
+from setuptools.command.develop import develop
+from setuptools.command.install import install
 
 _built = False
 

@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-import numpy as np
-from ErwinJr2 import SaveLoad
-import unittest
 import os
+import unittest
+
+import numpy as np
+
+from ErwinJr2 import SaveLoad
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(__file__))
 _TEST_SAMPLE_FILE = os.path.join(_REPO_ROOT, "ErwinJr2/example/PQLiu.json")

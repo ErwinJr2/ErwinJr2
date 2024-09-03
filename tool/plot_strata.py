@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-from ErwinJr2 import SaveLoad
-from ErwinJr2.OptStrata import OptStrata
-import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
+
+from ErwinJr2 import SaveLoad
+from ErwinJr2.OptStrata import OptStrata
 
 matplotlib.rcParams.update({'font.size': 12})
 with open("../ErwinJr2/example/PQLiu.json", 'r') as f:
