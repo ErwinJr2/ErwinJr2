@@ -8,6 +8,10 @@ dev:
 doc:
 [![Documentation Status](https://readthedocs.org/projects/erwinjr2/badge/?version=latest)](https://erwinjr2.readthedocs.io/en/latest/?badge=latest)
 
+This is a Quantum Cascade Laser (QCL) modeling and design software produced
+at Princeton University, Gmachl group.
+
+See https://erwinjr2.readthedocs.io/ for details.
 
 ![Main Window Screenshot](./docs/figures/qtab.png)
 

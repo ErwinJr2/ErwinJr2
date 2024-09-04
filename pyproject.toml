@@ -1,3 +1,75 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "ErwinJr2"
+description = "A Quantum Cascade Laser Design Tool"
+readme = "README.md"
+authors = [{ name = "Ming Lyu", email = "caref.lm@gmail.com" }]
+keywords = ["Quantum Cascade Laser", "Maxwell", "Schrodinger", "quantum"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Environment :: X11 Applications :: Qt",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: C",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Visualization",
+]
+requires-python = ">=3.6"
+dependencies = ["numpy", "scipy"]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+GUI = ["pyqt5", "matplotlib>=3.3", "winshell;sys_platform == 'win32'"]
+dev = [
+    'sphinx>=2',
+    'sphinx_rtd_theme',
+    'sphinxcontrib-bibtex>=2.0.0',
+    'breathe',
+]
+
+[project.gui-scripts]
+ErwinJr = "ErwinJr2.__main__:__main__"
+ErwinJr-genshortcut = "ErwinJr2.genshortcut:create_shortcut"
+
+[project.urls]
+"Docs: User Guide" = "https://erwinjr2.readthedocs.io/en/latest/"
+"Source Code" = "https://github.com/ErwinJr2/ErwinJr2"
+"homepage" = "https://github.com/ErwinJr2/ErwinJr2"
+"Bug Tracker" = "https://github.com/ErwinJr2/ErwinJr2/issues"
+
+[tool.setuptools.packages.find]
+include = ["ErwinJr2"]
+
+[tool.setuptools.package-data]
+ErwinJr2 = [
+    "images/*.png",
+    "images/*.ico",
+    "images/*.icns",
+    "example/PQLiu.json",
+    "Info.plist",
+    "OneDQuantum/Makefile",
+    "OneDQuantum/*.sln",
+    "OneDQuantum/*.vcxproj",
+    "OneDQuantum/*.c",
+    "OneDQuantum/*.h",
+    "OneDQuantum/fftautocorr/*.c",
+    "OneDQuantum/fftautocorr/*.h",
+    "OneDQuantum/*.so",
+    "OneDQuantum/*.dll",
+    "OneDQuantum/*.dylib",
+]
+
+[tool.setuptools.dynamic]
+version = { attr = "ErwinJr2.versionAndName.Version" }
