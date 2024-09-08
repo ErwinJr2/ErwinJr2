@@ -33,7 +33,7 @@ author = 'Ming Lyu'
 
 # The short X.Y version
 from ErwinJr2.versionAndName import \
-    Version as version  # type: ignore # noqa: E402, E501
+    VERSION as version  # type: ignore # noqa: E402, E501
 
 # The full version, including alpha/beta/rc tags
 release = version + ' beta'

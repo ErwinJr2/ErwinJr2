@@ -72,4 +72,4 @@ ErwinJr2 = [
 ]
 
 [tool.setuptools.dynamic]
-version = { attr = "ErwinJr2.versionAndName.Version" }
+version = { attr = "ErwinJr2.versionAndName.VERSION" }

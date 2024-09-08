@@ -18,7 +18,7 @@ from ErwinJr2.OpticalTab import OpticalTab
 from ErwinJr2.OptStrata import OptStrata
 from ErwinJr2.QCLayers import QCLayers, onedq
 from ErwinJr2.QuantumTab import QuantumTab
-from ErwinJr2.versionAndName import Version
+from ErwinJr2.versionAndName import VERSION
 
 basePath = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_FILE_DIR = os.path.join(
@@ -36,7 +36,7 @@ class MainWindow(QMainWindow):
             self.qsettings.setValue("firstRun", False)
             if not fname:
                 firstRunBox = QMessageBox(
-                    QMessageBox.Question, 'ErwinJr2 ' + Version,
+                    QMessageBox.Question, 'ErwinJr2 ' + VERSION,
                     ("Welcome to ErwinJr2!\n"
                      "Since this is your first time running the program, "
                      "would you like to open an example or a blank file?"),
@@ -323,7 +323,7 @@ class MainWindow(QMainWindow):
 # Save, Load, RecentFiles
 # ===========================================================================
     def updateWindowTitle(self):
-        title = "ErwinJr2 " + Version
+        title = "ErwinJr2 " + VERSION
         if self.filename:
             title += " - %s" % os.path.basename(self.filename)
         if self.dirty:
@@ -343,7 +343,7 @@ class MainWindow(QMainWindow):
         user cancels the operation"""
         if self.dirty:
             reply = QMessageBox.question(
-                self, "ErwinJr2 " + Version + " - Unsaved Changes",
+                self, "ErwinJr2 " + VERSION + " - Unsaved Changes",
                 "Save unsaved changes?",
                 QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
             if reply == QMessageBox.Cancel:
@@ -525,7 +525,7 @@ With contributions from:
          * Yamac Dikmelik (Johns Hopkins University)
          * Yu Song (Princeton University)
         """
-        QMessageBox.about(self, "ErwinJr2 " + Version, msg.strip())
+        QMessageBox.about(self, "ErwinJr2 " + VERSION, msg.strip())
 
     def on_licenses(self):
         copyright = """
@@ -547,7 +547,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-        QMessageBox.about(self, "ErwinJr2 " + Version,
+        QMessageBox.about(self, "ErwinJr2 " + VERSION,
                           copyright.strip())
 
     def on_tutorial(self):
