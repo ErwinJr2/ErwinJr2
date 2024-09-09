@@ -9,16 +9,13 @@ import warnings
 
 from setuptools import setup
 from setuptools.command.build_py import build_py
-from setuptools.command.develop import develop
 from setuptools.dist import Distribution
 
 
 def build_clib():
     print("Building binary for ErwinJr2.")
-    cwd = os.getcwd()
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                         'ErwinJr2', 'OneDQuantum')
-    os.chdir(path)
     # compile binary
     MSBuild = os.environ.get('MSBUILD')
     if MSBuild is not None:
@@ -30,24 +27,16 @@ def build_clib():
         makeCMD_MP = ['make', 'MP']
     try:
         print('call ', makeCMD)
-        subprocess.check_call(makeCMD)
+        subprocess.check_call(makeCMD, cwd=path)
     except subprocess.CalledProcessError:
         warnings.warn("Warning: Exit without compiling the C library. "
                       "Features are limited.")
-        os.chdir(cwd)
         return
     try:
         print('call ', makeCMD_MP)
-        subprocess.check_call(makeCMD_MP)
+        subprocess.check_call(makeCMD_MP, cwd=path)
     except subprocess.CalledProcessError:
         warnings.warn("Warning: openMP not supported")
-    os.chdir(cwd)
-
-
-class EJDevelopCMD(develop):
-    def run(self):
-        build_clib()
-        super().run()
 
 
 class EJBuildCMD(build_py):
@@ -64,7 +53,6 @@ class EJDistribution(Distribution):
 
 setup(
     cmdclass={
-        'develop': EJDevelopCMD,
         'build_py': EJBuildCMD,
     },
     distclass=EJDistribution,
