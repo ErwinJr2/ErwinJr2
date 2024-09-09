@@ -50,26 +50,29 @@ ErwinJr-genshortcut = "ErwinJr2.genshortcut:create_shortcut"
 "Bug Tracker" = "https://github.com/ErwinJr2/ErwinJr2/issues"
 
 [tool.setuptools.packages.find]
-include = ["ErwinJr2"]
+include = [
+    "ErwinJr2",
+    "ErwinJr2.images",
+    "ErwinJr2.example",
+    "ErwinJr2.OneDQuantum",
+    "ErwinJr2.OneDQuantum.fftautocorr",
+]
 
 [tool.setuptools.package-data]
-ErwinJr2 = [
-    "images/*.png",
-    "images/*.ico",
-    "images/*.icns",
-    "example/PQLiu.json",
-    "Info.plist",
-    "OneDQuantum/Makefile",
-    "OneDQuantum/*.sln",
-    "OneDQuantum/*.vcxproj",
-    "OneDQuantum/*.c",
-    "OneDQuantum/*.h",
-    "OneDQuantum/fftautocorr/*.c",
-    "OneDQuantum/fftautocorr/*.h",
-    "OneDQuantum/*.so",
-    "OneDQuantum/*.dll",
-    "OneDQuantum/*.dylib",
+ErwinJr2 = ["Info.plist"]
+"ErwinJr2.images" = ["*.png", "*.ico", "*.icns"]
+"ErwinJr2.example" = ["PQLiu.json"]
+"ErwinJr2.OneDQuantum" = [
+    "Makefile",
+    "*.sln",
+    "*.vcxproj",
+    "*.c",
+    "*.h",
+    "*.so",
+    "*.dll",
+    "*.dylib",
 ]
+"ErwinJr2.OneDQuantum.fftautocorr" = ["*.c", "*.h"]
 
 [tool.setuptools.dynamic]
 version = { attr = "ErwinJr2.versionAndName.VERSION" }

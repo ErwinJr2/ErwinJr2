@@ -1,3 +1,4 @@
+SHELL=bash
 CFLAGS += -Ofast -Wall -fPIC
 # CFLAGS += -D _DEBUG
 # CC = icc

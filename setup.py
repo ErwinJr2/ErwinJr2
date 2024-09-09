@@ -8,7 +8,9 @@ import subprocess
 import warnings
 
 from setuptools import setup
+from setuptools.command.build_py import build_py
 from setuptools.command.develop import develop
+from setuptools.dist import Distribution
 
 
 def build_clib():
@@ -48,8 +50,22 @@ class EJDevelopCMD(develop):
         super().run()
 
 
+class EJBuildCMD(build_py):
+    def run(self):
+        build_clib()
+        super().run()
+
+
+class EJDistribution(Distribution):
+    def has_ext_modules(self):
+        super().has_ext_modules()
+        return True
+
+
 setup(
     cmdclass={
-        'develop': EJDevelopCMD
+        'develop': EJDevelopCMD,
+        'build_py': EJBuildCMD,
     },
+    distclass=EJDistribution,
 )
