@@ -15,16 +15,16 @@ extern "C" {
 
 /** @cond IMPL
  * implemtation of functions in header files should be excluded in doxygen */
-numpyint BandUpdateM(Band *band, double E, const double *xVc, double *m) {
+numpyint BandUpdateM(const Band *band, double E, const double *xVc, double *m) {
     return band->updateM(band, E, xVc, m);
 }
 /** @endcond */
 
 /** @cond IMPL
  * implemtation of functions in header files should be excluded in doxygen */
-double BandNormalize(Band *band, double E, const double *xVc,
-                     double *psi, double xres) {
-    return band->normalize(band, E, xVc, psi, xres);
+double BandNormalize(const Band *band, double E, const double *xVc, double *psi,
+                     double xres) {
+  return band->normalize(band, E, xVc, psi, xres);
 }
 /** @endcond */
 
@@ -42,8 +42,8 @@ typedef struct ZBBAND {
 }ZBBand;
 
 /** Update effective mass of a Zincblende band semiconductor */
-numpyint ZBupdateM(Band *mat, double Eq, const double *xVc, double *m) {
-    ZBBand *zbmat = (ZBBand *) mat;
+numpyint ZBupdateM(const Band *mat, double Eq, const double *xVc, double *m) {
+    const ZBBand *zbmat = (const ZBBand *) mat;
     int q;
     for(q=0; q<zbmat->N; q++) {
         double E = Eq - xVc[q];
@@ -57,9 +57,9 @@ numpyint ZBupdateM(Band *mat, double Eq, const double *xVc, double *m) {
 
 #define SQ(x) (x)*(x)   /**< short for square of a function */
 /** @brief The normalization condition for Zincblende band. */
-double ZBNormalize(Band *mat, double Eq, const double *xVc,
+double ZBNormalize(const Band *mat, double Eq, const double *xVc,
                    double *psi, double xres) {
-    ZBBand *zbmat = (ZBBand *) mat;
+    const ZBBand *zbmat = (const ZBBand *) mat;
     int q;
     double modsq = 0;
     for(q=1; q<zbmat->N; q++) {
@@ -142,8 +142,8 @@ typedef struct WZBAND {
 } WZBand;
 
 /** @brief  Update effective mass of a Wurtzite band semiconductor. Output N */
-numpyint WZupdateM(Band *mat, double Eq, const double *xVc, double *m) {
-    WZBand *wzmat = (WZBand *) mat;
+numpyint WZupdateM(const Band *mat, double Eq, const double *xVc, double *m) {
+    const WZBand *wzmat = (const WZBand *) mat;
     int q;
     for(q=0; q<wzmat->N; q++) {
         double E = Eq - xVc[q];
@@ -157,9 +157,9 @@ numpyint WZupdateM(Band *mat, double Eq, const double *xVc, double *m) {
 }
 
 /** @brief The normalization condition for Wurtzite band. */
-double WZNormalize(Band *mat, double Eq, const double *xVc,
+double WZNormalize(const Band *mat, double Eq, const double *xVc,
                    double *psi, double xres) {
-    ZBBand *zbmat = (ZBBand *) mat;
+    const ZBBand *zbmat = (const ZBBand *) mat;
     int q;
     double modsq = 0;
     for(q=1; q<zbmat->N; q++) {

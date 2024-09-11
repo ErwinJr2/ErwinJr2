@@ -31,7 +31,7 @@ void
 FillPsi(double step, numpyint N, const double *EigenEs,
         numpyint EN, const double *V, double *m, double *psis,
         numpyint *starts, numpyint *ends,
-        Band *const mat);
+        const Band *mat);
 
 #ifdef _WINDLL
 __declspec(dllexport)
@@ -62,7 +62,7 @@ __declspec(dllexport)
 numpyint
 Solve1D(double step, numpyint N,
         const double *Es, numpyint EN,
-        const double *V, double *m, Band *const mat,
+        const double *V, double *m, const Band *mat,
         double *EigenE);
 
 #ifdef _WINDLL

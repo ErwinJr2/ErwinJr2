@@ -134,7 +134,7 @@ double rk4(double step, numpyint N, double y0, double y1,
 void FillPsi(double step, numpyint N, const double *EigenEs,
              numpyint EN, const double *V, double *m, double *psis,
              numpyint *starts, numpyint *ends,
-             Band *const mat)
+             const Band *mat)
 {
     int i;
 #ifdef _DEBUG
@@ -227,7 +227,7 @@ void FillPsi(double step, numpyint N, const double *EigenEs,
 
     numpyint Solve1D(double step, numpyint N,
                      const double *Es, numpyint EN,
-                     const double *V, double *m, Band *const mat,
+                     const double *V, double *m, const Band *mat,
                      double *EigenE)
     {
         double *yend;

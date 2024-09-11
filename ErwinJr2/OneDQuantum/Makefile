@@ -1,5 +1,5 @@
 SHELL=bash
-CFLAGS += -Ofast -Wall -fPIC
+CFLAGS += -Ofast -Wall -Werror -fPIC
 # CFLAGS += -D _DEBUG
 # CC = icc
 # CFLAGS = -march=native -Ofast -gcc-name=gcc-6 -Wall
