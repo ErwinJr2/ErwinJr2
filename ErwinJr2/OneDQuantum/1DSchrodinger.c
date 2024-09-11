@@ -6,6 +6,7 @@
  *
  */
 
+#include "1DSchrodinger.h"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -130,98 +131,84 @@ double rk4(double step, numpyint N, double y0, double y1,
 
 #define ode rk4 /**< Use RK4 as the default ODE solver */
 
-
-#ifdef _WINDLL
-__declspec(dllexport)
-#endif
-
-/**
- * Fill in wavefunctions in \f$ \psi \f$'s accroding to eigen energy in EigenEs.
- * \f$ \psi + i N \times sizeof(double) \f$ is the wavefunction with Energy EigenEs[i]
- * The result is normalized to 1 (so psi is unit sqrt(Angstrom^-1))
- * if mat == NULL  or the normalization defined in mat.
- *
- * @param[in] step step size
- * @param[in] N number of steps
- * @param[in] EigenEs list of eigen energies
- * @param[in] EN number of eigen energies we consider
- * @param[in] V V[n] is the potential at \f$ x = x_0 + n \times step \f$
- * @param[in] m m[n] is the effective mass at \f$ x = x_0 + n \times step \f$,
- *                in unit \f$ m_0 \f$ (free electron mass), used only when
- *                mat=Null
- * @param[in] starts
- * @param[in] ends wavefuntion limited to psi[starts[i]:ends[i]]
- * @param[in] mat is a pointer to band structure, for updating
- *                effective mass according to energy and perform normalization.
- *                When it's NULL it means using constant mass with parabolic
- *                kinetic energy.
- * @param[out] psis \f$ \psi + i N \times sizeof(double) \f$ is the
- *                  wavefunction with energy EigenEs[i].
- */
 void FillPsi(double step, numpyint N, const double *EigenEs,
-        numpyint EN, const double *V, double *m, double *psis,
-        numpyint *starts, numpyint *ends,
-        Band *const mat) {
+             numpyint EN, const double *V, double *m, double *psis,
+             numpyint *starts, numpyint *ends,
+             Band *const mat)
+{
     int i;
 #ifdef _DEBUG
-    if(mat != NULL) {
+    if (mat != NULL)
+    {
         assert N == mat->N;
     }
 #endif
 #ifdef __MP
-    #ifdef _DEBUG
+#ifdef _DEBUG
     printf("Start a FillPsi with openMP.\n");
-    #endif
-    #pragma omp parallel
+#endif
+#pragma omp parallel
 #endif
     {
         double *bandm;
-        if (mat != NULL) {
-            bandm = (double*)malloc(N*sizeof(double));
+        if (mat != NULL)
+        {
+            bandm = (double *)malloc(N * sizeof(double));
         }
-        else {
+        else
+        {
             bandm = m;
         }
 #ifdef __MP
-    #ifdef _DEBUG
-            printf("    From thread %d out of %d\n",
-                    omp_get_thread_num(), omp_get_num_threads());
-    #endif
-        #pragma omp for
+#ifdef _DEBUG
+        printf("    From thread %d out of %d\n",
+               omp_get_thread_num(), omp_get_num_threads());
 #endif
-        for(i=0; i<EN; i++) {
+#pragma omp for
+#endif
+        for (i = 0; i < EN; i++)
+        {
             int j;
-            double* psi = psis + i*N;
-            for(j = 0; j<starts[i]; j++) {
+            double *psi = psis + i * N;
+            for (j = 0; j < starts[i]; j++)
+            {
                 psi[j] = 0;
             }
-            for(j = ends[i]; j<N; j++) {
+            for (j = ends[i]; j < N; j++)
+            {
                 psi[j] = 0;
             }
             psi += starts[i];
-            int len = (N<ends[i]? N : ends[i]) - starts[i];
+            int len = (N < ends[i] ? N : ends[i]) - starts[i];
             double modsq = 0;
-            if (mat != NULL) {
+            if (mat != NULL)
+            {
                 /*MP assume only mass is updated*/
                 BandUpdateM(mat, EigenEs[i], V, bandm);
             }
             ode(step, len, 0.0, Y_EPS, EigenEs[i],
-                    V+starts[i], bandm+starts[i], psi);
+                V + starts[i], bandm + starts[i], psi);
             /* Normalization */
-            if (mat != NULL) {
+            if (mat != NULL)
+            {
                 BandNormalize(mat, EigenEs[i], V, psi, step);
-            } else {
+            }
+            else
+            {
                 /* default normalization */
-                for(j=0; j<len; j++) {
+                for (j = 0; j < len; j++)
+                {
                     modsq += sq(psi[j]);
                 }
                 modsq = sqrt(modsq * step);
-                for(j=0; j<len; j++) {
+                for (j = 0; j < len; j++)
+                {
                     psi[j] /= modsq;
                 }
             }
         }
-        if (mat != NULL) {
+        if (mat != NULL)
+        {
             free(bandm);
             bandm = NULL;
         }
@@ -236,43 +223,16 @@ void FillPsi(double step, numpyint N, const double *EigenEs,
  * i.e assuming y1 and y2 are of opposite signs and
  * returning \f$ x_n \f$.
  */
-#define findZero(x1, y1, x2, y2) (((x1)*(y2) - (x2)*(y1))/((y2)-(y1)))
+#define findZero(x1, y1, x2, y2) (((x1) * (y2) - (x2) * (y1)) / ((y2) - (y1)))
 
-
-#ifdef _WINDLL
-__declspec(dllexport)
-#endif
-
-/**
- * Solve 1D Schrodinger's equation with potential \f$ V \f$ and effective
- * mass \f$ m \f$
- * in the region \f$ x_0 \leq x < x_0 + step \times N \f$.
- * Boundary condition: wavefunction is zero at boundaries.
- *
- * Method: First scan in energy Es[0:EN] and look for zeros(EigenE) by either
- * simple linear interpolation if SIMPLE is defined;
- * or calculate zero using secant method if SIMPLE is not defined.
- *
- * Es should be in small to large order.
- *
- * @param[in] step step size
- * @param[in] N number of steps
- * @param[in] Es initial search range of eigen energy
- * @param[in] EN number of eigen energy to find
- * @param[in] V potential
- * @param[in] m effective mass
- * @param[in] mat is a pointer to band structure
- * @param[out] EigenE eigen energy
- *
- * @return total number of eigen states found.
- */
-numpyint Solve1D(double step, numpyint N,
-        const double *Es, numpyint EN,
-        const double *V, double *m, Band * const mat,
-        double *EigenE) {
-    double *yend;
-    int NofZeros=0;
-    int i;
+    numpyint Solve1D(double step, numpyint N,
+                     const double *Es, numpyint EN,
+                     const double *V, double *m, Band *const mat,
+                     double *EigenE)
+    {
+        double *yend;
+        int NofZeros = 0;
+        int i;
 #ifdef _DEBUG
     if(mat != NULL) {
         assert N == mat->N;
@@ -387,23 +347,7 @@ numpyint Solve1D(double step, numpyint N,
     return NofZeros;
 }
 
-
-# define MINPSI 1E-8 /**< The min cutoff for integral of wavefunctions */
-#ifdef _WINDLL
-__declspec(dllexport)
-#endif
-/**
- * Calculate the LO phonon scattering rate
- *
- * @param[in] step step size in unit Angstrom
- * @param[in] N number of steps
- * @param[in] kl wavevector of LO phonon in unit m^-1. This is DIFFERENT than
- *            the step unit for convience to use kl.
- * @param[in] psi_ij \f$\psi_i \psi_j\f$ wavefunction overlap
- *
- * @return    \f$I_{ij} = \int\mathrm dx\mathrm dy\, \psi_i(x)\psi_j(x)
- *             \exp\left[-k_l|x-y|\right]\psi_i(y)\psi_j(y) \f$
- */
+#define MINPSI 1E-8 /**< The min cutoff for integral of wavefunctions */
 double LOphononScatter(double step, numpyint N, double kl,
         const double *psi_ij) {
     double Iij = 0;
@@ -441,25 +385,6 @@ double LOphononScatter(double step, numpyint N, double kl,
     return 2*Iij * sq(step);
 }
 
-
-#ifdef _WINDLL
-__declspec(dllexport)
-#endif
-/**
- * Calculate sum LO phonon scattering rate from psi_i to all psi_j's
- *
- * @param[in] step step size in unit Angstrom
- * @param[in] N number of steps
- * @param[in] kls wavevector of LO phonon between psi_i to psi_j's in unit m^-1
- * @param[in] psi_ijs psi_j = psi_js[n*N] \f$\psi_i\psi_j\f$ overlap between
- *            \f$\psi_i\f$ and \f$\psi_j\f$ wavefunction
- * @param[in] fjs the factor \f$f_j\f$ before \f$I_{ij}\f$ before sum
- * @param[in] Nj number of psi_j
- *
- * @return    \f$\sum_j f_j I_{ij} =
- *             \sum_j f_j \int\mathrm dx\mathrm dy\, \psi_i(x)\psi_j(x)
- *             \exp\left[-k_l|x-y|\right]\psi_i(y)\psi_j(y) \f$
- */
 double LOtotal(double step, numpyint N, const double *kls,
         const double *psi_ijs, const double *fjs, numpyint Nj) {
     double Iij = 0;
@@ -521,24 +446,10 @@ double LOtotal(double step, numpyint N, const double *kls,
     return 2*Iij * sq(step);
 }
 
-
-#ifdef _WINDLL
-__declspec(dllexport)
-#endif
-/**
- * Checkpoint for python-C interface. Output 137.
- */
 numpyint invAlpha() {
     return 137;
 }
 
-
-#ifdef _WINDLL
-__declspec(dllexport)
-#endif
-/**
- * Check if openMP is loaded.
- */
 int isMP() {
 # ifdef __MP
     return 1;
