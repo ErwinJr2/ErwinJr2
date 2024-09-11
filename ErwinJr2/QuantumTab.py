@@ -1687,7 +1687,7 @@ class QuantumTab(QWidget):
         wlmin, wlmax, buttonRes = wlDialog.exec()
         if buttonRes:
             wlFigure = figure()
-            wlFigure.canvas.set_window_title('Gain Spectrum')
+            wlFigure.canvas.manager.set_window_title('Gain Spectrum')
             axes = wlFigure.add_subplot(111)
             wls = np.linspace(wlmin, wlmax, 500)
             axes.plot(wls, self.qclayers.full_gain_spectrum(wls))
