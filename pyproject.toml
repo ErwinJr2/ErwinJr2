@@ -84,3 +84,5 @@ skip = [
     # Disable building PyPy wheels on all platforms
     "pp*",
 ]
+# test-requires = "pytest"
+# test-command = "pytest {project}/tests"
