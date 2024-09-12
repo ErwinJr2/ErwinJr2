@@ -27,8 +27,7 @@ __declspec(dllexport)
  * @param[out] psis \f$ \psi + i N \times sizeof(double) \f$ is the
  *                  wavefunction with energy EigenEs[i].
  */
-void
-FillPsi(double step, numpyint N, const double *EigenEs,
+void FillPsi(double step, numpyint N, const double *EigenEs,
         numpyint EN, const double *V, double *m, double *psis,
         numpyint *starts, numpyint *ends,
         const Band *mat);
@@ -59,8 +58,7 @@ __declspec(dllexport)
  *
  * @return total number of eigen states found.
  */
-numpyint
-Solve1D(double step, numpyint N,
+numpyint Solve1D(double step, numpyint N,
         const double *Es, numpyint EN,
         const double *V, double *m, const Band *mat,
         double *EigenE);
@@ -80,9 +78,8 @@ __declspec(dllexport)
  * @return    \f$I_{ij} = \int\mathrm dx\mathrm dy\, \psi_i(x)\psi_j(x)
  *             \exp\left[-k_l|x-y|\right]\psi_i(y)\psi_j(y) \f$
  */
-double
-LOphononScatter(double step, numpyint N, double kl,
-                const double *psi_ij);
+double LOphononScatter(double step, numpyint N, double kl,
+                       const double *psi_ij);
 
 #ifdef _WINDLL
 __declspec(dllexport)
@@ -102,9 +99,8 @@ __declspec(dllexport)
  *             \sum_j f_j \int\mathrm dx\mathrm dy\, \psi_i(x)\psi_j(x)
  *             \exp\left[-k_l|x-y|\right]\psi_i(y)\psi_j(y) \f$
  */
-double
-LOtotal(double step, numpyint N, const double *kls,
-        const double *psi_ijs, const double *fjs, numpyint Nj);
+double LOtotal(double step, numpyint N, const double *kls,
+               const double *psi_ijs, const double *fjs, numpyint Nj);
 
 #ifdef _WINDLL
 __declspec(dllexport)
@@ -112,8 +108,7 @@ __declspec(dllexport)
 /**
  * Checkpoint for python-C interface. Output 137.
  */
-numpyint
-invAlpha();
+numpyint invAlpha();
 
 #ifdef _WINDLL
 __declspec(dllexport)
@@ -121,5 +116,4 @@ __declspec(dllexport)
 /**
  * Check if openMP is loaded.
  */
-int
-isMP();
+int isMP();
