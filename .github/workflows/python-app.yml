@@ -34,8 +34,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements-dev.txt
-    - name: Build C Libs  # this may duplicate with pip install -e .
-      run: make -C ErwinJr2/OneDQuantum
     - name: Test with flake8
       run: flake8 ErwinJr2/ --count --show-source --statistics
     - name: Test with pytest

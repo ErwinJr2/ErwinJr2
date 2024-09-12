@@ -4,56 +4,42 @@
 # import wheel.bdist_wheel as bdist_wheel
 # from wheel.bdist_wheel import bdist_wheel, get_platform
 import os
-import subprocess
-import warnings
 
-from setuptools import setup
-from setuptools.command.build_py import build_py
-from setuptools.dist import Distribution
+import numpy
+from Cython.Build import cythonize
+from setuptools import Extension, setup
 
-
-def build_clib():
-    print("Building binary for ErwinJr2.")
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                        'ErwinJr2', 'OneDQuantum')
-    # compile binary
-    MSBuild = os.environ.get('MSBUILD')
-    if MSBuild is not None:
-        sln = 'OneDQuantum.sln'
-        makeCMD = [MSBuild, sln, '/p:Configuration=Release']
-        makeCMD_MP = [MSBuild, sln, '/p:Configuration=MP_Release']
-    else:
-        makeCMD = ['make']
-        makeCMD_MP = ['make', 'MP']
-    try:
-        print('call ', makeCMD)
-        subprocess.check_call(makeCMD, cwd=path)
-    except subprocess.CalledProcessError:
-        warnings.warn("Warning: Exit without compiling the C library. "
-                      "Features are limited.")
-        return
-    try:
-        print('call ', makeCMD_MP)
-        subprocess.check_call(makeCMD_MP, cwd=path)
-    except subprocess.CalledProcessError:
-        warnings.warn("Warning: openMP not supported")
-
-
-class EJBuildCMD(build_py):
-    def run(self):
-        build_clib()
-        super().run()
-
-
-class EJDistribution(Distribution):
-    def has_ext_modules(self):
-        super().has_ext_modules()
-        return True
-
+_CLIB_PREFIX = "ErwinJr2/OneDQuantum"
+_CLIB_FILES = [
+    "c_schrodinger.pyx",
+    "1DSchrodinger.c",
+    "band.c",
+    "fftautocorr/fftautocorr.c",
+    # "1DSchrodinger.h",
+    # "science.h",
+    # "fftautocorr/fftautocorr.h",
+    # "fftautocorr/factortable.h",
+]
 
 setup(
-    cmdclass={
-        'build_py': EJBuildCMD,
-    },
-    distclass=EJDistribution,
+    ext_modules=cythonize([
+        Extension(
+            name="ErwinJr2.OneDQuantum.c_schrodinger",
+            sources=[os.path.join(_CLIB_PREFIX, f) for f in _CLIB_FILES],
+            include_dirs=[numpy.get_include()],
+            define_macros=[
+                ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"),
+                ("__MP", None),
+            ],
+            extra_compile_args=[
+                "-Ofast",
+                # "-Werror",
+                "-fopenmp",
+            ],
+            extra_link_args=[
+                '-lgomp',
+                "-lm",
+            ],
+        ),
+    ], show_all_warnings=True)
 )
