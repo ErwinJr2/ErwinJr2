@@ -29,7 +29,8 @@ NUMPY_INCLUDE = $(shell python -c "import numpy; print(numpy.get_include())")
 .SECONDARY :
 
 
-all: 1DSchrodinger.$(EXT)
+all: c_schrodinger.$(EXT)
+# all: 1DSchrodinger.$(EXT)
 MP:  1DSchrodinger_MP.$(EXT)
 
 1DSchrodinger_MP.$(EXT) : 1DSchrodinger_MP.o band.o fftautocorr.o

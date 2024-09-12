@@ -29,7 +29,8 @@ cdef numpyint* get_c_ptr_i(numpyint[:] array):
 
 cdef class PyBand:
     """Python interface for a Band"""
-    cdef numpyint N
+    cdef str _bandtype
+    cdef numpyint _N
     cdef const double* _xEg
     cdef const double* _xEp
     cdef const double* _xF
@@ -40,16 +41,16 @@ cdef class PyBand:
         self._bandtype = bandtype
         # Make refs of parameters of band so it's not garbage collected
         if bandtype == "ZincBlende":
-            arg_N, arg_xEg, arg_xF, arg_xEp, arg_xESO = args
-            self._N = arg_N
+            arg_xEg, arg_xF, arg_xEp, arg_xESO = args
+            self._N = arg_xEg.size
             self._xEg = get_c_ptr_f(arg_xEg)
             self._xEp = get_c_ptr_f(arg_xEp)
             self._xF = get_c_ptr_f(arg_xF)
             self._xESO = get_c_ptr_f(arg_xESO)
             self._c = ZBband_new(self._N, self._xEg, self._xF, self._xEp, self._xESO)
         elif bandtype == "Wurtzite":
-            arg_N, arg_xEg, arg_xEp, arg_xESO = args
-            self._N = arg_N
+            arg_xEg, arg_xEp, arg_xESO = args
+            self._N = arg_xEg.size
             self._xEg = get_c_ptr_f(arg_xEg)
             self._xEp = get_c_ptr_f(arg_xEp)
             self._xESO = get_c_ptr_f(arg_xESO)
@@ -114,10 +115,11 @@ def cSimpleFillPsi(step: float, EigenEs: np.ndarray, V: np.ndarray,
     if not isinstance(m, np.ndarray):
         m = m*np.ones(V.size)
     psis = np.empty(EigenEs.size*(xmax-xmin))
+    starts = np.zeros(xmax-xmin, dtype=np.int32)
+    ends = (xmax-xmin)*np.ones(xmax-xmin, dtype=np.int32)
     FillPsi(step, xmax-xmin, get_c_ptr_f(EigenEs), EigenEs.size,
             get_c_ptr_f(V[xmin:xmax]), get_c_ptr_f(m[xmin:xmax]), get_c_ptr_f(psis),
-            get_c_ptr_i(np.zeros(xmax-xmin, dtype=np.int32)),
-            get_c_ptr_i((xmax-xmin)*np.ones(xmax-xmin, dtype=np.int32)), NULL)
+            get_c_ptr_i(starts), get_c_ptr_i(ends), NULL)
     return psis.reshape((EigenEs.size, xmax-xmin))
 
 

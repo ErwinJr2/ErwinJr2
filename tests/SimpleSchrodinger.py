@@ -6,8 +6,7 @@ import numpy as np
 from scipy.constants import e, hbar, m_e, pi
 from scipy.special import ai_zeros, airy
 
-from ErwinJr2.OneDQuantum import OneDSchrodinger
-from ErwinJr2.OneDQuantum.OneDSchrodinger import cSimpleFillPsi, cSimpleSolve1D
+from ErwinJr2.OneDQuantum.c_schrodinger import cSimpleFillPsi, cSimpleSolve1D
 
 ANG = 1E-10
 # test precision
@@ -62,11 +61,4 @@ class TestSimpleSchrodinger(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) > 1 and sys.argv.pop() == "MP":
-        OneDSchrodinger.bindOpenMP(True)
-        assert OneDSchrodinger.isMP()
-    else:
-        OneDSchrodinger.bindOpenMP(False)
-        assert not OneDSchrodinger.isMP()
     unittest.main()

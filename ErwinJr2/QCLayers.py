@@ -11,7 +11,7 @@ from scipy.constants import hbar as hbar
 from scipy.linalg import null_space
 
 try:
-    from ErwinJr2.OneDQuantum import OneDSchrodinger as onedq
+    from ErwinJr2.OneDQuantum import c_schrodinger as onedq
 except OSError:
     onedq = None
     print('C library is not compiled. Features are limited.')
@@ -360,7 +360,7 @@ status :
             self.psis = onedq.cSimpleFillPsi(self.xres, self.eigenEs,
                                              self.xVc, self.xMc)
             return self.eigenEs
-        xBand = onedq.Band(self.crystalType, *self.bandParams)
+        xBand = onedq.PyBand(self.crystalType, *self.bandParams)
         self.eigenEs = onedq.cBandSolve1D(self.xres, self.Es, self.xVc, xBand)
         self.psis = onedq.cBandFillPsi(
             self.xres, self.eigenEs, self.xVc, xBand)
