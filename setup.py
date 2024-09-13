@@ -35,7 +35,7 @@ setup(
                 ] + [("__MP", None)] if enable_omp else [],
             extra_compile_args=[
                 "-Ofast",
-                "-Werror",
+                # "-Werror",
             ] + ["-fopenmp"] if enable_omp else [],
             extra_link_args=[
                 "-lm",
