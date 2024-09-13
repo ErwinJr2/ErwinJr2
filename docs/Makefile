@@ -6,9 +6,9 @@ SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
-DOXYGENDIR    = ../ErwinJr2/OneDQuantum/docs
-DOXYGENXML    = ../ErwinJr2/OneDQuantum/docs/xml
-CLIBDIR       = ../ErwinJr2/OneDQuantum
+DOXYGENDIR    = ../ErwinJr2/oned_quantum/docs
+DOXYGENXML    = ../ErwinJr2/oned_quantum/docs/xml
+CLIBDIR       = ../ErwinJr2/oned_quantum
 
 # Put it first so that "make" without argument is like "make help".
 help:
@@ -20,7 +20,7 @@ doxygen:
 	cd "$(DOXYGENDIR)"; \
 	doxygen
 
-clib: Makefile
+clib: Makefile doxygen
 	breathe-apidoc -o $@ -T -g file "$(DOXYGENXML)"
 
 clib-bin: Makefile

@@ -6,7 +6,7 @@ import numpy as np
 from scipy.constants import e, hbar, m_e, pi
 from scipy.special import ai_zeros, airy
 
-from ErwinJr2.OneDQuantum.c_schrodinger import cSimpleFillPsi, cSimpleSolve1D
+from ErwinJr2.oned_quantum.c_schrodinger import cSimpleFillPsi, cSimpleSolve1D
 
 ANG = 1E-10
 # test precision

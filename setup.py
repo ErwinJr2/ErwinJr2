@@ -8,7 +8,7 @@ import numpy
 from Cython.Build import cythonize
 from setuptools import Extension, setup
 
-_CLIB_PREFIX = "ErwinJr2/OneDQuantum"
+_CLIB_PREFIX = "ErwinJr2/oned_quantum"
 _CLIB_FILES = [
     "c_schrodinger.pyx",
     "1DSchrodinger.c",
@@ -27,7 +27,7 @@ else:
 setup(
     ext_modules=cythonize([
         Extension(
-            name="ErwinJr2.OneDQuantum.c_schrodinger",
+            name="ErwinJr2.oned_quantum.c_schrodinger",
             sources=[os.path.join(_CLIB_PREFIX, f) for f in _CLIB_FILES],
             include_dirs=[numpy.get_include()],
             define_macros=[

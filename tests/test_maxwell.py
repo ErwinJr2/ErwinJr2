@@ -4,7 +4,7 @@ import unittest
 
 import numpy as np
 
-from ErwinJr2.OptStrata import MaxwellLayer, MaxwellLayer_anisotropic
+from ErwinJr2.opt_strata import MaxwellLayer, MaxwellLayer_anisotropic
 
 
 class TestTransferMatrix(unittest.TestCase):

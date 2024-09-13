@@ -19,8 +19,8 @@ import sys
 # generate doxygen files
 read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
 if read_the_docs_build:
-    subprocess.call('cd ../ErwinJr2/OneDQuantum; make', shell=True)
-    subprocess.call('cd ../ErwinJr2/OneDQuantum/docs; doxygen', shell=True)
+    subprocess.call('cd ../ErwinJr2/oned_quantum; make', shell=True)
+    subprocess.call('cd ../ErwinJr2/oned_quantum/docs; doxygen', shell=True)
 
 sys.path.insert(0, os.path.abspath('..'))
 
@@ -32,7 +32,7 @@ copyright = '2021, Gmachl Group, Princeton'
 author = 'Ming Lyu'
 
 # The short X.Y version
-from ErwinJr2.versionAndName import \
+from ErwinJr2.version_and_name import \
     VERSION as version  # type: ignore # noqa: E402, E501
 
 # The full version, including alpha/beta/rc tags
@@ -62,8 +62,8 @@ extensions = [
     'breathe',
     'matplotlib.sphinxext.plot_directive',
 ]
-breathe_projects = {"OneDQuantum": "../ErwinJr2/OneDQuantum/docs/xml/"}
-breathe_default_project = "OneDQuantum"
+breathe_projects = {"oned_quantum": "../ErwinJr2/oned_quantum/docs/xml/"}
+breathe_default_project = "oned_quantum"
 breathe_domain_by_extension = {"h": "c", "c": "c"}
 autosummary_generate = True
 napoleon_use_rtype = False
@@ -88,7 +88,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.

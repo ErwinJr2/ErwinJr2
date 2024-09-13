@@ -2,22 +2,22 @@
 # -*- coding:utf-8 -*-
 import unittest
 
-from ErwinJr2 import Material
+from ErwinJr2 import material
 
 
 class TestMaterial(unittest.TestCase):
     def test_GaAs(self):
-        Material.main("GaAs")
+        material.main("GaAs")
 
     def test_AlGaAs(self):
-        Material.main("AlGaAs")
+        material.main("AlGaAs")
 
     def test_Alloy_AlGaAs(self):
-        algaas0 = Material.Alloy("AlGaAs", 0.0)  # so that is pure GaAs
-        algaas1 = Material.Alloy("AlGaAs", 1.0)  # so that is pure GaAs
-        algaas = Material.Alloy("AlGaAs", 0.33)  # so that is pure GaAs
-        gaas = Material.Material("GaAs")
-        alas = Material.Material("AlAs")
+        algaas0 = material.Alloy("AlGaAs", 0.0)  # so that is pure GaAs
+        algaas1 = material.Alloy("AlGaAs", 1.0)  # so that is pure GaAs
+        algaas = material.Alloy("AlGaAs", 0.33)  # so that is pure GaAs
+        gaas = material.Material("GaAs")
+        alas = material.Material("AlAs")
         for key in gaas.param:
             self.assertAlmostEqual(algaas0.param[key], gaas.param[key])
             self.assertAlmostEqual(algaas1.param[key], alas.param[key])
@@ -32,7 +32,7 @@ class TestMaterial(unittest.TestCase):
             )
 
     def test_zero_strain(self):
-        gaas = Material.Material("GaAs")
+        gaas = material.Material("GaAs")
         gaas.set_strain(gaas.param["alc"])
         self.assertAlmostEqual(gaas.a_perp, gaas.param["alc"])
 

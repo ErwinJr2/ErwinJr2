@@ -4,7 +4,7 @@ import unittest
 
 import numpy as np
 
-from ErwinJr2.QCLayers import QCLayers
+from ErwinJr2.qc_layers import QCLayers
 
 """This unit test is to compare simulation with PhysRevB.50.8663"""
 

@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief  header file for 1DSchrodinger.c
+ *
+ */
+
 #include "science.h"
 #include "band.h"
 

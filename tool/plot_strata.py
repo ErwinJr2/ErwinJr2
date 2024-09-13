@@ -4,12 +4,12 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ErwinJr2 import SaveLoad
-from ErwinJr2.OptStrata import OptStrata
+from ErwinJr2 import save_load
+from ErwinJr2.opt_strata import OptStrata
 
 matplotlib.rcParams.update({'font.size': 12})
 with open("../ErwinJr2/example/PQLiu.json", 'r') as f:
-    strata = SaveLoad.optLoad(f)
+    strata = save_load.optLoad(f)
 
 strata = OptStrata(
     wl=8.0,

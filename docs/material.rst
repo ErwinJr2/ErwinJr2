@@ -1,14 +1,14 @@
-Material module
+material module
 ===============
 
-.. automodule:: ErwinJr2.Material
+.. automodule:: ErwinJr2.material
    :members:
    :show-inheritance:
 
-.. py:data:: ErwinJr2.Material.MParm
+.. py:data:: ErwinJr2.material.MParm
 
    A Python `dict` for material parameters
 
-.. py:data:: ErwinJr2.Material.AParm
+.. py:data:: ErwinJr2.material.AParm
 
    A Python `dict` for alloy parameters

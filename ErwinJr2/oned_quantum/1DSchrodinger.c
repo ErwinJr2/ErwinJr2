@@ -131,6 +131,8 @@ double rk4(double step, numpyint N, double y0, double y1,
 
 #define ode rk4 /**< Use RK4 as the default ODE solver */
 
+/** @cond IMPL
+ * implementation of functions in header files should be excluded in doxygen */
 void FillPsi(double step, numpyint N, const double *EigenEs,
              numpyint EN, const double *V, double *m, double *psis,
              numpyint *starts, numpyint *ends,
@@ -225,14 +227,13 @@ void FillPsi(double step, numpyint N, const double *EigenEs,
  */
 #define findZero(x1, y1, x2, y2) (((x1) * (y2) - (x2) * (y1)) / ((y2) - (y1)))
 
-    numpyint Solve1D(double step, numpyint N,
-                     const double *Es, numpyint EN,
-                     const double *V, double *m, const Band *mat,
-                     double *EigenE)
-    {
-        double *yend;
-        int NofZeros = 0;
-        int i;
+/** @cond IMPL
+ * implementation of functions in header files should be excluded in doxygen */
+numpyint Solve1D(double step, numpyint N, const double *Es, numpyint EN,
+                 const double *V, double *m, const Band *mat, double *EigenE) {
+  double *yend;
+  int NofZeros = 0;
+  int i;
 #ifdef _DEBUG
     if(mat != NULL) {
         assert N == mat->N;
@@ -348,6 +349,8 @@ void FillPsi(double step, numpyint N, const double *EigenEs,
 }
 
 #define MINPSI 1E-8 /**< The min cutoff for integral of wavefunctions */
+/** @cond IMPL
+ * implementation of functions in header files should be excluded in doxygen */
 double LOphononScatter(double step, numpyint N, double kl,
         const double *psi_ij) {
     double Iij = 0;
@@ -385,6 +388,8 @@ double LOphononScatter(double step, numpyint N, double kl,
     return 2*Iij * sq(step);
 }
 
+/** @cond IMPL
+ * implementation of functions in header files should be excluded in doxygen */
 double LOtotal(double step, numpyint N, const double *kls,
         const double *psi_ijs, const double *fjs, numpyint Nj) {
     double Iij = 0;
@@ -446,10 +451,14 @@ double LOtotal(double step, numpyint N, const double *kls,
     return 2*Iij * sq(step);
 }
 
+/** @cond IMPL
+ * implementation of functions in header files should be excluded in doxygen */
 numpyint invAlpha() {
     return 137;
 }
 
+/** @cond IMPL
+ * implementation of functions in header files should be excluded in doxygen */
 int isMP() {
 # ifdef __MP
     return 1;

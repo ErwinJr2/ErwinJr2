@@ -3,7 +3,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ErwinJr2.Material import rIdx
+from ErwinJr2.material import rIdx
 
 
 def testGaAs():

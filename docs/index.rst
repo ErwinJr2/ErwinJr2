@@ -34,13 +34,13 @@ See `Github <https://github.com/ErwinJr2/ErwinJr2/>`_ for the source code.
 
    code_struct
    other
-   Profiling
-   QCLayers
-   QCPlotter
-   OptStrata
-   Material
-   SaveLoad
-   OneDQuantum
+   profiling
+   qc_layers
+   qc_plotter
+   opt_strata
+   material
+   save_load
+   oned_quantum
    clib/filelist
 
 Indices and tables

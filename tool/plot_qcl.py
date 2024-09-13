@@ -4,15 +4,15 @@ import os
 
 import matplotlib.pyplot as plt
 
-from ErwinJr2 import SaveLoad
-from ErwinJr2.QCLayers import QCLayers
-from ErwinJr2.QCPlotter import plotPotential, plotWF
+from ErwinJr2 import save_load
+from ErwinJr2.qc_layers import QCLayers
+from ErwinJr2.qc_plotter import plotPotential, plotWF
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(__file__))
 _TEST_SAMPLE_FILE = os.path.join(_REPO_ROOT, "ErwinJr2/example/PQLiu.json")
 
 with open(_TEST_SAMPLE_FILE) as f:
-    qcl = SaveLoad.qclLoad(f)
+    qcl = save_load.qclLoad(f)
 
 qcl = QCLayers(
     substrate='InP',
@@ -44,4 +44,4 @@ plt.ylabel('Energy (eV)')
 plt.show()
 
 with open('testSave.json', 'w') as f:
-    SaveLoad.EJSaveJSON(f, qcl)
+    save_load.EJSaveJSON(f, qcl)

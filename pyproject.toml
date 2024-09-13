@@ -54,15 +54,15 @@ include = [
     "ErwinJr2",
     "ErwinJr2.images",
     "ErwinJr2.example",
-    "ErwinJr2.OneDQuantum",
-    "ErwinJr2.OneDQuantum.fftautocorr",
+    "ErwinJr2.oned_quantum",
+    "ErwinJr2.oned_quantum.fftautocorr",
 ]
 
 [tool.setuptools.package-data]
 ErwinJr2 = ["Info.plist"]
 "ErwinJr2.images" = ["*.png", "*.ico", "*.icns"]
 "ErwinJr2.example" = ["PQLiu.json"]
-"ErwinJr2.OneDQuantum" = [
+"ErwinJr2.oned_quantum" = [
     "Makefile",
     "*.sln",
     "*.vcxproj",
@@ -72,10 +72,10 @@ ErwinJr2 = ["Info.plist"]
     "*.dll",
     "*.dylib",
 ]
-"ErwinJr2.OneDQuantum.fftautocorr" = ["*.c", "*.h"]
+"ErwinJr2.oned_quantum.fftautocorr" = ["*.c", "*.h"]
 
 [tool.setuptools.dynamic]
-version = { attr = "ErwinJr2.versionAndName.VERSION" }
+version = { attr = "ErwinJr2.version_and_name.VERSION" }
 
 [tool.cibuildwheel]
 skip = [

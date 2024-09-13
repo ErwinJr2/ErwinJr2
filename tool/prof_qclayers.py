@@ -4,13 +4,13 @@ import cProfile
 import io
 import pstats
 
-import SaveLoad
-from QCLayers import auto_gain
+import ErwinJr2.save_load as save_load
+from ErwinJr2.qc_layers import auto_gain
 
 if __name__ == "__main__":
     cp = cProfile.Profile()
     with open("../example/PQLiu.json") as f:
-        qcl = SaveLoad.qclLoad(f)
+        qcl = save_load.qclLoad(f)
     qcl.xres = 0.1
     cp.enable()
     auto_gain(qcl)

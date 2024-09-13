@@ -27,16 +27,16 @@ from PyQt5.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog,
                              QPushButton, QSizePolicy, QSpinBox, QTableWidget,
                              QTableWidgetItem, QTextEdit, QVBoxLayout, QWidget)
 
-from ErwinJr2.customQTClass import mtrlComboBox
-from ErwinJr2.darkDetect import isdark
-from ErwinJr2.EJcanvas import EJcanvas, EJplotControl
-from ErwinJr2.EJcanvas import config as plotconfig
-from ErwinJr2.Material import AParam
-from ErwinJr2.QCLayers import (QCLayers, QCMaterial, StateRecognizeError, c0,
-                               e0, eps0, h, hbar, optimize_global,
-                               optimize_layer)
-from ErwinJr2.QCPlotter import plotPotential, plotWF, scaleWF
-from ErwinJr2.versionAndName import ejError, ejWarning
+from ErwinJr2.custom_qt_class import mtrlComboBox
+from ErwinJr2.dark_detect import isdark
+from ErwinJr2.ej_canvas import EJcanvas, EJplotControl
+from ErwinJr2.ej_canvas import config as plotconfig
+from ErwinJr2.material import AParam
+from ErwinJr2.qc_layers import (QCLayers, QCMaterial, StateRecognizeError, c0,
+                                e0, eps0, h, hbar, optimize_global,
+                                optimize_layer)
+from ErwinJr2.qc_plotter import plotPotential, plotWF, scaleWF
+from ErwinJr2.version_and_name import EJ_ERROR, ejWarning
 
 
 # TODO: this may not be necessary by better designer
@@ -603,7 +603,7 @@ class QuantumTab(QWidget):
             self.qclayers.set_substrate(substrateType)
         else:
             QMessageBox.information(
-                self, ejError,
+                self, EJ_ERROR,
                 '%s substrates have not yet been implemented.' % substrateType)
             self.inputSubstrateBox.setCurrentIndex(
                 self.inputSubstrateBox.findText(self.qclayers.substrate))
@@ -879,7 +879,7 @@ class QuantumTab(QWidget):
             QMessageBox.warning(self, ejWarning, "Solve the model first.")
             return
         if n < 0 or n > len(self.qclayers.layerWidths):
-            QMessageBox.warning(self, ejError,
+            QMessageBox.warning(self, EJ_ERROR,
                                 "Select the layer to optimize.")
             return
         try:
@@ -887,7 +887,7 @@ class QuantumTab(QWidget):
             if self.qclayers.eigenEs[upper] < self.qclayers.eigenEs[lower]:
                 upper, lower = lower, upper
         except ValueError:
-            QMessageBox.warning(self, ejError,
+            QMessageBox.warning(self, EJ_ERROR,
                                 "Select state pair to optimize.")
             return
         self.stateParamText.clear()
@@ -926,7 +926,7 @@ class QuantumTab(QWidget):
                 value = float(item.text())
             except ValueError:
                 # invalid input
-                QMessageBox.warning(self, ejError,
+                QMessageBox.warning(self, EJ_ERROR,
                                     "This value should be a number")
                 self._update_layerTable()
                 return
@@ -1163,7 +1163,7 @@ class QuantumTab(QWidget):
                 self.qclayers.set_mtrl(row, moleFrac=int(100*mf)/100)
             except (ValueError, AssertionError):
                 # Input is not a number or is larger than 1
-                QMessageBox.warning(self, ejError, "invalid mole Fraction")
+                QMessageBox.warning(self, EJ_ERROR, "invalid mole Fraction")
             #  item.setText(str(self.qclayers.moleFracs[row]))
             self.clear_WFs()
             self.qclayers.populate_x()
@@ -1436,7 +1436,7 @@ class QuantumTab(QWidget):
         self._worker.finished.connect(self.calcThread.quit)
         self._worker.finished.connect(self._worker.deleteLater)
         self._worker.failed.connect(lambda traceInfo: QMessageBox.warning(
-            self, ejError, traceInfo))
+            self, EJ_ERROR, traceInfo))
         self._worker.warning.connect(lambda message: QMessageBox.warning(
             self, ejWarning, message))
         self._worker.failed.connect(self.clear_WFs)

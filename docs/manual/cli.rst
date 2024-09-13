@@ -3,12 +3,12 @@ Command Line Guide
 
 This chapter is used as examples on how to use the code as a Python module
 rather than as GUI software. However, users are very encouraged to read
-:doc:`../QCLayers` and :doc:`../OptStrata` on how to use this package.
+:doc:`../qc_layers` and :doc:`../opt_strata` on how to use this package.
 
 QC layers
 ----------
 
-.. currentmodule:: ErwinJr2.QCLayers
+.. currentmodule:: ErwinJr2.qc_layers
 
 The basic routine of solving a QCL structure is:
 
@@ -26,9 +26,9 @@ the structure by command line. The easiest example would be:
    :include-source:
    :context:
 
-   from ErwinJr2 import SaveLoad
-   from ErwinJr2.QCPlotter import plotPotential, plotWF
-   from ErwinJr2.QCLayers import QCLayers, auto_gain
+   from ErwinJr2 import save_load
+   from ErwinJr2.qc_plotter import plotPotential, plotWF
+   from ErwinJr2.qc_layers import QCLayers, auto_gain
    import matplotlib.pyplot as plt
    import numpy as np
 
@@ -54,7 +54,7 @@ the structure by command line. The easiest example would be:
    qcl.includeIFR = True
    # or load from file
    # with open("../../ErwinJr2/example/std8um.json", 'r') as f:
-   #     qcl = SaveLoad.qclLoad(f)
+   #     qcl = save_load.qclLoad(f)
 
    # To use customized IFR settings
    # qcl.customIFR = True
@@ -77,7 +77,7 @@ the structure by command line. The easiest example would be:
 where running :func:`QCLayers.populate_x`, :func:`QCLayers.solve_whole`,
 :func:`QCLayers.period_recognize`, and :func:`QCLayers.full_population`
 can be replaced for short by :meth:`auto_gain`.
-See :doc:`../QCLayers` for more detail.
+See :doc:`../qc_layers` for more detail.
 
 Further more, plot the gain spectrum:
 
@@ -96,18 +96,18 @@ Further more, plot the gain spectrum:
 Waveguide
 ---------
 
-.. currentmodule:: ErwinJr2.OptStrata
+.. currentmodule:: ErwinJr2.opt_strata
 
-Similarly the :mod:`ErwinJr2.OptStrata` module can also be used independent
-of the GUI. See :doc:`../OptStrata` for more detail.
+Similarly the :mod:`ErwinJr2.opt_strata` module can also be used independent
+of the GUI. See :doc:`../opt_strata` for more detail.
 
 
 .. plot::
    :include-source:
    :context: reset
 
-   from ErwinJr2 import SaveLoad
-   from ErwinJr2.OptStrata import OptStrata
+   from ErwinJr2 import save_load
+   from ErwinJr2.opt_strata import OptStrata
    import numpy as np
    import matplotlib
    import matplotlib.pyplot as plt
@@ -127,7 +127,7 @@ of the GUI. See :doc:`../OptStrata` for more detail.
    )
    # or load from file
    # with open("../../ErwinJr2/example/std8um.json", 'r') as f:
-   #    strata = SaveLoad.optLoad(f)
+   #    strata = save_load.optLoad(f)
 
    beta = strata.boundModeTM()
 
@@ -177,4 +177,4 @@ Save the structure
 -------------------
 
 Both the QC layers and the waveguide structure can be saved with
-:meth:`ErwinJr2.SaveLoad.EJSaveJSON`.
+:meth:`ErwinJr2.save_load.EJSaveJSON`.

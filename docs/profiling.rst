@@ -5,7 +5,7 @@ Profiling
 
 The following block of code is profiled by :py:mod:`cProfile`:
 
-.. literalinclude:: ../tool/profQCLayers.py
+.. literalinclude:: ../tool/prof_qclayers.py
    :language: python
 
 

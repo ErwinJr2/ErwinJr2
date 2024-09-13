@@ -29,9 +29,9 @@ __pycache__/
 *.xdv
 
 ## doxygen gnerated file for C code
-OneDQuantum/docs/html/
-OneDQuantum/docs/xml/
-OneDQuantum/docs/latex/
+oned_quantum/docs/html/
+oned_quantum/docs/xml/
+oned_quantum/docs/latex/
 example/*
 !example/PQLiu*
 !example/std8um.json

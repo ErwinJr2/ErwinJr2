@@ -11,14 +11,14 @@ from scipy.constants import hbar as hbar
 from scipy.linalg import null_space
 
 try:
-    from ErwinJr2.OneDQuantum import c_schrodinger as onedq
+    from ErwinJr2.oned_quantum import c_schrodinger as onedq
 except OSError:
     onedq = None
     print('C library is not compiled. Features are limited.')
 import copy
 from typing import List, Tuple, Union
 
-from ErwinJr2 import Material
+from ErwinJr2 import material
 
 EUNIT = 1e-5    # E field unit from kV/cm to V/Angstrom
 BASISPAD = 100  #: padding barrier for basis solver, unit Angstrom
@@ -1154,8 +1154,8 @@ description :
                          layerWidths=layerWidths, layerARs=layerARs,
                          ifrDelta=ifrDelta, ifrLambda=ifrLambda,
                          EField=EField, repeats=repeats)
-        self.crystalType = Material.MParam[substrate]["Crystal"]
-        self.subM = Material.Material(self.substrate, self.temperature)
+        self.crystalType = material.MParam[substrate]["Crystal"]
+        self.subM = material.Material(self.substrate, self.temperature)
         self.wl = wl
         self.solver = solver
         if onedq is None:
@@ -1209,7 +1209,7 @@ description :
             list of the Alloy objects for processing material properties.
         """
         self.a_parallel = self.subM.param['alc']
-        self.mtrlAlloys = [Material.Alloy(self.materials[idx],
+        self.mtrlAlloys = [material.Alloy(self.materials[idx],
                                           self.moleFracs[idx],
                                           self.temperature)
                            for idx in range(len(self.materials))]
@@ -1226,7 +1226,7 @@ description :
             moleFrac = self.moleFracs[n]
         self.moleFracs[n] = moleFrac
         self.materials[n] = mtrl
-        self.mtrlAlloys[n] = Material.Alloy(mtrl, moleFrac, self.temperature)
+        self.mtrlAlloys[n] = material.Alloy(mtrl, moleFrac, self.temperature)
         self.mtrlAlloys[n].set_strain(self.a_parallel)
 
     def add_mtrl(self, mtrl: str = None, moleFrac: float = None,
@@ -1239,7 +1239,7 @@ description :
                                   self.mtrlIFRLambda[-1])
         self.mtrlIFRDelta.append(IFRDelta if IFRDelta else
                                  self.mtrlIFRDelta[-1])
-        self.mtrlAlloys.append(Material.Alloy(
+        self.mtrlAlloys.append(material.Alloy(
             self.materials[-1], self.moleFracs[-1], self.temperature))
         self.mtrlAlloys[-1].set_strain(self.a_parallel)
 
@@ -1286,7 +1286,7 @@ description :
     def set_substrate(self, subs: str):
         if subs in QCMaterial:
             self.substrate = subs
-            self.crystalType = Material.MParam[subs]["Crystal"]
+            self.crystalType = material.MParam[subs]["Crystal"]
             matlN = len(self.materials)
             self.materials = (QCMaterial[subs]*matlN)[0:matlN]
             self.update_mtrls()
@@ -1440,8 +1440,8 @@ description :
         """Return the effective refractive index for TM mode"""
         if sum(self.layerWidths) == 0:
             return 1.0
-        self.mtrlRIdx = [(m.moleFrac * Material.rIdx[m.A.name](wl) +
-                          (1 - m.moleFrac) * Material.rIdx[m.B.name](wl))
+        self.mtrlRIdx = [(m.moleFrac * material.rIdx[m.A.name](wl) +
+                          (1 - m.moleFrac) * material.rIdx[m.B.name](wl))
                          for m in self.mtrlAlloys]
         self.layerRIdx = np.array([self.mtrlRIdx[n] for n in self.layerMtrls])
         neff = np.average(1/self.layerRIdx**2, axis=0,

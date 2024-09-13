@@ -1,7 +1,7 @@
-QCLayers module
-===============
+qc_layers module
+================
 
-.. currentmodule:: ErwinJr2.QCLayers
+.. currentmodule:: ErwinJr2.qc_layers
 
 This module contains :class:`QCLayers` and :class:`SchrodingerLayer` classes.
 The physics model can be seen in :doc:`manual/physics_quantum`
@@ -24,7 +24,7 @@ SchrodingerLayer class
 
 Others
 ---------------
-.. automodule:: ErwinJr2.QCLayers
+.. automodule:: ErwinJr2.qc_layers
    :members:
    :show-inheritance:
    :exclude-members: QCLayers, SchrodingerLayer
@@ -40,7 +40,7 @@ states and wave functions. A sample *json* file is can be found
    :linenos:
 
    with open("path/to/file.json") as f:
-       qcl = SaveLoad.qclLoad(f)
+       qcl = save_load.qclLoad(f)
 
    qcl.layerSelected = 3
    qcl.populate_x()

@@ -16,11 +16,11 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
                              QSpinBox, QTableWidget, QTableWidgetItem,
                              QTextEdit, QVBoxLayout, QWidget)
 
-from ErwinJr2.customQTClass import mtrlComboBox
-from ErwinJr2.EJcanvas import EJcanvas
-from ErwinJr2.OptStrata import (Alloy, Dopable, OptStrata, optimizeOptStrata,
-                                rIdx)
-from ErwinJr2.versionAndName import ejError
+from ErwinJr2.custom_qt_class import mtrlComboBox
+from ErwinJr2.ej_canvas import EJcanvas
+from ErwinJr2.opt_strata import (Alloy, Dopable, OptStrata, optimizeOptStrata,
+                                 rIdx)
+from ErwinJr2.version_and_name import EJ_ERROR
 
 mtrlList = list(rIdx.keys()) + list(Alloy.keys())
 facetList = ('cleaved', 'perfect AR', 'perfect HR', 'custom')
@@ -466,7 +466,7 @@ class OpticalTab(QWidget):
                     raise ValueError
             except ValueError:
                 # invalid input
-                QMessageBox.warning(self, ejError, "This value should be "
+                QMessageBox.warning(self, EJ_ERROR, "This value should be "
                                     "a non-negative number")
                 self.strataTable_refresh()
                 return
@@ -474,7 +474,8 @@ class OpticalTab(QWidget):
                 # mole fraction
                 if value > 1:
                     QMessageBox.warning(
-                        self, ejError, "Mole Fraction must be between 0 and 1")
+                        self, EJ_ERROR,
+                        "Mole Fraction must be between 0 and 1")
                     self.strataTable.setItem(row, column, QTableWidgetItem(
                         "%.2f" % self.stratum.moleFracs[row]))
                     return
@@ -619,7 +620,7 @@ class OpticalTab(QWidget):
         try:
             self.beta = self.stratum.boundModeTM()
         except (TimeoutError, ValueError):
-            QMessageBox.warning(self, ejError, "Failed to solve for modes")
+            QMessageBox.warning(self, EJ_ERROR, "Failed to solve for modes")
             return
         self.Ey, _, _ = self.stratum.populateMode(self.beta, self.xs)
         # TODO

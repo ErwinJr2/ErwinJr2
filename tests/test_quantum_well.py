@@ -7,7 +7,7 @@ from scipy.constants import e as e0
 from scipy.constants import electron_mass as m0
 from scipy.constants import hbar as hbar
 
-from ErwinJr2.QCLayers import QCLayers, SchrodingerLayer
+from ErwinJr2.qc_layers import QCLayers, SchrodingerLayer
 
 """This unit test is to compare simulation with PhysRevB.50.8663"""
 

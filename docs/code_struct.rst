@@ -11,19 +11,17 @@ The folder structure:
 
     root
     |- ErwinJr2.....................The main souce code
-    |  |- OneDQuantum...............The C library and its Python interface
+    |  |- oned_quantum...............The C library and its Python interface
     |  |  |- fftautocorr............A small FFT-based autocorrelation calculator
     |  |  |  |- ....
     |  |  |- docs...................The Doxygen documentation for the C library
     |  |  |- Makefile...............The build system for make
-    |  |  |- OneDQuantum.sln........The build system for Visual Studio
-    |  |  |- 1DSchrodinger.vcxproj..The build system for Visual Studio
     |  |  |- 1DSchrodinger.c
     |  |  |- band.c
     |  |  |- band.h
     |  |  |- science.h
     |  |  |- __init__.py
-    |  |  |- OneDSchrodinger.py
+    |  |  |- c_schrodinger.pyx
     |  |  |- band.py
     |  |  |- typeDefs.py
     |  |- images....................The images needed for the GUI
@@ -31,19 +29,19 @@ The folder structure:
     |  |- example....................Example files as QCL design
     |  |- __init__.py
     |  |- __main__.py...............This defines how ErwinJr will start outside command line
-    |  |- OptStrata.py
-    |  |- QCLayers.py
-    |  |- Material.py
+    |  |- opt_strata.py
+    |  |- qc_layers.py
+    |  |- material.py
     |  |- rFittings.py
-    |  |- SaveLoad.py
-    |  |- QCPlotter.py
+    |  |- save_load.py
+    |  |- qc_plotter.py
     |  |- ErwinJr.py
-    |  |- QuantumTab.py
-    |  |- OpticalTab.py
-    |  |- EJcanvas.py
-    |  |- customQTClass.py
-    |  |- darkDetect.py
-    |  |- versionAndName.py
+    |  |- quantum_tab.py
+    |  |- optical_tab.py
+    |  |- ej_canvas.py
+    |  |- custom_qt_class.py.py
+    |  |- dark_detect.py
+    |  |- version_and_name.py
     |  |- genshortcut.py
     |  |- Info.plist............The sample file for creating macOS shortcut
     |- test.....................Test cases
@@ -64,9 +62,9 @@ The folder structure:
        |- ....
 
 
-The C library in ``OneDQuantum`` has two sets of building system:
+The C library in ``oned_quantum`` has two sets of building system:
 ``make`` defined in ``Makefile`` and ``Visual Studio``
-solution file defined in ``OneDQuantum.sln`` and
+solution file defined in ``oned_quantum.sln`` and
 ``1DSchrodinger.vcxproj``. They are intended to be consistent,
 so that the software behaves the same under Linux/macOS and under Windows.
 

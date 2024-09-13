@@ -13,12 +13,12 @@ from PyQt5.QtWidgets import (QAction, QApplication, QFileDialog, QInputDialog,
                              QMainWindow, QMessageBox, QSplashScreen,
                              QTabWidget)
 
-from ErwinJr2 import SaveLoad
-from ErwinJr2.OpticalTab import OpticalTab
-from ErwinJr2.OptStrata import OptStrata
-from ErwinJr2.QCLayers import QCLayers, onedq
-from ErwinJr2.QuantumTab import QuantumTab
-from ErwinJr2.versionAndName import VERSION
+from ErwinJr2 import save_load
+from ErwinJr2.opt_strata import OptStrata
+from ErwinJr2.optical_tab import OpticalTab
+from ErwinJr2.qc_layers import QCLayers, onedq
+from ErwinJr2.quantum_tab import QuantumTab
+from ErwinJr2.version_and_name import VERSION
 
 basePath = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_FILE_DIR = os.path.join(
@@ -65,7 +65,7 @@ class MainWindow(QMainWindow):
         if fname and QFile.exists(fname):
             try:
                 with open(fname, 'r') as f:
-                    qclayers, stratum = SaveLoad.loadBoth(f)
+                    qclayers, stratum = save_load.loadBoth(f)
                 self.filename = fname
                 self.addRecentFile(fname)
                 self.dirty = False
@@ -384,7 +384,7 @@ class MainWindow(QMainWindow):
         """Load from file "fname", and update everything for consistency."""
         try:
             with open(fname, 'r') as f:
-                qclayers, stratum = SaveLoad.loadBoth(f)
+                qclayers, stratum = save_load.loadBoth(f)
                 if stratum is None:
                     stratum = OptStrata(3.0)
         except Exception:
@@ -404,8 +404,8 @@ class MainWindow(QMainWindow):
         if self.filename.split('.')[-1] == 'json':
             try:
                 with open(self.filename, 'w') as f:
-                    SaveLoad.EJSaveJSON(f, self.qtab.qclayers,
-                                        self.otab.stratum)
+                    save_load.EJSaveJSON(f, self.qtab.qclayers,
+                                         self.otab.stratum)
             except OSError:
                 QMessageBox.warning(self, "ErwinJr2 - Warning",
                                     "Could not save *.json file.\n" +

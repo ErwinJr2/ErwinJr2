@@ -168,7 +168,7 @@ manually build the C library by
 
 .. code-block:: bash
 
-   cd [PATH_TO_THE_CODE]/ErwinJr2/OneDQuantum
+   cd [PATH_TO_THE_CODE]/ErwinJr2/oned_quantum
    make
    make MP
 

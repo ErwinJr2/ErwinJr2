@@ -1,7 +1,7 @@
-OptStrata module
+opt_strata module
 =================
 
-.. currentmodule:: ErwinJr2.OptStrata
+.. currentmodule:: ErwinJr2.opt_strata
 
 This module contains :class:`MaxwellLayer` and :class:`OptStrata` classes.
 The physics model can be seen in :doc:`manual/physics_optics`
@@ -22,7 +22,7 @@ MaxwellLayer class
 
 Others
 ---------------
-.. automodule:: ErwinJr2.OptStrata
+.. automodule:: ErwinJr2.opt_strata
    :members:
    :show-inheritance:
    :exclude-members: OptStrata, MaxwellLayer

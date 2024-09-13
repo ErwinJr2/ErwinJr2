@@ -3,10 +3,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ErwinJr2 import QCLayers, SaveLoad
+from ErwinJr2 import qc_layers, save_load
 
 
-def plot_band(axes, qcLayers: QCLayers):
+def plot_band(axes, qcLayers: qc_layers):
     """ Plot potential (quantum barriers and wells) and other band parameters
     of the layer scturecture on axes, assuming already populated"""
 
@@ -35,7 +35,7 @@ def plot_band(axes, qcLayers: QCLayers):
 
 if __name__ == '__main__':
     with open("../example/new16umgaas-cladding.json") as f:
-        qcl = SaveLoad.qclLoad(f)
+        qcl = save_load.qclLoad(f)
     qcl.populate_x()
     qcl.solve_whole()
 

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy import pi
 
-from ErwinJr2 import OptStrata
+from ErwinJr2.opt_strata import OptStrata
 
 
 def firstGaAs():

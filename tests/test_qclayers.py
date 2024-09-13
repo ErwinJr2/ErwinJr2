@@ -5,7 +5,7 @@ import unittest
 
 import numpy as np
 
-from ErwinJr2 import SaveLoad
+from ErwinJr2 import save_load
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(__file__))
 _TEST_SAMPLE_FILE = os.path.join(_REPO_ROOT, "ErwinJr2/example/PQLiu.json")
@@ -14,7 +14,7 @@ _TEST_SAMPLE_FILE = os.path.join(_REPO_ROOT, "ErwinJr2/example/PQLiu.json")
 class TestQCLayers(unittest.TestCase):
     def test_solve_whole_matrix(self):
         with open(_TEST_SAMPLE_FILE) as f:
-            qcl = SaveLoad.qclLoad(f)
+            qcl = save_load.qclLoad(f)
         qcl.solver = 'matrix'
         qcl.populate_x()
         qcl.solve_whole()
@@ -40,7 +40,7 @@ class TestQCLayers(unittest.TestCase):
 
     def test_solve_whole_ode(self):
         with open(_TEST_SAMPLE_FILE) as f:
-            qcl = SaveLoad.qclLoad(f)
+            qcl = save_load.qclLoad(f)
         qcl.solver = 'ODE'
         qcl.populate_x()
         qcl.solve_whole()
@@ -58,7 +58,7 @@ class TestQCLayers(unittest.TestCase):
 
     def test_solve_basis(self):
         with open(_TEST_SAMPLE_FILE) as f:
-            qcl = SaveLoad.qclLoad(f)
+            qcl = save_load.qclLoad(f)
         qcl.populate_x()
         qcl.solve_basis()
         self.assertAlmostEqual(qcl.eigenEs[32] - qcl.eigenEs[31], 0.27, 2)
@@ -67,7 +67,7 @@ class TestQCLayers(unittest.TestCase):
 
     def test_cache_consistency(self):
         with open(_TEST_SAMPLE_FILE) as f:
-            qcl = SaveLoad.qclLoad(f)
+            qcl = save_load.qclLoad(f)
         qcl.includeIFR = True
         qcl.mtrlIFRLambda = [5.0] * 2
         qcl.mtrlIFRDelta = [5.0] * 2
@@ -98,7 +98,7 @@ class TestQCLayers(unittest.TestCase):
 
     def test_revert_layer(self):
         with open(_TEST_SAMPLE_FILE) as f:
-            qcl = SaveLoad.qclLoad(f)
+            qcl = save_load.qclLoad(f)
         qcl.solver = 'matrix'
         qcl.repeats = 2
         qcl.xres = 0.02

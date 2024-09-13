@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy import abs, pi, sqrt
 
-from ErwinJr2.OptStrata import MaxwellLayer, MaxwellLayer_anisotropic
+from ErwinJr2.opt_strata import MaxwellLayer, MaxwellLayer_anisotropic
 
 
 def firstGaAs():
