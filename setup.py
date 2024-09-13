@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 
-# import wheel.bdist_wheel as bdist_wheel
-# from wheel.bdist_wheel import bdist_wheel, get_platform
 import os
 import sys
 
@@ -16,14 +14,12 @@ _CLIB_FILES = [
     "1DSchrodinger.c",
     "band.c",
     "fftautocorr/fftautocorr.c",
-    # "1DSchrodinger.h",
-    # "science.h",
-    # "fftautocorr/fftautocorr.h",
-    # "fftautocorr/factortable.h",
 ]
 
 
-if sys.platform in ("linux", "win32"):
+if os.environ.get("ENABLE_OMP", "false").lower() not in ("false", "0", "f"):
+    enable_omp = False
+elif sys.platform in ("linux", "win32"):
     enable_omp = True
 else:
     enable_omp = False
@@ -39,7 +35,7 @@ setup(
                 ] + [("__MP", None)] if enable_omp else [],
             extra_compile_args=[
                 "-Ofast",
-                # "-Werror",
+                "-Werror",
             ] + ["-fopenmp"] if enable_omp else [],
             extra_link_args=[
                 "-lm",
