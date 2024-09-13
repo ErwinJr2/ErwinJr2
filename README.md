@@ -1,12 +1,14 @@
 A software for Quantum Cascade Laser design and simulation
 ================
 
-master:
-![master Build Status](https://github.com/ErwinJr2/ErwinJr2/actions/workflows/python-app.yml/badge.svg)
+[![PyPI](https://img.shields.io/pypi/v/ErwinJr2.svg)](https://pypi.python.org/pypi/ErwinJr2)
+[![Documentation Status](https://readthedocs.org/projects/cibuildwheel/badge/?version=latest)](https://erwinjr2.readthedocs.io/en/stable/?badge=latest)
+[![Test Status](https://github.com/ErwinJr2/ErwinJr2/actions/workflows/python-app.yml/badge.svg)](https://github.com/ErwinJr2/ErwinJr2/actions/workflows/python-app.yml?query=branch%3Amaster)
+[![Build Status](https://github.com/ErwinJr2/ErwinJr2/actions/workflows/build-wheel.yml/badge.svg)](https://github.com/ErwinJr2/ErwinJr2/actions/workflows/build-wheel.yml?query=branch%3Amaster)
+
 dev:
-![dev Build Status](https://github.com/ErwinJr2/ErwinJr2/actions/workflows/python-app.yml/badge.svg?branch=dev)
-doc:
-[![Documentation Status](https://readthedocs.org/projects/erwinjr2/badge/?version=latest)](https://erwinjr2.readthedocs.io/en/latest/?badge=latest)
+[![dev Test Status](https://github.com/ErwinJr2/ErwinJr2/actions/workflows/python-app.yml/badge.svg?branch=dev)](https://github.com/ErwinJr2/ErwinJr2/actions/workflows/python-app.yml?query=branch%3Adev)
+[![dev Build Status](https://github.com/ErwinJr2/ErwinJr2/actions/workflows/build-wheel.yml/badge.svg)](https://github.com/ErwinJr2/ErwinJr2/actions/workflows/build-wheel.yml?query=branch%3Adev)
 
 This is a Quantum Cascade Laser (QCL) modeling and design software produced
 at Princeton University, Gmachl group.
@@ -21,7 +23,7 @@ documents can be found [here](https://erwinjr2.readthedocs.io/)
 
 Installation
 ---------------
-The software is based on Python (>=3.6) and uses `setuptools` for installation.
+The software is based on Python (>=3.9) and uses `setuptools` for installation.
 The easiest way to install the software is via `pip` the Python package manager.
 
 Fist to make sure you have the latest `pip` installed (depending on your
