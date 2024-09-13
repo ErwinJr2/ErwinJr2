@@ -70,9 +70,9 @@ jobs:
     permissions:
       id-token: write
     runs-on: ubuntu-latest
-    # if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch'
     # This is for dev testing when this change is not merged yet
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/dev')
+    # if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/dev')
     steps:
       - uses: actions/download-artifact@v4
         with:
