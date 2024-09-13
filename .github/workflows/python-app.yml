@@ -39,5 +39,4 @@ jobs:
     - name: Test with pytest
       run: |
         pip install -e .
-        pytest -v --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html tests/*
-        python3 tests/SimpleSchrodinger.py
+        pytest -v --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html tests

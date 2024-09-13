@@ -177,8 +177,9 @@ def cLOphononScatter(step: float, kl: float,
 
 def cLOtotal(step: float, kls: np.ndarray,
              psi_ijs: np.ndarray, fjs: np.ndarray):
+    psi_ijs_flatten = np.ascontiguousarray(psi_ijs).flatten()
     return LOtotal(step, psi_ijs.shape[1], get_c_ptr_f(kls),
-                   get_c_ptr_f(psi_ijs.flatten()), get_c_ptr_f(fjs),
+                   get_c_ptr_f(psi_ijs_flatten), get_c_ptr_f(fjs),
                    psi_ijs.shape[0])
 
 

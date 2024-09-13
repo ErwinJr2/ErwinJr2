@@ -1,5 +1,5 @@
 SHELL=bash
-CFLAGS += -Ofast -Wall -fPIC
+CFLAGS += -Ofast -Wall -Werror -fPIC
 # CFLAGS += -D _DEBUG
 # CC = icc
 # CFLAGS = -march=native -Ofast -gcc-name=gcc-6 -Wall
@@ -54,7 +54,7 @@ fftautocorr.o : fftautocorr/fftautocorr.c fftautocorr/fftautocorr.h fftautocorr/
 c_schrodinger.c : c_schrodinger.pyx
 	cython $<
 c_schrodinger.o : c_schrodinger.c
-	$(CC) $(CFLAGS) -I$(PYTHON_INCLUDE) -I$(NUMPY_INCLUDE) -c $< -o $@
+	$(CC) $(CFLAGS) -D NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I$(PYTHON_INCLUDE) -I$(NUMPY_INCLUDE) -c $< -o $@
 c_schrodinger.so : c_schrodinger.o 1DSchrodinger_MP.o fftautocorr.o band.o
 	$(CC) -shared -fPIC $(OMPFLAGS) $^ -o $@ -lm $(LDFLAGS)
 
