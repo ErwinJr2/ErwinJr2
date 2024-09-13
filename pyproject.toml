@@ -86,3 +86,6 @@ skip = [
 ]
 test-requires = "pytest"
 test-command = "cd {project} && pytest tests"
+
+[tool.cibuildwheel.windows]
+test-command = "cd /d {project} && pytest tests"
