@@ -1,3 +1,6 @@
+import copy
+from typing import List, Tuple, Union
+
 import numpy as np
 import scipy.sparse as sparse
 import scipy.sparse.linalg as splg
@@ -10,15 +13,8 @@ from scipy.constants import h as h
 from scipy.constants import hbar as hbar
 from scipy.linalg import null_space
 
-try:
-    from ErwinJr2.oned_quantum import c_schrodinger as onedq
-except OSError:
-    onedq = None
-    print("C library is not compiled. Features are limited.")
-import copy
-from typing import List, Tuple, Union
-
 from ErwinJr2 import material
+from ErwinJr2.oned_quantum import c_schrodinger as onedq
 
 EUNIT = 1e-5  # E field unit from kV/cm to V/Angstrom
 BASISPAD = 100  #: padding barrier for basis solver, unit Angstrom
