@@ -81,6 +81,8 @@ def settingslot(fn):
 
 
 class CalculateHolder(QObject):
+    """Helper class to hold the calculation function and run it in a separate thread."""
+
     finished = pyqtSignal()
     succeed = pyqtSignal()
     failed = pyqtSignal(str)
@@ -228,22 +230,21 @@ class QuantumTab(QWidget):
         self.fillPlot = False
 
         # Platform dependent settings, eg. layout size settings
-        if sys.platform.startswith("win"):
+        platform = sys.platform
+        if platform.startswith("win"):
             settingBoxWidth = 150
             layerBoxWidth = 230
             solveBoxWidth = 170
-        elif sys.platform.startswith("darwin"):
+        elif platform.startswith("darwin"):
             settingBoxWidth = 160
             layerBoxWidth = 250
             solveBoxWidth = 180
-        elif sys.platform.startswith("linux"):
+        elif platform.startswith("linux"):
             settingBoxWidth = 150
             layerBoxWidth = 250
             solveBoxWidth = 185
         else:
-            QMessageBox.warning(
-                self, EJ_WARNING, "Platform %s not tested." % sys.platform
-            )
+            QMessageBox.warning(self, EJ_WARNING, f"Platform {platform} not tested.")
             settingBoxWidth = 150
             layerBoxWidth = 400
             solveBoxWidth = 190
@@ -626,7 +627,7 @@ class QuantumTab(QWidget):
             name = AParam[mtrl]["name"]
             name = name.replace("1-x", str(1 - self.qclayers.moleFracs[n]))
             name = name.replace("x", str(self.qclayers.moleFracs[n]))
-            name = "#%d " % (n + 1)  # + name
+            name = f"#{n + 1} "  # + name
             self.mtrlList.append(name)
 
     # ===========================================================================
@@ -655,7 +656,7 @@ class QuantumTab(QWidget):
             QMessageBox.information(
                 self,
                 EJ_ERROR,
-                "%s substrates have not yet been implemented." % substrateType,
+                f"{substrateType} substrates have not yet been implemented.",
             )
             self.inputSubstrateBox.setCurrentIndex(
                 self.inputSubstrateBox.findText(self.qclayers.substrate)
@@ -757,7 +758,7 @@ class QuantumTab(QWidget):
         # +1 because range is not inclusive of last value
         # total length of the layers (1 period)
         Lp = sum(self.qclayers.layerWidths[LpFirst:LpLast])
-        Lp_string = "Lp: %.1f \u212b<br>" % Lp
+        Lp_string = f"Lp: {Lp:.1f} \u212b<br>"
         # average doping of the layers
         ns = sum(
             self.qclayers.layerDopings[n] * self.qclayers.layerWidths[n]
@@ -768,16 +769,15 @@ class QuantumTab(QWidget):
         else:
             nD = ns / Lp
             Lp_string += (
-                "N<sub>D</sub>: %6.3f\u00d710<sup>17</sup>" "cm<sup>-3</sup><br>"
-            ) % nD
+                f"N<sub>D</sub>: {nD:6.3f}\u00d710<sup>17</sup>" "cm<sup>-3</sup><br>"
+            )
         # 2D carrier density in 1E11cm-2
         ns = ns * 1e-2
         Lp_string += (
-            "N<sub>s</sub>: %6.3f\u00d710<sup>11</sup>" "cm<sup>-2</sup><br>"
-        ) % ns
-        Lp_string += "n<sub>eff</sub>: %.2f" % self.qclayers.effective_ridx(
-            self.inputWlBox.value()
+            f"N<sub>s</sub>: {ns:6.3f}\u00d710<sup>11</sup>" "cm<sup>-2</sup><br>"
         )
+        neff = self.qclayers.effective_ridx(self.inputWlBox.value())
+        Lp_string += f"n<sub>eff</sub>: {neff:.2f}"
         self.LpStringBox.setText(Lp_string)
 
     @pyqtSlot()
@@ -818,7 +818,7 @@ class QuantumTab(QWidget):
         for q, layerWidths in enumerate(self.qclayers.layerWidths):
             color = self.mtrlcolors[self.qclayers.layerMtrls[q] % len(self.mtrlcolors)]
             # Width Setup
-            width = QTableWidgetItem("%5.1f" % layerWidths)
+            width = QTableWidgetItem(f"{layerWidths:5.1f}")
             width.setTextAlignment(Qt.AlignCenter)
             width.setBackground(color)
             self.layerTable.setItem(q, 0, width)
@@ -830,7 +830,7 @@ class QuantumTab(QWidget):
                 self.qclayers.mtrlAlloys[self.qclayers.layerMtrls[q]].a_perp / 2
             )
             # a_perp has two layer of atoms (one III and one V)
-            numML = QTableWidgetItem("%5.1f" % (layerWidths / mlThickness))
+            numML = QTableWidgetItem(f"{layerWidths / mlThickness:5.1f}")
             numML.setTextAlignment(Qt.AlignCenter)
             numML.setBackground(color)
             self.layerTable.setItem(q, 1, numML)
@@ -926,7 +926,7 @@ class QuantumTab(QWidget):
         else:
             self.layerTable.setCurrentCell(n, 0)
             # self.updateSelected()
-            self._updateFoM
+            self._updateFoM()
             self.dirty.emit()
 
     @pyqtSlot()
@@ -939,8 +939,12 @@ class QuantumTab(QWidget):
         if n < 0 or n > len(self.qclayers.layerWidths):
             QMessageBox.warning(self, EJ_ERROR, "Select the layer to optimize.")
             return
+        if len(self.stateHolder) != 2:
+            QMessageBox.warning(self, EJ_ERROR, "Select state pair to optimize.")
+            return
         try:
-            upper, lower = self.stateHolder
+            upper = self.stateHolder[0]
+            lower = self.stateHolder[1]
             if self.qclayers.eigenEs[upper] < self.qclayers.eigenEs[lower]:
                 upper, lower = lower, upper
         except ValueError:
@@ -1026,7 +1030,7 @@ class QuantumTab(QWidget):
         elif column == 2:
             # column == 2 for item change in mtrl column, should be
             # controlled by layerTable_materialChanged
-            raise Exception("Should not be here")
+            raise RuntimeError("Should not be here")
 
         elif column == 3:
             # column == 3 for item change in AR column
@@ -1036,7 +1040,7 @@ class QuantumTab(QWidget):
             self.qclayers.layerARs[row] = item.checkState() == Qt.Checked
 
         else:
-            raise Exception("Should not be here")
+            raise RuntimeError("Should not be here")
 
         self._update_layerTable()
         self.clear_WFs()
@@ -1103,7 +1107,7 @@ class QuantumTab(QWidget):
         clipboard = QApplication.clipboard()
         string = ""
         for width in self.qclayers.layerWidths:
-            string += "%.1f\n" % width
+            string += f"{width:.1f}\n"
         clipboard.setText(string)
 
     # =========================================================================
@@ -1297,16 +1301,16 @@ class QuantumTab(QWidget):
 
     def update_mtrl_info(self):
         """Update labels below mtrlTable"""
+        mtrl_offset_in_mev = self.qclayers.mtrlOffset * 1000
         self.offsetLabel.setText(
-            "<center>ΔE<sub>c</sub>: <b>%6.0f meV </b></center>"
-            % (self.qclayers.mtrlOffset * 1000)
+            f"<center>ΔE<sub>c</sub>: <b>{mtrl_offset_in_mev:6.0f} meV</b></center>"
         )
         self.netStrainLabel.setText(
-            "<center>Net Strain: <b>%6.3f%%</b></center>" % self.qclayers.netStrain
+            f"<center>Net Strain: <b>{self.qclayers.netStrain:6.3f}%</b></center>"
         )
+        hwlo_in_mev = self.qclayers.avghwLO * 1000
         self.LOPhononLabel.setText(
-            "<center>E<sub>LO</sub>: <b>%4.1f meV</b></center>"
-            % (1000 * self.qclayers.avghwLO)
+            f"<center>E<sub>LO</sub>: <b>{hwlo_in_mev:4.1f} meV</b></center>"
         )
 
     # =========================================================================
@@ -1634,11 +1638,11 @@ class QuantumTab(QWidget):
 
         if len(self.stateHolder) == 1:
             self.stateParamText.clear()
-            self.pairString = "selected: %d, ..<br>" % self.stateHolder[0]
+            self.pairString = f"selected: {self.stateHolder[0]}, ..<br>"
             if self.qclayers.status == "solved-full":
                 pop = self.qclayers.state_population(self.stateHolder[0])
                 if pop is not None:
-                    self.pairString += "population: %.1f%%<br>" % (pop * 100)
+                    self.pairString += f"population: {pop * 100:.1f}%<br>"
             self.stateParamText.setText(self.pairString)
 
         elif len(self.stateHolder) == 2:
@@ -1648,7 +1652,8 @@ class QuantumTab(QWidget):
     def updateSelected(self):
         """Update easy-to-calculate parameters regarding picked two states"""
         self.FoMButton.setEnabled(True)
-        upper, lower = self.stateHolder
+        upper = self.stateHolder[0]
+        lower = self.stateHolder[1]
         if self.qclayers.eigenEs[upper] < self.qclayers.eigenEs[lower]:
             upper, lower = lower, upper
         self.de = self.qclayers.eigenEs[upper] - self.qclayers.eigenEs[lower]
@@ -1668,9 +1673,9 @@ class QuantumTab(QWidget):
                 f"({self.wavelength:6.1f} \u00b5m)<br>"
                 f"dipole: <b>{opticalDipole:6.1f} \u212b</b><br>"
             )
-            self.pairString += "LO scatter: %6.3g ps<br>" % tauLO_ul
+            self.pairString += f"LO scatter: {tauLO_ul:6.3g} ps<br>"
             if self.qclayers.includeIFR:
-                self.pairString += "IFR scatter: %6.3g ps<br>" % self.tauIFR_ul
+                self.pairString += f"IFR scatter: {self.tauIFR_ul:6.3g} ps<br>"
             if self.qclayers.status == "solved-full":
                 self.pairString += "population: <br>&nbsp;&nbsp;&nbsp;"
                 uPop = self.qclayers.state_population(upper)
@@ -1682,7 +1687,8 @@ class QuantumTab(QWidget):
         self.stateParamText.setText(self.pairString)
 
     def _calcFoM(self):
-        upper, lower = self.stateHolder
+        upper = self.stateHolder[0]
+        lower = self.stateHolder[1]
         if self.qclayers.eigenEs[upper] < self.qclayers.eigenEs[lower]:
             upper, lower = lower, upper
         tauLO_u = self.qclayers.lo_lifetime(upper)
@@ -1707,18 +1713,18 @@ class QuantumTab(QWidget):
         # tauUpperLower is the inverse of transition rate (lifetime)
 
         self.FoMString = (
-            "<i>\u03c4<sup>LO</sup><sub>upper</sub></i> : %6.3f ps<br>"
-            "<i>\u03c4<sup>LO</sup><sub>lower</sub></i> : %6.3f ps<br>"
-        ) % (tauLO_u, tauLO_l)
+            f"<i>\u03c4<sup>LO</sup><sub>upper</sub></i> : {tauLO_u:6.3f} ps<br>"
+            f"<i>\u03c4<sup>LO</sup><sub>lower</sub></i> : {tauLO_l:6.3f} ps<br>"
+        )
         if self.qclayers.includeIFR:
             self.FoMString += (
-                "<i>\u03c4<sup>IFR</sup><sub>upper</sub></i> : %6.3f ps<br>"
-                "<i>\u03c4<sup>IFR</sup><sub>lower</sub></i> : %6.3f ps<br>"
-            ) % (tauIFR_u, tauIFR_l)
+                f"<i>\u03c4<sup>IFR</sup><sub>upper</sub></i> : {tauIFR_u:6.3f} ps<br>"
+                f"<i>\u03c4<sup>IFR</sup><sub>lower</sub></i> : {tauIFR_l:6.3f} ps<br>"
+            )
         self.FoMString += (
-            "FoM: <b>%6.0f ps \u212b<sup>2</sup></b><br>"
-            "Gain coefficient:<br>&nbsp;&nbsp; %.2f cm/kA"
-        ) % (FoM, self.gainCoeff)
+            f"FoM: <b>{FoM:6.0f} ps \u212b<sup>2</sup></b><br>"
+            f"Gain coefficient:<br>&nbsp;&nbsp; {self.gainCoeff:.2f} cm/kA"
+        )
 
     def _updateFoM(self):
         self.stateParamText.setText(self.pairString + self.FoMString)
@@ -1747,11 +1753,10 @@ class QuantumTab(QWidget):
         self.gainCoeff = gain / self.qclayers.current
         self.specString = (
             "Carrier Leakage: <br>"
-            "&nbsp;&nbsp; %.2f%%<br>"
-            "Current: %.1f kA/cm<sup>2</sup><br>"
-            "Gain coefficient:<br>"
-            "&nbsp;&nbsp; %.2f cm/kA"
-        ) % (self.qclayers.carrierLeak * 100, self.qclayers.current, self.gainCoeff)
+            f"&nbsp;&nbsp; {self.qclayers.carrierLeak * 100:.2f}%<br>"
+            f"Current: {self.qclayers.current:.1f} kA/cm<sup>2</sup><br>"
+            f"Gain coefficient:<br>&nbsp;&nbsp; {self.gainCoeff:.2f} cm/kA"
+        )
 
     def _updatePopulation(self):
         self.stateParamText.setText(self.specString)
@@ -1790,6 +1795,8 @@ class QuantumTab(QWidget):
 
 
 class WLDialog(QDialog):
+    """Dialog window for setting the wavelength range for gain spectrum"""
+
     def __init__(self, parent, wlMin, wlMax):
         super().__init__(parent)
         self.setModal(True)
