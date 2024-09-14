@@ -115,7 +115,7 @@ def plotWF(
     qcl: QCLayers,
     plotType: str = "mode",
     fillPlot: Union[bool, float] = False,
-    pickedStates: Iterable = set(),
+    pickedStates: Iterable = tuple(),
     showPeriod: bool = True,
     axes: Axes = None,
 ):
