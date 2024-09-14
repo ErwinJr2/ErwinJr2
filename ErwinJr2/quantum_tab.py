@@ -46,7 +46,7 @@ from PyQt5.QtWidgets import (
 
 from ErwinJr2.custom_qt_class import mtrlComboBox
 from ErwinJr2.dark_detect import isdark
-from ErwinJr2.ej_canvas import EJcanvas, EJplotControl
+from ErwinJr2.ej_canvas import EJCanvas, EJplotControl
 from ErwinJr2.ej_canvas import config as plotconfig
 from ErwinJr2.material import AParam
 from ErwinJr2.qc_layers import (
@@ -447,7 +447,7 @@ class QuantumTab(QWidget):
         """Return:
         A Qt Layout containing a canvas for plotting;
         A QGridLayout containing plot control;"""
-        self.quantumCanvas = EJcanvas(
+        self.quantumCanvas = EJCanvas(
             xlabel="Position (Å)", ylabel="Energy (eV)", parent=self
         )
         self.plotControl = EJplotControl(self.quantumCanvas, self)

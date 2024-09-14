@@ -5,7 +5,7 @@ This file defines class for plotting figures in ErwinJr
 import json
 import os
 import sys
-from warnings import warn
+import warnings
 
 import matplotlib
 import numpy as np
@@ -38,24 +38,23 @@ elif sys.platform == "darwin":
 def LoadConfig(fname="plotconfig.json"):
     try:
         with open(fname, "r") as f:
-            userConfig = json.load(f)
+            user_config = json.load(f)
     except FileNotFoundError:
-        userConfig = {}
-        warn(
-            "Cannot load plot config file %s. Use default config." % fname, UserWarning
+        user_config = {}
+        warnings.warn(
+            f"Cannot load plot config file {fname}. Use default config.", UserWarning
         )
-    for k in userConfig:
-        config[k] = userConfig[k]
+    for k in user_config:
+        config[k] = user_config[k]
 
 
-class EJcanvas(FigureCanvas):
+class EJCanvas(FigureCanvas):
     """EJcanvas is designed for ErwinJr as a canvas for energy band and
     wavefunctions"""
 
     def __init__(self, xlabel="x", ylabel="y", parent=None):
         self.figure = Figure()
         super().__init__(self.figure)
-        #  NavigationToolbar2.__init__(self, self)
         self.setParent(parent)
         self.setMinimumWidth(200)
         self.setMinimumHeight(200)
@@ -153,7 +152,7 @@ class EJplotControl(NavigationToolbar2, QObject):
             if callback in ["zoom", "pan"]:
                 button.setCheckable(True)
         else:
-            raise TypeError("%s not supported." % callback)
+            raise TypeError(f"{callable} not supported.")
 
     def set_custom(self, name, button, callback, cursor=cursors.HAND):
         """customized callback action,
@@ -164,7 +163,7 @@ class EJplotControl(NavigationToolbar2, QObject):
         self._actions[name] = button
         self._custom_cursor[name] = cursor
         self._custom_mode = None
-        self._custom_callBack = None
+        self._custom_callback = None
         button.setCheckable(True)
 
     def _get_mode_name(self):
@@ -217,16 +216,16 @@ class EJplotControl(NavigationToolbar2, QObject):
 
     def _reset_custom(self):
         self._custom_mode = None
-        if self._custom_callBack is not None:
-            self.canvas.mpl_disconnect(self._custom_callBack)
-            self._custom_callBack = None
+        if self._custom_callback is not None:
+            self.canvas.mpl_disconnect(self._custom_callback)
+            self._custom_callback = None
 
     def trigger_custom(self, mode):
         self._reset_mode()
         if self._custom_mode != mode:
             self._reset_custom()
             self._custom_mode = mode
-            self._custom_callBack = self.canvas.mpl_connect(
+            self._custom_callback = self.canvas.mpl_connect(
                 "button_release_event", self._custom_active[mode]
             )
             self.canvas.widgetlock(self)
@@ -282,24 +281,23 @@ class EJplotControl(NavigationToolbar2, QObject):
             startpath = os.path.expanduser(matplotlib.rcParams["savefig.directory"])
             filename = os.path.join(startpath, self.canvas.get_default_filename())
         filters = []
-        selectedFilter = None
+        selected_filter = None
         for name, exts in sorted_filetypes:
-            exts_list = " ".join(["*.%s" % ext for ext in exts])
-            filter = "%s (%s)" % (name, exts_list)
-            #  filter = '(*.%s) %s' % (exts_list, name)
+            exts_list = " ".join([f"*.{ext}" for ext in exts])
+            fmt_filter = f"{name} ({exts_list})"
             if default_filetype in exts:
-                selectedFilter = filter
-            filters.append(filter)
+                selected_filter = fmt_filter
+            filters.append(fmt_filter)
         filters = ";;".join(filters)
-        print(filters, selectedFilter)
+        print(filters, selected_filter)
 
-        fname, filter = QFileDialog.getSaveFileName(
-            self.parent(), caption, filename, filters, selectedFilter
+        fname, fmt_filter = QFileDialog.getSaveFileName(
+            self.parent(), caption, filename, filters, selected_filter
         )
         if fname:
             try:
                 self.canvas.figure.savefig(fname, dpi=300, bbox_inches="tight")
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-except
                 QMessageBox.critical(
                     self.parent(),
                     "Error saving band diagram",

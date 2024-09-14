@@ -31,7 +31,7 @@ from PyQt5.QtWidgets import (
 )
 
 from ErwinJr2.custom_qt_class import mtrlComboBox
-from ErwinJr2.ej_canvas import EJcanvas
+from ErwinJr2.ej_canvas import EJCanvas
 from ErwinJr2.opt_strata import Alloy, Dopable, OptStrata, optimizeOptStrata, rIdx
 from ErwinJr2.version_and_name import EJ_ERROR
 
@@ -114,7 +114,7 @@ class OpticalTab(QWidget):
         opticalLayout.addLayout(self._settingBox(settingBoxWidth))
         opticalLayout.addLayout(self._strataBox(strataBoxWidth))
         figureBox = QVBoxLayout()
-        self.optCanvas = EJcanvas(
+        self.optCanvas = EJCanvas(
             xlabel="Position $x$ (μm)", ylabel="Refractive index $n$"
         )
         self.rIdxAxes = self.optCanvas.axes
