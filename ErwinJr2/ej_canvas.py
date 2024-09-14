@@ -54,7 +54,7 @@ class EJcanvas(FigureCanvas):
 
     def __init__(self, xlabel="x", ylabel="y", parent=None):
         self.figure = Figure()
-        super(EJcanvas, self).__init__(self.figure)
+        super().__init__(self.figure)
         #  NavigationToolbar2.__init__(self, self)
         self.setParent(parent)
         self.setMinimumWidth(200)
@@ -82,7 +82,7 @@ class EJcanvas(FigureCanvas):
         self.axes.plot(x, np.sin(x))
 
     def resizeEvent(self, event):
-        super(EJcanvas, self).resizeEvent(event)
+        super().resizeEvent(event)
         height = self.figure.get_figheight()
         width = self.figure.get_figwidth()
         margin = config["PlotMargin"]
@@ -199,20 +199,20 @@ class EJplotControl(NavigationToolbar2, QObject):
 
     def pan(self, *args):
         # override
-        super(EJplotControl, self).pan(*args)
+        super().pan(*args)
         self._reset_custom()
         self._update_buttons_checked()
 
     def zoom(self, *args):
         # override
-        super(EJplotControl, self).zoom(*args)
+        super().zoom(*args)
         self._reset_custom()
         self.zoomed = True
         self._update_buttons_checked()
 
     def home(self, *args):
         # override
-        super(EJplotControl, self).home(*args)
+        super().home(*args)
         self.zoomed = False
 
     def _reset_custom(self):
@@ -248,7 +248,7 @@ class EJplotControl(NavigationToolbar2, QObject):
         ):
             self.set_cursor(self._custom_cursor[self._custom_mode])
             return
-        super(EJplotControl, self)._update_cursor(event)
+        super()._update_cursor(event)
 
     def set_cursor(self, cursor):
         # implement

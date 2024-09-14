@@ -361,7 +361,7 @@ class MaxwellLayer_anisotropic(MaxwellLayer):
     top air and bottom substrate."""
 
     def __init__(self, wl, Ls=[1.0, 1.0], indexz=[1.0, 1.0], indexy=None):
-        super(MaxwellLayer_anisotropic, self).__init__(wl, Ls, indexz)
+        super().__init__(wl, Ls, indexz)
         if indexy is None:
             self.indexy = np.copy(self.indices)
         else:
@@ -454,7 +454,7 @@ class OptStrata(MaxwellLayer):
         cstmPrd=defaultdict(float),
         cstmGain=defaultdict(float),
     ):
-        super(OptStrata, self).__init__(wl)
+        super().__init__(wl)
         N = len(materials)
         self.materials = list(AlloyNick[m] if m in AlloyNick else m for m in materials)
         self.moleFracs = list(moleFracs) if moleFracs else [0.0] * N
@@ -632,7 +632,7 @@ class OptStrata(MaxwellLayer):
             xs = np.linspace(-3, sum(self.Ls[1:]), 5000)
         if Ey is None:
             Ey, _, _ = self.populateMode(beta, xs)
-        return super(OptStrata, self).confinementy(beta, self.populateMtrl(xs), xs, Ey)
+        return super().confinementy(beta, self.populateMtrl(xs), xs, Ey)
 
 
 def optimizeOptStrata(

@@ -42,7 +42,7 @@ DEFAULT_FILE_DIR = os.path.join(
 
 class MainWindow(QMainWindow):
     def __init__(self, fname=None, parent=None):
-        super(MainWindow, self).__init__(parent)
+        super().__init__(parent)
         self.qsettings = QSettings(
             QSettings.IniFormat, QSettings.UserScope, "ErwinJr", "ErwinJr2", self
         )

@@ -26,7 +26,7 @@ class Band(object):
     c: CBAND_P
 
     def __init__(self, bandtype: str, *args, **kwargs):
-        super(Band, self).__init__()
+        super().__init__()
         self.bandtype = bandtype
         # Make refs of parameters of band so it's not garbage collected
         self.args = args

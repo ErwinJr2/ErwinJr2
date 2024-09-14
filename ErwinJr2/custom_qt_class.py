@@ -7,9 +7,9 @@ class mtrlComboBox(QComboBox):
     """A QComboBox that pops up on the right"""
 
     def __init__(self, parent=None):
-        super(mtrlComboBox, self).__init__(parent)
+        super().__init__(parent)
 
     def showPopup(self):
-        super(mtrlComboBox, self).showPopup()
+        super().showPopup()
         popup = self.findChild(QFrame)
         popup.move(popup.x() + self.size().width(), popup.y())

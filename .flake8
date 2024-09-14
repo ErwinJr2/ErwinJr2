@@ -6,5 +6,4 @@ ignore = E203,E701,W503,W504
 exclude =
     .git,
     __pycache__,
-    ErwinJr2/rFittings.py,
     .venv

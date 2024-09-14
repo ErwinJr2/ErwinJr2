@@ -62,7 +62,7 @@ from ErwinJr2.qc_layers import (
     optimize_layer,
 )
 from ErwinJr2.qc_plotter import plotPotential, plotWF, scaleWF
-from ErwinJr2.version_and_name import EJ_ERROR, ejWarning
+from ErwinJr2.version_and_name import EJ_ERROR, EJ_WARNING
 
 
 # TODO: this may not be necessary by better designer
@@ -174,7 +174,7 @@ class QuantumTab(QWidget):
     toOptics = pyqtSignal(QCLayers)
 
     def __init__(self, qclayers=None, parent=None):
-        super(QuantumTab, self).__init__(parent)
+        super().__init__(parent)
         self.qclayers = qclayers if qclayers else QCLayers()
         self.calcThread = QThread()
         self._worker = None
@@ -242,7 +242,7 @@ class QuantumTab(QWidget):
             solveBoxWidth = 185
         else:
             QMessageBox.warning(
-                self, ejWarning, "Platform %s not tested." % sys.platform
+                self, EJ_WARNING, "Platform %s not tested." % sys.platform
             )
             settingBoxWidth = 150
             layerBoxWidth = 400
@@ -934,7 +934,7 @@ class QuantumTab(QWidget):
         """SLOT connected to self.optimizeLayerButton.clicked()"""
         n = self.layerTable.currentRow()
         if self.qclayers.status == "unsolved":
-            QMessageBox.warning(self, ejWarning, "Solve the model first.")
+            QMessageBox.warning(self, EJ_WARNING, "Solve the model first.")
             return
         if n < 0 or n > len(self.qclayers.layerWidths):
             QMessageBox.warning(self, EJ_ERROR, "Select the layer to optimize.")
@@ -965,7 +965,7 @@ class QuantumTab(QWidget):
             "It's highly recommended to save the structure first.\n"
             "Do you want to proceed?"
         )
-        if QMessageBox.question(self, ejWarning, message) == QMessageBox.Yes:
+        if QMessageBox.question(self, EJ_WARNING, message) == QMessageBox.Yes:
             self.stateParamText.clear()
             self.clear_WFs()
             self._threadRun(self._global_optimize, self.showOptmize)
@@ -1522,7 +1522,7 @@ class QuantumTab(QWidget):
             lambda traceInfo: QMessageBox.warning(self, EJ_ERROR, traceInfo)
         )
         self._worker.warning.connect(
-            lambda message: QMessageBox.warning(self, ejWarning, message)
+            lambda message: QMessageBox.warning(self, EJ_WARNING, message)
         )
         self._worker.failed.connect(self.clear_WFs)
         self.calcThread.finished.connect(lambda: self.calcRepaint(False))

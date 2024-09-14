@@ -81,7 +81,7 @@ class OpticalTab(QWidget):
     dirty = pyqtSignal()
 
     def __init__(self, stratum=None, parent=None):
-        super(OpticalTab, self).__init__(parent)
+        super().__init__(parent)
         self.stratum = stratum if stratum else OptStrata(3.0)
         self.periods = {}
         self.ridgeLength = 3.0
