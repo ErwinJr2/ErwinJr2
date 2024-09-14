@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
+"""Scripts to generate shortcuts for ErwinJr2."""
 
 import os
 import subprocess
@@ -25,9 +26,9 @@ def macos_shortcut(basePath, shortcut_path=None):
         ["cp", os.path.join(basePath, "images", "EJicns.icns"), "Resources/"]
     )
     shellcode = "#!/bin/bash\n"
-    if os.environ.get("PYTHONPATH"):
-        shellcode += "export PYTHONPATH=%s\n" % os.environ["PYTHONPATH"]
-    shellcode += "%s -m ErwinJr2\n" % sys.executable
+    if python_path := os.environ.get("PYTHONPATH"):
+        shellcode += f"export PYTHONPATH={python_path}\n"
+    shellcode += f"{sys.executable} -m ErwinJr2\n"
     shellfile = "MacOS/ErwinJr2"
     with open(shellfile, "w") as f:
         f.write(shellcode)
@@ -39,11 +40,9 @@ def win_shortcut(basePath, shortcut_path):
     if shortcut_path is None:
         shortcut_path = os.path.join(os.path.expanduser("~"), "Desktop")
     link_path = os.path.join(shortcut_path, "ErwinJr2.lnk")
-    batcode = """@SET "PATH=%s\"\n""" % os.environ["PATH"]
-    if os.environ.get("PYTHONPATH"):
-        batcode += """@SET "PYTHONPATH=%s\"\n""" % os.environ["PYTHONPATH"]
-    # batcode += "@echo off\n"
-    # batcode += "cd %~dp0\n"
+    batcode = f"""@SET "PATH={os.environ["PATH"]}\"\n"""
+    if python_path := os.environ.get("PYTHONPATH"):
+        batcode += f"""@SET "PYTHONPATH={python_path}\"\n"""
     batcode += "start pythonw -m ErwinJr2 %1\n"
     batfile = "ErwinJr2.bat"
     with open(batfile, "w") as f:
