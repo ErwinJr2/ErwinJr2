@@ -31,7 +31,7 @@ import logging
 from numpy import sqrt
 
 # This is to separate legacy fitting
-from ErwinJr2.rFittings import AlGaAsIndex, SiNxIndex, SiO2Index
+from ErwinJr2.index_fitting import index_AlGaAs, index_SiNx, index_SiO2
 
 # flags for what effect to include
 BOWING = True
@@ -692,9 +692,9 @@ rIdx = {
     # from old ej
     # "Au": lambda wl: (-0.1933-0.382j + (0.3321+6.8522j)*wl
     #                   + (0.0938**2+0.1289**2*1j)*wl),
-    "AlxGa1-xAs": AlGaAsIndex,
-    "SiNx": SiNxIndex,
-    "SiO2": SiO2Index,
+    "AlxGa1-xAs": index_AlGaAs,
+    "SiNx": index_SiNx,
+    "SiO2": index_SiO2,
     "Air": lambda wl: 1,
 }
 

@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 """
 This script contains some external fitting/theoretical functions for
 refractive indices
@@ -6,7 +7,7 @@ refractive indices
 from numpy import pi, sqrt
 
 
-def AlGaAsIndex(wl, x):
+def index_AlGaAs(wl, x):
     # from indexAlexey
     e = 1.2395 / wl
     e0 = 1.425 + 1.155 * x + 0.37 * x**2
@@ -20,7 +21,7 @@ def AlGaAsIndex(wl, x):
     return sqrt(a1 * (f1 + 0.5 * f2 * (e0 / edel) ** (1.5)) + b)
 
 
-def SiNxIndex(wl):
+def index_SiNx(wl):
     # from Jean Nguyen's Thesis
     C1 = 2.0019336
     C2 = 0.15265213
@@ -50,7 +51,7 @@ def SiNxIndex(wl):
     return n_SiNx + 1j * k_SiNx
 
 
-def SiO2Index(wl):
+def index_SiO2(wl):
     # from Jean Nguyen's Thesis
     C1 = 1.41870
     C2 = 0.12886725
