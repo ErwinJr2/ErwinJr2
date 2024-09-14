@@ -5,4 +5,4 @@ cython
 pylint
 pytest
 pytest-cov
-flake8
+ruff

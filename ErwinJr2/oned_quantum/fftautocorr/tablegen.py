@@ -23,7 +23,7 @@ def tablegen(intmax, ps=(2, 3, 5)):
     logL = np.log2(intmax)
     allp = 1
     for p in ps:
-        compp = p**(np.arange(logL/np.log2(p), dtype=np.int))
+        compp = p ** (np.arange(logL / np.log2(p), dtype=np.int))
         allp = np.outer(allp, compp).reshape(-1)
         allp = allp[allp < intmax]
     return np.sort(allp)
@@ -56,15 +56,18 @@ static int find_factor(size_t n) {{
     return factortable[lo];
 }}
 #endif
-""".format(filename=filename.replace('.', '_').upper(),
-           this=os.path.basename(__file__),
-           numbers=', '.join([str(n) for n in array]))
-    with open(filename, 'w') as f:
+""".format(
+        filename=filename.replace(".", "_").upper(),
+        this=os.path.basename(__file__),
+        numbers=", ".join([str(n) for n in array]),
+    )
+    with open(filename, "w") as f:
         f.write(contents)
 
 
 if __name__ == "__main__":
     import sys
+
     filename = sys.argv[1]
     print("Generating %s" % filename)
-    print_as_c_header(filename, tablegen(2**31-1))
+    print_as_c_header(filename, tablegen(2**31 - 1))

@@ -1,6 +1,7 @@
 """
 This file provides a detection of dark mode for MacOS
 """
+
 # The code is a modified version of darkdetect
 # (https://github.com/albertosottile/darkdetect),
 # which is under the following licence
@@ -38,12 +39,13 @@ isdark = False
 
 if sys.platform == "darwin":
     from distutils.version import LooseVersion as V
+
     if V(platform.mac_ver()[0]) >= V("10.14"):
         import ctypes
         import ctypes.util
 
-        appkit = ctypes.cdll.LoadLibrary(ctypes.util.find_library('AppKit'))
-        objc = ctypes.cdll.LoadLibrary(ctypes.util.find_library('objc'))
+        appkit = ctypes.cdll.LoadLibrary(ctypes.util.find_library("AppKit"))
+        objc = ctypes.cdll.LoadLibrary(ctypes.util.find_library("objc"))
 
         void_p = ctypes.c_void_p
         ull = ctypes.c_uint64
@@ -57,7 +59,7 @@ if sys.platform == "darwin":
 
         def _utf8(s):
             if not isinstance(s, bytes):
-                s = s.encode('utf8')
+                s = s.encode("utf8")
             return s
 
         def n(name):
@@ -66,29 +68,28 @@ if sys.platform == "darwin":
         def C(classname):
             return objc.objc_getClass(_utf8(classname))
 
-        NSAutoreleasePool = objc.objc_getClass('NSAutoreleasePool')
-        pool = msg(NSAutoreleasePool, n('alloc'))
-        pool = msg(pool, n('init'))
+        NSAutoreleasePool = objc.objc_getClass("NSAutoreleasePool")
+        pool = msg(NSAutoreleasePool, n("alloc"))
+        pool = msg(pool, n("init"))
 
-        NSUserDefaults = C('NSUserDefaults')
-        stdUserDef = msg(NSUserDefaults, n('standardUserDefaults'))
+        NSUserDefaults = C("NSUserDefaults")
+        stdUserDef = msg(NSUserDefaults, n("standardUserDefaults"))
 
-        NSString = C('NSString')
+        NSString = C("NSString")
 
-        key = msg(NSString, n("stringWithUTF8String:"),
-                  _utf8('AppleInterfaceStyle'))
-        appearanceNS = msg(stdUserDef, n('stringForKey:'), void_p(key))
-        appearanceC = msg(appearanceNS, n('UTF8String'))
+        key = msg(NSString, n("stringWithUTF8String:"), _utf8("AppleInterfaceStyle"))
+        appearanceNS = msg(stdUserDef, n("stringForKey:"), void_p(key))
+        appearanceC = msg(appearanceNS, n("UTF8String"))
 
         if appearanceC is not None:
             out = ctypes.string_at(appearanceC)
         else:
             out = None
 
-        msg(pool, n('release'))
+        msg(pool, n("release"))
 
         if out is not None:
-            isdark = out.decode('utf-8') == 'Dark'
+            isdark = out.decode("utf-8") == "Dark"
 
     del V
 

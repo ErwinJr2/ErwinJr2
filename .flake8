@@ -1,4 +1,8 @@
 [flake8]
+# https://black.readthedocs.io/en/stable/guides/using_black_with_other_tools.html
+# https://github.com/astral-sh/ruff/issues/4125
+max-line-length = 88
+ignore = E203,E701,W503,W504
 exclude =
     .git,
     __pycache__,

@@ -25,21 +25,37 @@ else:
     enable_omp = False
 
 setup(
-    ext_modules=cythonize([
-        Extension(
-            name="ErwinJr2.oned_quantum.c_schrodinger",
-            sources=[os.path.join(_CLIB_PREFIX, f) for f in _CLIB_FILES],
-            include_dirs=[numpy.get_include()],
-            define_macros=[
-                ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")
-                ] + [("__MP", None)] if enable_omp else [],
-            extra_compile_args=[
-                "-Ofast",
-                # "-Werror",
-            ] + ["-fopenmp"] if enable_omp else [],
-            extra_link_args=[
-                "-lm",
-            ] + ["-lgomp"] if enable_omp else [],
-        ),
-    ], show_all_warnings=True)
+    ext_modules=cythonize(
+        [
+            Extension(
+                name="ErwinJr2.oned_quantum.c_schrodinger",
+                sources=[os.path.join(_CLIB_PREFIX, f) for f in _CLIB_FILES],
+                include_dirs=[numpy.get_include()],
+                define_macros=(
+                    [("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]
+                    + [("__MP", None)]
+                    if enable_omp
+                    else []
+                ),
+                extra_compile_args=(
+                    [
+                        "-Ofast",
+                        # "-Werror",
+                    ]
+                    + ["-fopenmp"]
+                    if enable_omp
+                    else []
+                ),
+                extra_link_args=(
+                    [
+                        "-lm",
+                    ]
+                    + ["-lgomp"]
+                    if enable_omp
+                    else []
+                ),
+            ),
+        ],
+        show_all_warnings=True,
+    )
 )

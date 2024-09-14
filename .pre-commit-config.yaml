@@ -17,6 +17,15 @@ repos:
       - id: isort
         name: isort (pyi)
         types: [pyi]
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.6.4
+    hooks:
+      # Run the linter.
+      - id: ruff
+        args: [ --fix ]
+      # Run the formatter.
+      - id: ruff-format
   - repo: https://github.com/pycqa/flake8
     rev: "7.1.1"
     hooks:

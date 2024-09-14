@@ -8,16 +8,15 @@ from numpy import cos, exp, pi, sin, sinc, sqrt
 from ErwinJr2.material import MParam, rIdx
 
 # Effective mass in unit of free electron mass.
-EffectiveMass = {mtrl: MParam[mtrl]['me0']
-                 for mtrl in ('GaAs', 'InAs', 'AlAs', 'InP')}
+EffectiveMass = {mtrl: MParam[mtrl]["me0"] for mtrl in ("GaAs", "InAs", "AlAs", "InP")}
 
-Alloy = {"AlxGa1-xAs": ("AlAs", "GaAs"),
-         "InxGa1-xAs": ("InAs", "GaAs"),
-         "Al1-xInxAs": ("InAs", "AlAs")}
-AlloyNick = {'AlGaAs': 'AlxGa1-xAs',
-             'InGaAs': 'InxGa1-xAs',
-             'AlInAs': 'Al1-xInxAs'}
-Dopable = set(['GaAs', 'InAs', 'AlAs', 'InP'] + list(Alloy.keys()))
+Alloy = {
+    "AlxGa1-xAs": ("AlAs", "GaAs"),
+    "InxGa1-xAs": ("InAs", "GaAs"),
+    "Al1-xInxAs": ("InAs", "AlAs"),
+}
+AlloyNick = {"AlGaAs": "AlxGa1-xAs", "InGaAs": "InxGa1-xAs", "AlInAs": "Al1-xInxAs"}
+Dopable = set(["GaAs", "InAs", "AlAs", "InP"] + list(Alloy.keys()))
 
 
 class MaxwellLayer(object):
@@ -47,20 +46,23 @@ class MaxwellLayer(object):
         Thickness of the stratum, same unit as wl. The first and last elements
         are for top and substrate and is not used for calculation
     """
+
     wl: float
     index0: complex
     indexS: complex
     indices: np.ndarray
     Ls: List[complex]
 
-    def __init__(self, wl: float, Ls: List = [1.0, 3.0],
-                 allIndex: List = [1.0, 1.0]):
+    def __init__(self, wl: float, Ls: List = [1.0, 3.0], allIndex: List = [1.0, 1.0]):
         self.wl = wl
         self.index0 = allIndex[0]
         self.indexS = allIndex[-1]
         self.indices = np.array(allIndex[1:-1], dtype=np.complex128)
-        self.Ls = (np.array(Ls) if len(Ls) == len(allIndex)
-                   else np.array([1.0] + list(Ls) + [2.0]))
+        self.Ls = (
+            np.array(Ls)
+            if len(Ls) == len(allIndex)
+            else np.array([1.0] + list(Ls) + [2.0])
+        )
 
     def transferTM(self, beta: complex) -> np.ndarray:
         """Transfer matrix for TM wave
@@ -84,10 +86,19 @@ class MaxwellLayer(object):
         alpha = self._alpha(beta)
         k = 2 * pi / self.wl
         phi = alpha * k * self.Ls[1:-1]
-        ms = np.moveaxis(np.array([
-            [cos(phi), -1j*sin(phi)*alpha/self.indices**2],
-            [-1j*sinc(phi/pi)*self.indices**2*k * self.Ls[1:-1], cos(phi)]]),
-            -1, 0)
+        ms = np.moveaxis(
+            np.array(
+                [
+                    [cos(phi), -1j * sin(phi) * alpha / self.indices**2],
+                    [
+                        -1j * sinc(phi / pi) * self.indices**2 * k * self.Ls[1:-1],
+                        cos(phi),
+                    ],
+                ]
+            ),
+            -1,
+            0,
+        )
         # np.sinc (x) is defined as sin(pi*x)/(pi*x)
         return np.linalg.multi_dot(ms)
 
@@ -111,14 +122,14 @@ class MaxwellLayer(object):
         complex
             The modal-dispersion function
         """
-        gamma0 = np.sqrt((1+0j)*self.index0**2 - beta**2)/self.index0**2
+        gamma0 = np.sqrt((1 + 0j) * self.index0**2 - beta**2) / self.index0**2
         if gamma0.imag < 0:
             gamma0 = -gamma0
-        gammas = np.sqrt((1+0j)*self.indexS**2 - beta**2)/self.indexS**2
+        gammas = np.sqrt((1 + 0j) * self.indexS**2 - beta**2) / self.indexS**2
         if gammas.imag < 0:
             gammas = -gammas
         m = self.transferTM(beta)
-        return m[0, 0]*gammas+m[0, 1]+(m[1, 0]*gammas+m[1, 1])*gamma0
+        return m[0, 0] * gammas + m[0, 1] + (m[1, 0] * gammas + m[1, 1]) * gamma0
 
     def boundModeTM(self, beta: typing.Optional[complex] = None) -> complex:
         """Solve for TM bounded mode near beta
@@ -148,11 +159,12 @@ class MaxwellLayer(object):
         """
         if beta is None:
             if len(self.indices) == 0:
-                beta = 1.5*self.indexS
+                beta = 1.5 * self.indexS
             else:
                 beta = max(self.indices.real)
-                beta = min(beta, 2.0*np.average(self.indices.real,
-                           weights=self.Ls[1:-1]))
+                beta = min(
+                    beta, 2.0 * np.average(self.indices.real, weights=self.Ls[1:-1])
+                )
         # # Minimization algorithm. for complex function zero searching
         # beta0 = newton(lambda beta:
         #                chiMTM(beta, wl, Ls, indices, index0, indexS).imag,
@@ -166,11 +178,11 @@ class MaxwellLayer(object):
         residual = self.chiMTM(beta)
         betaDiff = beta
         t = 0
-        dbeta = 1E-6
-        while abs(betaDiff) > 1E-5 and abs(residual) > 1E-10:
+        dbeta = 1e-6
+        while abs(betaDiff) > 1e-5 and abs(residual) > 1e-10:
             # print(beta, residual)
             t += 1
-            fp = (self.chiMTM(beta+dbeta) - self.chiMTM(beta-dbeta))/(2*dbeta)
+            fp = (self.chiMTM(beta + dbeta) - self.chiMTM(beta - dbeta)) / (2 * dbeta)
             betaDiff = residual / fp
             beta = beta - betaDiff
             residual = self.chiMTM(beta)
@@ -182,10 +194,11 @@ class MaxwellLayer(object):
     def _alpha(self, beta: complex) -> np.ndarray:
         """return alpha = np.sqrt((1+0j)*self.indices**2 - beta**2)
         for isotropic material"""
-        return np.sqrt((1+0j)*self.indices**2 - beta**2)
+        return np.sqrt((1 + 0j) * self.indices**2 - beta**2)
 
-    def populateMode(self, beta: complex, xs: np.ndarray
-                     ) -> typing.Union[np.ndarray, np.ndarray, np.ndarray]:
+    def populateMode(
+        self, beta: complex, xs: np.ndarray
+    ) -> typing.Union[np.ndarray, np.ndarray, np.ndarray]:
         """Generate TM modes (field) on position array xs
 
         Generate TM modes (field) on position array xs, assuming beta is a
@@ -218,49 +231,58 @@ class MaxwellLayer(object):
         k = 2 * pi / self.wl
 
         # top outside medium
-        alpha0 = np.sqrt((1+0j)*self.index0**2 - beta**2)
+        alpha0 = np.sqrt((1 + 0j) * self.index0**2 - beta**2)
         if alpha0.imag < 0:
             alpha0 = -alpha0
-        gamma0 = alpha0/self.index0**2
+        gamma0 = alpha0 / self.index0**2
         Ez0 = -gamma0
         Hx0 = 1
-        Hx[xs < 0] = exp(-1j*alpha0*k*xs[xs < 0])
-        Ez[xs < 0] = -gamma0*Hx[xs < 0]
-        Ey[xs < 0] = -beta*Hx[xs < 0]/self.index0**2
+        Hx[xs < 0] = exp(-1j * alpha0 * k * xs[xs < 0])
+        Ez[xs < 0] = -gamma0 * Hx[xs < 0]
+        Ey[xs < 0] = -beta * Hx[xs < 0] / self.index0**2
 
         # middle stratum
         lsum = np.cumsum(self.Ls[:-1]) - self.Ls[0]
         alpha = self._alpha(beta)
         # [[cos(phi), 1j*sin(phi)*alpha/indices**2],
         #  [1j*sinc(phi/pi)*indices**2*k * Ls, cos(phi)]]
-        for n in range(len(lsum)-1):
-            idx = (xs >= lsum[n]) & (xs < lsum[n+1])
-            phi = alpha[n]*k*(xs[idx] - lsum[n])
-            Ez[idx] = cos(phi)*Ez0 + 1j*(
-                alpha[n]/self.indices[n]**2*sin(phi)*Hx0)
-            Hx[idx] = cos(phi)*Hx0 + 1j*k*(xs[idx] - lsum[n])*(
-                                sinc(phi/pi)*self.indices[n]**2*Ez0)
-            Ey[idx] = -beta*Hx[idx]/self.indices[n]**2
-            phiL = alpha[n]*k*self.Ls[n+1]
-            Ez0, Hx0 = (cos(phiL)*Ez0 + 1j*alpha[n]/self.indices[n]**2*(
-                                           sin(phiL)*Hx0),
-                        cos(phiL)*Hx0 + 1j*k*self.Ls[n+1]*sinc(phiL/pi)*(
-                                           self.indices[n]**2*Ez0))
+        for n in range(len(lsum) - 1):
+            idx = (xs >= lsum[n]) & (xs < lsum[n + 1])
+            phi = alpha[n] * k * (xs[idx] - lsum[n])
+            Ez[idx] = cos(phi) * Ez0 + 1j * (
+                alpha[n] / self.indices[n] ** 2 * sin(phi) * Hx0
+            )
+            Hx[idx] = cos(phi) * Hx0 + 1j * k * (xs[idx] - lsum[n]) * (
+                sinc(phi / pi) * self.indices[n] ** 2 * Ez0
+            )
+            Ey[idx] = -beta * Hx[idx] / self.indices[n] ** 2
+            phiL = alpha[n] * k * self.Ls[n + 1]
+            Ez0, Hx0 = (
+                cos(phiL) * Ez0
+                + 1j * alpha[n] / self.indices[n] ** 2 * (sin(phiL) * Hx0),
+                cos(phiL) * Hx0
+                + 1j
+                * k
+                * self.Ls[n + 1]
+                * sinc(phiL / pi)
+                * (self.indices[n] ** 2 * Ez0),
+            )
 
         # last substrate
-        alphas = np.sqrt((1+0j)*self.indexS**2 - beta**2)
+        alphas = np.sqrt((1 + 0j) * self.indexS**2 - beta**2)
         if alphas.imag < 0:
             alphas = -alphas
-        gammas = alphas/self.indexS**2
-        Hx[xs >= lsum[-1]] = Hx0 * exp(1j*alphas * k *
-                                       (xs[xs >= lsum[-1]] - lsum[-1]))
-        Ez[xs >= lsum[-1]] = gammas*Hx[xs >= lsum[-1]]
-        Ey[xs >= lsum[-1]] = -beta*Hx[xs >= lsum[-1]]/self.indexS**2
+        gammas = alphas / self.indexS**2
+        Hx[xs >= lsum[-1]] = Hx0 * exp(
+            1j * alphas * k * (xs[xs >= lsum[-1]] - lsum[-1])
+        )
+        Ez[xs >= lsum[-1]] = gammas * Hx[xs >= lsum[-1]]
+        Ey[xs >= lsum[-1]] = -beta * Hx[xs >= lsum[-1]] / self.indexS**2
 
         scale = Ey[np.argmax(np.abs(Ey))]
-        self.Hx = Hx/scale
-        self.Ey = Ey/scale
-        self.Ez = Ez/scale
+        self.Hx = Hx / scale
+        self.Ey = Ey / scale
+        self.Ez = Ez / scale
         return self.Ey, self.Hx, self.Ez
 
     def populateIndices(self, xs: np.ndarray) -> np.ndarray:
@@ -278,18 +300,24 @@ class MaxwellLayer(object):
         """
         lsum = np.cumsum(self.Ls[:-1]) - self.Ls[0]
         if len(self.indices) > 0:
-            n = np.piecewise(xs+0j, [(xs >= lsum[i]) & (xs < lsum[i+1])
-                                     for i in range(len(lsum)-1)],
-                             self.indices)
+            n = np.piecewise(
+                xs + 0j,
+                [(xs >= lsum[i]) & (xs < lsum[i + 1]) for i in range(len(lsum) - 1)],
+                self.indices,
+            )
         else:
             n = np.empty(xs.shape, dtype=np.complex128)
         n[xs < 0] = self.index0
         n[xs >= lsum[-1]] = self.indexS
         return n
 
-    def confinementy(self, beta: complex, actives: List[np.ndarray],
-                     xs: typing.Optional[np.ndarray] = None,
-                     Ey: typing.Optional[np.ndarray] = None) -> float:
+    def confinementy(
+        self,
+        beta: complex,
+        actives: List[np.ndarray],
+        xs: typing.Optional[np.ndarray] = None,
+        Ey: typing.Optional[np.ndarray] = None,
+    ) -> float:
         """Return the confinement factor corresponds to mode with effective
         refractive index beta. Assuming active only couple to E_y filed.
         The active region is defined in `actives`. If xs and Ey is None, they
@@ -323,16 +351,15 @@ class MaxwellLayer(object):
         confinement = 0
         nx = self.populateIndices(xs).real
         for ar in actives:
-            confinement += np.trapezoid(
-                nx[ar] * np.abs(self.Ey[ar])**2, xs[ar])
-        confinement = beta.real * confinement / np.trapezoid(
-            (nx * np.abs(Ey))**2, xs)
+            confinement += np.trapezoid(nx[ar] * np.abs(self.Ey[ar]) ** 2, xs[ar])
+        confinement = beta.real * confinement / np.trapezoid((nx * np.abs(Ey)) ** 2, xs)
         return confinement
 
 
 class MaxwellLayer_anisotropic(MaxwellLayer):
     """class for anisotropic Maxwell layers, cannot deal with anisotropy for
     top air and bottom substrate."""
+
     def __init__(self, wl, Ls=[1.0, 1.0], indexz=[1.0, 1.0], indexy=None):
         super(MaxwellLayer_anisotropic, self).__init__(wl, Ls, indexz)
         if indexy is None:
@@ -341,18 +368,21 @@ class MaxwellLayer_anisotropic(MaxwellLayer):
             self.indexy = np.array(indexy, dtype=np.complex128)
 
     def _alpha(self, beta):
-        return self.indices/self.indexy*np.sqrt(
-                    (1+0j)*self.indexy**2 - beta**2)
+        return self.indices / self.indexy * np.sqrt((1 + 0j) * self.indexy**2 - beta**2)
 
     def populateIndices(self, xs):
         lsum = np.cumsum(self.Ls[:-1]) - self.Ls[0]
         if len(self.indices) > 0:
-            n = np.piecewise(xs+0j, [(xs >= lsum[i]) & (xs < lsum[i+1])
-                                     for i in range(len(lsum)-1)],
-                             self.indices)
-            ny = np.piecewise(xs+0j, [(xs >= lsum[i]) & (xs < lsum[i+1])
-                                      for i in range(len(lsum)-1)],
-                              self.indexy)
+            n = np.piecewise(
+                xs + 0j,
+                [(xs >= lsum[i]) & (xs < lsum[i + 1]) for i in range(len(lsum) - 1)],
+                self.indices,
+            )
+            ny = np.piecewise(
+                xs + 0j,
+                [(xs >= lsum[i]) & (xs < lsum[i + 1]) for i in range(len(lsum) - 1)],
+                self.indexy,
+            )
         else:
             n = np.empty(xs.shape, dtype=np.complex128)
             ny = np.empty(xs.shape, dtype=np.complex128)
@@ -411,20 +441,30 @@ class OptStrata(MaxwellLayer):
         the gain coefficient. The variable is only for book keeping and is
         not used for any calculation.
     """
-    def __init__(self, wl=3.0, materials=['Air', 'InP'], moleFracs=None,
-                 dopings=None, Ls=[1.0, 1.0], mobilities=None,
-                 cstmIndx=dict(), cstmPrd=defaultdict(float),
-                 cstmGain=defaultdict(float)):
+
+    def __init__(
+        self,
+        wl=3.0,
+        materials=["Air", "InP"],
+        moleFracs=None,
+        dopings=None,
+        Ls=[1.0, 1.0],
+        mobilities=None,
+        cstmIndx=dict(),
+        cstmPrd=defaultdict(float),
+        cstmGain=defaultdict(float),
+    ):
         super(OptStrata, self).__init__(wl)
         N = len(materials)
-        self.materials = list(AlloyNick[m] if m in AlloyNick else m
-                              for m in materials)
+        self.materials = list(AlloyNick[m] if m in AlloyNick else m for m in materials)
         self.moleFracs = list(moleFracs) if moleFracs else [0.0] * N
         self.dopings = list(dopings) if dopings else [0.0] * N
-        self.Ls = (np.array(Ls) if len(Ls) == len(materials)
-                   else np.array([1.0] + list(Ls) + [2.0]))
-        self.mobilities = ([None]*len(materials)
-                           if mobilities is None else mobilities)
+        self.Ls = (
+            np.array(Ls)
+            if len(Ls) == len(materials)
+            else np.array([1.0] + list(Ls) + [2.0])
+        )
+        self.mobilities = [None] * len(materials) if mobilities is None else mobilities
         assert len(self.moleFracs) == N
         assert len(self.dopings) == N
         assert len(self.Ls) == N
@@ -434,31 +474,35 @@ class OptStrata(MaxwellLayer):
         self.updateIndices()
 
     def __str__(self):
-        return "\n".join(("wavelength: %f" % self.wl,
-                          "materials: %s" % str(self.materials),
-                          "moleFracs: %s" % str(self.moleFracs),
-                          "dopings: %s" % str(self.dopings),
-                          "Ls: %s" % str(self.Ls),
-                          "mobilities: %s" % str(self.mobilities),
-                          "custom: %s" % str(self.cstmIndx)))
+        return "\n".join(
+            (
+                "wavelength: %f" % self.wl,
+                "materials: %s" % str(self.materials),
+                "moleFracs: %s" % str(self.moleFracs),
+                "dopings: %s" % str(self.dopings),
+                "Ls: %s" % str(self.Ls),
+                "mobilities: %s" % str(self.mobilities),
+                "custom: %s" % str(self.cstmIndx),
+            )
+        )
 
     def setWl(self, wl):
         self.wl = wl
 
-    def insert(self, row, material=None, moleFrac=None, doping=None,
-               L=None, mobility=None):
+    def insert(
+        self, row, material=None, moleFrac=None, doping=None, L=None, mobility=None
+    ):
         """Insert a strata indexed with row (top air and bottom substrate
         included) with parameters listed"""
         if row <= 0 or row >= len(self.materials):
             raise IndexError("Cannot insert strata beyond top and substrate.")
-        self.materials.insert(row, material if material else
-                              self.materials[row-1])
-        self.moleFracs.insert(row, moleFrac if moleFrac is not None else
-                              self.moleFracs[row-1])
+        self.materials.insert(row, material if material else self.materials[row - 1])
+        self.moleFracs.insert(
+            row, moleFrac if moleFrac is not None else self.moleFracs[row - 1]
+        )
         self.dopings.insert(row, doping if doping is not None else 0)
         self.Ls = np.insert(self.Ls, row, 1.0)
-        self.mobilities.insert(row, mobility if mobility else
-                               self.mobilities[row-1])
+        self.mobilities.insert(row, mobility if mobility else self.mobilities[row - 1])
 
     def delete(self, row):
         """Delete the strata indexed with row (top air and bottom substrate
@@ -478,32 +522,42 @@ class OptStrata(MaxwellLayer):
             return self.cstmIndx[mtrl]
         if mtrl in Alloy:
             # linear interpolation
-            layerRIdx = (
-                self.moleFracs[n] * rIdx[Alloy[mtrl][0]](self.wl)
-                + (1 - self.moleFracs[n]) * rIdx[Alloy[mtrl][1]](self.wl))
+            layerRIdx = self.moleFracs[n] * rIdx[Alloy[mtrl][0]](self.wl) + (
+                1 - self.moleFracs[n]
+            ) * rIdx[Alloy[mtrl][1]](self.wl)
         else:
             layerRIdx = rIdx[mtrl](self.wl)
 
-        plasmonUnit = 8.9698E-5 * self.wl**2
+        plasmonUnit = 8.9698e-5 * self.wl**2
         # 8.9698e-05 = mu_0*1E23*e**2*(1E-6)**2/(electron_mass*4*pi**2)
         # omega_P = plasmonUnit * doping / me / (1 + 1j gamma/omega)
         # doping in unit 1E17 cm^-3,
         # electron effective mass me in unit free electron mass
-        gammaUnit = 5.3088E-3
+        gammaUnit = 5.3088e-3
         # 5.3088E-3 = 1E7/(2*pi*c)
         # gammaUnit * gamma_c (unit 1E13 s-1) * wl (unit um) = gamma_c/omega
         if mtrl in Dopable:
             if mtrl in Alloy:
-                me = (EffectiveMass[Alloy[mtrl][0]] * self.moleFracs[n] +
-                      EffectiveMass[Alloy[mtrl][1]] * (1 - self.moleFracs[n]))
+                me = EffectiveMass[Alloy[mtrl][0]] * self.moleFracs[n] + EffectiveMass[
+                    Alloy[mtrl][1]
+                ] * (1 - self.moleFracs[n])
             else:
                 me = EffectiveMass[mtrl]
-            nue = (1.0 if self.mobilities[n] is None else
-                   1.7588E11/(me * self.mobilities[n] * 1E-4))
+            nue = (
+                1.0
+                if self.mobilities[n] is None
+                else 1.7588e11 / (me * self.mobilities[n] * 1e-4)
+            )
             # 1.7588E11 = electron charge / free electron mass
-            layerRIdx = sqrt(layerRIdx**2 - (
-                plasmonUnit * self.dopings[n]/me
-                / (1 + 1j*gammaUnit * self.wl * nue)))
+            layerRIdx = sqrt(
+                layerRIdx**2
+                - (
+                    plasmonUnit
+                    * self.dopings[n]
+                    / me
+                    / (1 + 1j * gammaUnit * self.wl * nue)
+                )
+            )
         return layerRIdx
 
     def updateIndices(self):
@@ -520,8 +574,7 @@ class OptStrata(MaxwellLayer):
         indexS : complex
             refractive index of the substrate (after Ls[-1])
         """
-        self.indices = np.array(
-            [self.indexOf(n) for n in range(len(self.materials))])
+        self.indices = np.array([self.indexOf(n) for n in range(len(self.materials))])
         self.index0 = self.indices[0]
         self.indexS = self.indices[-1]
         self.indices = self.indices[1:-1]
@@ -545,14 +598,17 @@ class OptStrata(MaxwellLayer):
             list of slicing indices to label materials
         """
         res = []
-        lsum = np.empty(len(self.Ls)+1)
+        lsum = np.empty(len(self.Ls) + 1)
         lsum[1:] = np.cumsum(self.Ls) - self.Ls[0]
         lsum[0] = -np.inf
         lsum[-1] = np.inf
         for i in range(len(self.materials)):
-            if (self.materials[i] in mtrlList if mtrlList is not None else
-                    self.materials[i].startswith('Active')):
-                res.append((xs >= lsum[i]) & (xs <= lsum[i+1]))
+            if (
+                self.materials[i] in mtrlList
+                if mtrlList is not None
+                else self.materials[i].startswith("Active")
+            ):
+                res.append((xs >= lsum[i]) & (xs <= lsum[i + 1]))
         return res
 
     def confinementy(self, beta, xs=None, Ey=None):
@@ -576,13 +632,17 @@ class OptStrata(MaxwellLayer):
             xs = np.linspace(-3, sum(self.Ls[1:]), 5000)
         if Ey is None:
             Ey, _, _ = self.populateMode(beta, xs)
-        return super(OptStrata, self).confinementy(
-            beta, self.populateMtrl(xs), xs, Ey)
+        return super(OptStrata, self).confinementy(beta, self.populateMtrl(xs), xs, Ey)
 
 
-def optimizeOptStrata(stratum: OptStrata, alphaM,
-                      toOptimize: List[int], maxLength: float,
-                      iter: int = 20, tol=0.05) -> float:
+def optimizeOptStrata(
+    stratum: OptStrata,
+    alphaM,
+    toOptimize: List[int],
+    maxLength: float,
+    iter: int = 20,
+    tol=0.05,
+) -> float:
     """Optimize strata with threshold gain as the minimize objective function
     g_th = (alphaM + alphaW)/confinement, where the waveguide loss alphaW
     and the confinement factor is a character of strata.
@@ -595,14 +655,14 @@ def optimizeOptStrata(stratum: OptStrata, alphaM,
     float: The optimized threshold gain in cm^-1
     """
     assert toOptimize
-    assert all(n > 0 and n < len(stratum.Ls)-1 for n in toOptimize)
+    assert all(n > 0 and n < len(stratum.Ls) - 1 for n in toOptimize)
 
     def objective(penalty: float):
         beta = stratum.boundModeTM()
         gamma = stratum.confinementy(beta)
-        alphaW = 4*pi/(stratum.wl/1E4) * beta.imag  # cm^-1
+        alphaW = 4 * pi / (stratum.wl / 1e4) * beta.imag  # cm^-1
         length = sum(stratum.Ls[1:-1])
-        return (alphaM+alphaW)/gamma+penalty*max(0, length-maxLength)**2
+        return (alphaM + alphaW) / gamma + penalty * max(0, length - maxLength) ** 2
 
     penalty = 0.5
     now = objective(penalty)
@@ -610,23 +670,23 @@ def optimizeOptStrata(stratum: OptStrata, alphaM,
         changed = False
         for n in toOptimize:
             w = stratum.Ls[n]
-            step = 1E-5 * w
+            step = 1e-5 * w
             stratum.Ls[n] = w - step
             newMinus = objective(penalty)
             stratum.Ls[n] = w + step
             newPlus = objective(penalty)
-            dif = (newPlus - newMinus)/2/step
-            ddif = (newPlus + newMinus - 2*now)/step**2
-            dw = -dif/ddif
-            if ddif < 0 or abs(dw) > 0.2*w:
-                dw = 0.2*w if dif < 0 else -0.2*w
+            dif = (newPlus - newMinus) / 2 / step
+            ddif = (newPlus + newMinus - 2 * now) / step**2
+            dw = -dif / ddif
+            if ddif < 0 or abs(dw) > 0.2 * w:
+                dw = 0.2 * w if dif < 0 else -0.2 * w
             elif abs(dw) < tol:
                 continue
             changed = True
-            res = tol/5
-            stratum.Ls[n] = res*round((w + dw)/res)
+            res = tol / 5
+            stratum.Ls[n] = res * round((w + dw) / res)
             now = objective(penalty)
-        if not changed and sum(stratum.Ls[1:-1]) <= maxLength+tol:
+        if not changed and sum(stratum.Ls[1:-1]) <= maxLength + tol:
             break
         penalty *= 2
-    print('Finished with penalty: ', penalty)
+    print("Finished with penalty: ", penalty)

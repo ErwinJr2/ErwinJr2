@@ -18,8 +18,8 @@ if __name__ == "__main__":
     cp.print_stats(sort="cumulative")
 
     s = io.StringIO()
-    ps = pstats.Stats(cp, stream=s).sort_stats('cumulative')
+    ps = pstats.Stats(cp, stream=s).sort_stats("cumulative")
     ps.print_stats()
 
-    with open('profiling_0.txt', 'w+') as f:
+    with open("profiling_0.txt", "w+") as f:
         f.write(s.getvalue())

@@ -13,15 +13,16 @@ class TestThreeBandMatrix(unittest.TestCase):
     def test_three_well(self):
         layers = [300, 46, 10, 20, 10, 19, 300]
         mtrls = [1, 0, 1, 0, 1, 0, 1]
-        qcLayers = QCLayers(xres=0.01, layerWidths=layers,
-                            layerMtrls=mtrls, repeats=1, T=10.0)
-        qcLayers.solver = 'ODE'
+        qcLayers = QCLayers(
+            xres=0.01, layerWidths=layers, layerMtrls=mtrls, repeats=1, T=10.0
+        )
+        qcLayers.solver = "ODE"
         qcLayers.populate_x()
         qcLayers.solve_whole()
         psis_ode, eigenEs_ode = qcLayers.psis, qcLayers.eigenEs
         philh_ode, phiso_ode = qcLayers.philh, qcLayers.phiso
         dipole_ode = qcLayers.dipole(0, 1)
-        qcLayers.solver = 'matrix'
+        qcLayers.solver = "matrix"
         qcLayers.matrixEigenCount = 4
         qcLayers.solve_whole()
         psis_mtx, eigenEs_mtx = qcLayers.psis, qcLayers.eigenEs
@@ -36,14 +37,20 @@ class TestThreeBandMatrix(unittest.TestCase):
     def test_three_well_biased(self):
         layers = [300, 46, 10, 20, 10, 19, 300]
         mtrls = [1, 0, 1, 0, 1, 0, 1]
-        qcLayers = QCLayers(xres=0.01, layerWidths=layers, EField=30,
-                            layerMtrls=mtrls, repeats=1, T=10.0)
-        qcLayers.solver = 'ODE'
+        qcLayers = QCLayers(
+            xres=0.01,
+            layerWidths=layers,
+            EField=30,
+            layerMtrls=mtrls,
+            repeats=1,
+            T=10.0,
+        )
+        qcLayers.solver = "ODE"
         qcLayers.populate_x()
         qcLayers.solve_whole()
         psis_ode, eigenEs_ode = qcLayers.psis[:4], qcLayers.eigenEs[:4]
         dipole_ode = qcLayers.dipole(0, 1)
-        qcLayers.solver = 'matrix'
+        qcLayers.solver = "matrix"
         qcLayers.matrixEigenCount = 4
         qcLayers.solve_whole()
         psis_mtx, eigenEs_mtx = qcLayers.psis, qcLayers.eigenEs

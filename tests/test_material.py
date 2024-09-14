@@ -23,12 +23,13 @@ class TestMaterial(unittest.TestCase):
             self.assertAlmostEqual(algaas1.param[key], alas.param[key])
             self.assertTrue(
                 (algaas0.param[key] <= algaas.param[key] <= algaas1.param[key])
-                or
-                (algaas1.param[key] <= algaas.param[key] <= algaas0.param[key])
+                or (algaas1.param[key] <= algaas.param[key] <= algaas0.param[key])
                 or
                 # Equal with machine precision
-                (abs(algaas1.param[key]-algaas.param[key]) < 1E-18
-                 and abs(algaas0.param[key]-algaas.param[key]) < 1E-18)
+                (
+                    abs(algaas1.param[key] - algaas.param[key]) < 1e-18
+                    and abs(algaas0.param[key] - algaas.param[key]) < 1e-18
+                )
             )
 
     def test_zero_strain(self):

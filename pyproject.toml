@@ -89,3 +89,9 @@ test-command = "cd {project} && pytest tests"
 
 [tool.cibuildwheel.windows]
 test-command = "cd /d {project} && pytest tests"
+
+[tool.isort]
+profile = "black"
+
+# [tool.ruff.lint.isort]
+# split-on-trailing-comma = false

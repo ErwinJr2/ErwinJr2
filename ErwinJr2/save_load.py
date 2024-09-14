@@ -99,40 +99,44 @@ def parseQcl(ldict: typing.Dict[str, typing.Any]) -> QCLayers:
     version = int(ldict["Version"])
     if version >= 181107 and version < 210330:
         # Don't touch this for compatibility
-        o = QCLayers(substrate=ldict["Substrate"],
-                     materials=ldict["Materials"]["Compostion"],
-                     moleFracs=ldict["Materials"]["Mole Fraction"],
-                     xres=ldict["x resolution"],
-                     Eres=ldict["E resolution"],
-                     layerWidths=ldict["QC Layers"]["Width"],
-                     layerMtrls=ldict["QC Layers"]["Material"],
-                     layerDopings=ldict["QC Layers"]["Doping"],
-                     layerARs=ldict["QC Layers"]["Active Region"],
-                     EField=ldict["EField"],
-                     repeats=ldict["Repeats"],
-                     T=ldict["Temperature"],
-                     solver=ldict["Solver"],
-                     description=ldict["Description"])
+        o = QCLayers(
+            substrate=ldict["Substrate"],
+            materials=ldict["Materials"]["Compostion"],
+            moleFracs=ldict["Materials"]["Mole Fraction"],
+            xres=ldict["x resolution"],
+            Eres=ldict["E resolution"],
+            layerWidths=ldict["QC Layers"]["Width"],
+            layerMtrls=ldict["QC Layers"]["Material"],
+            layerDopings=ldict["QC Layers"]["Doping"],
+            layerARs=ldict["QC Layers"]["Active Region"],
+            EField=ldict["EField"],
+            repeats=ldict["Repeats"],
+            T=ldict["Temperature"],
+            solver=ldict["Solver"],
+            description=ldict["Description"],
+        )
         o.wl = ldict["Wavelength"] if "Wavelength" in ldict else 1.5
     elif version >= 210330:
         discription = ldict["Description"]
         ldict = ldict["QCLayers"]
-        o = QCLayers(substrate=ldict["Substrate"],
-                     materials=ldict["MaterialDefs"]["Compostion"],
-                     moleFracs=ldict["MaterialDefs"]["Mole Fraction"],
-                     xres=ldict["x resolution"],
-                     Eres=ldict["E resolution"],
-                     statePerRepeat=ldict["No of states"],
-                     layerWidths=ldict["Width"],
-                     layerMtrls=ldict["Material"],
-                     layerDopings=ldict["Doping"],
-                     layerARs=ldict["Active Region"],
-                     EField=ldict["EField"],
-                     repeats=ldict["Repeats"],
-                     T=ldict["Temperature"],
-                     solver=ldict["Solver"],
-                     description=discription,
-                     wl=ldict["Wavelength"])
+        o = QCLayers(
+            substrate=ldict["Substrate"],
+            materials=ldict["MaterialDefs"]["Compostion"],
+            moleFracs=ldict["MaterialDefs"]["Mole Fraction"],
+            xres=ldict["x resolution"],
+            Eres=ldict["E resolution"],
+            statePerRepeat=ldict["No of states"],
+            layerWidths=ldict["Width"],
+            layerMtrls=ldict["Material"],
+            layerDopings=ldict["Doping"],
+            layerARs=ldict["Active Region"],
+            EField=ldict["EField"],
+            repeats=ldict["Repeats"],
+            T=ldict["Temperature"],
+            solver=ldict["Solver"],
+            description=discription,
+            wl=ldict["Wavelength"],
+        )
         if ldict["IFR"]:
             o.includeIFR = True
             o.customIFR = ldict["IFR"]["custom IFR"]
@@ -143,8 +147,7 @@ def parseQcl(ldict: typing.Dict[str, typing.Any]) -> QCLayers:
         else:
             o.includeIFR = False
     else:
-        raise NotImplementedError("Version %s not supported" %
-                                  ldict["Version"])
+        raise NotImplementedError("Version %s not supported" % ldict["Version"])
     return o
 
 
@@ -162,16 +165,19 @@ def parseStrata(ldict: typing.Dict[str, typing.Any]) -> OptStrata:
                 cstprd[item] = ldict["custom"][item]["period"]
             if "gain" in ldict["custom"][item]:
                 cstgain[item] = ldict["custom"][item]["gain"]
-        o = OptStrata(wl=ldict["wavelength"],
-                      materials=ldict["materials"],
-                      moleFracs=ldict["moleFracs"],
-                      dopings=ldict["dopings"],
-                      Ls=ldict["width"],
-                      mobilities=ldict["mobilities"],
-                      cstmIndx=cstidx, cstmPrd=cstprd, cstmGain=cstgain)
+        o = OptStrata(
+            wl=ldict["wavelength"],
+            materials=ldict["materials"],
+            moleFracs=ldict["moleFracs"],
+            dopings=ldict["dopings"],
+            Ls=ldict["width"],
+            mobilities=ldict["mobilities"],
+            cstmIndx=cstidx,
+            cstmPrd=cstprd,
+            cstmGain=cstgain,
+        )
     else:
-        raise NotImplementedError("Version %s not supported" %
-                                  ldict["Version"])
+        raise NotImplementedError("Version %s not supported" % ldict["Version"])
     return o
 
 
@@ -220,8 +226,9 @@ IFRSettings = """{
         }"""
 
 
-def EJSaveJSON(fhandle: typing.TextIO, qclayers: QCLayers = None,
-               optstratum: OptStrata = None):
+def EJSaveJSON(
+    fhandle: typing.TextIO, qclayers: QCLayers = None, optstratum: OptStrata = None
+):
     """Save QCLayers and OptStratum as a json file
 
     Parameters
@@ -239,10 +246,10 @@ def EJSaveJSON(fhandle: typing.TextIO, qclayers: QCLayers = None,
         optstratum = OptStrata()
     if qclayers is None:
         qclayers = QCLayers()
-    if not (isinstance(qclayers, QCLayers)
-            and isinstance(optstratum, OptStrata)):
-        raise TypeError("qclSave: Nothing to save.."
-                        "QCLayers or OptStratum not valid type")
+    if not (isinstance(qclayers, QCLayers) and isinstance(optstratum, OptStrata)):
+        raise TypeError(
+            "qclSave: Nothing to save.." "QCLayers or OptStratum not valid type"
+        )
     o = qclayers
     s = optstratum
     s_cstmtrl = defaultdict(dict)
@@ -253,20 +260,52 @@ def EJSaveJSON(fhandle: typing.TextIO, qclayers: QCLayers = None,
         if item in s.cstmGain:
             s_cstmtrl[item]["gain"] = s.cstmGain[item]
     if o.includeIFR:
-        ifrParams = IFRSettings % tuple([json.dumps(s) for s in (
-            o.customIFR, o.mtrlIFRDelta, o.mtrlIFRLambda,
-            o.ifrDelta, o.ifrLambda)])
+        ifrParams = IFRSettings % tuple(
+            [
+                json.dumps(s)
+                for s in (
+                    o.customIFR,
+                    o.mtrlIFRDelta,
+                    o.mtrlIFRLambda,
+                    o.ifrDelta,
+                    o.ifrLambda,
+                )
+            ]
+        )
     else:
-        ifrParams = 'false'
-    parameters = [json.dumps(s) for s in (o.description, o.wl, o.substrate,
-                                          o.EField, o.xres, o.Eres,
-                                          o.statePerRepeat, o.solver,
-                                          o.temperature, o.repeats,
-                                          o.materials, o.moleFracs,
-                                          o.layerMtrls, o.layerWidths,
-                                          o.layerDopings, o.layerARs)]
+        ifrParams = "false"
+    parameters = [
+        json.dumps(s)
+        for s in (
+            o.description,
+            o.wl,
+            o.substrate,
+            o.EField,
+            o.xres,
+            o.Eres,
+            o.statePerRepeat,
+            o.solver,
+            o.temperature,
+            o.repeats,
+            o.materials,
+            o.moleFracs,
+            o.layerMtrls,
+            o.layerWidths,
+            o.layerDopings,
+            o.layerARs,
+        )
+    ]
     parameters.append(ifrParams)
-    parameters += [json.dumps(s) for s in (s.wl, s.materials, s.moleFracs,
-                                           s.dopings, list(s.Ls), s.mobilities,
-                                           s_cstmtrl)]
+    parameters += [
+        json.dumps(s)
+        for s in (
+            s.wl,
+            s.materials,
+            s.moleFracs,
+            s.dopings,
+            list(s.Ls),
+            s.mobilities,
+            s_cstmtrl,
+        )
+    ]
     fhandle.write(JSONTemplate % tuple(parameters))

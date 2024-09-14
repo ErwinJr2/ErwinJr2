@@ -11,16 +11,16 @@ import matplotlib
 import numpy as np
 from matplotlib.backend_bases import NavigationToolbar2, cursors
 from matplotlib.backends.backend_qt5 import cursord  # , NavigationToolbar2QT
-from matplotlib.backends.backend_qt5agg import \
-    FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+
 # import matplotlib.backends.qt_editor.figureoptions as figureoptions
 from matplotlib.figure import Figure
 from PyQt5.QtCore import QObject, Signal
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QSizePolicy
 
-matplotlib.use('Qt5Agg')
+matplotlib.use("Qt5Agg")
 config = {
-    "PlotMargin": {'l': 0.9, 'r': 0.12, 'b': 0.6, 't': 0.09},
+    "PlotMargin": {"l": 0.9, "r": 0.12, "b": 0.6, "t": 0.09},
     "fontsize": 12,
     "wfscale": 0.3,
     "modescale": 3,
@@ -29,20 +29,21 @@ config = {
     # wf_almost_zero / modescale = tol
     "wf_almost_zero": 1.5e-4,
 }
-if sys.platform == 'win32':
-    config["PlotMargin"] = {'l': 0.9, 'r': 0.12, 'b': 0.55, 't': 0.09}
-elif sys.platform == 'darwin':
-    config["PlotMargin"] = {'l': 0.90, 'r': 0.12, 'b': 0.55, 't': 0.09}
+if sys.platform == "win32":
+    config["PlotMargin"] = {"l": 0.9, "r": 0.12, "b": 0.55, "t": 0.09}
+elif sys.platform == "darwin":
+    config["PlotMargin"] = {"l": 0.90, "r": 0.12, "b": 0.55, "t": 0.09}
 
 
 def LoadConfig(fname="plotconfig.json"):
     try:
-        with open(fname, 'r') as f:
+        with open(fname, "r") as f:
             userConfig = json.load(f)
     except FileNotFoundError:
         userConfig = {}
-        warn("Cannot load plot config file %s. Use default config." % fname,
-             UserWarning)
+        warn(
+            "Cannot load plot config file %s. Use default config." % fname, UserWarning
+        )
     for k in userConfig:
         config[k] = userConfig[k]
 
@@ -50,30 +51,30 @@ def LoadConfig(fname="plotconfig.json"):
 class EJcanvas(FigureCanvas):
     """EJcanvas is designed for ErwinJr as a canvas for energy band and
     wavefunctions"""
-    def __init__(self, xlabel='x', ylabel='y', parent=None):
+
+    def __init__(self, xlabel="x", ylabel="y", parent=None):
         self.figure = Figure()
         super(EJcanvas, self).__init__(self.figure)
         #  NavigationToolbar2.__init__(self, self)
         self.setParent(parent)
         self.setMinimumWidth(200)
         self.setMinimumHeight(200)
-        self.setSizePolicy(QSizePolicy.MinimumExpanding,
-                           QSizePolicy.MinimumExpanding)
+        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.updateGeometry()
         self.axes = self.figure.add_subplot(111)
         self.xlabel = xlabel
         self.ylabel = ylabel
 
     def set_axes(self, fsize=config["fontsize"]):
-        self.axes.tick_params(axis='both', which='major', labelsize=fsize)
-        self.axes.spines['top'].set_color('none')
-        self.axes.spines['right'].set_color('none')
-        self.axes.spines['bottom'].set_position(('outward', 5))
+        self.axes.tick_params(axis="both", which="major", labelsize=fsize)
+        self.axes.spines["top"].set_color("none")
+        self.axes.spines["right"].set_color("none")
+        self.axes.spines["bottom"].set_position(("outward", 5))
         self.axes.set_xlabel(self.xlabel, fontsize=fsize)
-        self.axes.spines['left'].set_position(('outward', 5))
+        self.axes.spines["left"].set_position(("outward", 5))
         self.axes.set_ylabel(self.ylabel, fontsize=fsize)
-        self.axes.autoscale(enable=True, axis='x', tight=True)
-        self.axes.autoscale(enable=True, axis='y', tight=True)
+        self.axes.autoscale(enable=True, axis="x", tight=True)
+        self.axes.autoscale(enable=True, axis="y", tight=True)
 
     def test(self):
         """A test function, plotting sin(x)"""
@@ -86,9 +87,13 @@ class EJcanvas(FigureCanvas):
         width = self.figure.get_figwidth()
         margin = config["PlotMargin"]
         self.figure.subplots_adjust(
-            left=margin['l'] / width, bottom=margin['b'] / height,
-            right=1 - margin['r'] / width, top=1 - margin['t'] / height,
-            wspace=0, hspace=0)
+            left=margin["l"] / width,
+            bottom=margin["b"] / height,
+            right=1 - margin["r"] / width,
+            top=1 - margin["t"] / height,
+            wspace=0,
+            hspace=0,
+        )
 
     def clear(self):
         self.axes.clear()
@@ -106,6 +111,7 @@ class EJplotControl(NavigationToolbar2, QObject):
       `pairselect` for quantum wells/barriers and quantum states selection.
     - trigger_custom to trigger custom actions
     """
+
     message = Signal(str)
 
     def __init__(self, canvas, parent):
@@ -141,11 +147,10 @@ class EJplotControl(NavigationToolbar2, QObject):
           )
         format (text, tooltip_text, image_file, callback)
         """
-        if callback in (self.toolitems[n][-1] for n in
-                        range(len(self.toolitems))):
+        if callback in (self.toolitems[n][-1] for n in range(len(self.toolitems))):
             button.clicked.connect(getattr(self, callback))
             self._actions[callback] = button
-            if callback in ['zoom', 'pan']:
+            if callback in ["zoom", "pan"]:
                 button.setCheckable(True)
         else:
             raise TypeError("%s not supported." % callback)
@@ -175,20 +180,20 @@ class EJplotControl(NavigationToolbar2, QObject):
 
     def _update_buttons_checked(self):
         # sync button check-states to match active mode
-        if 'pan' in self._actions:
-            self._actions['pan'].setChecked(self._get_mode_name() == 'PAN')
-        if 'zoom' in self._actions:
-            self._actions['zoom'].setChecked(self._get_mode_name() == 'ZOOM')
+        if "pan" in self._actions:
+            self._actions["pan"].setChecked(self._get_mode_name() == "PAN")
+        if "zoom" in self._actions:
+            self._actions["zoom"].setChecked(self._get_mode_name() == "ZOOM")
         for mode in self._custom_active:
             self._actions[mode].setChecked(self._get_mode_name() == mode)
 
     def _reset_mode(self):
         # This is a work around for self.mode value type being private.
         name = self._get_mode_name()
-        if name == 'PAN':
+        if name == "PAN":
             self.pan()
             return
-        if name == 'ZOOM':
+        if name == "ZOOM":
             self.zoom()
             return
 
@@ -222,7 +227,8 @@ class EJplotControl(NavigationToolbar2, QObject):
             self._reset_custom()
             self._custom_mode = mode
             self._custom_callBack = self.canvas.mpl_connect(
-                'button_release_event', self._custom_active[mode])
+                "button_release_event", self._custom_active[mode]
+            )
             self.canvas.widgetlock(self)
         else:
             self._reset_custom()
@@ -235,8 +241,11 @@ class EJplotControl(NavigationToolbar2, QObject):
 
     def _update_cursor(self, event):
         # override backend_bases.NavigationToolbar2._update_cursor
-        if (event.inaxes and self._custom_mode and
-                self._lastCursor != self._custom_cursor[self._custom_mode]):
+        if (
+            event.inaxes
+            and self._custom_mode
+            and self._lastCursor != self._custom_cursor[self._custom_mode]
+        ):
             self.set_cursor(self._custom_cursor[self._custom_mode])
             return
         super(EJplotControl, self)._update_cursor(event)
@@ -257,8 +266,12 @@ class EJplotControl(NavigationToolbar2, QObject):
         # implement
         self.canvas.drawRectangle(None)
 
-    def save_figure(self, caption="Choose a filename to save to",
-                    filename=None, default_filetype=None):
+    def save_figure(
+        self,
+        caption="Choose a filename to save to",
+        filename=None,
+        default_filetype=None,
+    ):
         # This method is override to support customized filename.
         filetypes = self.canvas.get_supported_filetypes_grouped()
         sorted_filetypes = sorted(filetypes.items())
@@ -266,29 +279,31 @@ class EJplotControl(NavigationToolbar2, QObject):
             default_filetype = self.canvas.get_default_filetype()
 
         if not filename:
-            startpath = os.path.expanduser(
-                matplotlib.rcParams['savefig.directory'])
-            filename = os.path.join(startpath,
-                                    self.canvas.get_default_filename())
+            startpath = os.path.expanduser(matplotlib.rcParams["savefig.directory"])
+            filename = os.path.join(startpath, self.canvas.get_default_filename())
         filters = []
         selectedFilter = None
         for name, exts in sorted_filetypes:
-            exts_list = " ".join(['*.%s' % ext for ext in exts])
-            filter = '%s (%s)' % (name, exts_list)
+            exts_list = " ".join(["*.%s" % ext for ext in exts])
+            filter = "%s (%s)" % (name, exts_list)
             #  filter = '(*.%s) %s' % (exts_list, name)
             if default_filetype in exts:
                 selectedFilter = filter
             filters.append(filter)
-        filters = ';;'.join(filters)
+        filters = ";;".join(filters)
         print(filters, selectedFilter)
 
         fname, filter = QFileDialog.getSaveFileName(
-            self.parent(), caption, filename, filters, selectedFilter)
+            self.parent(), caption, filename, filters, selectedFilter
+        )
         if fname:
             try:
-                self.canvas.figure.savefig(fname, dpi=300,
-                                           bbox_inches='tight')
+                self.canvas.figure.savefig(fname, dpi=300, bbox_inches="tight")
             except Exception as e:
                 QMessageBox.critical(
-                    self.parent(), "Error saving band diagram",
-                    e, QMessageBox.Ok, QMessageBox.NoButton)
+                    self.parent(),
+                    "Error saving band diagram",
+                    e,
+                    QMessageBox.Ok,
+                    QMessageBox.NoButton,
+                )

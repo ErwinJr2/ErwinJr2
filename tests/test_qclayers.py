@@ -15,7 +15,7 @@ class TestQCLayers(unittest.TestCase):
     def test_solve_whole_matrix(self):
         with open(_TEST_SAMPLE_FILE) as f:
             qcl = save_load.qclLoad(f)
-        qcl.solver = 'matrix'
+        qcl.solver = "matrix"
         qcl.populate_x()
         qcl.solve_whole()
         # 0.264 is approximately 4.7um
@@ -27,21 +27,24 @@ class TestQCLayers(unittest.TestCase):
             self.assertEqual(qcl.periodMap[i][1], 1)
             self.assertEqual(qcl.periodIdx[qcl.periodMap[i][0]], j)
             np.testing.assert_almost_equal(
-                qcl.psi_overlap(44, j, 1), qcl.psi_overlap(44, i), decimal=6)
+                qcl.psi_overlap(44, j, 1), qcl.psi_overlap(44, i), decimal=6
+            )
+            self.assertAlmostEqual(qcl._dipole(44, j, 1), qcl._dipole(44, i), 3)
             self.assertAlmostEqual(
-                qcl._dipole(44, j, 1), qcl._dipole(44, i), 3)
+                qcl._lo_transition(44, j, 1), qcl._lo_transition(44, i), 4
+            )
             self.assertAlmostEqual(
-                qcl._lo_transition(44, j, 1), qcl._lo_transition(44, i), 4)
-            self.assertAlmostEqual(
-                qcl._ifr_transition(44, j, 1), qcl._ifr_transition(44, i), 5)
+                qcl._ifr_transition(44, j, 1), qcl._ifr_transition(44, i), 5
+            )
         # Test overlapping
         np.testing.assert_almost_equal(
-            qcl.psi_overlap(41, 49, 1), qcl.psi_overlap(41, 31), decimal=6)
+            qcl.psi_overlap(41, 49, 1), qcl.psi_overlap(41, 31), decimal=6
+        )
 
     def test_solve_whole_ode(self):
         with open(_TEST_SAMPLE_FILE) as f:
             qcl = save_load.qclLoad(f)
-        qcl.solver = 'ODE'
+        qcl.solver = "ODE"
         qcl.populate_x()
         qcl.solve_whole()
         # 0.264 is approximately 4.7um
@@ -52,9 +55,9 @@ class TestQCLayers(unittest.TestCase):
             self.assertEqual(qcl.periodMap[i][1], 1)
             self.assertEqual(qcl.periodIdx[qcl.periodMap[i][0]], j)
             np.testing.assert_almost_equal(
-                qcl.psi_overlap(33, j, 1), qcl.psi_overlap(33, i), decimal=6)
-            self.assertAlmostEqual(
-                qcl._dipole(33, j, 1), qcl._dipole(33, i), 2)
+                qcl.psi_overlap(33, j, 1), qcl.psi_overlap(33, i), decimal=6
+            )
+            self.assertAlmostEqual(qcl._dipole(33, j, 1), qcl._dipole(33, i), 2)
 
     def test_solve_basis(self):
         with open(_TEST_SAMPLE_FILE) as f:
@@ -74,8 +77,8 @@ class TestQCLayers(unittest.TestCase):
         qcl.repeats = 4
         qcl.populate_x()
         qcl.solve_whole()
-        self.assertFalse(hasattr(qcl, 'periodMap'))
-        self.assertEqual(qcl.status, 'solved')
+        self.assertFalse(hasattr(qcl, "periodMap"))
+        self.assertEqual(qcl.status, "solved")
         taulo = qcl.lo_lifetime(33)
         tauifr = qcl.ifr_lifetime(33)
         tau = qcl.lifetime(33)
@@ -83,8 +86,8 @@ class TestQCLayers(unittest.TestCase):
         qcl.period_recognize()
         qcl.period_map_build()
         qcl.full_population()
-        self.assertEqual(qcl.status, 'solved-full')
-        self.assertTrue(hasattr(qcl, 'periodMap'))
+        self.assertEqual(qcl.status, "solved-full")
+        self.assertTrue(hasattr(qcl, "periodMap"))
         # A different cache is used
         self.assertNotEqual(taulo, qcl.lo_lifetime(33), 4)
         self.assertNotEqual(tauifr, qcl.ifr_lifetime(33), 4)
@@ -99,7 +102,7 @@ class TestQCLayers(unittest.TestCase):
     def test_revert_layer(self):
         with open(_TEST_SAMPLE_FILE) as f:
             qcl = save_load.qclLoad(f)
-        qcl.solver = 'matrix'
+        qcl.solver = "matrix"
         qcl.repeats = 2
         qcl.xres = 0.02
         qcl.populate_x()
