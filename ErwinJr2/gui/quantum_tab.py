@@ -44,10 +44,10 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from ErwinJr2.custom_qt_class import mtrlComboBox
-from ErwinJr2.dark_detect import isdark
-from ErwinJr2.ej_canvas import EJCanvas, EJplotControl
-from ErwinJr2.ej_canvas import config as plotconfig
+from ErwinJr2.gui.custom_qt_class import mtrlComboBox
+from ErwinJr2.gui.dark_detect import isdark
+from ErwinJr2.gui.ej_canvas import EJCanvas, EJplotControl
+from ErwinJr2.gui.ej_canvas import config as plotconfig
 from ErwinJr2.material import AParam
 from ErwinJr2.qc_layers import (
     QCLayers,

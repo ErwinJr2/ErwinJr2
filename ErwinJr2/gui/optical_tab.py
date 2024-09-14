@@ -30,8 +30,8 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from ErwinJr2.custom_qt_class import mtrlComboBox
-from ErwinJr2.ej_canvas import EJCanvas
+from ErwinJr2.gui.custom_qt_class import mtrlComboBox
+from ErwinJr2.gui.ej_canvas import EJCanvas
 from ErwinJr2.opt_strata import Alloy, Dopable, OptStrata, optimizeOptStrata, rIdx
 from ErwinJr2.version_and_name import EJ_ERROR
 
