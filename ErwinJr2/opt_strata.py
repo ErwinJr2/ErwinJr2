@@ -5,10 +5,12 @@ from typing import List
 import numpy as np
 from numpy import cos, exp, pi, sin, sinc, sqrt
 
-from ErwinJr2.material import MParam, rIdx
+from ErwinJr2.material import MTRL_PARAM, rIdx
 
 # Effective mass in unit of free electron mass.
-EffectiveMass = {mtrl: MParam[mtrl]["me0"] for mtrl in ("GaAs", "InAs", "AlAs", "InP")}
+EffectiveMass = {
+    mtrl: MTRL_PARAM[mtrl]["me0"] for mtrl in ("GaAs", "InAs", "AlAs", "InP")
+}
 
 Alloy = {
     "AlxGa1-xAs": ("AlAs", "GaAs"),

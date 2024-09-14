@@ -40,7 +40,7 @@ VARSH = True
 # for In0.53Ga0.47As, EcG = 0.22004154
 #    use this as a zero point baseline. This is only here for consistency
 #    with legacy code
-bandBaseln = 0.22004154
+BAND_BASELINE = 0.22004154
 _logger = logging.getLogger(__name__)
 
 
@@ -55,7 +55,7 @@ class Material(object):
         Temperature of the material
     """
 
-    def __init__(self, Name: str, Temperature: float = 300):
+    def __init__(self, name: str, temp: float = 300):
         """
 
         Yields
@@ -63,12 +63,12 @@ class Material(object):
         type : str
             Type of the material
         """
-        self.name = Name
-        self.param = MParam[self.name].copy()
+        self.name = name
+        self.param = MTRL_PARAM[self.name].copy()
         self.type = self.param.pop("Crystal")
-        self.set_temperature(Temperature)
+        self.set_temperature(temp)
 
-    def set_temperature(self, Temperature: float):
+    def set_temperature(self, temp: float):
         """
         Set temperature of the material and update related parameters:
         lattice constant and band gap.
@@ -80,12 +80,13 @@ class Material(object):
         param : dict
             lattice constant and band gap in this dictionary are updated
         """
-        self.T = Temperature
+        self.temp = temp
         for k in self.param:
             if k.endswith("lc") and k + "_T" in self.param:
                 # k is about lattice constant
                 self.param[k] = (
-                    MParam[self.name][k] + (self.T - 300) * MParam[self.name][k + "_T"]
+                    MTRL_PARAM[self.name][k]
+                    + (self.temp - 300) * MTRL_PARAM[self.name][k + "_T"]
                 )
         # Varshni correction to bandgap [4]
         # major assumption:
@@ -94,12 +95,12 @@ class Material(object):
         #   conduction band, part valence
         if VARSH:
             for pt in ("G", "X", "L"):
-                Varsh = (
+                varsh = (
                     -self.param["al" + pt]
-                    * self.T**2
-                    / (self.T + self.param["be" + pt])
+                    * self.temp**2
+                    / (self.temp + self.param["be" + pt])
                 )
-                self.param["Eg" + pt] = MParam[self.name]["Eg" + pt] + Varsh
+                self.param["Eg" + pt] = MTRL_PARAM[self.name]["Eg" + pt] + varsh
 
     def set_strain(self, a_parallel: float):
         """
@@ -133,21 +134,23 @@ class Material(object):
         # eps_perp: strain tensor perpendicular to the layer plane
         self.eps_perp = self.a_perp / self.param["alc"] - 1
         if self.type == "ZincBlende":
-            Pec = (2 * self.eps_parallel + self.eps_perp) * self.param["acG"]
-            Pev = (2 * self.eps_parallel + self.eps_perp) * self.param["av"]
-            Qe = (
+            p_ec = (2 * self.eps_parallel + self.eps_perp) * self.param["acG"]
+            p_ev = (2 * self.eps_parallel + self.eps_perp) * self.param["av"]
+            q_e = (
                 -self.param["b"]
                 * (self.param["c11"] + 2 * self.param["c12"])
                 / self.param["c11"]
                 * self.eps_parallel
             )
-            self.param["EcG"] = self.param["VBO"] + self.param["EgG"] + Pec - bandBaseln
+            self.param["EcG"] = (
+                self.param["VBO"] + self.param["EgG"] + p_ec - BAND_BASELINE
+            )
             self.param["EcL"] = (
                 self.param["VBO"]
                 + self.param["EgL"]
                 + (2 * self.eps_parallel + self.eps_perp)
                 * (self.param["acL"] + self.param["av"])
-                - bandBaseln
+                - BAND_BASELINE
             )
             self.param["EcX"] = (
                 self.param["VBO"]
@@ -155,22 +158,22 @@ class Material(object):
                 + (2 * self.eps_parallel + self.eps_perp)
                 * (self.param["acX"] + self.param["av"])
                 + 2 / 3 * self.param["XiX"] * (self.eps_perp - self.eps_parallel)
-                - bandBaseln
+                - BAND_BASELINE
             )
             self.param["ESO"] = sqrt(
-                9 * Qe**2 + 2 * Qe * self.param["DSO"] + self.param["DSO"] ** 2
+                9 * q_e**2 + 2 * q_e * self.param["DSO"] + self.param["DSO"] ** 2
             )
             self.param["EgLH"] = (
                 self.param["EgG"]
-                + Pec
-                + Pev
-                - 1 / 2 * (Qe - self.param["DSO"] + self.param["ESO"])
+                + p_ec
+                + p_ev
+                - 1 / 2 * (q_e - self.param["DSO"] + self.param["ESO"])
             )
             self.param["EgSO"] = (
                 self.param["EgG"]
-                + Pec
-                + Pev
-                - 1 / 2 * (Qe - self.param["DSO"] - self.param["ESO"])
+                + p_ec
+                + p_ev
+                - 1 / 2 * (q_e - self.param["DSO"] - self.param["ESO"])
             )
             self.param["EvLH"] = self.param["EcG"] - self.param["EgLH"]
             self.param["EvSO"] = self.param["EcG"] - self.param["EgSO"]
@@ -178,7 +181,7 @@ class Material(object):
             _logger.warning(
                 "Warning: the strain effect on %s is not implemented", self.type
             )
-            self.param["EcG"] = self.param["VBO"] + self.param["EgG"] - bandBaseln
+            self.param["EcG"] = self.param["VBO"] + self.param["EgG"] - BAND_BASELINE
 
 
 class Alloy(Material):
@@ -196,18 +199,18 @@ class Alloy(Material):
     """
 
     def __init__(self, Name: str, x: float, Temperature: float = 300):
-        super().__init__(Name, Temperature)
+        # pylint: disable=super-init-not-called
         self.name = Name
-        self.comp = AParam[self.name]["composition"]
-        self.A = Material(self.comp[0], Temperature)
-        self.B = Material(self.comp[1], Temperature)
-        assert self.A.type == self.B.type
-        self.type = self.A.type
+        self.comp = ALLOY_PARAM[self.name]["composition"]
+        self.elm_a = Material(self.comp[0], Temperature)
+        self.elm_b = Material(self.comp[1], Temperature)
+        assert self.elm_a.type == self.elm_b.type
+        self.type = self.elm_a.type
         # so alloy is A_x B_(1-x)
-        self.moleFrac = x
+        self.mole_frac = x
         self.set_temperature(Temperature)
 
-    def set_temperature(self, Temperature: float):
+    def set_temperature(self, temp: float):
         """
         Set temperature of the alloy and update related parameters,
         lattice consant and band gap, by updating the temperature of the
@@ -219,10 +222,10 @@ class Alloy(Material):
         T : int
             Updated temperature
         """
-        self.T = Temperature
-        self.A.set_temperature(self.T)
-        self.B.set_temperature(self.T)
-        self.set_molefrac(self.moleFrac)
+        self.temp = temp
+        self.elm_a.set_temperature(self.temp)
+        self.elm_b.set_temperature(self.temp)
+        self.set_molefrac(self.mole_frac)
 
     def set_molefrac(self, x: float):
         """
@@ -238,7 +241,7 @@ class Alloy(Material):
         param : dict
             stores the parameter of the alloy
         """
-        self.moleFrac = x
+        self.mole_frac = x
         self.param = {}
 
         # For the Gamma band gap bowing in AlxGa1-xAs and AlxGa1-xSb
@@ -246,20 +249,20 @@ class Alloy(Material):
         # Here, the bowing parameter is not constant,
         # it depends on the alloy composition x.
         if self.name == "AlGaAs":
-            AParam[self.name]["EgG"] = -0.127 + 1.310 * x
+            ALLOY_PARAM[self.name]["EgG"] = -0.127 + 1.310 * x
         if self.name == "AlGaSb":
-            AParam[self.name]["EgG"] = -0.044 + 1.22 * x
+            ALLOY_PARAM[self.name]["EgG"] = -0.044 + 1.22 * x
 
-        for k in self.A.param:
+        for k in self.elm_a.param:
             #  if not k in B.param:
             #      continue
-            self.param[k] = x * self.A.param[k] + (1 - x) * self.B.param[k]
-            if BOWING and k in AParam[self.name]:
+            self.param[k] = x * self.elm_a.param[k] + (1 - x) * self.elm_b.param[k]
+            if BOWING and k in ALLOY_PARAM[self.name]:
                 # Bowing parameters
-                self.param[k] -= x * (1 - x) * AParam[self.name][k]
+                self.param[k] -= x * (1 - x) * ALLOY_PARAM[self.name][k]
 
 
-MParam = {
+MTRL_PARAM: dict[str, dict] = {
     # TODO: include Luttinger gamma
     "GaAs": {  # from Vurgaftman[0] unless specified
         "Crystal": "ZincBlende",
@@ -548,7 +551,7 @@ MParam = {
     },
 }
 
-AParam = {
+ALLOY_PARAM: dict[str, dict] = {
     "InGaAs": {
         "EgG": 0.477,
         "EgL": 0.33,
@@ -642,15 +645,15 @@ AParam = {
 
 def main(material):
     print("Looking for parameters of {material}:")
-    if material in AParam:
-        A, B = AParam[material]["composition"]
-        print(f"Alloy with ({A})x({B})1-x")
-        print(f"{A}: ", MParam[A])
-        print(f"{B}: ", MParam[B])
-        print("Bowing parameters:", AParam[material])
+    if material in ALLOY_PARAM:
+        elm_a, elm_b = ALLOY_PARAM[material]["composition"]
+        print(f"Alloy with ({elm_a})x({elm_b})1-x")
+        print(f"{elm_a}: ", MTRL_PARAM[elm_a])
+        print(f"{elm_b}: ", MTRL_PARAM[elm_b])
+        print("Bowing parameters:", ALLOY_PARAM[material])
         return 0
-    elif material in MParam:
-        print(MParam[material])
+    elif material in MTRL_PARAM:
+        print(MTRL_PARAM[material])
         return 0
     else:
         print("Not found.")

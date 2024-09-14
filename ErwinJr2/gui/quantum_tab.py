@@ -48,7 +48,7 @@ from ErwinJr2.gui.custom_qt_class import mtrlComboBox
 from ErwinJr2.gui.dark_detect import isdark
 from ErwinJr2.gui.ej_canvas import EJCanvas, EJplotControl
 from ErwinJr2.gui.ej_canvas import config as plotconfig
-from ErwinJr2.material import AParam
+from ErwinJr2.material import ALLOY_PARAM
 from ErwinJr2.qc_layers import (
     QCLayers,
     QCMaterial,
@@ -624,7 +624,7 @@ class QuantumTab(QWidget):
         information. mtrlList is used for mtrl column in layerTable"""
         self.mtrlList = []
         for n, mtrl in enumerate(self.qclayers.materials):
-            name = AParam[mtrl]["name"]
+            name = ALLOY_PARAM[mtrl]["name"]
             name = name.replace("1-x", str(1 - self.qclayers.moleFracs[n]))
             name = name.replace("x", str(self.qclayers.moleFracs[n]))
             name = f"#{n + 1} "  # + name
@@ -1124,7 +1124,7 @@ class QuantumTab(QWidget):
         # TODO: material name support
 
         possibleMtrl = tuple(
-            [AParam[m]["name"] for m in QCMaterial[self.qclayers.substrate]]
+            [ALLOY_PARAM[m]["name"] for m in QCMaterial[self.qclayers.substrate]]
         )
         for n, mtrl in enumerate(self.qclayers.materials):
             color = self.mtrlcolors[n % len(self.mtrlcolors)]
@@ -1138,7 +1138,7 @@ class QuantumTab(QWidget):
             #  mtrlItem = QComboBox()
             mtrlItem = mtrlComboBox()
             mtrlItem.addItems(possibleMtrl)
-            mtrlItem.setCurrentText(AParam[mtrl]["name"])
+            mtrlItem.setCurrentText(ALLOY_PARAM[mtrl]["name"])
             mtrlItem.currentIndexChanged.connect(partial(self.mtrlTable_mtrlChanged, n))
             self.mtrlTable.setCellWidget(n, 1, mtrlItem)
 

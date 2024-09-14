@@ -1273,7 +1273,7 @@ class QCLayers(SchrodingerLayer):
             EField=EField,
             repeats=repeats,
         )
-        self.crystalType = material.MParam[substrate]["Crystal"]
+        self.crystalType = material.MTRL_PARAM[substrate]["Crystal"]
         self.subM = material.Material(self.substrate, self.temperature)
         self.wl = wl
         self.solver = solver
@@ -1414,7 +1414,7 @@ class QCLayers(SchrodingerLayer):
     def set_substrate(self, subs: str):
         if subs in QCMaterial:
             self.substrate = subs
-            self.crystalType = material.MParam[subs]["Crystal"]
+            self.crystalType = material.MTRL_PARAM[subs]["Crystal"]
             matlN = len(self.materials)
             self.materials = (QCMaterial[subs] * matlN)[0:matlN]
             self.update_mtrls()
@@ -1581,8 +1581,8 @@ class QCLayers(SchrodingerLayer):
             return 1.0
         self.mtrlRIdx = [
             (
-                m.moleFrac * material.rIdx[m.A.name](wl)
-                + (1 - m.moleFrac) * material.rIdx[m.B.name](wl)
+                m.mole_frac * material.rIdx[m.elm_a.name](wl)
+                + (1 - m.mole_frac) * material.rIdx[m.elm_b.name](wl)
             )
             for m in self.mtrlAlloys
         ]
