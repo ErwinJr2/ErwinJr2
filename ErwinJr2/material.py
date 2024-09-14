@@ -26,8 +26,8 @@ III/V semiconductor electron band. The module contains:
 #    semiconductors. physica, 34(1), 149-154
 # ===========================================================================
 
-# from warnings import warn
-# TODO: add warning for problematic datas
+import logging
+
 from numpy import sqrt
 
 # This is to separate legacy fitting
@@ -41,6 +41,7 @@ VARSH = True
 #    use this as a zero point baseline. This is only here for consistency
 #    with legacy code
 bandBaseln = 0.22004154
+_logger = logging.getLogger(__name__)
 
 
 class Material(object):
@@ -174,8 +175,8 @@ class Material(object):
             self.param["EvLH"] = self.param["EcG"] - self.param["EgLH"]
             self.param["EvSO"] = self.param["EcG"] - self.param["EgSO"]
         else:
-            print(
-                "Warning: the strain effect on {} is not implemented".format(self.type)
+            _logger.warning(
+                "Warning: the strain effect on %s is not implemented", self.type
             )
             self.param["EcG"] = self.param["VBO"] + self.param["EgG"] - bandBaseln
 
@@ -195,6 +196,7 @@ class Alloy(Material):
     """
 
     def __init__(self, Name: str, x: float, Temperature: float = 300):
+        super().__init__(Name, Temperature)
         self.name = Name
         self.comp = AParam[self.name]["composition"]
         self.A = Material(self.comp[0], Temperature)
@@ -639,12 +641,12 @@ AParam = {
 
 
 def main(material):
-    print("Looking for parameters of %s:" % material)
+    print("Looking for parameters of {material}:")
     if material in AParam:
         A, B = AParam[material]["composition"]
-        print("Alloy with (%s)x(%s)1-x" % (A, B))
-        print("%s: " % A, MParam[A])
-        print("%s: " % B, MParam[B])
+        print(f"Alloy with ({A})x({B})1-x")
+        print(f"{A}: ", MParam[A])
+        print(f"{B}: ", MParam[B])
         print("Bowing parameters:", AParam[material])
         return 0
     elif material in MParam:
@@ -690,9 +692,9 @@ rIdx = {
     # from old ej
     # "Au": lambda wl: (-0.1933-0.382j + (0.3321+6.8522j)*wl
     #                   + (0.0938**2+0.1289**2*1j)*wl),
-    "AlxGa1-xAs": lambda wl, x: AlGaAsIndex(wl, x),
-    "SiNx": lambda wl: SiNxIndex(wl),
-    "SiO2": lambda wl: SiO2Index(wl),
+    "AlxGa1-xAs": AlGaAsIndex,
+    "SiNx": SiNxIndex,
+    "SiO2": SiO2Index,
     "Air": lambda wl: 1,
 }
 
@@ -700,6 +702,5 @@ rIdx = {
 if __name__ == "__main__":
     import sys
 
-    for material in sys.argv[1:]:
-        main(material)
-        print("")
+    for mtrl in sys.argv[1:]:
+        main(mtrl)
