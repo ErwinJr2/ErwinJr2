@@ -1663,15 +1663,10 @@ class QuantumTab(QWidget):
             if self.qclayers.includeIFR:
                 self.tauIFR_ul = 1 / self.qclayers.ifr_transition(upper, lower)
             self.pairString = (
-                "selected: %d, %d<br>"
-                "energy diff: <b>%6.1f meV</b> (%6.1f \u00b5m)<br>"
-                "dipole: <b>%6.1f \u212b</b><br>"
-            ) % (
-                self.stateHolder[0],
-                self.stateHolder[1],
-                1000 * self.de,
-                self.wavelength,
-                opticalDipole,
+                f"selected: {self.stateHolder[0]}, {self.stateHolder[1]}<br>"
+                f"energy diff: <b>{1000 * self.de:6.1f} meV</b> "
+                f"({self.wavelength:6.1f} \u00b5m)<br>"
+                f"dipole: <b>{opticalDipole:6.1f} \u212b</b><br>"
             )
             self.pairString += "LO scatter: %6.3g ps<br>" % tauLO_ul
             if self.qclayers.includeIFR:
@@ -1679,10 +1674,10 @@ class QuantumTab(QWidget):
             if self.qclayers.status == "solved-full":
                 self.pairString += "population: <br>&nbsp;&nbsp;&nbsp;"
                 uPop = self.qclayers.state_population(upper)
-                uPop = "N/A" if uPop is None else "%.1f%%" % (100 * uPop)
+                uPop = "N/A" if uPop is None else f"{100 * uPop:.1f}%"
                 lPop = self.qclayers.state_population(lower)
-                lPop = "N/A" if lPop is None else "%.1f%%" % (100 * lPop)
-                self.pairString += "%d: %s %d: %s<br>" % (upper, uPop, lower, lPop)
+                lPop = "N/A" if lPop is None else f"{100 * lPop:.1f}%"
+                self.pairString += f"{upper}: {uPop} {lower}: {lPop}<br>"
         self.stateParamText.clear()
         self.stateParamText.setText(self.pairString)
 
