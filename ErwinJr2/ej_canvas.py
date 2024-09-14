@@ -244,7 +244,7 @@ class EJplotControl(NavigationToolbar2, QObject):
         if (
             event.inaxes
             and self._custom_mode
-            and self._lastCursor != self._custom_cursor[self._custom_mode]
+            and self._last_cursor != self._custom_cursor[self._custom_mode]
         ):
             self.set_cursor(self._custom_cursor[self._custom_mode])
             return
