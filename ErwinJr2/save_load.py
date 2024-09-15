@@ -151,14 +151,14 @@ def parse_qcl(ldict: typing.Dict[str, typing.Any]) -> QCLayers:
         else:
             o.include_ifr = False
     else:
-        raise InvalidJsonFile(f"Version {ldict['Version']} not supported")
+        raise InvalidJsonFile(f"Version {version} not supported")
     return o
 
 
 def parse_strata(ldict: typing.Dict[str, typing.Any]) -> OptStrata:
     if ldict["FileType"] != "ErwinJr2 Data File":
         raise TypeError("Wrong file type")
-    if int(ldict["Version"]) >= 200504:
+    if (version := int(ldict["Version"])) >= 200504:
         ldict = ldict["Waveguide"]
         cstidx = {}
         cstprd = {}
@@ -181,7 +181,7 @@ def parse_strata(ldict: typing.Dict[str, typing.Any]) -> OptStrata:
             cstm_gain=cstgain,
         )
     else:
-        raise InvalidJsonFile(f"Version {ldict['Version']} not supported")
+        raise InvalidJsonFile(f"Version {version} not supported")
     return o
 
 

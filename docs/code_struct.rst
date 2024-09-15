@@ -22,7 +22,6 @@ The folder structure:
     |  |  |- science.h
     |  |  |- __init__.py
     |  |  |- c_schrodinger.pyx
-    |  |  |- band.py
     |  |  |- typeDefs.py
     |  |- images....................The images needed for the GUI
     |  |  |- ....

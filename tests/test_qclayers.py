@@ -12,6 +12,9 @@ _TEST_SAMPLE_FILE = os.path.join(_REPO_ROOT, "ErwinJr2/example/PQLiu.json")
 
 
 class TestQCLayers(unittest.TestCase):
+    """Test QCLayers class"""
+
+    # pylint: disable=protected-access
     def test_solve_whole_matrix(self):
         with open(_TEST_SAMPLE_FILE) as f:
             qcl = save_load.qcl_load(f)

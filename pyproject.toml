@@ -31,7 +31,12 @@ dependencies = ["numpy>=2.0.0", "scipy"]
 dynamic = ["version"]
 
 [project.optional-dependencies]
-GUI = ["pyqt5", "matplotlib>=3.3", "winshell;sys_platform == 'win32'"]
+GUI = [
+    "pyqt5",
+    "matplotlib>=3.3",
+    "winshell;sys_platform == 'win32'",
+    "darkdetect",
+]
 dev = [
     'sphinx>=2',
     'sphinx_rtd_theme',
@@ -64,8 +69,6 @@ ErwinJr2 = ["Info.plist"]
 "ErwinJr2.example" = ["PQLiu.json"]
 "ErwinJr2.oned_quantum" = [
     "Makefile",
-    "*.sln",
-    "*.vcxproj",
     "*.c",
     "*.h",
     "*.so",

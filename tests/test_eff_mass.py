@@ -5,26 +5,24 @@ import unittest
 import numpy as np
 import scipy.sparse as sparse
 import scipy.sparse.linalg as splg
-from scipy.constants import e as e0, electron_mass as m0, hbar as hbar
+from scipy.constants import e as e0, electron_mass as m0, hbar
 
 from ErwinJr2.qc_layers import SchrodingerLayer
 
-"""This unit test is to compare simulation with PhysRevB.50.8663"""
 
-
-class GaAs_Layer(SchrodingerLayer):
+class GaAsLayer(SchrodingerLayer):
     """Sadly the parameters given in PhysRevB.50.8663 is not complete"""
 
-    def __init__(self, xres, layerWidths):
+    def __init__(self, xres, layer_width):
         # fixed offset 0.51 eV
         super().__init__(
-            xres, layer_widths=layerWidths, layer_vc=np.zeros(len(layerWidths))
+            xres, layer_widths=layer_width, layer_vc=np.zeros(len(layer_width))
         )
         self.crystal_type = "ZincBlende"
 
     def populate_material(self):
-        N = self.x_points.size
-        ones = np.ones(N)
+        length = self.x_points.size
+        ones = np.ones(length)
         self.x_f = -1.94 * ones
         self.x_ep = 28.8 * ones
         self.x_eso = 0.341 * ones
@@ -37,10 +35,12 @@ class GaAs_Layer(SchrodingerLayer):
 
 
 class TestEffectiveMass(unittest.TestCase):
+    """This unit test is to compare simulation with PhysRevB.50.8663"""
+
     def test_single_well(self):
-        L = 1e4
-        layer = GaAs_Layer(5, [L])
-        ks = np.pi / L * np.arange(1, 4)
+        layer_width = 1e4
+        layer = GaAsLayer(5, [layer_width])
+        ks = np.pi / layer_width * np.arange(1, 4)
         layer.solver = "matrix"
         layer.populate_x()
         layer.populate_kane_matrix()

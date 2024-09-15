@@ -15,9 +15,8 @@ import sys
 import traceback
 from functools import partial, wraps
 
+import darkdetect
 import numpy as np
-
-# figure is and should be used for gain spectrum plot only!
 from matplotlib.pyplot import figure
 from numpy import sqrt
 from PyQt5.QtCore import QObject, Qt, QThread, pyqtSignal, pyqtSlot
@@ -46,7 +45,6 @@ from PyQt5.QtWidgets import (
 
 from ErwinJr2.gui.constants import EJ_ERROR, EJ_WARNING
 from ErwinJr2.gui.custom_qt_class import MtrlComboBox
-from ErwinJr2.gui.dark_detect import isdark
 from ErwinJr2.gui.ej_canvas import EJCanvas, EJplotControl, config as plotconfig
 from ErwinJr2.material import ALLOY_PARAM
 from ErwinJr2.qc_layers import (
@@ -192,7 +190,7 @@ class QuantumTab(QWidget):
         self._worker = None
 
         self.mtrlcolors = tuple([QColor(*rgb) for rgb in MTRL_COLORS_RGB])
-        if isdark:
+        if darkdetect.isDark():
             self.mtrlcolors = tuple(
                 [QColor(*(2 * (255 - c) for c in rgb)) for rgb in MTRL_COLORS_RGB]
             )

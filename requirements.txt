@@ -2,3 +2,4 @@ numpy
 scipy
 matplotlib>=3.3
 pyqt5
+darkdetect

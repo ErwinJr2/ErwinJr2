@@ -28,6 +28,9 @@ jobs=4
 # active Python interpreter and may run arbitrary code.
 unsafe-load-any-extension=no
 
+ignore-paths=^.venv/.*$,
+             ^tool/.*$,
+             ^docs/_build/.*$,
 
 [MESSAGES CONTROL]
 
@@ -89,6 +92,7 @@ disable=R,
         map-builtin-not-iterating,
         misplaced-comparison-constant,
         missing-function-docstring,
+        missing-module-docstring,
         metaclass-assignment,
         next-method-called,
         next-method-defined,
@@ -157,7 +161,7 @@ evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / stateme
 [BASIC]
 
 # Good variable names which should always be accepted, separated by a comma
-good-names=main,_
+good-names=main,_,ErwinJr2
 
 # Bad variable names which should always be refused, separated by a comma
 bad-names=
@@ -198,7 +202,7 @@ inlinevar-rgx=^[a-z][a-z0-9_]*$
 class-rgx=^_?[A-Z][a-zA-Z0-9]*$
 
 # Regular expression matching correct module names
-module-rgx=^(_?[a-z][a-z0-9_]*|__init__)$
+module-rgx=^(_?[a-z][a-z0-9_]*|__init__|__main__)$
 
 # Regular expression matching correct method names
 method-rgx=(?x)^(?:(?P<exempt>_[a-z0-9_]+__|runTest|setUp|tearDown|setUpTestCase|tearDownTestCase|setupSelf|tearDownClass|setUpClass|(test|assert)_*[A-Z0-9][a-zA-Z0-9_]*|next)|(?P<camel_case>_{0,2}[A-Z][a-zA-Z0-9_]*)|(?P<snake_case>_{0,2}[a-z][a-z0-9_]*))$

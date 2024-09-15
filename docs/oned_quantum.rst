@@ -11,4 +11,3 @@ equation solver in C.
    :maxdepth: 2
 
    oned_schrodinger.rst
-   bandpy.rst

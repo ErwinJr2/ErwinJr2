@@ -210,7 +210,7 @@ class OpticalTab(QWidget):
         self.facet_box = [None] * 2
         self.ref_box = [None] * 2
         for n in (0, 1):
-            ridge_layout.addWidget(QLabel(f"<center>Facet{n+1}</center>"), 0, n)
+            ridge_layout.addWidget(QLabel(f"<center>Facet{n + 1}</center>"), 0, n)
             self.facet_box[n] = QComboBox()
             self.facet_box[n].addItems(facetList)
             self.facet_box[n].setCurrentText(self.facet[n])

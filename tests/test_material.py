@@ -6,6 +6,8 @@ from ErwinJr2 import material
 
 
 class TestMaterial(unittest.TestCase):
+    """Test material module"""
+
     def test_GaAs(self):
         material.main("GaAs")
 

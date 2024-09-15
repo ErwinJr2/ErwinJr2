@@ -48,6 +48,9 @@ MP:  1DSchrodinger_MP.$(EXT)
 band.o : band.c band.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
+fftautocorr/factortable.h : fftautocorr/tablegen.py
+	$< $@
+
 fftautocorr.o : fftautocorr/fftautocorr.c fftautocorr/fftautocorr.h fftautocorr/factortable.h
 	$(CC) $(CFLAGS) -c $< -o $@
 

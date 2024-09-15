@@ -4,51 +4,51 @@ import typing
 import unittest
 
 import numpy as np
-from scipy.constants import e as e0, electron_mass as m0, hbar as hbar
+from scipy.constants import e as e0, electron_mass as m0, hbar
 
 from ErwinJr2.qc_layers import QCLayers, SchrodingerLayer
 
-"""This unit test is to compare simulation with PhysRevB.50.8663"""
 
-
-class GaInAs_AlInAs_Layer(SchrodingerLayer):
+class GaInAsWithAlInAsLayer(SchrodingerLayer):
     """Sadly the parameters given in PhysRevB.50.8663 is not complete"""
 
-    def __init__(self, xres, layerWidths, layerMtrl, EField=0):
+    def __init__(self, xres, layer_width, layer_mtrl, EField=0):
         # fixed offset 0.51 eV
-        Vc = {0: 0, 1: 0.51}
-        layerVc = [Vc[m] for m in layerMtrl]
-        self.layerMtrl = layerMtrl
+        vc = {0: 0, 1: 0.51}
+        layer_vc = [vc[m] for m in layer_mtrl]
+        self.layer_mtrl = layer_mtrl
         super().__init__(
-            xres, layer_widths=layerWidths, e_field=EField, layer_vc=layerVc
+            xres, layer_widths=layer_width, e_field=EField, layer_vc=layer_vc
         )
         self.crystal_type = "ZincBlende"
 
     def layer_mc(self, n):
-        Mc = {0: 0.043, 1: 0.072}
-        return Mc[self.layerMtrl[n]]
+        mc = {0: 0.043, 1: 0.072}
+        return mc[self.layer_mtrl[n]]
 
     def populate_material(self):
-        N = self.x_points.size
-        self.x_f = -0.5 * np.ones(N)  # s.t. 1+2F = 0
-        self.x_ep = 18.3 * np.ones(N)
-        self.x_eso = np.zeros(N)
-        self.x_eg = 0.79 * np.ones(N)
+        length = self.x_points.size
+        self.x_f = -0.5 * np.ones(length)  # s.t. 1+2F = 0
+        self.x_ep = 18.3 * np.ones(length)
+        self.x_eso = np.zeros(length)
+        self.x_eg = 0.79 * np.ones(length)
         self.band_params = (self.x_eg, self.x_f, self.x_ep, self.x_eso)
 
 
-def validate_ode(q: typing.Union[GaInAs_AlInAs_Layer, QCLayers]):
+def validate_ode(q: typing.Union[GaInAsWithAlInAsLayer, QCLayers]):
     interface = np.abs(np.diff(q.x_vc)) > 0.1
     interface = interface[1:] | interface[:-1]
     residules = []
     for t in range(len(q.eigen_es)):
-        E = q.eigen_es[t]
+        eigen_e = q.eigen_es[t]
         psi = q.psis[t]
         x_eg, x_f, x_ep, x_eso = q.band_params
         meff = 1 / (
             1
             + 2 * x_f
-            + x_ep / 3 * (1 / (E - q.x_vc + x_eg + x_eso) + 2 / (E - q.x_vc + x_eg))
+            + x_ep
+            / 3
+            * (1 / (eigen_e - q.x_vc + x_eg + x_eso) + 2 / (eigen_e - q.x_vc + x_eg))
         )
         # interpolate half grid
         meff = (meff[1:] + meff[:-1]) / 2
@@ -56,7 +56,7 @@ def validate_ode(q: typing.Union[GaInAs_AlInAs_Layer, QCLayers]):
             -np.diff(hbar**2 / (2 * m0 * meff * e0) * np.diff(psi))
             / (q.x_step * 1e-10) ** 2
             + q.x_vc[1:-1] * psi[1:-1]
-            - E * psi[1:-1]
+            - eigen_e * psi[1:-1]
         )
         residules.append(residule)
         inter_res = residule[interface]
@@ -68,67 +68,69 @@ def validate_ode(q: typing.Union[GaInAs_AlInAs_Layer, QCLayers]):
 
 
 class TestQuantumWell(unittest.TestCase):
+    """This unit test is to compare simulation with PhysRevB.50.8663"""
+
     def test_single_well(self):
         # Test PhysRevB.50.8663 original model
         layers = [100, 52, 100]
         mtrls = [1, 0, 1]
-        singleWell = GaInAs_AlInAs_Layer(0.01, layers, mtrls)
-        singleWell.populate_x()
-        singleWell.solve_whole()
-        validate_ode(singleWell)
-        Ei = singleWell.eigen_es[1]
-        Ej = singleWell.eigen_es[0]
-        self.assertAlmostEqual((Ei - Ej) / (0.381 - 0.123), 1, 1)
-        self.assertAlmostEqual(abs(singleWell.dipole(1, 0)) / 15.3, 1, 0)
+        single_well = GaInAsWithAlInAsLayer(0.01, layers, mtrls)
+        single_well.populate_x()
+        single_well.solve_whole()
+        validate_ode(single_well)
+        e_i = single_well.eigen_es[1]
+        e_j = single_well.eigen_es[0]
+        self.assertAlmostEqual((e_i - e_j) / (0.381 - 0.123), 1, 1)
+        self.assertAlmostEqual(abs(single_well.dipole(1, 0)) / 15.3, 1, 0)
 
         # Test QCLayers
-        qcLayers = QCLayers(
+        qclayers = QCLayers(
             x_res=0.01, layer_widths=layers, layer_matrls=mtrls, repeats=1, temp=10.0
         )
-        qcLayers.populate_x()
-        qcLayers.solve_whole()
-        validate_ode(qcLayers)
-        Ei = qcLayers.eigen_es[1]
-        Ej = qcLayers.eigen_es[0]
-        self.assertAlmostEqual((Ei - Ej) / (0.381 - 0.123), 1, 1)
-        self.assertAlmostEqual(abs(qcLayers.dipole(1, 0)) / 15.3, 1, 0)
+        qclayers.populate_x()
+        qclayers.solve_whole()
+        validate_ode(qclayers)
+        e_i = qclayers.eigen_es[1]
+        e_j = qclayers.eigen_es[0]
+        self.assertAlmostEqual((e_i - e_j) / (0.381 - 0.123), 1, 1)
+        self.assertAlmostEqual(abs(qclayers.dipole(1, 0)) / 15.3, 1, 0)
 
     def test_double_well(self):
         layers = [200, 59, 13, 24, 200]
         mtrls = [1, 0, 1, 0, 1]
-        qcLayers = QCLayers(
+        qclayers = QCLayers(
             x_res=0.01, layer_widths=layers, layer_matrls=mtrls, repeats=1, temp=10.0
         )
-        qcLayers.populate_x()
-        qcLayers.solve_whole()
-        validate_ode(qcLayers)
+        qclayers.populate_x()
+        qclayers.solve_whole()
+        validate_ode(qclayers)
         self.assertAlmostEqual(
-            qcLayers.eigen_es[1] - qcLayers.eigen_es[0], 0.252 - 0.102, 2
+            qclayers.eigen_es[1] - qclayers.eigen_es[0], 0.252 - 0.102, 2
         )
         self.assertAlmostEqual(
-            qcLayers.eigen_es[2] - qcLayers.eigen_es[0], 0.373 - 0.102, 1
+            qclayers.eigen_es[2] - qclayers.eigen_es[0], 0.373 - 0.102, 1
         )
-        self.assertAlmostEqual(abs(qcLayers.dipole(1, 0)), 16.4, 0)
+        self.assertAlmostEqual(abs(qclayers.dipole(1, 0)), 16.4, 0)
 
     def test_three_well(self):
         layers = [300, 46, 10, 20, 10, 19, 300]
         mtrls = [1, 0, 1, 0, 1, 0, 1]
-        qcLayers = QCLayers(
+        qclayers = QCLayers(
             x_res=0.01, layer_widths=layers, layer_matrls=mtrls, repeats=1, temp=10.0
         )
-        qcLayers.populate_x()
-        qcLayers.solve_whole()
-        validate_ode(qcLayers)
+        qclayers.populate_x()
+        qclayers.solve_whole()
+        validate_ode(qclayers)
         self.assertAlmostEqual(
-            qcLayers.eigen_es[1] - qcLayers.eigen_es[0], 0.242 - 0.126, 2
+            qclayers.eigen_es[1] - qclayers.eigen_es[0], 0.242 - 0.126, 2
         )
         self.assertAlmostEqual(
-            qcLayers.eigen_es[2] - qcLayers.eigen_es[0], 0.383 - 0.126, 2
+            qclayers.eigen_es[2] - qclayers.eigen_es[0], 0.383 - 0.126, 2
         )
         self.assertAlmostEqual(
-            qcLayers.eigen_es[3] - qcLayers.eigen_es[0], 0.494 - 0.126, 2
+            qclayers.eigen_es[3] - qclayers.eigen_es[0], 0.494 - 0.126, 2
         )
-        self.assertAlmostEqual(abs(qcLayers.dipole(1, 0)), 18.6, -1)
+        self.assertAlmostEqual(abs(qclayers.dipole(1, 0)), 18.6, -1)
 
 
 if __name__ == "__main__":
