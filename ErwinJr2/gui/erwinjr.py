@@ -130,12 +130,12 @@ class MainWindow(QMainWindow):
         self.otab.dirty.connect(self.things_changed)
         self.main_tab_widget.addTab(self.otab, "Optics")
         self.qtab.to_optics_button.clicked.connect(self.q2o)
-        self.otab.fieldBox.setValue(self.qtab.qclayers.e_field)
+        self.otab.field_box.setValue(self.qtab.qclayers.e_field)
         self.create_menu()
         self.main_tab_widget.currentChanged.connect(self.create_menu)
 
     def q2o(self):
-        self.otab.setupActive(
+        self.otab.setup_active(
             self.qtab.wavelength,
             self.qtab.qclayers.e_field,
             self.qtab.gain_coeff,
@@ -358,8 +358,8 @@ class MainWindow(QMainWindow):
             optical_active_action = self.create_action(
                 "Optical: Show Active Core",
                 checkable=True,
-                ischecked=self.otab.redActive,
-                slot=self.otab.view_redActive,
+                ischecked=self.otab.red_active,
+                slot=self.otab.view_red_active,
                 setting_sync=True,
             )
             self.add_actions(self.view_menu, (optical_active_action,))
