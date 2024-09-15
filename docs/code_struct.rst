@@ -41,7 +41,7 @@ The folder structure:
     |  |- ej_canvas.py
     |  |- custom_qt_class.py.py
     |  |- dark_detect.py
-    |  |- version_and_name.py
+    |  |- version.py
     |  |- genshortcut.py
     |  |- Info.plist............The sample file for creating macOS shortcut
     |- test.....................Test cases
@@ -55,10 +55,8 @@ The folder structure:
     |- README.md................This is shown in the project front page in GitHub
     |- pyproject.toml...........Part of the setup system required by PEP518
     |- setup.py.................The `setuptools` based setup system
-    |- requirements.txt.........The requirement packages
     |- .readthedocs.yml.........The online documentation generation definition
-    |- .travis.yml..............The automated test and deployment system definition
-    |- .travis..................Scripts for online deployment
+    |- .github..................Configs for github deployment
        |- ....
 
 

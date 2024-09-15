@@ -44,6 +44,7 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
+from ErwinJr2.gui.constants import EJ_ERROR, EJ_WARNING
 from ErwinJr2.gui.custom_qt_class import mtrlComboBox
 from ErwinJr2.gui.dark_detect import isdark
 from ErwinJr2.gui.ej_canvas import EJCanvas, EJplotControl, config as plotconfig
@@ -60,7 +61,6 @@ from ErwinJr2.qc_layers import (
     optimize_layer,
 )
 from ErwinJr2.qc_plotter import plotPotential, plotWF, scaleWF
-from ErwinJr2.version_and_name import EJ_ERROR, EJ_WARNING
 
 
 # TODO: this may not be necessary by better designer

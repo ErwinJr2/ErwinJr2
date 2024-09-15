@@ -1,5 +1,4 @@
-"""Some constants used in ErwinJr2."""
+"""Some constants used in ErwinJr2 GUI."""
 
-VERSION = "3.0.0-dev"
 EJ_ERROR = "ErwinJr2 - Error"
 EJ_WARNING = "ErwinJr2 - WARNING"

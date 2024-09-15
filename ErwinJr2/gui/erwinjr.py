@@ -32,7 +32,7 @@ from ErwinJr2.gui.optical_tab import OpticalTab
 from ErwinJr2.gui.quantum_tab import QuantumTab
 from ErwinJr2.opt_strata import OptStrata
 from ErwinJr2.qc_layers import QCLayers, onedq
-from ErwinJr2.version_and_name import VERSION
+from ErwinJr2.version import VERSION
 
 basePath = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_FILE_DIR = os.path.join(

@@ -75,7 +75,7 @@ ErwinJr2 = ["Info.plist"]
 "ErwinJr2.oned_quantum.fftautocorr" = ["*.c", "*.h"]
 
 [tool.setuptools.dynamic]
-version = { attr = "ErwinJr2.version_and_name.VERSION" }
+version = { attr = "ErwinJr2.version.VERSION" }
 
 [tool.cibuildwheel]
 skip = [
@@ -93,6 +93,9 @@ test-command = "cd /d {project} && pytest tests"
 [tool.isort]
 profile = "black"
 combine_as_imports = true
+
+[tool.ruff]
+extend-exclude = ["docs/conf.py",]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true

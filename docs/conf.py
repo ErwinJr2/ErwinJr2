@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: skip-file
 #
 # Configuration file for the Sphinx documentation builder.
 #
@@ -31,13 +32,10 @@ project = "ErwinJr2"
 copyright = "2021, Gmachl Group, Princeton"
 author = "Ming Lyu"
 
-# The short X.Y version
-from ErwinJr2.version_and_name import (  # type: ignore # noqa: E402, E501
-    VERSION as version,
-)
+from ErwinJr2.version import VERSION  # noqa: E402
 
 # The full version, including alpha/beta/rc tags
-release = version + " beta"
+release = VERSION + " beta"
 
 
 # -- General configuration ---------------------------------------------------

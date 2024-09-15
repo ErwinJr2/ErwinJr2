@@ -30,6 +30,7 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
+from ErwinJr2.gui.constants import EJ_ERROR
 from ErwinJr2.gui.custom_qt_class import mtrlComboBox
 from ErwinJr2.gui.ej_canvas import EJCanvas
 from ErwinJr2.opt_strata import (
@@ -39,7 +40,6 @@ from ErwinJr2.opt_strata import (
     optimize_opt_strata,
     rIdx,
 )
-from ErwinJr2.version_and_name import EJ_ERROR
 
 mtrlList = list(rIdx.keys()) + list(ALLOY_MAP.keys())
 facetList = ("cleaved", "perfect AR", "perfect HR", "custom")
