@@ -5,9 +5,7 @@ import unittest
 import numpy as np
 import scipy.sparse as sparse
 import scipy.sparse.linalg as splg
-from scipy.constants import e as e0
-from scipy.constants import electron_mass as m0
-from scipy.constants import hbar as hbar
+from scipy.constants import e as e0, electron_mass as m0, hbar as hbar
 
 from ErwinJr2.qc_layers import SchrodingerLayer
 
@@ -20,18 +18,18 @@ class GaAs_Layer(SchrodingerLayer):
     def __init__(self, xres, layerWidths):
         # fixed offset 0.51 eV
         super().__init__(
-            xres, layerWidths=layerWidths, layerVc=np.zeros(len(layerWidths))
+            xres, layer_widths=layerWidths, layer_vc=np.zeros(len(layerWidths))
         )
-        self.crystalType = "ZincBlende"
+        self.crystal_type = "ZincBlende"
 
     def populate_material(self):
-        N = self.xPoints.size
+        N = self.x_points.size
         ones = np.ones(N)
-        self.xF = -1.94 * ones
-        self.xEp = 28.8 * ones
-        self.xESO = 0.341 * ones
-        self.xEg = 1.519 * ones
-        self.bandParams = (self.xEg, self.xF, self.xEp, self.xESO)
+        self.x_f = -1.94 * ones
+        self.x_ep = 28.8 * ones
+        self.x_eso = 0.341 * ones
+        self.x_eg = 1.519 * ones
+        self.band_params = (self.x_eg, self.x_f, self.x_ep, self.x_eso)
         self.gamma1 = 6.98 * ones
         self.gamma2 = 2.06 * ones
         self.gamma3 = 2.93 * ones
@@ -45,14 +43,14 @@ class TestEffectiveMass(unittest.TestCase):
         ks = np.pi / L * np.arange(1, 4)
         layer.solver = "matrix"
         layer.populate_x()
-        layer.populate_Kane_matrix()
-        eigen_c = splg.eigsh(layer.Hsparse, 3, sigma=0, return_eigenvectors=False)
-        diag = sparse.diags(np.ones(3 * layer.xPoints.size))
+        layer.populate_kane_matrix()
+        eigen_c = splg.eigsh(layer.h_sparse, 3, sigma=0, return_eigenvectors=False)
+        diag = sparse.diags(np.ones(3 * layer.x_points.size))
         eigen_lh = splg.eigsh(
-            layer.Hsparse + 1.519 * diag, 3, sigma=0, return_eigenvectors=False
+            layer.h_sparse + 1.519 * diag, 3, sigma=0, return_eigenvectors=False
         )
         eigen_so = splg.eigsh(
-            layer.Hsparse + (1.519 + 0.341) * diag,
+            layer.h_sparse + (1.519 + 0.341) * diag,
             3,
             sigma=0,
             return_eigenvectors=False,

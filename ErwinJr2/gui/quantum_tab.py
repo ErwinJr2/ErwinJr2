@@ -46,19 +46,17 @@ from PyQt5.QtWidgets import (
 
 from ErwinJr2.gui.custom_qt_class import mtrlComboBox
 from ErwinJr2.gui.dark_detect import isdark
-from ErwinJr2.gui.ej_canvas import EJCanvas, EJplotControl
-from ErwinJr2.gui.ej_canvas import config as plotconfig
+from ErwinJr2.gui.ej_canvas import EJCanvas, EJplotControl, config as plotconfig
 from ErwinJr2.material import ALLOY_PARAM
 from ErwinJr2.qc_layers import (
+    QC_MATERIAL,
     QCLayers,
-    QCMaterial,
     StateRecognizeError,
     c0,
     e0,
     eps0,
     h,
     hbar,
-    optimize_global,
     optimize_layer,
 )
 from ErwinJr2.qc_plotter import plotPotential, plotWF, scaleWF
@@ -288,7 +286,7 @@ class QuantumTab(QWidget):
         settingBox.addWidget(QLabel("<center><b>Substrate</b></center>"))
         self.inputSubstrateBox = QComboBox()
         self.inputSubstrateBox.setMaximumWidth(width)
-        self.inputSubstrateBox.addItems(QCMaterial.keys())
+        self.inputSubstrateBox.addItems(QC_MATERIAL.keys())
         self.inputSubstrateBox.currentIndexChanged[str].connect(self.input_substrate)
         self.inputSubstrateBox.setToolTip(
             "The substrate decides possible choices of materials."
@@ -421,8 +419,8 @@ class QuantumTab(QWidget):
         self.optimizeLayerButton = QPushButton("Optimize Layer")
         self.optimizeLayerButton.clicked.connect(self.optimize_layer)
         self.optimizeLayerButton.setEnabled(False)
+        # TODO: global optimize is not implemented
         self.globalOptimizeButton = QPushButton("Global Optimize")
-        self.globalOptimizeButton.clicked.connect(self.global_optimize)
         self.globalOptimizeButton.setEnabled(False)
         layerBox.addWidget(self.optimizeLayerButton, 1, 0)
         layerBox.addWidget(self.globalOptimizeButton, 1, 1)
@@ -625,8 +623,8 @@ class QuantumTab(QWidget):
         self.mtrlList = []
         for n, mtrl in enumerate(self.qclayers.materials):
             name = ALLOY_PARAM[mtrl]["name"]
-            name = name.replace("1-x", str(1 - self.qclayers.moleFracs[n]))
-            name = name.replace("x", str(self.qclayers.moleFracs[n]))
+            name = name.replace("1-x", str(1 - self.qclayers.mole_fracs[n]))
+            name = name.replace("x", str(self.qclayers.mole_fracs[n]))
             name = f"#{n + 1} "  # + name
             self.mtrlList.append(name)
 
@@ -637,10 +635,10 @@ class QuantumTab(QWidget):
         self.updating = True
         self.descBox.setText(self.qclayers.description)
         self.inputSubstrateBox.setCurrentText(self.qclayers.substrate)
-        self.inputEFieldBox.setValue(self.qclayers.EField)
-        self.inputxResBox.setValue(self.qclayers.xres)
-        self.inputEresBox.setValue(self.qclayers.Eres)
-        self.inputECountBox.setValue(self.qclayers.statePerRepeat)
+        self.inputEFieldBox.setValue(self.qclayers.e_field)
+        self.inputxResBox.setValue(self.qclayers.x_step)
+        self.inputEresBox.setValue(self.qclayers.e_step)
+        self.inputECountBox.setValue(self.qclayers.state_per_repeat)
         self.inputWlBox.setValue(self.qclayers.wl)
         self.inputRepeatsBox.setValue(self.qclayers.repeats)
         self.updating = False
@@ -675,7 +673,7 @@ class QuantumTab(QWidget):
         """SLOT connected to inputEFieldBox.valueChanged(double)
         update external E field in unit kV/cm"""
         self.clear_WFs()
-        self.qclayers.EField = EField
+        self.qclayers.e_field = EField
         self.qclayers.populate_x()
         self.dirty.emit()
         self.update_quantumCanvas()
@@ -686,7 +684,7 @@ class QuantumTab(QWidget):
         """SLOT connected to inputxResBox.valueChanged
         update position resolution (xres), in angstrom"""
         self.clear_WFs()
-        self.qclayers.xres = xres
+        self.qclayers.x_step = xres
         self.qclayers.populate_x()
         self.dirty.emit()
         self.update_quantumCanvas()
@@ -697,14 +695,14 @@ class QuantumTab(QWidget):
         """SLOT connected to inputEresBox.valueChanged
         Update initial energy resolution for eigensolver. Set this too small
         may result in loss of some eigenvalue."""
-        self.qclayers.Eres = ERes
+        self.qclayers.e_step = ERes
         self.dirty.emit()
 
     @pyqtSlot(int)
     @settingslot
     def input_Ecount(self, count: int):
-        self.qclayers.statePerRepeat = count
-        self.qclayers.matrixEigenCount = count * self.qclayers.repeats
+        self.qclayers.state_per_repeat = count
+        self.qclayers.matrix_eigen_count = count * self.qclayers.repeats
         self.dirty.emit()
 
     @pyqtSlot(int)
@@ -729,8 +727,8 @@ class QuantumTab(QWidget):
         self.inputInjectorARCheck.stateChanged(int)
         update dividers info
         """
-        self.qclayers.basisARInjector = self.inputARInjectorCheck.isChecked()
-        self.qclayers.basisInjectorAR = self.inputInjectorARCheck.isChecked()
+        self.qclayers.basis_ar_injector = self.inputARInjectorCheck.isChecked()
+        self.qclayers.basis_injector_ar = self.inputInjectorARCheck.isChecked()
 
     def _update_Lp_limits(self):
         """Update Lp select range in the Period Info box (GUI)
@@ -738,10 +736,10 @@ class QuantumTab(QWidget):
         Will trigger LpFirstSpinbox/LpLastSpinBox.valueChanged(int) SIGNAL
         and thus update_Lp_box
         """
-        self.LpFirstSpinbox.setRange(1, len(self.qclayers.layerWidths) - 1)
+        self.LpFirstSpinbox.setRange(1, len(self.qclayers.layer_widths) - 1)
         self.LpFirstSpinbox.setValue(1)
-        self.LpLastSpinbox.setRange(1, len(self.qclayers.layerWidths))
-        self.LpLastSpinbox.setValue(len(self.qclayers.layerWidths))
+        self.LpLastSpinbox.setRange(1, len(self.qclayers.layer_widths))
+        self.LpLastSpinbox.setValue(len(self.qclayers.layer_widths))
 
     @pyqtSlot()
     @settingslot
@@ -757,11 +755,11 @@ class QuantumTab(QWidget):
         LpLast = self.LpLastSpinbox.value()
         # +1 because range is not inclusive of last value
         # total length of the layers (1 period)
-        Lp = sum(self.qclayers.layerWidths[LpFirst:LpLast])
+        Lp = sum(self.qclayers.layer_widths[LpFirst:LpLast])
         Lp_string = f"Lp: {Lp:.1f} \u212b<br>"
         # average doping of the layers
         ns = sum(
-            self.qclayers.layerDopings[n] * self.qclayers.layerWidths[n]
+            self.qclayers.layer_dopings[n] * self.qclayers.layer_widths[n]
             for n in range(LpFirst, LpLast)
         )
         if Lp == 0:
@@ -806,8 +804,8 @@ class QuantumTab(QWidget):
         self.layerTable.clear()
         self.layerTable.setColumnCount(5)
         # An extra blank line for adding new layers
-        self.layerTable.setRowCount(len(self.qclayers.layerWidths) + 1)
-        vertLabels = [str(n + 1) for n in range(len(self.qclayers.layerWidths))]
+        self.layerTable.setRowCount(len(self.qclayers.layer_widths) + 1)
+        vertLabels = [str(n + 1) for n in range(len(self.qclayers.layer_widths))]
         self.layerTable.setHorizontalHeaderLabels(
             ("Width", "ML", "Mtrl", "AR", "Doping")
         )
@@ -815,8 +813,8 @@ class QuantumTab(QWidget):
 
         # gray2 = QColor(230, 230, 230)  # for unchangeable background
 
-        for q, layerWidths in enumerate(self.qclayers.layerWidths):
-            color = self.mtrlcolors[self.qclayers.layerMtrls[q] % len(self.mtrlcolors)]
+        for q, layerWidths in enumerate(self.qclayers.layer_widths):
+            color = self.mtrlcolors[self.qclayers.layer_mtrls[q] % len(self.mtrlcolors)]
             # Width Setup
             width = QTableWidgetItem(f"{layerWidths:5.1f}")
             width.setTextAlignment(Qt.AlignCenter)
@@ -827,7 +825,7 @@ class QuantumTab(QWidget):
             # TODO: monolayer <-> thickness should not include
             # temperature/strain correction
             mlThickness = (
-                self.qclayers.mtrlAlloys[self.qclayers.layerMtrls[q]].a_perp / 2
+                self.qclayers.mtrl_alloys[self.qclayers.layer_mtrls[q]].a_perp / 2
             )
             # a_perp has two layer of atoms (one III and one V)
             numML = QTableWidgetItem(f"{layerWidths / mlThickness:5.1f}")
@@ -839,7 +837,7 @@ class QuantumTab(QWidget):
             #  mtrlWidget = QComboBox()
             mtrlWidget = mtrlComboBox()
             mtrlWidget.addItems(self.mtrlList)
-            mtrlWidget.setCurrentIndex(self.qclayers.layerMtrls[q])
+            mtrlWidget.setCurrentIndex(self.qclayers.layer_mtrls[q])
             mtrlWidget.currentIndexChanged.connect(
                 partial(self.layerTable_materialChanged, q)
             )
@@ -848,14 +846,14 @@ class QuantumTab(QWidget):
             # Active Region Layer Setup
             ARitem = QTableWidgetItem()
             ARitem.setCheckState(
-                Qt.Checked if self.qclayers.layerARs[q] == 1 else Qt.Unchecked
+                Qt.Checked if self.qclayers.layer_ar[q] == 1 else Qt.Unchecked
             )
             ARitem.setTextAlignment(Qt.AlignCenter)
             ARitem.setBackground(color)
             self.layerTable.setItem(q, 3, ARitem)
 
             # Layer Doping Setup
-            doping = QTableWidgetItem(str(self.qclayers.layerDopings[q]))
+            doping = QTableWidgetItem(str(self.qclayers.layer_dopings[q]))
             doping.setTextAlignment(Qt.AlignCenter)
             doping.setBackground(color)
             self.layerTable.setItem(q, 4, doping)
@@ -868,16 +866,16 @@ class QuantumTab(QWidget):
         """SLOT connected to self.insertLayerAboveButton.clicked()"""
         row = self.layerTable.currentRow()
         N = len(self.qclayers.materials)
-        if row >= len(self.qclayers.layerWidths) or row < 0:
+        if row >= len(self.qclayers.layer_widths) or row < 0:
             # Add new lines in the last layer
-            row = len(self.qclayers.layerWidths)
-            aR = self.qclayers.layerARs[row - 1] and self.qclayers.layerARs[0]
-            doping = self.qclayers.layerDopings[row - 1]
-            mtrlIdx = (self.qclayers.layerMtrls[row - 1] + 1) % N
+            row = len(self.qclayers.layer_widths)
+            aR = self.qclayers.layer_ar[row - 1] and self.qclayers.layer_ar[0]
+            doping = self.qclayers.layer_dopings[row - 1]
+            mtrlIdx = (self.qclayers.layer_mtrls[row - 1] + 1) % N
         else:
-            aR = self.qclayers.layerARs[row] and self.qclayers.layerARs[row - 1]
-            doping = self.qclayers.layerDopings[row]
-            mtrlIdx = (self.qclayers.layerMtrls[row - 1] - 1) % N
+            aR = self.qclayers.layer_ar[row] and self.qclayers.layer_ar[row - 1]
+            doping = self.qclayers.layer_dopings[row]
+            mtrlIdx = (self.qclayers.layer_mtrls[row - 1] - 1) % N
 
         self.clear_WFs()
         self.qclayers.add_layer(row, 0.0, mtrlIdx, aR, doping)
@@ -894,11 +892,11 @@ class QuantumTab(QWidget):
     def delete_layer(self):
         """SLOT connected to self.deleteLayerButton.clicked()"""
         row = self.layerTable.currentRow()
-        if row == -1 or row >= len(self.qclayers.layerWidths):
+        if row == -1 or row >= len(self.qclayers.layer_widths):
             return
         # don't delete last layer
-        if len(self.qclayers.layerWidths) == 1:
-            self.qclayers.layerWidths[0] = 0.0
+        if len(self.qclayers.layer_widths) == 1:
+            self.qclayers.layer_widths[0] = 0.0
             return
 
         self.clear_WFs()
@@ -936,7 +934,7 @@ class QuantumTab(QWidget):
         if self.qclayers.status == "unsolved":
             QMessageBox.warning(self, EJ_WARNING, "Solve the model first.")
             return
-        if n < 0 or n > len(self.qclayers.layerWidths):
+        if n < 0 or n > len(self.qclayers.layer_widths):
             QMessageBox.warning(self, EJ_ERROR, "Select the layer to optimize.")
             return
         if len(self.stateHolder) != 2:
@@ -945,7 +943,7 @@ class QuantumTab(QWidget):
         try:
             upper = self.stateHolder[0]
             lower = self.stateHolder[1]
-            if self.qclayers.eigenEs[upper] < self.qclayers.eigenEs[lower]:
+            if self.qclayers.eigen_es[upper] < self.qclayers.eigen_es[lower]:
                 upper, lower = lower, upper
         except ValueError:
             QMessageBox.warning(self, EJ_ERROR, "Select state pair to optimize.")
@@ -956,31 +954,13 @@ class QuantumTab(QWidget):
             lambda: self._optimize_layer(n, upper, lower), lambda: self.showOptmize(n)
         )
 
-    def _global_optimize(self):
-        optimize_global(self.qclayers)
-        self._fullPopulation()
-
-    @pyqtSlot()
-    def global_optimize(self):
-        """SLOT connect to self.globalOptimizeButton.clicked()"""
-        message = (
-            "This is an experimental feature "
-            "the result may not be stable and may take a long time."
-            "It's highly recommended to save the structure first.\n"
-            "Do you want to proceed?"
-        )
-        if QMessageBox.question(self, EJ_WARNING, message) == QMessageBox.Yes:
-            self.stateParamText.clear()
-            self.clear_WFs()
-            self._threadRun(self._global_optimize, self.showOptmize)
-
     @pyqtSlot(QTableWidgetItem)
     def layerTable_itemChanged(self, item):
         """SLOT connected to layerTable.itemChanged(QTableWidgetItem*)
         Update layer profile after user input"""
         row = item.row()
         mtrlN = len(self.qclayers.materials)
-        if row > len(self.qclayers.layerWidths):
+        if row > len(self.qclayers.layer_widths):
             raise ValueError("Bad layer width input row number")
         column = item.column()
         if column in (0, 1, 4):
@@ -997,35 +977,37 @@ class QuantumTab(QWidget):
                 else:  # column == 1 for "ML" number of monolayers
                     new_width = (
                         value
-                        * self.qclayers.mtrlAlloys[self.qclayers.layerMtrls[row]].a_perp
+                        * self.qclayers.mtrl_alloys[
+                            self.qclayers.layer_mtrls[row]
+                        ].a_perp
                         / 2
                     )
                     new_width = round(new_width, 1)
 
-                if row == len(self.qclayers.layerWidths):
+                if row == len(self.qclayers.layer_widths):
                     # add row at end of list
-                    AR = self.qclayers.layerARs[row - 1]
-                    doping = self.qclayers.layerDopings[row - 1]
-                    mtrlIndx = (self.qclayers.layerMtrls[row - 1] + 1) % mtrlN
+                    AR = self.qclayers.layer_ar[row - 1]
+                    doping = self.qclayers.layer_dopings[row - 1]
+                    mtrlIndx = (self.qclayers.layer_mtrls[row - 1] + 1) % mtrlN
                     self.qclayers.add_layer(row, new_width, mtrlIndx, AR, doping)
                     row += 1  # used so that last (blank) row is again selected
                     self._update_Lp_limits()
                     self.update_Lp_box()
                 else:  # change Width of selected row in-place
-                    self.qclayers.layerWidths[row] = new_width
+                    self.qclayers.layer_widths[row] = new_width
                     self.update_Lp_box()
             else:
                 # column == 4 for item change in Doping column
                 doping = value
-                if row == len(self.qclayers.layerWidths):
-                    AR = self.qclayers.layerARs[row - 1]
-                    mtrlIndx = (self.qclayers.layerMtrls[row - 1] + 1) % mtrlN
+                if row == len(self.qclayers.layer_widths):
+                    AR = self.qclayers.layer_ar[row - 1]
+                    mtrlIndx = (self.qclayers.layer_mtrls[row - 1] + 1) % mtrlN
                     self.qclayers.add_layer(row, 0.0, mtrlIndx, AR, doping)
                     row += 1  # used so that last (blank) row is again selected
                     self._update_Lp_limits()
                     self.update_Lp_box()
                 else:
-                    self.qclayers.layerDopings[row] = doping
+                    self.qclayers.layer_dopings[row] = doping
 
         elif column == 2:
             # column == 2 for item change in mtrl column, should be
@@ -1034,10 +1016,10 @@ class QuantumTab(QWidget):
 
         elif column == 3:
             # column == 3 for item change in AR column
-            if row == len(self.qclayers.layerWidths):
+            if row == len(self.qclayers.layer_widths):
                 # don't do anything if row is last row
                 return
-            self.qclayers.layerARs[row] = item.checkState() == Qt.Checked
+            self.qclayers.layer_ar[row] = item.checkState() == Qt.Checked
 
         else:
             raise RuntimeError("Should not be here")
@@ -1054,7 +1036,7 @@ class QuantumTab(QWidget):
     def layerTable_itemSelectionChanged(self):
         """SLOT connected to layerTable.itemSelectionChanged()"""
         row = self.layerTable.currentRow()
-        if row < len(self.qclayers.layerWidths):
+        if row < len(self.qclayers.layer_widths):
             self.layerSelected = row
         else:
             self.layerSelected = None
@@ -1064,7 +1046,7 @@ class QuantumTab(QWidget):
     def layerTable_materialChanged(self, row, selection):
         """SLOT as partial(self.layerTable_materialChanged, q)) connected to
         materialWidget.currentIndexChanged(int)"""
-        self.qclayers.layerMtrls[row] = selection
+        self.qclayers.layer_mtrls[row] = selection
         self.clear_WFs()
         self.qclayers.populate_x()
         self.layerTable.selectRow(row)
@@ -1093,20 +1075,20 @@ class QuantumTab(QWidget):
         self._update_layerTable()
         row = self.layerTable.currentRow()
         if row >= 0 and row < len(self.layerWidths):
-            self.layerTable.setCurrentCell(len(self.qclayers.layerWidths) - 1 - row, 0)
+            self.layerTable.setCurrentCell(len(self.qclayers.layer_widths) - 1 - row, 0)
         self.update_quantumCanvas()
         self.dirty.emit()
 
     @pyqtSlot()
     def ARonly(self):
-        self.qclayers.basisAROnly = not self.qclayers.basisAROnly
+        self.qclayers.basis_ar_only = not self.qclayers.basis_ar_only
         self.clear_WFs()
 
     @pyqtSlot()
     def copy_structure(self):
         clipboard = QApplication.clipboard()
         string = ""
-        for width in self.qclayers.layerWidths:
+        for width in self.qclayers.layer_widths:
             string += f"{width:.1f}\n"
         clipboard.setText(string)
 
@@ -1124,7 +1106,7 @@ class QuantumTab(QWidget):
         # TODO: material name support
 
         possibleMtrl = tuple(
-            [ALLOY_PARAM[m]["name"] for m in QCMaterial[self.qclayers.substrate]]
+            [ALLOY_PARAM[m]["name"] for m in QC_MATERIAL[self.qclayers.substrate]]
         )
         for n, mtrl in enumerate(self.qclayers.materials):
             color = self.mtrlcolors[n % len(self.mtrlcolors)]
@@ -1144,7 +1126,7 @@ class QuantumTab(QWidget):
 
             # Set mole fraction for materials
             # TODO: number only with QItemDelegate
-            moleFrac = QTableWidgetItem(str(self.qclayers.moleFracs[n]))
+            moleFrac = QTableWidgetItem(str(self.qclayers.mole_fracs[n]))
             moleFrac.setTextAlignment(Qt.AlignCenter)
             moleFrac.setBackground(color)
             self.mtrlTable.setItem(n, 2, moleFrac)
@@ -1161,41 +1143,43 @@ class QuantumTab(QWidget):
         self.update_IFR_settings()
 
     def update_IFR_settings(self):
-        if self.qclayers.includeIFR:
+        if self.qclayers.include_ifr:
             self._ifrGroupBox.setVisible(True)
         else:
             self._ifrGroupBox.setVisible(False)
-        if self.qclayers.customIFR:
+        if self.qclayers.custom_ifr:
             self.ifrDefBox.setEnabled(False)
             self.ifrDeltaBox.setEnabled(False)
             self.ifrLambdaBox.setEnabled(False)
             # button to remove custom
         if self.ifrDefBox.isChecked():
             assert all(
-                x == self.qclayers.mtrlIFRDelta[0]
-                for x in self.qclayers.mtrlIFRDelta[1:]
+                x == self.qclayers.mtrl_ifr_delta[0]
+                for x in self.qclayers.mtrl_ifr_delta[1:]
             )
             assert all(
-                x == self.qclayers.mtrlIFRLambda[0]
-                for x in self.qclayers.mtrlIFRLambda[1:]
+                x == self.qclayers.mtrl_ifr_lambda[0]
+                for x in self.qclayers.mtrl_ifr_lambda[1:]
             )
-            self.ifrDeltaBox.setValue(self.qclayers.mtrlIFRDelta[0])
-            self.ifrLambdaBox.setValue(self.qclayers.mtrlIFRLambda[0])
+            self.ifrDeltaBox.setValue(self.qclayers.mtrl_ifr_delta[0])
+            self.ifrLambdaBox.setValue(self.qclayers.mtrl_ifr_lambda[0])
         else:
             row = self.mtrlTable.currentRow()
             if (
                 row < len(self.qclayers.materials)
-                and not self.qclayers.customIFR
-                and self.qclayers.mtrlIFRDelta is not None
+                and not self.qclayers.custom_ifr
+                and self.qclayers.mtrl_ifr_delta is not None
             ):
-                self.ifrDeltaBox.setValue(self.qclayers.mtrlIFRDelta[row])
-                self.ifrLambdaBox.setValue(self.qclayers.mtrlIFRLambda[row])
+                self.ifrDeltaBox.setValue(self.qclayers.mtrl_ifr_delta[row])
+                self.ifrLambdaBox.setValue(self.qclayers.mtrl_ifr_lambda[row])
 
     def IFR_settings_checkConst(self):
         if all(
-            x == self.qclayers.mtrlIFRDelta[0] for x in self.qclayers.mtrlIFRDelta[1:]
+            x == self.qclayers.mtrl_ifr_delta[0]
+            for x in self.qclayers.mtrl_ifr_delta[1:]
         ) and all(
-            x == self.qclayers.mtrlIFRLambda[0] for x in self.qclayers.mtrlIFRLambda[1:]
+            x == self.qclayers.mtrl_ifr_lambda[0]
+            for x in self.qclayers.mtrl_ifr_lambda[1:]
         ):
             self.ifrDefBox.setChecked(True)
 
@@ -1203,7 +1187,7 @@ class QuantumTab(QWidget):
         """SLOT as partial(self.mtrlTable_mrtlChanged, q)) connected to
         mtrlItem.currentIndexChanged(int)"""
         # not decorated by pyqt because it's not a real slot but a meta-slot
-        self.qclayers.set_mtrl(row, QCMaterial[self.qclayers.substrate][selection])
+        self.qclayers.set_mtrl(row, QC_MATERIAL[self.qclayers.substrate][selection])
         self.clear_WFs()
         self.qclayers.populate_x()
         self.update_mtrl_info()
@@ -1263,22 +1247,22 @@ class QuantumTab(QWidget):
         # state is int from Qt definition but here it's used as a bool
         if state:
             m = len(self.qclayers.materials)
-            self.qclayers.mtrlIFRLambda = [self.ifrLambdaBox.value()] * m
-            self.qclayers.mtrlIFRDelta = [self.ifrDeltaBox.value()] * m
+            self.qclayers.mtrl_ifr_lambda = [self.ifrLambdaBox.value()] * m
+            self.qclayers.mtrl_ifr_delta = [self.ifrDeltaBox.value()] * m
         self.dirty.emit()
 
     @pyqtSlot(float)
     def input_ifrLambda(self, ifrLambda):
         if self.ifrDefBox.isChecked():
             m = len(self.qclayers.materials)
-            self.qclayers.mtrlIFRLambda = [ifrLambda] * m
+            self.qclayers.mtrl_ifr_lambda = [ifrLambda] * m
         else:
             mn = self.mtrlTable.currentRow()
-            self.qclayers.mtrlIFRLambda[mn] = ifrLambda
+            self.qclayers.mtrl_ifr_lambda[mn] = ifrLambda
         self.qclayers.populate_material()
         if self.qclayers.status.startswith("solved"):
             # following also do self.qclayers.status = 'solved'
-            self.qclayers.reset_IFR_cache()
+            self.qclayers.reset_ifr_cache()
             self.gainSpecButton.setEnabled(False)
             self.update_quantumCanvas()
         self.dirty.emit()
@@ -1287,28 +1271,28 @@ class QuantumTab(QWidget):
     def input_ifrDelta(self, ifrDelta):
         if self.ifrDefBox.isChecked():
             m = len(self.qclayers.materials)
-            self.qclayers.mtrlIFRDelta = [ifrDelta] * m
+            self.qclayers.mtrl_ifr_delta = [ifrDelta] * m
         else:
             mn = self.mtrlTable.currentRow()
-            self.qclayers.mtrlIFRDelta[mn] = ifrDelta
+            self.qclayers.mtrl_ifr_delta[mn] = ifrDelta
         self.qclayers.populate_material()
         if self.qclayers.status.startswith("solved"):
             # following also do self.qclayers.status = 'solved'
-            self.qclayers.reset_IFR_cache()
+            self.qclayers.reset_ifr_cache()
             self.gainSpecButton.setEnabled(False)
             self.update_quantumCanvas()
         self.dirty.emit()
 
     def update_mtrl_info(self):
         """Update labels below mtrlTable"""
-        mtrl_offset_in_mev = self.qclayers.mtrlOffset * 1000
+        mtrl_offset_in_mev = self.qclayers.mtrl_offset * 1000
         self.offsetLabel.setText(
             f"<center>ΔE<sub>c</sub>: <b>{mtrl_offset_in_mev:6.0f} meV</b></center>"
         )
         self.netStrainLabel.setText(
-            f"<center>Net Strain: <b>{self.qclayers.netStrain:6.3f}%</b></center>"
+            f"<center>Net Strain: <b>{self.qclayers.net_strain:6.3f}%</b></center>"
         )
-        hwlo_in_mev = self.qclayers.avghwLO * 1000
+        hwlo_in_mev = self.qclayers.avg_hw_lo * 1000
         self.LOPhononLabel.setText(
             f"<center>E<sub>LO</sub>: <b>{hwlo_in_mev:4.1f} meV</b></center>"
         )
@@ -1332,13 +1316,13 @@ class QuantumTab(QWidget):
 
         if self.layerSelected is not None:
             selectedVc = np.ma.masked_where(
-                self.qclayers.xLayerMask(self.layerSelected), self.qclayers.xVc
+                self.qclayers.x_layer_mask(self.layerSelected), self.qclayers.x_vc
             )
             axes.plot(
-                self.qclayers.xPoints,
+                self.qclayers.x_points,
                 selectedVc,
                 "b",
-                linewidth=1.5 if self.qclayers.layerARs[self.layerSelected] else 1,
+                linewidth=1.5 if self.qclayers.layer_ar[self.layerSelected] else 1,
             )
 
         if self.qclayers.status in ("basis", "solved", "solved-full"):
@@ -1383,8 +1367,8 @@ class QuantumTab(QWidget):
         It's mpl_connect to button_release_event of quantumCanvas"""
         if event.button == 1:  # left button clicked
             x = event.xdata
-            xLayerNum = np.argmin((self.qclayers.xPoints - x) ** 2)
-            layerNum = self.qclayers.xLayerNums[xLayerNum]
+            xLayerNum = np.argmin((self.qclayers.x_points - x) ** 2)
+            layerNum = self.qclayers.x_layer_nums[xLayerNum]
             self.layerTable.selectRow(layerNum)
             # Trigger itemSelectionChanged SIGNAL and thus update_quantumCanvas
 
@@ -1395,7 +1379,6 @@ class QuantumTab(QWidget):
         self.fullPopulationButton.setEnabled(False)
         self.gainSpecButton.setEnabled(False)
         self.optimizeLayerButton.setEnabled(False)
-        self.globalOptimizeButton.setEnabled(False)
         self.update_quantumCanvas()
 
     # ===========================================================================
@@ -1411,7 +1394,7 @@ class QuantumTab(QWidget):
         fnameBase = "".join(fnameBase[:-1]) if len(fnameBase) > 1 else fname
         np.savetxt(
             fnameBase + "_CB" + ".csv",
-            np.column_stack([self.qclayers.xPoints, self.qclayers.xVc]),
+            np.column_stack([self.qclayers.x_points, self.qclayers.x_vc]),
             delimiter=",",
         )
 
@@ -1419,25 +1402,27 @@ class QuantumTab(QWidget):
             # otherwise band structure hasn't been solved yet
             np.savetxt(
                 fnameBase + "_WFs" + ".csv",
-                np.column_stack([self.qclayers.xPoints, self.qclayers.psis.T]),
+                np.column_stack([self.qclayers.x_points, self.qclayers.psis.T]),
                 delimiter=",",
             )
-            ys = scaleWF(self.qclayers, self.plotType).T + self.qclayers.eigenEs
+            ys = scaleWF(self.qclayers, self.plotType).T + self.qclayers.eigen_es
             np.savetxt(
                 fnameBase + ".csv",
-                np.column_stack([self.qclayers.xPoints, ys]),
+                np.column_stack([self.qclayers.x_points, ys]),
                 delimiter=",",
             )
-            np.savetxt(fnameBase + "_Es" + ".csv", self.qclayers.eigenEs, delimiter=",")
+            np.savetxt(
+                fnameBase + "_Es" + ".csv", self.qclayers.eigen_es, delimiter=","
+            )
             if self.qclayers.status == "solved-full":
                 pop = np.array(
                     [
                         (
                             self.qclayers.state_population(n)
-                            if self.qclayers.periodMap[n] is not None
+                            if self.qclayers.period_map[n] is not None
                             else np.NaN
                         )
-                        for n in range(len(self.qclayers.eigenEs))
+                        for n in range(len(self.qclayers.eigen_es))
                     ]
                 )
                 np.savetxt(fnameBase + "_population" + ".csv", pop, delimiter=",")
@@ -1481,9 +1466,9 @@ class QuantumTab(QWidget):
     # Model triggering
     # ===========================================================================
     def triggerIFR(self):
-        self.qclayers.includeIFR = not self.qclayers.includeIFR
+        self.qclayers.include_ifr = not self.qclayers.include_ifr
         # TODO: dynamically hide IFR block
-        if self.qclayers.includeIFR:
+        if self.qclayers.include_ifr:
             self._ifrGroupBox.setVisible(True)
         else:
             self._ifrGroupBox.setVisible(False)
@@ -1563,7 +1548,6 @@ class QuantumTab(QWidget):
 
     def _solved(self):
         self.optimizeLayerButton.setEnabled(True)
-        self.globalOptimizeButton.setEnabled(True)
         self.update_quantumCanvas()
 
     @pyqtSlot()
@@ -1597,11 +1581,11 @@ class QuantumTab(QWidget):
             # TODO: replace following by matplotlib lines picker
             x = event.xdata
             y = event.ydata
-            xData = np.tile(self.qclayers.xPoints, (self.qclayers.psis.shape[0], 1)).T
+            xData = np.tile(self.qclayers.x_points, (self.qclayers.psis.shape[0], 1)).T
             if self.plotType in ("mode", "wf"):
-                yData = self.qclayers.eigenEs + self.wfs.T
+                yData = self.qclayers.eigen_es + self.wfs.T
             else:
-                yData = self.qclayers.eigenEs
+                yData = self.qclayers.eigen_es
 
             width, height = self.quantumCanvas.axes.bbox.size
             xmin, xmax = self.quantumCanvas.axes.get_xlim()
@@ -1619,8 +1603,8 @@ class QuantumTab(QWidget):
                     np.abs(self.wfs[:, ::-1]) > plotconfig["wf_almost_zero"], axis=1
                 )
                 outOfSignt = np.arange(self.wfs.shape[0])[
-                    (x0 * self.qclayers.xres > x + 5)
-                    | (xL * self.qclayers.xres < x - 5)
+                    (x0 * self.qclayers.x_step > x + 5)
+                    | (xL * self.qclayers.x_step < x - 5)
                 ]
                 r[outOfSignt] += np.inf
             ss = np.nanargmin(r)
@@ -1654,9 +1638,9 @@ class QuantumTab(QWidget):
         self.FoMButton.setEnabled(True)
         upper = self.stateHolder[0]
         lower = self.stateHolder[1]
-        if self.qclayers.eigenEs[upper] < self.qclayers.eigenEs[lower]:
+        if self.qclayers.eigen_es[upper] < self.qclayers.eigen_es[lower]:
             upper, lower = lower, upper
-        self.de = self.qclayers.eigenEs[upper] - self.qclayers.eigenEs[lower]
+        self.de = self.qclayers.eigen_es[upper] - self.qclayers.eigen_es[lower]
         self.wavelength = h * c0 / (e0 * self.de) * 1e6  # um
 
         if self.qclayers.status == "unsolved":
@@ -1665,7 +1649,7 @@ class QuantumTab(QWidget):
         else:
             opticalDipole = self.qclayers.dipole(upper, lower)
             tauLO_ul = 1 / self.qclayers.lo_transition(upper, lower)
-            if self.qclayers.includeIFR:
+            if self.qclayers.include_ifr:
                 self.tauIFR_ul = 1 / self.qclayers.ifr_transition(upper, lower)
             self.pairString = (
                 f"selected: {self.stateHolder[0]}, {self.stateHolder[1]}<br>"
@@ -1674,7 +1658,7 @@ class QuantumTab(QWidget):
                 f"dipole: <b>{opticalDipole:6.1f} \u212b</b><br>"
             )
             self.pairString += f"LO scatter: {tauLO_ul:6.3g} ps<br>"
-            if self.qclayers.includeIFR:
+            if self.qclayers.include_ifr:
                 self.pairString += f"IFR scatter: {self.tauIFR_ul:6.3g} ps<br>"
             if self.qclayers.status == "solved-full":
                 self.pairString += "population: <br>&nbsp;&nbsp;&nbsp;"
@@ -1689,11 +1673,11 @@ class QuantumTab(QWidget):
     def _calcFoM(self):
         upper = self.stateHolder[0]
         lower = self.stateHolder[1]
-        if self.qclayers.eigenEs[upper] < self.qclayers.eigenEs[lower]:
+        if self.qclayers.eigen_es[upper] < self.qclayers.eigen_es[lower]:
             upper, lower = lower, upper
         tauLO_u = self.qclayers.lo_lifetime(upper)
         tauLO_l = self.qclayers.lo_lifetime(lower)
-        if self.qclayers.includeIFR:
+        if self.qclayers.include_ifr:
             tauIFR_u = self.qclayers.ifr_lifetime(upper)
             tauIFR_l = self.qclayers.ifr_lifetime(lower)
         # tau_u = 1/(1/tauLO_u + 1/tauIFR_u)
@@ -1708,7 +1692,7 @@ class QuantumTab(QWidget):
             * FoM
             * 1e-27
             * self.de
-            / (gamma * hbar * c0 * eps0 * self.neff * self.qclayers.periodL * 1e-10)
+            / (gamma * hbar * c0 * eps0 * self.neff * self.qclayers.period_l * 1e-10)
         )
         # tauUpperLower is the inverse of transition rate (lifetime)
 
@@ -1716,7 +1700,7 @@ class QuantumTab(QWidget):
             f"<i>\u03c4<sup>LO</sup><sub>upper</sub></i> : {tauLO_u:6.3f} ps<br>"
             f"<i>\u03c4<sup>LO</sup><sub>lower</sub></i> : {tauLO_l:6.3f} ps<br>"
         )
-        if self.qclayers.includeIFR:
+        if self.qclayers.include_ifr:
             self.FoMString += (
                 f"<i>\u03c4<sup>IFR</sup><sub>upper</sub></i> : {tauIFR_u:6.3f} ps<br>"
                 f"<i>\u03c4<sup>IFR</sup><sub>lower</sub></i> : {tauIFR_l:6.3f} ps<br>"
@@ -1753,7 +1737,7 @@ class QuantumTab(QWidget):
         self.gainCoeff = gain / self.qclayers.current
         self.specString = (
             "Carrier Leakage: <br>"
-            f"&nbsp;&nbsp; {self.qclayers.carrierLeak * 100:.2f}%<br>"
+            f"&nbsp;&nbsp; {self.qclayers.carrier_leak * 100:.2f}%<br>"
             f"Current: {self.qclayers.current:.1f} kA/cm<sup>2</sup><br>"
             f"Gain coefficient:<br>&nbsp;&nbsp; {self.gainCoeff:.2f} cm/kA"
         )

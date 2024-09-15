@@ -64,24 +64,24 @@ def plotPotential(
     """
     if axes is None:
         axes = gca()
-    ys = [qcl.xVc]
-    axes.plot(qcl.xPoints, qcl.xVc, "k", linewidth=config["default_lw"])
+    ys = [qcl.x_vc]
+    axes.plot(qcl.x_points, qcl.x_vc, "k", linewidth=config["default_lw"])
     # highlight selected layer & make AR layers bold
     xNonARs = np.bitwise_and.reduce(
-        [qcl.xLayerMask(n) for n, ar in enumerate(qcl.layerARs) if ar]
+        [qcl.x_layer_mask(n) for n, ar in enumerate(qcl.layer_ar) if ar]
     )
-    xARVc = np.ma.masked_where(xNonARs, qcl.xVc)
-    axes.plot(qcl.xPoints, xARVc, "k", linewidth=config["default_lw"] + 0.5)
+    xARVc = np.ma.masked_where(xNonARs, qcl.x_vc)
+    axes.plot(qcl.x_points, xARVc, "k", linewidth=config["default_lw"] + 0.5)
     # plot Conduction Band L-Valley/X-Valley, Light Hole Valence Band and
     # Spin-Orbit coupling Valence Band
     for flag, xv, conf in (
-        (plotVL, qcl.xVL, "g--"),
-        (plotVX, qcl.xVX, "m-."),
-        (plotLH, qcl.xVLH, "k--"),
-        (plotSO, qcl.xVSO, "r--"),
+        (plotVL, qcl.x_vl, "g--"),
+        (plotVX, qcl.x_vx, "m-."),
+        (plotLH, qcl.x_vlh, "k--"),
+        (plotSO, qcl.x_vso, "r--"),
     ):
         if flag:
-            axes.plot(qcl.xPoints, xv, conf, linewidth=config["default_lw"])
+            axes.plot(qcl.x_points, xv, conf, linewidth=config["default_lw"])
         ys.append(xv)
     return ys
 
@@ -161,14 +161,14 @@ def plotWF(
         vmin = 0
         vmax = np.ceil(np.max(qcl.population) * 10) / 10
         popMap = cm.ScalarMappable(cmNorm(vmin=vmin, vmax=vmax), "plasma")
-    for n in range(len(qcl.eigenEs)):
+    for n in range(len(qcl.eigen_es)):
         ls = "-"
         if n in pickedStates:
             color = "k"
             lw = config["default_lw"] * 2
         else:
             if showPop:
-                if qcl.periodMap[n] is not None:
+                if qcl.period_map[n] is not None:
                     color = popMap.to_rgba(qcl.state_population(n))
                 else:
                     color = "g"
@@ -177,18 +177,18 @@ def plotWF(
             if qcl.status == "basis":
                 lw = config["default_lw"]
             else:
-                if showPeriod and n in qcl.periodIdx:
+                if showPeriod and n in qcl.period_idx:
                     # lw = 1 if n in qcl.unBound else 1.5
                     lw = config["default_lw"]
-                    if n in qcl.unBound:
+                    if n in qcl.un_bound:
                         ls = (0, (0.5, 0.5))
                 else:
                     lw = config["default_lw"] / 2
-        x = qcl.xPoints[starts[n] : -ends[n]]
-        y = wfs[n, starts[n] : -ends[n]] + qcl.eigenEs[n]
+        x = qcl.x_points[starts[n] : -ends[n]]
+        y = wfs[n, starts[n] : -ends[n]] + qcl.eigen_es[n]
         axes.plot(x, y, lw=lw, ls=ls, color=color)
         if fillPlot:
-            axes.fill_between(x, y, qcl.eigenEs[n], facecolor=color, alpha=fillPlot)
+            axes.fill_between(x, y, qcl.eigen_es[n], facecolor=color, alpha=fillPlot)
     if showPop:
         colorbar_axes = axes.inset_axes([0.03, 0.01, 0.5, 0.02])
         axes.figure.colorbar(

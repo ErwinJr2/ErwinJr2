@@ -6,11 +6,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.constants import c as c0
-from scipy.constants import e as e0
-from scipy.constants import epsilon_0 as eps0
-from scipy.constants import h as h
-from scipy.constants import hbar as hbar
+from scipy.constants import c as c0, e as e0, epsilon_0 as eps0, h as h, hbar as hbar
 
 from ErwinJr2 import save_load
 from ErwinJr2.qc_layers import QCLayers
@@ -52,25 +48,25 @@ def full_gain_spectrum(qcl: QCLayers, wl=None):
     neff = qcl.effective_ridx(wl)
     de0 = h * c0 / (wl * 1e-6) / e0
     gain = 0
-    for i in range(len(qcl.periodIdx)):
-        upper = qcl.periodIdx[i]
-        for j in range(i + 1, len(qcl.periodIdx)):
-            lower = qcl.periodIdx[j]
+    for i in range(len(qcl.period_idx)):
+        upper = qcl.period_idx[i]
+        for j in range(i + 1, len(qcl.period_idx)):
+            lower = qcl.period_idx[j]
             for shift in (-1, 0, 1):
                 dipole = qcl._dipole(upper, lower, shift) * 1e-8  # to cm
-                Eu = qcl.eigenEs[upper]
-                El = qcl.eigenEs[lower] - shift * qcl.Eshift
+                Eu = qcl.eigen_es[upper]
+                El = qcl.eigen_es[lower] - shift * qcl.e_shift
                 de = Eu - El
                 dpop = qcl.population[i] - qcl.population[j]
                 if de < 0:
                     de, dpop = -de, -dpop
-                if qcl.includeIFR:
-                    gamma_para = qcl._pGamma[shift][j][i]
+                if qcl.include_ifr:
+                    gamma_para = qcl._p_gamma[shift][j][i]
                 else:
                     gamma_para = qcl.dephasing(upper, lower)
                     gamma_para /= 1e12 * hbar / e0  # unit to Hz
                 gamma = (
-                    (gamma_para + (qcl.decayRates[i] + qcl.decayRates[j]) / 2)
+                    (gamma_para + (qcl.decay_rates[i] + qcl.decay_rates[j]) / 2)
                     * 1e12
                     * hbar
                     / e0
@@ -83,7 +79,10 @@ def full_gain_spectrum(qcl: QCLayers, wl=None):
                 gain = gain + gainul
     # e0^2 / (hbar * c0 * eps0) is dimension 1.. 1E-8 makes unit cm^-1
     gain *= (
-        e0**2 * de0 * qcl.sheet_density / (hbar * neff * c0 * eps0 * qcl.periodL * 1e-8)
+        e0**2
+        * de0
+        * qcl.sheet_density
+        / (hbar * neff * c0 * eps0 * qcl.period_l * 1e-8)
     )
     return gain
 

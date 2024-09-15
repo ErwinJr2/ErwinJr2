@@ -127,17 +127,17 @@ class MainWindow(QMainWindow):
         self.otab.dirty.connect(self.thingsChanged)
         self.mainTabWidget.addTab(self.otab, "Optics")
         self.qtab.toOpticsButton.clicked.connect(self.q2o)
-        self.otab.fieldBox.setValue(self.qtab.qclayers.EField)
+        self.otab.fieldBox.setValue(self.qtab.qclayers.e_field)
         self.create_menu()
         self.mainTabWidget.currentChanged.connect(self.create_menu)
 
     def q2o(self):
         self.otab.setupActive(
             self.qtab.wavelength,
-            self.qtab.qclayers.EField,
+            self.qtab.qclayers.e_field,
             self.qtab.gainCoeff,
             self.qtab.neff,
-            sum(self.qtab.qclayers.layerWidths),
+            sum(self.qtab.qclayers.layer_widths),
         )
         self.mainTabWidget.setCurrentIndex(1)
 
@@ -277,7 +277,7 @@ class MainWindow(QMainWindow):
             solveARonly = self.create_action(
                 "&Solve Active Only",
                 checkable=True,
-                ischecked=self.qtab.qclayers.basisAROnly,
+                ischecked=self.qtab.qclayers.basis_ar_only,
                 slot=self.qtab.ARonly,
             )
             copyStructureAction = self.create_action(
@@ -380,7 +380,7 @@ class MainWindow(QMainWindow):
             ifrAction = self.create_action(
                 "IFR scattering",
                 checkable=True,
-                ischecked=self.qtab.qclayers.includeIFR,
+                ischecked=self.qtab.qclayers.include_ifr,
                 slot=self.qtab.triggerIFR,
             )
             self.add_actions(self.model_menu, (None, ifrAction))

@@ -102,16 +102,16 @@ def parseQcl(ldict: typing.Dict[str, typing.Any]) -> QCLayers:
         o = QCLayers(
             substrate=ldict["Substrate"],
             materials=ldict["Materials"]["Compostion"],
-            moleFracs=ldict["Materials"]["Mole Fraction"],
-            xres=ldict["x resolution"],
-            Eres=ldict["E resolution"],
-            layerWidths=ldict["QC Layers"]["Width"],
-            layerMtrls=ldict["QC Layers"]["Material"],
-            layerDopings=ldict["QC Layers"]["Doping"],
-            layerARs=ldict["QC Layers"]["Active Region"],
-            EField=ldict["EField"],
+            mole_fracs=ldict["Materials"]["Mole Fraction"],
+            x_res=ldict["x resolution"],
+            e_res=ldict["E resolution"],
+            layer_widths=ldict["QC Layers"]["Width"],
+            layer_matrls=ldict["QC Layers"]["Material"],
+            layer_dopings=ldict["QC Layers"]["Doping"],
+            layer_ar=ldict["QC Layers"]["Active Region"],
+            e_field=ldict["EField"],
             repeats=ldict["Repeats"],
-            T=ldict["Temperature"],
+            temp=ldict["Temperature"],
             solver=ldict["Solver"],
             description=ldict["Description"],
         )
@@ -122,30 +122,30 @@ def parseQcl(ldict: typing.Dict[str, typing.Any]) -> QCLayers:
         o = QCLayers(
             substrate=ldict["Substrate"],
             materials=ldict["MaterialDefs"]["Compostion"],
-            moleFracs=ldict["MaterialDefs"]["Mole Fraction"],
-            xres=ldict["x resolution"],
-            Eres=ldict["E resolution"],
-            statePerRepeat=ldict["No of states"],
-            layerWidths=ldict["Width"],
-            layerMtrls=ldict["Material"],
-            layerDopings=ldict["Doping"],
-            layerARs=ldict["Active Region"],
-            EField=ldict["EField"],
+            mole_fracs=ldict["MaterialDefs"]["Mole Fraction"],
+            x_res=ldict["x resolution"],
+            e_res=ldict["E resolution"],
+            state_per_repeat=ldict["No of states"],
+            layer_widths=ldict["Width"],
+            layer_matrls=ldict["Material"],
+            layer_dopings=ldict["Doping"],
+            layer_ar=ldict["Active Region"],
+            e_field=ldict["EField"],
             repeats=ldict["Repeats"],
-            T=ldict["Temperature"],
+            temp=ldict["Temperature"],
             solver=ldict["Solver"],
             description=discription,
             wl=ldict["Wavelength"],
         )
         if ldict["IFR"]:
-            o.includeIFR = True
-            o.customIFR = ldict["IFR"]["custom IFR"]
-            o.mtrlIFRDelta = ldict["IFR"]["material IFR delta"]
-            o.mtrlIFRLambda = ldict["IFR"]["material IFR lambda"]
-            o.ifrDelta = ldict["IFR"]["layer IFR delta"]
-            o.ifrLambda = ldict["IFR"]["layer IFR lambda"]
+            o.include_ifr = True
+            o.custom_ifr = ldict["IFR"]["custom IFR"]
+            o.mtrl_ifr_delta = ldict["IFR"]["material IFR delta"]
+            o.mtrl_ifr_lambda = ldict["IFR"]["material IFR lambda"]
+            o.ifr_deltas = ldict["IFR"]["layer IFR delta"]
+            o.ifr_lambdas = ldict["IFR"]["layer IFR lambda"]
         else:
-            o.includeIFR = False
+            o.include_ifr = False
     else:
         raise NotImplementedError("Version %s not supported" % ldict["Version"])
     return o
@@ -259,16 +259,16 @@ def EJSaveJSON(
             s_cstmtrl[item]["period"] = s.cstmPrd[item]
         if item in s.cstmGain:
             s_cstmtrl[item]["gain"] = s.cstmGain[item]
-    if o.includeIFR:
+    if o.include_ifr:
         ifrParams = IFRSettings % tuple(
             [
                 json.dumps(s)
                 for s in (
-                    o.customIFR,
-                    o.mtrlIFRDelta,
-                    o.mtrlIFRLambda,
-                    o.ifrDelta,
-                    o.ifrLambda,
+                    o.custom_ifr,
+                    o.mtrl_ifr_delta,
+                    o.mtrl_ifr_lambda,
+                    o.ifr_deltas,
+                    o.ifr_lambdas,
                 )
             ]
         )
@@ -280,19 +280,19 @@ def EJSaveJSON(
             o.description,
             o.wl,
             o.substrate,
-            o.EField,
-            o.xres,
-            o.Eres,
-            o.statePerRepeat,
+            o.e_field,
+            o.x_step,
+            o.e_step,
+            o.state_per_repeat,
             o.solver,
             o.temperature,
             o.repeats,
             o.materials,
-            o.moleFracs,
-            o.layerMtrls,
-            o.layerWidths,
-            o.layerDopings,
-            o.layerARs,
+            o.mole_fracs,
+            o.layer_mtrls,
+            o.layer_widths,
+            o.layer_dopings,
+            o.layer_ar,
         )
     ]
     parameters.append(ifrParams)

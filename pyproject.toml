@@ -92,6 +92,8 @@ test-command = "cd /d {project} && pytest tests"
 
 [tool.isort]
 profile = "black"
+combine_as_imports = true
 
-# [tool.ruff.lint.isort]
+[tool.ruff.lint.isort]
+combine-as-imports = true
 # split-on-trailing-comma = false

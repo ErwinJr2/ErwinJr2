@@ -16,9 +16,9 @@ with open(_TEST_SAMPLE_FILE) as f:
 
 qcl = QCLayers(
     substrate="InP",
-    EField=51.0,
+    e_field=51.0,
     wl=8.0,
-    layerWidths=[
+    layer_widths=[
         34.0,
         14.0,
         33.0,
@@ -42,8 +42,8 @@ qcl = QCLayers(
         45.0,
         25.0,
     ],
-    layerMtrls=[0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
-    layerDopings=[
+    layer_matrls=[0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+    layer_dopings=[
         0.0,
         0.0,
         0.0,
@@ -67,7 +67,7 @@ qcl = QCLayers(
         0.0,
         0.0,
     ],
-    layerARs=[
+    layer_ar=[
         False,
         False,
         False,
@@ -91,10 +91,10 @@ qcl = QCLayers(
         True,
         False,
     ],
-    mtrlIFRDelta=[1.2, 1.2],
-    mtrlIFRLambda=[90.0, 90.0],
+    mtrl_ifr_delta=[1.2, 1.2],
+    mtrl_ifr_lambda=[90.0, 90.0],
 )
-qcl.includeIFR = True
+qcl.include_ifr = True
 
 qcl.populate_x()
 qcl.solve_whole()

@@ -19,13 +19,13 @@ class TestQCLayers(unittest.TestCase):
         qcl.populate_x()
         qcl.solve_whole()
         # 0.264 is approximately 4.7um
-        self.assertAlmostEqual(qcl.eigenEs[41] - qcl.eigenEs[31], 0.264, 2)
+        self.assertAlmostEqual(qcl.eigen_es[41] - qcl.eigen_es[31], 0.264, 2)
         qcl.period_recognize()
         qcl.period_map_build()
-        self.assertAlmostEqual(qcl.eigenEs[41] - qcl.eigenEs[31], 0.26, 2)
+        self.assertAlmostEqual(qcl.eigen_es[41] - qcl.eigen_es[31], 0.26, 2)
         for i, j in ((25, 41), (24, 40), (26, 42), (31, 49)):
-            self.assertEqual(qcl.periodMap[i][1], 1)
-            self.assertEqual(qcl.periodIdx[qcl.periodMap[i][0]], j)
+            self.assertEqual(qcl.period_map[i][1], 1)
+            self.assertEqual(qcl.period_idx[qcl.period_map[i][0]], j)
             np.testing.assert_almost_equal(
                 qcl.psi_overlap(44, j, 1), qcl.psi_overlap(44, i), decimal=6
             )
@@ -48,12 +48,12 @@ class TestQCLayers(unittest.TestCase):
         qcl.populate_x()
         qcl.solve_whole()
         # 0.264 is approximately 4.7um
-        self.assertAlmostEqual(qcl.eigenEs[31] - qcl.eigenEs[21], 0.264, 2)
+        self.assertAlmostEqual(qcl.eigen_es[31] - qcl.eigen_es[21], 0.264, 2)
         qcl.period_recognize()
         qcl.period_map_build()
         for i, j in ((21, 39), (14, 30), (15, 31)):
-            self.assertEqual(qcl.periodMap[i][1], 1)
-            self.assertEqual(qcl.periodIdx[qcl.periodMap[i][0]], j)
+            self.assertEqual(qcl.period_map[i][1], 1)
+            self.assertEqual(qcl.period_idx[qcl.period_map[i][0]], j)
             np.testing.assert_almost_equal(
                 qcl.psi_overlap(33, j, 1), qcl.psi_overlap(33, i), decimal=6
             )
@@ -64,20 +64,20 @@ class TestQCLayers(unittest.TestCase):
             qcl = save_load.qclLoad(f)
         qcl.populate_x()
         qcl.solve_basis()
-        self.assertAlmostEqual(qcl.eigenEs[32] - qcl.eigenEs[31], 0.27, 2)
-        self.assertEqual(qcl.eigenEs.shape, (96,))
+        self.assertAlmostEqual(qcl.eigen_es[32] - qcl.eigen_es[31], 0.27, 2)
+        self.assertEqual(qcl.eigen_es.shape, (96,))
         self.assertEqual(qcl.psis.shape, (96, 1384))
 
     def test_cache_consistency(self):
         with open(_TEST_SAMPLE_FILE) as f:
             qcl = save_load.qclLoad(f)
-        qcl.includeIFR = True
-        qcl.mtrlIFRLambda = [5.0] * 2
-        qcl.mtrlIFRDelta = [5.0] * 2
+        qcl.include_ifr = True
+        qcl.mtrl_ifr_lambda = [5.0] * 2
+        qcl.mtrl_ifr_delta = [5.0] * 2
         qcl.repeats = 4
         qcl.populate_x()
         qcl.solve_whole()
-        self.assertFalse(hasattr(qcl, "periodMap"))
+        self.assertFalse(hasattr(qcl, "period_map"))
         self.assertEqual(qcl.status, "solved")
         taulo = qcl.lo_lifetime(33)
         tauifr = qcl.ifr_lifetime(33)
@@ -87,7 +87,7 @@ class TestQCLayers(unittest.TestCase):
         qcl.period_map_build()
         qcl.full_population()
         self.assertEqual(qcl.status, "solved-full")
-        self.assertTrue(hasattr(qcl, "periodMap"))
+        self.assertTrue(hasattr(qcl, "period_map"))
         # A different cache is used
         self.assertNotEqual(taulo, qcl.lo_lifetime(33), 4)
         self.assertNotEqual(tauifr, qcl.ifr_lifetime(33), 4)
@@ -104,13 +104,13 @@ class TestQCLayers(unittest.TestCase):
             qcl = save_load.qclLoad(f)
         qcl.solver = "matrix"
         qcl.repeats = 2
-        qcl.xres = 0.02
+        qcl.x_step = 0.02
         qcl.populate_x()
-        e1 = qcl.solve_whole() - np.min(qcl.xVc)
+        e1 = qcl.solve_whole() - np.min(qcl.x_vc)
         qcl.invert_layer()
-        qcl.EField = -qcl.EField
+        qcl.e_field = -qcl.e_field
         qcl.populate_x()
-        e2 = qcl.solve_whole() - np.min(qcl.xVc)
+        e2 = qcl.solve_whole() - np.min(qcl.x_vc)
         np.testing.assert_almost_equal(e1, e2, decimal=3)
 
 
