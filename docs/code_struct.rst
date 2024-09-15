@@ -35,7 +35,7 @@ The folder structure:
     |  |- rFittings.py
     |  |- save_load.py
     |  |- qc_plotter.py
-    |  |- ErwinJr.py
+    |  |- erwinjr.py
     |  |- quantum_tab.py
     |  |- optical_tab.py
     |  |- ej_canvas.py

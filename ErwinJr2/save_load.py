@@ -1,5 +1,5 @@
 """
-This file defines functions to save and load JSON files from ErwinJr
+This file defines functions to save and load JSON files from ErwinJr2
 """
 
 import json
@@ -8,6 +8,10 @@ from collections import defaultdict
 
 from ErwinJr2.opt_strata import OptStrata
 from ErwinJr2.qc_layers import QCLayers
+
+
+class InvalidJsonFile(Exception):
+    pass
 
 
 def qcl_load(fhandle: typing.TextIO) -> QCLayers:
@@ -88,7 +92,7 @@ def load_both(fhandle: typing.TextIO) -> typing.Union[QCLayers, OptStrata]:
     qcl = parse_qcl(ldict)
     try:
         stratum = parse_strata(ldict)
-    except NotImplementedError:
+    except InvalidJsonFile:
         stratum = None
     return qcl, stratum
 
@@ -147,7 +151,7 @@ def parse_qcl(ldict: typing.Dict[str, typing.Any]) -> QCLayers:
         else:
             o.include_ifr = False
     else:
-        raise ValueError(f"Version {ldict['Version']} not supported")
+        raise InvalidJsonFile(f"Version {ldict['Version']} not supported")
     return o
 
 
@@ -177,7 +181,7 @@ def parse_strata(ldict: typing.Dict[str, typing.Any]) -> OptStrata:
             cstm_gain=cstgain,
         )
     else:
-        raise ValueError(f"Version {ldict['Version']} not supported")
+        raise InvalidJsonFile(f"Version {ldict['Version']} not supported")
     return o
 
 

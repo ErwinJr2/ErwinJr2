@@ -40,8 +40,8 @@ dev = [
 ]
 
 [project.gui-scripts]
-ErwinJr = "ErwinJr2.__main__:__main__"
-ErwinJr-genshortcut = "ErwinJr2.genshortcut:create_shortcut"
+erwinjr = "ErwinJr2.__main__:main"
+erwinjr-genshortcut = "ErwinJr2.genshortcut:create_shortcut"
 
 [project.urls]
 "Docs: User Guide" = "https://erwinjr2.readthedocs.io/en/latest/"

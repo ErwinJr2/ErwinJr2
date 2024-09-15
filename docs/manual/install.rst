@@ -27,13 +27,13 @@ Now you can start the software via
 
 .. code-block:: bash
 
-   ErwinJr
+   erwinjr
 
 or if you want to, you can create a shortcut on the desktop via
 
 .. code-block:: bash
 
-   ErwinJr-genshortcut
+   erwinjr-genshortcut
 
 For reasonably new versions of Windows or macOS with x86_64 CPU, the compiled
 library is provided via ``pip`` installation. For Linux or other platforms, it
@@ -54,7 +54,7 @@ repository, which helps to get further updates.
 Run the software
 ------------------
 
-After installation, you can start the software by ``ErwinJr`` command or
+After installation, you can start the software by ``erwinjr`` command or
 
 .. code-block:: bash
 
@@ -64,7 +64,7 @@ To create a shortcut on the desktop, run
 
 .. code-block:: bash
 
-   ErwinJr-genshortcut
+   erwinjr-genshortcut
 
 
 The following is for advanced users and developers, or for debugging if the

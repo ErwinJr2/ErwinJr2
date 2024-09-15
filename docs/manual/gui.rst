@@ -2,7 +2,7 @@ Graphical User Interface Guide
 ===================================
 .. currentmodule:: ErwinJr2
 
-The GUI starting program is defined in ``ErwinJr.py``, which includes two
+The GUI starting program is defined in ``erwinjr.py``, which includes two
 tabs: the quantum tab and the optical tab.
 The quantum tab is mostly a GUI wrapper of :py:class:`QCLayers` with a plotting canvas,
 while the optical tab is for :py:class:`OptStrata`
@@ -13,7 +13,7 @@ Quantum Tab
 
 .. figure:: ../figures/qtab.png
 
-   A screenshot of the ErwinJr.py quantum tab.
+   A screenshot of the erwinjr.py quantum tab.
 
 The interface includes 4 columns:
 
@@ -123,7 +123,7 @@ Optics Tab
 
 .. figure:: ../figures/otab.png
 
-   A screenshot of the ErwinJr.py quantum tab.
+   A screenshot of the erwinjr.py quantum tab.
 
 The interface includes 3 columns:
 

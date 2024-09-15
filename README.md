@@ -42,13 +42,13 @@ python -m pip install ErwinJr2
 Now you can start the software via
 
 ```bash
-ErwinJr
+erwinjr
 ```
 
 or if you want to, you can create a shortcut on the desktop via
 
 ```bash
-ErwinJr-genshortcut
+erwinjr-genshortcut
 ```
 
 For reasonably new versions of Windows, MacOS with x86_64 CPU or Linux this

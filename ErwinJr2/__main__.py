@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 """
-Make `python -m ErwinJr` an alias for running `ErwinJr`.
+Make `python -m ErwinJr2` an alias for running `ErwinJr2`.
 """
 
 import os
 import sys
 
-from ErwinJr2.gui.erwinjr import main
+import ErwinJr2.gui.erwinjr as erwinjr
 
 
-def __main__():
+def main():
     try:
-        fileName = os.path.abspath(sys.argv[1])
+        filename = os.path.abspath(sys.argv[1])
     except IndexError:
-        fileName = None
-    main(fileName)
+        filename = None
+    exit(erwinjr.main(filename))
 
 
 if __name__ == "__main__":
-    __main__()
+    main()

@@ -1,5 +1,5 @@
 """
-This file defines the optical tab of ErwinJr, for simulation and optimization
+This file defines the optical tab of ErwinJr2, for simulation and optimization
 of 1D waveguide
 """
 
@@ -46,7 +46,7 @@ facetList = ("cleaved", "perfect AR", "perfect HR", "custom")
 
 
 class OpticalTab(QWidget):
-    """The Optical Tab of ErwinJr. This is designed to be a GUI wrapper of
+    """The Optical Tab of ErwinJr2. This is designed to be a GUI wrapper of
     the class Stratum
     Member variable
         stratum: A class to describe the physics of 1D optical slab waveguide

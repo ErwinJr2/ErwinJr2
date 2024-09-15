@@ -1,5 +1,5 @@
 """
-This file defines the quantum tab of ErwinJr, for simulating electron spectrum
+This file defines the quantum tab of ErwinJr2, for simulating electron spectrum
 and scattering
 """
 
@@ -104,7 +104,7 @@ class CalculateHolder(QObject):
 
 
 class QuantumTab(QWidget):
-    """The Quantum Tab of ErwinJr. This is designed to be a GUI wrapper of
+    """The Quantum Tab of ErwinJr2. This is designed to be a GUI wrapper of
     the class QCLayers
     Member variable (! label public interface):
         !qclayers: A class to describe the physics of QC layers
