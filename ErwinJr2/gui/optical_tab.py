@@ -31,7 +31,7 @@ from PyQt5.QtWidgets import (
 )
 
 from ErwinJr2.gui.constants import EJ_ERROR
-from ErwinJr2.gui.custom_qt_class import mtrlComboBox
+from ErwinJr2.gui.custom_qt_class import MtrlComboBox
 from ErwinJr2.gui.ej_canvas import EJCanvas
 from ErwinJr2.opt_strata import (
     ALLOY_MAP,
@@ -547,7 +547,7 @@ class OpticalTab(QWidget):
 
         for q, mtrl in enumerate(self.stratum.materials):
             # material name
-            mtrlName = mtrlComboBox()
+            mtrlName = MtrlComboBox()
             mtrlName.addItems(mtrlList)
             mtrlName.addItems(self.stratum.cstm_idx.keys())
             mtrlName.setCurrentText(mtrl)

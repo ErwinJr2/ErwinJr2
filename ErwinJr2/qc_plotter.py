@@ -38,13 +38,13 @@ config = {
 }  #: The configuration dictionary for plotting.
 
 
-def plotPotential(
+def plot_potential(
     qcl: QCLayers,
     axes: Axes = None,
-    plotVL: bool = False,
-    plotVX: bool = False,
-    plotLH: bool = False,
-    plotSO: bool = False,
+    plot_vl: bool = False,
+    plot_vx: bool = False,
+    plot_lh: bool = False,
+    plot_so: bool = False,
 ):
     """Plot the potentials of qcl.
 
@@ -67,18 +67,18 @@ def plotPotential(
     ys = [qcl.x_vc]
     axes.plot(qcl.x_points, qcl.x_vc, "k", linewidth=config["default_lw"])
     # highlight selected layer & make AR layers bold
-    xNonARs = np.bitwise_and.reduce(
+    x_non_ars = np.bitwise_and.reduce(
         [qcl.x_layer_mask(n) for n, ar in enumerate(qcl.layer_ar) if ar]
     )
-    xARVc = np.ma.masked_where(xNonARs, qcl.x_vc)
-    axes.plot(qcl.x_points, xARVc, "k", linewidth=config["default_lw"] + 0.5)
+    x_ar_vc = np.ma.masked_where(x_non_ars, qcl.x_vc)
+    axes.plot(qcl.x_points, x_ar_vc, "k", linewidth=config["default_lw"] + 0.5)
     # plot Conduction Band L-Valley/X-Valley, Light Hole Valence Band and
     # Spin-Orbit coupling Valence Band
     for flag, xv, conf in (
-        (plotVL, qcl.x_vl, "g--"),
-        (plotVX, qcl.x_vx, "m-."),
-        (plotLH, qcl.x_vlh, "k--"),
-        (plotSO, qcl.x_vso, "r--"),
+        (plot_vl, qcl.x_vl, "g--"),
+        (plot_vx, qcl.x_vx, "m-."),
+        (plot_lh, qcl.x_vlh, "k--"),
+        (plot_so, qcl.x_vso, "r--"),
     ):
         if flag:
             axes.plot(qcl.x_points, xv, conf, linewidth=config["default_lw"])
@@ -86,7 +86,7 @@ def plotPotential(
     return ys
 
 
-def scaleWF(qcl: QCLayers, plotType: str = "mode"):
+def scale_wf(qcl: QCLayers, plot_type: str = "mode"):
     r"""Helper function to scale the wave function for plotting. The scale
     factor is decided by :data:`config`.
 
@@ -103,20 +103,20 @@ def scaleWF(qcl: QCLayers, plotType: str = "mode"):
     The scaled wavefunction.
 
     """
-    if plotType == "mode":
+    if plot_type == "mode":
         return qcl.psis**2 * config["mode_scale"]
-    elif plotType == "wf":
+    elif plot_type == "wf":
         return qcl.psis * config["wf_scale"]
     else:
-        raise ValueError("Undefined wavefunction time ", plotType)
+        raise ValueError("Undefined wavefunction time ", plot_type)
 
 
-def plotWF(
+def plot_wf(
     qcl: QCLayers,
-    plotType: str = "mode",
-    fillPlot: Union[bool, float] = False,
-    pickedStates: Iterable = tuple(),
-    showPeriod: bool = True,
+    plot_type: str = "mode",
+    fill_plot: Union[bool, float] = False,
+    picked_states: Iterable = tuple(),
+    show_period: bool = True,
     axes: Axes = None,
 ):
     r"""Plot the wavefunctions of qcl.
@@ -148,28 +148,28 @@ def plotWF(
     if axes is None:
         axes = gca()
     colors = config["wf_colors"]
-    wfs = scaleWF(qcl, plotType)
+    wfs = scale_wf(qcl, plot_type)
     # filter almost zero part
     starts = np.argmax(abs(wfs) > config["wf_almost_zero"], axis=1)
     ends = np.argmax(abs(wfs[:, ::-1]) > config["wf_almost_zero"], axis=1)
-    showPop = False
-    if showPeriod:
+    show_pop = False
+    if show_period:
         qcl.period_recognize()
-        showPop = qcl.status == "solved-full"
-    if showPop:
+        show_pop = qcl.status == "solved-full"
+    if show_pop:
         qcl.period_map_build()
         vmin = 0
         vmax = np.ceil(np.max(qcl.population) * 10) / 10
-        popMap = cm.ScalarMappable(cmNorm(vmin=vmin, vmax=vmax), "plasma")
+        pop_map = cm.ScalarMappable(cmNorm(vmin=vmin, vmax=vmax), "plasma")
     for n in range(len(qcl.eigen_es)):
         ls = "-"
-        if n in pickedStates:
+        if n in picked_states:
             color = "k"
             lw = config["default_lw"] * 2
         else:
-            if showPop:
+            if show_pop:
                 if qcl.period_map[n] is not None:
-                    color = popMap.to_rgba(qcl.state_population(n))
+                    color = pop_map.to_rgba(qcl.state_population(n))
                 else:
                     color = "g"
             else:
@@ -177,7 +177,7 @@ def plotWF(
             if qcl.status == "basis":
                 lw = config["default_lw"]
             else:
-                if showPeriod and n in qcl.period_idx:
+                if show_period and n in qcl.period_idx:
                     # lw = 1 if n in qcl.unBound else 1.5
                     lw = config["default_lw"]
                     if n in qcl.un_bound:
@@ -187,12 +187,12 @@ def plotWF(
         x = qcl.x_points[starts[n] : -ends[n]]
         y = wfs[n, starts[n] : -ends[n]] + qcl.eigen_es[n]
         axes.plot(x, y, lw=lw, ls=ls, color=color)
-        if fillPlot:
-            axes.fill_between(x, y, qcl.eigen_es[n], facecolor=color, alpha=fillPlot)
-    if showPop:
+        if fill_plot:
+            axes.fill_between(x, y, qcl.eigen_es[n], facecolor=color, alpha=fill_plot)
+    if show_pop:
         colorbar_axes = axes.inset_axes([0.03, 0.01, 0.5, 0.02])
         axes.figure.colorbar(
-            popMap,
+            pop_map,
             cax=colorbar_axes,
             orientation="horizontal",
             label="electron population",

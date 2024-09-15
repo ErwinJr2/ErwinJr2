@@ -45,7 +45,7 @@ from PyQt5.QtWidgets import (
 )
 
 from ErwinJr2.gui.constants import EJ_ERROR, EJ_WARNING
-from ErwinJr2.gui.custom_qt_class import mtrlComboBox
+from ErwinJr2.gui.custom_qt_class import MtrlComboBox
 from ErwinJr2.gui.dark_detect import isdark
 from ErwinJr2.gui.ej_canvas import EJCanvas, EJplotControl, config as plotconfig
 from ErwinJr2.material import ALLOY_PARAM
@@ -60,7 +60,7 @@ from ErwinJr2.qc_layers import (
     hbar,
     optimize_layer,
 )
-from ErwinJr2.qc_plotter import plotPotential, plotWF, scaleWF
+from ErwinJr2.qc_plotter import plot_potential, plot_wf, scale_wf
 
 
 # TODO: this may not be necessary by better designer
@@ -835,7 +835,7 @@ class QuantumTab(QWidget):
 
             # Material Setup
             #  mtrlWidget = QComboBox()
-            mtrlWidget = mtrlComboBox()
+            mtrlWidget = MtrlComboBox()
             mtrlWidget.addItems(self.mtrlList)
             mtrlWidget.setCurrentIndex(self.qclayers.layer_mtrls[q])
             mtrlWidget.currentIndexChanged.connect(
@@ -1118,7 +1118,7 @@ class QuantumTab(QWidget):
 
             # Choose from available materials, according to substrate
             #  mtrlItem = QComboBox()
-            mtrlItem = mtrlComboBox()
+            mtrlItem = MtrlComboBox()
             mtrlItem.addItems(possibleMtrl)
             mtrlItem.setCurrentText(ALLOY_PARAM[mtrl]["name"])
             mtrlItem.currentIndexChanged.connect(partial(self.mtrlTable_mtrlChanged, n))
@@ -1310,7 +1310,7 @@ class QuantumTab(QWidget):
             xmin = xmax = ymin = ymax = None
         self.quantumCanvas.clear()
         axes = self.quantumCanvas.axes
-        plotPotential(
+        plot_potential(
             self.qclayers, axes, self.plotVL, self.plotVX, self.plotLH, self.plotSO
         )
 
@@ -1326,7 +1326,7 @@ class QuantumTab(QWidget):
             )
 
         if self.qclayers.status in ("basis", "solved", "solved-full"):
-            self.wfs = plotWF(
+            self.wfs = plot_wf(
                 self.qclayers, self.plotType, self.fillPlot, self.stateHolder, axes=axes
             )
 
@@ -1405,7 +1405,7 @@ class QuantumTab(QWidget):
                 np.column_stack([self.qclayers.x_points, self.qclayers.psis.T]),
                 delimiter=",",
             )
-            ys = scaleWF(self.qclayers, self.plotType).T + self.qclayers.eigen_es
+            ys = scale_wf(self.qclayers, self.plotType).T + self.qclayers.eigen_es
             np.savetxt(
                 fnameBase + ".csv",
                 np.column_stack([self.qclayers.x_points, ys]),

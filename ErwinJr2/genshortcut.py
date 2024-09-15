@@ -10,8 +10,8 @@ if sys.platform.startswith("win"):
     import winshell  # type: ignore # ignore: unresolved-import
 
 
-def macos_shortcut(basePath, shortcut_path=None):
-    os.chdir(basePath)
+def macos_shortcut(proj_root, shortcut_path=None):
+    os.chdir(proj_root)
     if shortcut_path is None:
         shortcut_path = os.path.join(os.environ["HOME"], "Desktop")
     contents = os.path.join(shortcut_path, "ErwinJr2.app", "Contents")
@@ -21,9 +21,9 @@ def macos_shortcut(basePath, shortcut_path=None):
     os.chdir(contents)
     subprocess.check_call(["mkdir", "MacOS"])
     subprocess.check_call(["mkdir", "Resources"])
-    subprocess.check_call(["cp", os.path.join(basePath, "Info.plist"), "./"])
+    subprocess.check_call(["cp", os.path.join(proj_root, "Info.plist"), "./"])
     subprocess.check_call(
-        ["cp", os.path.join(basePath, "images", "EJicns.icns"), "Resources/"]
+        ["cp", os.path.join(proj_root, "images", "EJicns.icns"), "Resources/"]
     )
     shellcode = "#!/bin/bash\n"
     if python_path := os.environ.get("PYTHONPATH"):
@@ -35,8 +35,9 @@ def macos_shortcut(basePath, shortcut_path=None):
     subprocess.call(["chmod", "+x", shellfile])
 
 
-def win_shortcut(basePath, shortcut_path):
-    os.chdir(basePath)
+def win_shortcut(proj_root, shortcut_path):
+    assert sys.platform.startswith("win"), "This function is for Windows only."
+    os.chdir(proj_root)
     if shortcut_path is None:
         shortcut_path = os.path.join(os.path.expanduser("~"), "Desktop")
     link_path = os.path.join(shortcut_path, "ErwinJr2.lnk")
@@ -47,11 +48,11 @@ def win_shortcut(basePath, shortcut_path):
     batfile = "ErwinJr2.bat"
     with open(batfile, "w") as f:
         f.write(batcode)
-    with winshell.shortcut(link_path) as link:
-        link.path = os.path.join(basePath, batfile)
+    with winshell.shortcut(link_path) as link:  # pylint: disable=E0606
+        link.path = os.path.join(proj_root, batfile)
         link.description = "Shortcut to ErwinJr2"
-        link.icon_location = (os.path.join(basePath, "images", "EJico.ico"), 0)
-        link.working_directory = basePath
+        link.icon_location = (os.path.join(proj_root, "images", "EJico.ico"), 0)
+        link.working_directory = proj_root
         link.show_cmd = "min"
 
 
@@ -66,14 +67,14 @@ Terminal=false
 """
 
 
-def linux_shortcut(basePath, shortcut_path):
-    os.chdir(basePath)
+def linux_shortcut(proj_root, shortcut_path):
+    os.chdir(proj_root)
     if shortcut_path is None:
         shortcut_path = os.path.join(
             os.path.expanduser("~"), ".local", "share", "applications"
         )
     app_path = os.path.join(shortcut_path, "ErwinJr2.desktop")
-    icon_path = os.path.join(basePath, "images", "EJpng256.png")
+    icon_path = os.path.join(proj_root, "images", "EJpng256.png")
     app = linux_app.format(icon=icon_path)
     with open(app_path, "w") as f:
         f.write(app)
@@ -88,15 +89,15 @@ def linux_shortcut(basePath, shortcut_path):
 
 
 def create_shortcut(shortcut_path=None):
-    basePath = os.path.dirname(os.path.abspath(__file__))
+    proj_root = os.path.dirname(os.path.abspath(__file__))
     if sys.platform.startswith("darwin"):
-        macos_shortcut(basePath, shortcut_path)
+        macos_shortcut(proj_root, shortcut_path)
     elif sys.platform.startswith("win"):
-        win_shortcut(basePath, shortcut_path)
+        win_shortcut(proj_root, shortcut_path)
     elif sys.platform.startswith("linux"):
-        linux_shortcut(basePath, shortcut_path)
+        linux_shortcut(proj_root, shortcut_path)
     else:
-        raise NotImplementedError("Operating system not supported.")
+        raise NotImplementedError(f"OS not supported: {sys.platform}")
 
 
 if __name__ == "__main__":

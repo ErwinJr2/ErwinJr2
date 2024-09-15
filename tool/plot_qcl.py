@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from ErwinJr2 import save_load
 from ErwinJr2.qc_layers import QCLayers
-from ErwinJr2.qc_plotter import plotPotential, plotWF
+from ErwinJr2.qc_plotter import plot_potential, plot_wf
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(__file__))
 _TEST_SAMPLE_FILE = os.path.join(_REPO_ROOT, "ErwinJr2/example/PQLiu.json")
@@ -98,8 +98,8 @@ qcl.include_ifr = True
 
 qcl.populate_x()
 qcl.solve_whole()
-plotPotential(qcl)
-plotWF(qcl)
+plot_potential(qcl)
+plot_wf(qcl)
 plt.xlabel("Position (Å)")
 plt.ylabel("Energy (eV)")
 plt.show()
