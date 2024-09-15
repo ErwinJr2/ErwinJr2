@@ -168,13 +168,13 @@ def parseStrata(ldict: typing.Dict[str, typing.Any]) -> OptStrata:
         o = OptStrata(
             wl=ldict["wavelength"],
             materials=ldict["materials"],
-            moleFracs=ldict["moleFracs"],
+            mole_fracs=ldict["moleFracs"],
             dopings=ldict["dopings"],
-            Ls=ldict["width"],
+            layer_widths=ldict["width"],
             mobilities=ldict["mobilities"],
-            cstmIndx=cstidx,
-            cstmPrd=cstprd,
-            cstmGain=cstgain,
+            cstm_idx=cstidx,
+            cstm_prd=cstprd,
+            cstm_gain=cstgain,
         )
     else:
         raise NotImplementedError("Version %s not supported" % ldict["Version"])
@@ -253,12 +253,12 @@ def EJSaveJSON(
     o = qclayers
     s = optstratum
     s_cstmtrl = defaultdict(dict)
-    for item in s.cstmIndx:
-        s_cstmtrl[item]["index"] = str(s.cstmIndx[item])
-        if item in s.cstmPrd:
-            s_cstmtrl[item]["period"] = s.cstmPrd[item]
-        if item in s.cstmGain:
-            s_cstmtrl[item]["gain"] = s.cstmGain[item]
+    for item in s.cstm_idx:
+        s_cstmtrl[item]["index"] = str(s.cstm_idx[item])
+        if item in s.cstm_prd:
+            s_cstmtrl[item]["period"] = s.cstm_prd[item]
+        if item in s.cstm_gain:
+            s_cstmtrl[item]["gain"] = s.cstm_gain[item]
     if o.include_ifr:
         ifrParams = IFRSettings % tuple(
             [
@@ -301,9 +301,9 @@ def EJSaveJSON(
         for s in (
             s.wl,
             s.materials,
-            s.moleFracs,
+            s.mole_fracs,
             s.dopings,
-            list(s.Ls),
+            list(s.layer_widths),
             s.mobilities,
             s_cstmtrl,
         )

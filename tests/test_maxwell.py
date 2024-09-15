@@ -4,7 +4,7 @@ import unittest
 
 import numpy as np
 
-from ErwinJr2.opt_strata import MaxwellLayer, MaxwellLayer_anisotropic
+from ErwinJr2.opt_strata import MaxwellLayer, MaxwellLayerAnisotropic
 
 
 class TestTransferMatrix(unittest.TestCase):
@@ -15,12 +15,12 @@ class TestTransferMatrix(unittest.TestCase):
         indices = np.array([1.0, 1.66, 1.53, 1.60, 1.66, 1.5])
         wl = 632.8
         stratum = MaxwellLayer(wl, hs, indices)
-        beta = stratum.boundModeTM(max(indices))
+        beta = stratum.bound_mode_tm(max(indices))
         self.assertAlmostEqual(beta, 1.620031, 6)
 
         xs = np.linspace(-2000, 4000, 20000)
-        n = stratum.populateIndices(xs)
-        Ey, Hx, Ez = stratum.populateMode(beta, xs)
+        n = stratum.populate_indices(xs)
+        Ey, Hx, Ez = stratum.populate_mode(beta, xs)
         # dHx/dy = i k n^2 Ez
         lhs = (Hx[2:] - Hx[:-2]) / (xs[2] - xs[0])
         rhs = 1j * 2 * np.pi / wl * n**2 * Ez
@@ -36,14 +36,14 @@ class TestTransferMatrix(unittest.TestCase):
         hs = np.array([500] * 4)
         indices = np.array([1.0, 1.66, 1.53, 1.60, 1.66, 1.5])
         wl = 632.8
-        stratum = MaxwellLayer_anisotropic(wl, hs, indices)
+        stratum = MaxwellLayerAnisotropic(wl, hs, indices)
         stratum.indexy[2] = 1.8
-        beta = stratum.boundModeTM(max(indices))
+        beta = stratum.bound_mode_tm(max(indices))
 
         xs = np.linspace(-500, 2500, 10000)
-        nz, ny = stratum.populateIndices(xs)
+        nz, ny = stratum.populate_indices(xs)
         np.testing.assert_raises(AssertionError, np.testing.assert_almost_equal, ny, nz)
-        Ey, Hx, Ez = stratum.populateMode(beta, xs)
+        Ey, Hx, Ez = stratum.populate_mode(beta, xs)
         # dHx/dy = i k nz^2 Ez
         lhs = (Hx[2:] - Hx[:-2]) / (xs[2] - xs[0])
         rhs = 1j * 2 * np.pi / wl * nz**2 * Ez

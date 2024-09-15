@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy import abs, pi, sqrt
 
-from ErwinJr2.opt_strata import MaxwellLayer, MaxwellLayer_anisotropic
+from ErwinJr2.opt_strata import MaxwellLayer, MaxwellLayerAnisotropic
 
 
 def firstGaAs():
@@ -20,12 +20,12 @@ def firstGaAs():
     dopings = np.array([0, 90, 6, 0.4, 0, 0.4, 6, 30])
     ns = sqrt(ns**2 - plasmonUnit * dopings / me / (1 + 1j * gammaUnit * wl * nue))
     # print(ns)
-    stratum = MaxwellLayer_anisotropic(wl, hs, ns)
-    beta = stratum.boundModeTM(max(ns.real))
+    stratum = MaxwellLayerAnisotropic(wl, hs, ns)
+    beta = stratum.bound_mode_tm(max(ns.real))
     print(4 * pi / (wl * 1e-4) * beta.imag)
     xs = np.linspace(-3, sum(hs) + 3, 500000)
-    nn, _ = stratum.populateIndices(xs)
-    Ey, Hx, Ez = stratum.populateMode(beta, xs)
+    nn, _ = stratum.populate_indices(xs)
+    Ey, Hx, Ez = stratum.populate_mode(beta, xs)
     # plt.plot(xs, nx.real, label="index")
     # plt.plot(xs, abs(Ey)**2, label="field")
     # plt.plot(xs, np.angle(Ey)/np.pi, label="phase")
@@ -62,7 +62,7 @@ def firstGaAs():
     stratum.indexy = np.copy(stratum.indices)
     for n, chi in enumerate(chis):
         stratum.indexy[3] = sqrt(3.21**2 - 1j * chi)
-        betas[n] = stratum.boundModeTM()
+        betas[n] = stratum.bound_mode_tm()
     dbeta = betas.imag - beta.imag
     gs = -4 * pi / (wl * 1e-4) * dbeta
 
@@ -107,12 +107,12 @@ def findOutOfPhase():
     ns = sqrt(ns**2 - plasmonUnit * dopings / me / (1 + 1j * gammaUnit * wl * nue))
     # print(ns)
     stratum = MaxwellLayer(wl, hs, ns)
-    beta = stratum.boundModeTM(max(ns.real))
+    beta = stratum.bound_mode_tm(max(ns.real))
     print(beta, 4 * pi / (wl * 1e-4) * beta.imag)
 
     xs = np.linspace(-3, sum(hs) + 3, 5000)
-    nn = stratum.populateIndices(xs)
-    Ey, Hx, Ez = stratum.populateMode(beta, xs)
+    nn = stratum.populate_indices(xs)
+    Ey, Hx, Ez = stratum.populate_mode(beta, xs)
 
     acs = [
         ((xs >= sum(hs[: 3 + 2 * n])) & (xs <= sum(hs[: 4 + 2 * n]))) for n in range(N)

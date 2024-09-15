@@ -25,19 +25,19 @@ strata = OptStrata(
         "InP",
         "InP",
     ],
-    moleFracs=[0.0, 0.0, 0.0, 0.0, 0.0, 0.53, 0.53, 0.53, 0.53, 0.0],
+    mole_fracs=[0.0, 0.0, 0.0, 0.0, 0.0, 0.53, 0.53, 0.53, 0.53, 0.0],
     dopings=[0.0, 1000.0, 80.0, 2.0, 1.0, 0.5, 0, 0.5, 0, 0.0],
-    Ls=[1.0, 0.01, 0.35, 0.5, 2.5, 0.5, 2.0895, 0.5, 5.0, 1.0],
+    layer_widths=[1.0, 0.01, 0.35, 0.5, 2.5, 0.5, 2.0895, 0.5, 5.0, 1.0],
     # the properties for the active core
-    cstmIndx={"Active Core": 3.28 + 0j},
-    cstmPrd={"Active Core": [597.0, 35]},
-    cstmGain={"Active Core": 39.6},
+    cstm_idx={"Active Core": 3.28 + 0j},
+    cstm_prd={"Active Core": [597.0, 35]},
+    cstm_gain={"Active Core": 39.6},
 )
 
-beta = strata.boundModeTM()
-xs = np.linspace(-1, sum(strata.Ls[1:]), 5000)
-nx = strata.populateIndices(xs)
-Ey, _, _ = strata.populateMode(beta, xs)
+beta = strata.bound_mode_tm()
+xs = np.linspace(-1, sum(strata.layer_widths[1:]), 5000)
+nx = strata.populate_indices(xs)
+Ey, _, _ = strata.populate_mode(beta, xs)
 print("beta = ", beta)
 print("confinement: ", strata.confinementy(beta, xs, Ey))
 
