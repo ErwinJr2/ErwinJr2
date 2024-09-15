@@ -129,7 +129,7 @@ class MainWindow(QMainWindow):
         self.otab = OpticalTab(stratum)
         self.otab.dirty.connect(self.things_changed)
         self.main_tab_widget.addTab(self.otab, "Optics")
-        self.qtab.toOpticsButton.clicked.connect(self.q2o)
+        self.qtab.to_optics_button.clicked.connect(self.q2o)
         self.otab.fieldBox.setValue(self.qtab.qclayers.e_field)
         self.create_menu()
         self.main_tab_widget.currentChanged.connect(self.create_menu)
@@ -138,7 +138,7 @@ class MainWindow(QMainWindow):
         self.otab.setupActive(
             self.qtab.wavelength,
             self.qtab.qclayers.e_field,
-            self.qtab.gainCoeff,
+            self.qtab.gain_coeff,
             self.qtab.neff,
             sum(self.qtab.qclayers.layer_widths),
         )
@@ -307,38 +307,38 @@ class MainWindow(QMainWindow):
             vx_band_action = self.create_action(
                 "X Valley Conduction Band",
                 checkable=True,
-                ischecked=self.qtab.plotVX,
-                slot=self.qtab.view_VXBand,
+                ischecked=self.qtab.plot_vx,
+                slot=self.qtab.view_vx_band,
             )
             vl_band_action = self.create_action(
                 "L Valley Conduction Band",
                 checkable=True,
-                ischecked=self.qtab.plotVL,
-                slot=self.qtab.view_VLBand,
+                ischecked=self.qtab.plot_vl,
+                slot=self.qtab.view_vl_band,
             )
             lh_band_action = self.create_action(
                 "Light Hole Valence Band",
                 checkable=True,
-                ischecked=self.qtab.plotLH,
-                slot=self.qtab.view_LHBand,
+                ischecked=self.qtab.plot_lh,
+                slot=self.qtab.view_lh_band,
             )
             so_band_action = self.create_action(
                 "Split Off Valence Band",
                 checkable=True,
-                ischecked=self.qtab.plotSO,
-                slot=self.qtab.view_SOBand,
+                ischecked=self.qtab.plot_so,
+                slot=self.qtab.view_so_band,
             )
             plotwf = self.create_action(
                 "Plot Wave function",
                 checkable=True,
-                ischecked=self.qtab.plotType == "wf",
+                ischecked=self.qtab.plot_type == "wf",
                 slot=self.qtab.set_plotwf,
                 setting_sync=True,
             )
             plot_fill = self.create_action(
                 "Fill wave function curve",
                 checkable=True,
-                ischecked=bool(self.qtab.fillPlot),
+                ischecked=bool(self.qtab.fill_plot),
                 slot=self.qtab.set_fill,
                 setting_sync=True,
             )
@@ -384,7 +384,7 @@ class MainWindow(QMainWindow):
                 "IFR scattering",
                 checkable=True,
                 ischecked=self.qtab.qclayers.include_ifr,
-                slot=self.qtab.triggerIFR,
+                slot=self.qtab.trigger_ifr,
             )
             self.add_actions(self.model_menu, (None, ifr_action))
 
@@ -569,7 +569,7 @@ class MainWindow(QMainWindow):
             filename = "new_qcl"
         else:
             filename = self.filename.split(".")[0]
-        self.qtab.export_quantumCanvas(filename)
+        self.qtab.export_quantum_canvas(filename)
 
     def export_band_diagram_data(self):
         if self.filename is None:
@@ -608,7 +608,7 @@ class MainWindow(QMainWindow):
             for action in self.solver_actions.values():
                 action.setChecked(False)
             self.solver_actions[solver].setChecked(True)
-            self.qtab.triggerSolver(solver)
+            self.qtab.trigger_solver(solver)
             self.dirty = True
             self.things_changed()
 
