@@ -198,17 +198,17 @@ class Alloy(Material):
         Temperature of the alloy
     """
 
-    def __init__(self, Name: str, x: float, Temperature: float = 300):
+    def __init__(self, name: str, x: float, temp: float = 300):
         # pylint: disable=super-init-not-called
-        self.name = Name
+        self.name = name
         self.comp = ALLOY_PARAM[self.name]["composition"]
-        self.elm_a = Material(self.comp[0], Temperature)
-        self.elm_b = Material(self.comp[1], Temperature)
+        self.elm_a = Material(self.comp[0], temp)
+        self.elm_b = Material(self.comp[1], temp)
         assert self.elm_a.type == self.elm_b.type
         self.type = self.elm_a.type
         # so alloy is A_x B_(1-x)
         self.mole_frac = x
-        self.set_temperature(Temperature)
+        self.set_temperature(temp)
 
     def set_temperature(self, temp: float):
         """
@@ -661,7 +661,7 @@ def main(material):
 
 
 # refractive indices
-rIdx = {
+REFRATICE_INDICES = {
     # J. Appl. Phys., 94, 6447-6455 (2003)
     # https://refractiveindex.info/?shelf=main&book=GaAs&page=Skauli
     # 0.97um - 17um

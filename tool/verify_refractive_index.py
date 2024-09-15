@@ -3,7 +3,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ErwinJr2.material import rIdx
+from ErwinJr2.material import REFRATICE_INDICES
 
 
 def testGaAs():
@@ -43,7 +43,7 @@ def testGaAs():
         ]
     )
     x = np.linspace(0.97, 19, 100)
-    plt.plot(x, rIdx["GaAs"](x))
+    plt.plot(x, REFRATICE_INDICES["GaAs"](x))
     plt.plot(index[:, 0], index[:, 1], "*")
 
 
@@ -81,7 +81,7 @@ def testInAs():
         ]
     )
     x = np.linspace(3, 20, 100)
-    plt.plot(x, rIdx["InAs"](x))
+    plt.plot(x, REFRATICE_INDICES["InAs"](x))
     plt.plot(index[:, 0], index[:, 1], "*")
 
 
@@ -107,13 +107,13 @@ def testInP():
         ]
     )
     x = np.linspace(2, 15, 100)
-    plt.plot(x, rIdx["InP"](x))
+    plt.plot(x, REFRATICE_INDICES["InP"](x))
     plt.plot(index[:, 0], index[:, 1], "*")
 
 
 def testAlAs():
     x = np.linspace(0.56, 10, 100)
-    plt.plot(x, rIdx["AlAs"](x))
+    plt.plot(x, REFRATICE_INDICES["AlAs"](x))
     # plt.plot(x, rIdx['AlGaAs'](x, 1))
 
 
@@ -149,7 +149,7 @@ def testAu():
         ]
     )
     x = np.linspace(2.5, 20, 100)
-    index = rIdx["Au"](x)
+    index = REFRATICE_INDICES["Au"](x)
     plt.plot(x, index.real, color="C0", label="n")
     plt.plot(realindex[:, 0], realindex[:, 1], "*", color="C0")
     plt.plot(x, index.imag, color="C1", label="k")
@@ -159,7 +159,7 @@ def testAu():
 
 def testSi():
     x = np.linspace(2, 20, 100)
-    n = rIdx["SiNx"](x)
+    n = REFRATICE_INDICES["SiNx"](x)
     plt.plot(x, n.real, label="n")
     plt.plot(x, n.imag, label="k")
     plt.legend()

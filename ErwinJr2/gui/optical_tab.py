@@ -36,12 +36,12 @@ from ErwinJr2.gui.ej_canvas import EJCanvas
 from ErwinJr2.opt_strata import (
     ALLOY_MAP,
     DOPABLE_MATERIALS,
+    REFRATICE_INDICES,
     OptStrata,
     optimize_opt_strata,
-    rIdx,
 )
 
-mtrlList = list(rIdx.keys()) + list(ALLOY_MAP.keys())
+mtrlList = list(REFRATICE_INDICES.keys()) + list(ALLOY_MAP.keys())
 facetList = ("cleaved", "perfect AR", "perfect HR", "custom")
 
 

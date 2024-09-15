@@ -7,7 +7,7 @@ from typing import List
 import numpy as np
 from numpy import cos, exp, pi, sin, sinc, sqrt
 
-from ErwinJr2.material import MTRL_PARAM, rIdx
+from ErwinJr2.material import MTRL_PARAM, REFRATICE_INDICES
 
 # Effective mass in unit of free electron mass.
 EFF_MASS_MAP = {
@@ -557,11 +557,13 @@ class OptStrata(MaxwellLayer):
             return self.cstm_idx[mtrl]
         if mtrl in ALLOY_MAP:
             # linear interpolation
-            layer_r_idx = self.mole_fracs[n] * rIdx[ALLOY_MAP[mtrl][0]](self.wl) + (
-                1 - self.mole_fracs[n]
-            ) * rIdx[ALLOY_MAP[mtrl][1]](self.wl)
+            layer_r_idx = self.mole_fracs[n] * REFRATICE_INDICES[ALLOY_MAP[mtrl][0]](
+                self.wl
+            ) + (1 - self.mole_fracs[n]) * REFRATICE_INDICES[ALLOY_MAP[mtrl][1]](
+                self.wl
+            )
         else:
-            layer_r_idx = rIdx[mtrl](self.wl)
+            layer_r_idx = REFRATICE_INDICES[mtrl](self.wl)
 
         plasmon_unit = 8.9698e-5 * self.wl**2
         # 8.9698e-05 = mu_0*1E23*e**2*(1E-6)**2/(electron_mass*4*pi**2)

@@ -1609,8 +1609,8 @@ class QCLayers(SchrodingerLayer):
             return 1.0
         self.mtrl_r_idx = [
             (
-                m.mole_frac * material.rIdx[m.elm_a.name](wl)
-                + (1 - m.mole_frac) * material.rIdx[m.elm_b.name](wl)
+                m.mole_frac * material.REFRATICE_INDICES[m.elm_a.name](wl)
+                + (1 - m.mole_frac) * material.REFRATICE_INDICES[m.elm_b.name](wl)
             )
             for m in self.mtrl_alloys
         ]
