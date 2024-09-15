@@ -9,7 +9,7 @@ from ErwinJr2.opt_strata import OptStrata
 
 matplotlib.rcParams.update({"font.size": 12})
 with open("../ErwinJr2/example/PQLiu.json", "r") as f:
-    strata = save_load.optLoad(f)
+    strata = save_load.opt_load(f)
 
 strata = OptStrata(
     wl=8.0,

@@ -17,7 +17,7 @@ _TEST_SAMPLE_FILE = os.path.join(_REPO_ROOT, "ErwinJr2/example/test.json")
 
 def main():
     with open(_TEST_SAMPLE_FILE) as f:
-        qcl = save_load.qclLoad(f)
+        qcl = save_load.qcl_load(f)
     logging.info("Start.")
     qcl.populate_x()
     qcl.solve_whole()

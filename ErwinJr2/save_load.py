@@ -10,7 +10,7 @@ from ErwinJr2.opt_strata import OptStrata
 from ErwinJr2.qc_layers import QCLayers
 
 
-def qclLoad(fhandle: typing.TextIO) -> QCLayers:
+def qcl_load(fhandle: typing.TextIO) -> QCLayers:
     """
     Load QCLayers from a json file
 
@@ -32,10 +32,10 @@ def qclLoad(fhandle: typing.TextIO) -> QCLayers:
 
     """
     ldict = json.load(fhandle)
-    return parseQcl(ldict)
+    return parse_qcl(ldict)
 
 
-def optLoad(fhandle: typing.TextIO) -> OptStrata:
+def opt_load(fhandle: typing.TextIO) -> OptStrata:
     """
     Load OptStrata from a json file
 
@@ -57,10 +57,10 @@ def optLoad(fhandle: typing.TextIO) -> OptStrata:
 
     """
     ldict = json.load(fhandle)
-    return parseStrata(ldict)
+    return parse_strata(ldict)
 
 
-def loadBoth(fhandle: typing.TextIO) -> typing.Union[QCLayers, OptStrata]:
+def load_both(fhandle: typing.TextIO) -> typing.Union[QCLayers, OptStrata]:
     """
     Load QCLayers and OptStrata from a json file
 
@@ -85,15 +85,15 @@ def loadBoth(fhandle: typing.TextIO) -> typing.Union[QCLayers, OptStrata]:
 
     """
     ldict = json.load(fhandle)
-    qcl = parseQcl(ldict)
+    qcl = parse_qcl(ldict)
     try:
-        stratum = parseStrata(ldict)
+        stratum = parse_strata(ldict)
     except NotImplementedError:
         stratum = None
     return qcl, stratum
 
 
-def parseQcl(ldict: typing.Dict[str, typing.Any]) -> QCLayers:
+def parse_qcl(ldict: typing.Dict[str, typing.Any]) -> QCLayers:
     if ldict["FileType"] != "ErwinJr2 Data File":
         raise TypeError("Wrong file type")
     version = int(ldict["Version"])
@@ -147,11 +147,11 @@ def parseQcl(ldict: typing.Dict[str, typing.Any]) -> QCLayers:
         else:
             o.include_ifr = False
     else:
-        raise NotImplementedError("Version %s not supported" % ldict["Version"])
+        raise ValueError(f"Version {ldict['Version']} not supported")
     return o
 
 
-def parseStrata(ldict: typing.Dict[str, typing.Any]) -> OptStrata:
+def parse_strata(ldict: typing.Dict[str, typing.Any]) -> OptStrata:
     if ldict["FileType"] != "ErwinJr2 Data File":
         raise TypeError("Wrong file type")
     if int(ldict["Version"]) >= 200504:
@@ -177,12 +177,12 @@ def parseStrata(ldict: typing.Dict[str, typing.Any]) -> OptStrata:
             cstm_gain=cstgain,
         )
     else:
-        raise NotImplementedError("Version %s not supported" % ldict["Version"])
+        raise ValueError(f"Version {ldict['Version']} not supported")
     return o
 
 
 # Compostion is misspelled for legacy reason
-JSONTemplate = """{
+_JSON_TEMPLATE = """{
     "FileType": "ErwinJr2 Data File",
     "Version": "210330",
     "Description": %s,
@@ -217,7 +217,7 @@ JSONTemplate = """{
     }
 }"""
 
-IFRSettings = """{
+_IFR_TEMPLATE = """{
             "custom IFR": %s,
             "material IFR delta": %s,
             "material IFR lambda": %s,
@@ -226,7 +226,7 @@ IFRSettings = """{
         }"""
 
 
-def EJSaveJSON(
+def save_json(
     fhandle: typing.TextIO, qclayers: QCLayers = None, optstratum: OptStrata = None
 ):
     """Save QCLayers and OptStratum as a json file
@@ -260,7 +260,7 @@ def EJSaveJSON(
         if item in s.cstm_gain:
             s_cstmtrl[item]["gain"] = s.cstm_gain[item]
     if o.include_ifr:
-        ifrParams = IFRSettings % tuple(
+        ifr_params = _IFR_TEMPLATE % tuple(
             [
                 json.dumps(s)
                 for s in (
@@ -273,7 +273,7 @@ def EJSaveJSON(
             ]
         )
     else:
-        ifrParams = "false"
+        ifr_params = "false"
     parameters = [
         json.dumps(s)
         for s in (
@@ -295,7 +295,7 @@ def EJSaveJSON(
             o.layer_ar,
         )
     ]
-    parameters.append(ifrParams)
+    parameters.append(ifr_params)
     parameters += [
         json.dumps(s)
         for s in (
@@ -308,4 +308,4 @@ def EJSaveJSON(
             s_cstmtrl,
         )
     ]
-    fhandle.write(JSONTemplate % tuple(parameters))
+    fhandle.write(_JSON_TEMPLATE % tuple(parameters))

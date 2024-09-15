@@ -10,7 +10,7 @@ from ErwinJr2.qc_layers import auto_gain
 if __name__ == "__main__":
     cp = cProfile.Profile()
     with open("../example/PQLiu.json") as f:
-        qcl = save_load.qclLoad(f)
+        qcl = save_load.qcl_load(f)
     qcl.x_step = 0.1
     cp.enable()
     auto_gain(qcl)

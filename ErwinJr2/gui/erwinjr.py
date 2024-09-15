@@ -83,7 +83,7 @@ class MainWindow(QMainWindow):
         if fname and QFile.exists(fname):
             try:
                 with open(fname, "r") as f:
-                    qclayers, stratum = save_load.loadBoth(f)
+                    qclayers, stratum = save_load.load_both(f)
                 self.filename = fname
                 self.addRecentFile(fname)
                 self.dirty = False
@@ -493,7 +493,7 @@ class MainWindow(QMainWindow):
         """Load from file "fname", and update everything for consistency."""
         try:
             with open(fname, "r") as f:
-                qclayers, stratum = save_load.loadBoth(f)
+                qclayers, stratum = save_load.load_both(f)
                 if stratum is None:
                     stratum = OptStrata(3.0)
         except Exception:
@@ -515,7 +515,7 @@ class MainWindow(QMainWindow):
         if self.filename.split(".")[-1] == "json":
             try:
                 with open(self.filename, "w") as f:
-                    save_load.EJSaveJSON(f, self.qtab.qclayers, self.otab.stratum)
+                    save_load.save_json(f, self.qtab.qclayers, self.otab.stratum)
             except OSError:
                 QMessageBox.warning(
                     self,

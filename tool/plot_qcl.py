@@ -12,7 +12,7 @@ _REPO_ROOT = os.path.dirname(os.path.dirname(__file__))
 _TEST_SAMPLE_FILE = os.path.join(_REPO_ROOT, "ErwinJr2/example/PQLiu.json")
 
 with open(_TEST_SAMPLE_FILE) as f:
-    qcl = save_load.qclLoad(f)
+    qcl = save_load.qcl_load(f)
 
 qcl = QCLayers(
     substrate="InP",
@@ -105,4 +105,4 @@ plt.ylabel("Energy (eV)")
 plt.show()
 
 with open("testSave.json", "w") as f:
-    save_load.EJSaveJSON(f, qcl)
+    save_load.save_json(f, qcl)

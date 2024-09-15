@@ -36,7 +36,7 @@ def plot_band(axes, qclayer: qc_layers.QCLayers):
 
 if __name__ == "__main__":
     with open("../example/PQLiue.json") as f:
-        qcl = save_load.qclLoad(f)
+        qcl = save_load.qcl_load(f)
     qcl.populate_x()
     qcl.solve_whole()
 
