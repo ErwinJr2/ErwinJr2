@@ -3,10 +3,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ErwinJr2 import qc_layers, save_load
+from ErwinJr2 import qclayers, save_load
 
 
-def plot_band(axes, qclayer: qc_layers.QCLayers):
+def plot_band(axes, qclayer: qclayers.QCLayers):
     """Plot potential (quantum barriers and wells) and other band parameters
     of the layer scturecture on axes, assuming already populated"""
 

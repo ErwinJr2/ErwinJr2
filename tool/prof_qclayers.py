@@ -5,7 +5,7 @@ import io
 import pstats
 
 import ErwinJr2.save_load as save_load
-from ErwinJr2.qc_layers import auto_gain
+from ErwinJr2.qclayers import auto_gain
 
 if __name__ == "__main__":
     cp = cProfile.Profile()

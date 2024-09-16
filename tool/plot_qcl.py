@@ -5,8 +5,8 @@ import os
 import matplotlib.pyplot as plt
 
 from ErwinJr2 import save_load
-from ErwinJr2.qc_layers import QCLayers
 from ErwinJr2.qc_plotter import plot_potential, plot_wf
+from ErwinJr2.qclayers import QCLayers
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(__file__))
 _TEST_SAMPLE_FILE = os.path.join(_REPO_ROOT, "ErwinJr2/example/PQLiu.json")

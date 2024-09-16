@@ -32,7 +32,7 @@ from ErwinJr2.gui.constants import ABOUT_MSG, COPYRIGHT, EJ_FULLNAME, EJ_NAME
 from ErwinJr2.gui.optical_tab import OpticalTab
 from ErwinJr2.gui.quantum_tab import QuantumTab
 from ErwinJr2.opt_strata import OptStrata
-from ErwinJr2.qc_layers import QCLayers, onedq
+from ErwinJr2.qclayers import QCLayers, onedq
 from ErwinJr2.version import VERSION
 
 PROJ_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

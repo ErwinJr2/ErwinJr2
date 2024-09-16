@@ -3,12 +3,12 @@ Command Line Guide
 
 This chapter is used as examples on how to use the code as a Python module
 rather than as GUI software. However, users are very encouraged to read
-:doc:`../qc_layers` and :doc:`../opt_strata` on how to use this package.
+:doc:`../qclayers` and :doc:`../opt_strata` on how to use this package.
 
 QC layers
 ----------
 
-.. currentmodule:: ErwinJr2.qc_layers
+.. currentmodule:: ErwinJr2.qclayers
 
 The basic routine of solving a QCL structure is:
 
@@ -28,7 +28,7 @@ the structure by command line. The easiest example would be:
 
    from ErwinJr2 import save_load
    from ErwinJr2.qc_plotter import plotPotential, plotWF
-   from ErwinJr2.qc_layers import QCLayers, auto_gain
+   from ErwinJr2.qclayers import QCLayers, auto_gain
    import matplotlib.pyplot as plt
    import numpy as np
 
@@ -77,7 +77,7 @@ the structure by command line. The easiest example would be:
 where running :func:`QCLayers.populate_x`, :func:`QCLayers.solve_whole`,
 :func:`QCLayers.period_recognize`, and :func:`QCLayers.full_population`
 can be replaced for short by :meth:`auto_gain`.
-See :doc:`../qc_layers` for more detail.
+See :doc:`../qclayers` for more detail.
 
 Further more, plot the gain spectrum:
 

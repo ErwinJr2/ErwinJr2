@@ -71,9 +71,9 @@ class SchrodingerLayer(object):
 
     layer_widths :
         Width of each layer, in angstrom. len = No. of layers
-    layerVc :
+    layer_vc :
         The conduction band offset of each layer, in unit eV, len = No. of layers
-    layerMc :
+    layer_mc :
         The conduction band effective mass of each layer, in unit m0,
         the free space electron mass, len = No. of layers
     layer_ar :
@@ -101,7 +101,7 @@ class SchrodingerLayer(object):
     repeats :
         Number of repeat times for the given structure
 
-    crystalType :
+    crystal_type :
         Default being "simple", meaning a simple parabolic effective mass is
         used for the calculation. For setting other than "simple",
         `populate_material` should be implemented.
@@ -1181,12 +1181,12 @@ class QCLayers(SchrodingerLayer):
         Binaries indicating if the layer is active(True) or not(False),
         only affects basis solver. len = No. of layers
 
-    customIFR :
+    custom_ifr :
         Wether to use a customized IFR parameter rather than a material determined
         parameter.
-    mtrlIFRLambda :
+    mtrl_ifr_lambda :
         The interface roughness lambda after materials[n], len = No. of materials
-    mtrlIFRDelta :
+    mtrl_ifr_delta :
         The interface roughness delta after materials[n], len = No. of materials
 
     e_field :
@@ -1566,17 +1566,17 @@ class QCLayers(SchrodingerLayer):
 
         Yield
         ------
-        tauLO_l : float
+        tau_lo_l : float
             the lower state lifetime from LO scattering
-        tauLO_u : float
+        tau_lo_u : float
             the upper state lifetime from LO scattering
-        tauLO_ul : float
+        tau_lo_ul : float
             the transition rate from upper to lower due to LO scattering
-        tauIFR_l : float
+        tau_ifr_l : float
             the lower state lifetime from IFR scattering
-        tauIFR_u : float
+        tau_ifr_u : float
             the upper state lifetime from IFR scattering
-        tauIFR_ul : float
+        tau_ifr_ul : float
             the transition rate from upper to lower due to IFR scattering
         tau_u : float
             1/(1/tauLO_u + 1/tauIFR_u)

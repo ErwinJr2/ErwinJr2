@@ -7,7 +7,7 @@ import typing
 from collections import defaultdict
 
 from ErwinJr2.opt_strata import OptStrata
-from ErwinJr2.qc_layers import QCLayers
+from ErwinJr2.qclayers import QCLayers
 
 
 class InvalidJsonFile(Exception):

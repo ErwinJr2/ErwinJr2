@@ -35,7 +35,7 @@ See `Github <https://github.com/ErwinJr2/ErwinJr2/>`_ for the source code.
    code_struct
    other
    profiling
-   qc_layers
+   qclayers
    qc_plotter
    opt_strata
    material

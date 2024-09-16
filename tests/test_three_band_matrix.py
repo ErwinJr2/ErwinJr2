@@ -4,7 +4,7 @@ import unittest
 
 import numpy as np
 
-from ErwinJr2.qc_layers import QCLayers
+from ErwinJr2.qclayers import QCLayers
 
 
 class TestThreeBandMatrix(unittest.TestCase):

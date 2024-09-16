@@ -47,7 +47,8 @@ from ErwinJr2.gui.constants import EJ_ERROR, EJ_WARNING
 from ErwinJr2.gui.custom_qt_class import MtrlComboBox
 from ErwinJr2.gui.ej_canvas import EJCanvas, EJplotControl, config as plotconfig
 from ErwinJr2.material import ALLOY_PARAM
-from ErwinJr2.qc_layers import (
+from ErwinJr2.qc_plotter import plot_potential, plot_wf, scale_wf
+from ErwinJr2.qclayers import (
     QC_MATERIAL,
     QCLayers,
     StateRecognizeError,
@@ -58,7 +59,6 @@ from ErwinJr2.qc_layers import (
     hbar,
     optimize_layer,
 )
-from ErwinJr2.qc_plotter import plot_potential, plot_wf, scale_wf
 
 # colors for different materials in tables
 MTRL_COLORS_RGB = (

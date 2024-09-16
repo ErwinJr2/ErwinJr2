@@ -1,7 +1,7 @@
-qc_layers module
+qclayers module
 ================
 
-.. currentmodule:: ErwinJr2.qc_layers
+.. currentmodule:: ErwinJr2.qclayers
 
 This module contains :class:`QCLayers` and :class:`SchrodingerLayer` classes.
 The physics model can be seen in :doc:`manual/physics_quantum`
@@ -24,7 +24,7 @@ SchrodingerLayer class
 
 Others
 ---------------
-.. automodule:: ErwinJr2.qc_layers
+.. automodule:: ErwinJr2.qclayers
    :members:
    :show-inheritance:
    :exclude-members: QCLayers, SchrodingerLayer

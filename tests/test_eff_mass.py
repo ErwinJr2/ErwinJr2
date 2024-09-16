@@ -7,7 +7,7 @@ import scipy.sparse as sparse
 import scipy.sparse.linalg as splg
 from scipy.constants import e as e0, electron_mass as m0, hbar
 
-from ErwinJr2.qc_layers import SchrodingerLayer
+from ErwinJr2.qclayers import SchrodingerLayer
 
 
 class GaAsLayer(SchrodingerLayer):

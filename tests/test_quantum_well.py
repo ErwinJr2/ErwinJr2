@@ -6,7 +6,7 @@ import unittest
 import numpy as np
 from scipy.constants import e as e0, electron_mass as m0, hbar
 
-from ErwinJr2.qc_layers import QCLayers, SchrodingerLayer
+from ErwinJr2.qclayers import QCLayers, SchrodingerLayer
 
 
 class GaInAsWithAlInAsLayer(SchrodingerLayer):

@@ -10,7 +10,7 @@ from matplotlib.axes import Axes
 from matplotlib.colors import Normalize as cmNorm
 from matplotlib.pyplot import gca
 
-from ErwinJr2.qc_layers import QCLayers
+from ErwinJr2.qclayers import QCLayers
 
 config = {
     "wf_scale": 0.3,

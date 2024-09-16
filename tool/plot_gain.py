@@ -9,7 +9,7 @@ import numpy as np
 from scipy.constants import c as c0, e as e0, epsilon_0 as eps0, h as h, hbar as hbar
 
 from ErwinJr2 import save_load
-from ErwinJr2.qc_layers import QCLayers
+from ErwinJr2.qclayers import QCLayers
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(__file__))
 _TEST_SAMPLE_FILE = os.path.join(_REPO_ROOT, "ErwinJr2/example/test.json")

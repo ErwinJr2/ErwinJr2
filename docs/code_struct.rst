@@ -29,7 +29,7 @@ The folder structure:
     |  |- __init__.py
     |  |- __main__.py...............This defines how ErwinJr will start outside command line
     |  |- opt_strata.py
-    |  |- qc_layers.py
+    |  |- qclayers.py
     |  |- material.py
     |  |- rFittings.py
     |  |- save_load.py

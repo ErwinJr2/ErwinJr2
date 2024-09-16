@@ -1,7 +1,7 @@
 qc_plotter module
 =================
 
-This module contains functions to plot :class:`ErwinJr2.qc_layers`
+This module contains functions to plot :class:`ErwinJr2.qclayers`
 
 .. automodule:: ErwinJr2.qc_plotter
     :members:
