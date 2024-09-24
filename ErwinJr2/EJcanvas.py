@@ -235,8 +235,11 @@ class EJplotControl(NavigationToolbar2, QObject):
 
     def _update_cursor(self, event):
         # override backend_bases.NavigationToolbar2._update_cursor
-        if (event.inaxes and self._custom_mode and
-                self._lastCursor != self._custom_cursor[self._custom_mode]):
+        if (
+            event.inaxes
+            and self._custom_mode
+            and self._last_cursor != self._custom_cursor[self._custom_mode]
+        ):
             self.set_cursor(self._custom_cursor[self._custom_mode])
             return
         super(EJplotControl, self)._update_cursor(event)
