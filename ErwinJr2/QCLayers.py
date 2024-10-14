@@ -289,13 +289,19 @@ status :
             return np.interp(self.xPoints-self.periodL*n, self.xPoints, psi,
                              left=0, right=0)
 
-    def _basis_shifter(self, ns: List[int], psis0: np.ndarray,
-                       eigenEs0: np.ndarray, xPoints: np.ndarray = None
-                       ) -> Tuple[np.ndarray, np.ndarray]:
-        if xPoints is None:
-            xPoints = self.xPoints
+    def _basis_shifter(
+        self,
+        ns: List[int],
+        dCL: "SchrodingerLayer",
+        shift: float,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        psis0 = dCL.psis
+        eigenEs0 = dCL.eigenEs - shift * self.EField * EUNIT
+        xPoints = dCL.xPoints + shift
         period = self.periodL
         psis = np.empty((0, self.xPoints.size))
+        # philh = np.empty((0, self.xPoints.size))
+        # phiso = np.empty((0, self.xPoints.size))
         eigenEs = np.empty(0)
         emax = np.max(self.xVc)
         for n in sorted(ns, reverse=True):
@@ -573,12 +579,14 @@ status :
 
             # map dCL result back to self
             shift = sum(self.layerWidths[:startIdx[n]]) - BASISPAD
-            psis, eigenEs = self._basis_shifter(
-                range(-1, self.repeats), dCL.psis,
-                dCL.eigenEs - shift*self.EField*EUNIT,
-                dCL.xPoints + shift)
+            psis, eigenEs = self._basis_shifter(range(-1, self.repeats), dCL,
+                                                shift)
             self.eigenEs = np.concatenate((self.eigenEs, eigenEs))
             self.psis = np.concatenate((self.psis, psis))
+        if self.crystalType == "ZincBlende":
+            print("Warning: basis solver for ZincBlende is not fully modeled")
+            self.philh = np.zeros(self.psis.shape)
+            self.phiso = np.zeros(self.psis.shape)
         self._reset_cache()
         self.status = 'basis'
         return self.eigenEs
