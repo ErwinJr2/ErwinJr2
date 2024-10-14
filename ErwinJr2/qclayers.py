@@ -656,6 +656,11 @@ class SchrodingerLayer(object):
             )
             self.eigen_es = np.concatenate((self.eigen_es, eigen_es))
             self.psis = np.concatenate((self.psis, psis))
+        if self.crystal_type == "ZincBlende":
+            # TODO: fix this by replace self.psis dimension
+            print("Warning: basis solver for ZincBlende is not fully implemented")
+            self.philh = np.zeros(self.psis.shape)
+            self.phiso = np.zeros(self.psis.shape)
         self._reset_cache()
         self.status = "basis"
         return self.eigen_es
