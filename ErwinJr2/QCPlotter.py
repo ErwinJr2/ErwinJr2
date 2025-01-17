@@ -55,8 +55,11 @@ def plotPotential(qcl: QCLayers, axes: Axes = None,
     ys = [qcl.xVc]
     axes.plot(qcl.xPoints, qcl.xVc, 'k', linewidth=config['default_lw'])
     # highlight selected layer & make AR layers bold
-    xNonARs = np.bitwise_and.reduce(
-        [qcl.xLayerMask(n) for n, ar in enumerate(qcl.layerARs) if ar])
+    highlights = [qcl.xLayerMask(n) for n, ar in enumerate(qcl.layerARs) if ar]
+    if highlights:
+        xNonARs = np.bitwise_and.reduce(highlights)
+    else:
+        xNonARs = np.ones(qcl.xPoints.shape, dtype=bool)
     xARVc = np.ma.masked_where(xNonARs, qcl.xVc)
     axes.plot(qcl.xPoints, xARVc, 'k', linewidth=config['default_lw']+0.5)
     # plot Conduction Band L-Valley/X-Valley, Light Hole Valence Band and
