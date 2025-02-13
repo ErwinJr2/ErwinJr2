@@ -31,7 +31,12 @@ dependencies = ["numpy>=2.0.0", "scipy"]
 dynamic = ["version"]
 
 [project.optional-dependencies]
-GUI = ["pyqt5", "matplotlib>=3.3", "winshell;sys_platform == 'win32'"]
+GUI = [
+    "pyqt5",
+    "matplotlib>=3.3",
+    "winshell;sys_platform == 'win32'",
+    "pypiwin32;sys_platform == 'win32'",
+]
 dev = [
     'sphinx>=2',
     'sphinx_rtd_theme',
